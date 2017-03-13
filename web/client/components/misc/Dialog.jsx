@@ -28,7 +28,8 @@ const Dialog = React.createClass({
         footerClassName: React.PropTypes.string,
         onClickOut: React.PropTypes.func,
         modal: React.PropTypes.bool,
-        start: React.PropTypes.object
+        start: React.PropTypes.object,
+        draggableHeader: React.PropTypes.bool
     },
     getDefaultProps() {
         return {
@@ -43,7 +44,8 @@ const Dialog = React.createClass({
             headerClassName: "modal-header",
             bodyClassName: "modal-body",
             footerClassName: "modal-footer",
-            modal: false
+            modal: false,
+            draggableHeader: true
         };
     },
     renderLoading() {
@@ -70,9 +72,10 @@ const Dialog = React.createClass({
         return React.Children.toArray(this.props.children).filter((child) => child.props.role === role);
     },
     render() {
+        let draggable = this.props.draggableHeader ? " draggable-header" : "";
         const dialog = (<Draggable start={this.props.start} handle=".draggable-header, .draggable-header *">
             <div id={this.props.id} style={{zIndex: 3, ...this.props.style}} className={this.props.className + " modal-dialog-container"}>
-                <div className={this.props.headerClassName + " draggable-header"}>
+                <div className={this.props.headerClassName + draggable}>
                     {this.renderRole('header')}
                 </div>
                 <div className={this.props.bodyClassName}>
