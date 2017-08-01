@@ -242,7 +242,8 @@ class LayerTree extends React.Component {
         spatialOperations: PropTypes.array,
         spatialMethodOptions: PropTypes.array,
         groupOptions: PropTypes.object,
-        currentLocale: PropTypes.string
+        currentLocale: PropTypes.string,
+        availableOptions: PropTypes.array
     };
 
     static defaultProps = {
@@ -287,7 +288,8 @@ class LayerTree extends React.Component {
             {"id": "Circle", "name": "queryform.spatialfilter.methods.circle"},
             {"id": "Polygon", "name": "queryform.spatialfilter.methods.poly"}
         ],
-        currentLocale: 'en-US'
+        currentLocale: 'en-US',
+        availableOptions: ['bbox', 'search', 'dimensions', 'title']
     };
 
     getNoBackgroundLayers = (group) => {
@@ -298,7 +300,7 @@ class LayerTree extends React.Component {
         return (
             <div>
                 <Button onClick={this.props.onRefresh} bsSize="xsmall"><Glyphicon glyph="refresh"/></Button>
-                <RefreshLayers/>
+                <RefreshLayers availableOptions={this.props.availableOptions}/>
                 <RefreshLayer/>
             </div>
         );

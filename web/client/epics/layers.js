@@ -9,10 +9,12 @@
 const Rx = require('rxjs');
 const Api = require('../api/WMS');
 const {REFRESH_LAYERS, layersRefreshed, updateNode, layersRefreshError} = require('../actions/layers');
+const {groupsSelector} = require('../selectors/layers');
 const LayersUtils = require('../utils/LayersUtils');
 
 const assign = require('object-assign');
-const {isArray, head} = require('lodash');
+const {isArray, isString, head} = require('lodash');
+const {currentLocaleSelector} = require('../selectors/locale');
 
 const getUpdates = (updates, options) => {
     return Object.keys(options).filter((opt) => options[opt]).reduce((previous, current) => {
@@ -36,11 +38,20 @@ const removeWorkspace = (layer) => {
  * @return {external:Observable}
  */
 
-const refresh = action$ =>
+const refresh = (action$, store) =>
     action$.ofType(REFRESH_LAYERS)
         .debounce(({debounceTime = 500} = {}) => Rx.Observable.timer(debounceTime) )
         .switchMap(action => {
-            return Rx.Observable.from(
+            // update groups name
+            return Rx.Observable.defer(() => !!action.options.groups ?
+                Rx.Observable.from(groupsSelector(store.getState()))
+                    .switchMap((group) => {
+                        const title = isString(group.title) ? LayersUtils.getGroupsTitleTranslations(group.title) : group.title;
+                        return Rx.Observable.of(updateNode(group.id, "groups", {title}));
+                    })
+                : Rx.Observable.empty()
+            ).concat(
+            Rx.Observable.from(
                 action.layers.map((layer) =>
                     Rx.Observable.forkJoin(
                         Api.getCapabilities(LayersUtils.getCapabilitiesUrl(layer), true)
@@ -67,7 +78,13 @@ const refresh = action$ =>
                         if (caps.error) {
                             return Rx.Observable.of(caps.error && caps);
                         }
-                        return Rx.Observable.of(assign({layer: layer.id, title: caps.Title, bbox: Api.getBBox(caps, true), dimensions: Api.getDimensions(caps)}, (describe && !describe.error) ? {search: describe} : {}));
+
+                        // set style by language
+                        const availableStyles = isArray(caps.Style) ? caps.Style : [];
+                        const currentLocale = head(currentLocaleSelector(store.getState()).split('-'));
+                        const style = LayersUtils.getLocalizedStyle(layer.style, availableStyles, currentLocale || 'en');
+
+                        return Rx.Observable.of(assign({layer: layer.id, title: LayersUtils.getKeywordsTranslations(caps), style, availableStyles, bbox: Api.getBBox(caps, true), dimensions: Api.getDimensions(caps)}, (describe && !describe.error) ? {search: describe} : {}));
                     })
                 )
             )
@@ -80,10 +97,12 @@ const refresh = action$ =>
                     bbox: layer.bbox,
                     search: layer.search,
                     title: layer.title,
-                    dimensions: layer.dimensions
+                    dimensions: layer.dimensions,
+                    availableStyles: layer.availableStyles,
+                    style: layer.style
                 }, action.options))]);
             })
-            .mergeAll();
+            .mergeAll());
         });
 
 

@@ -8,6 +8,7 @@
 const {connect} = require('react-redux');
 
 const {loadLocale} = require('../actions/locale');
+const {addLayersStyleLocalization} = require('../epics/locale');
 
 const assign = require('object-assign');
 
@@ -27,5 +28,6 @@ module.exports = {
             priority: 1
         }
     }),
-    reducers: {}
+    reducers: {},
+    epics: {addLayersStyleLocalization}
 };

@@ -19,6 +19,9 @@ const sampleRecord = {
     tags: ["subject1", "subject2"],
     description: "sample abstract",
     thumbnail: "img.jpg",
+    capabilities: {
+        Style: []
+    },
     boundingBox: {
         extent: [10.686,
             44.931,
@@ -41,6 +44,9 @@ const sampleRecord2 = {
     tags: ["subject1", "subject2"],
     description: "sample abstract",
     thumbnail: "img.jpg",
+    capabilities: {
+        Style: []
+    },
     boundingBox: {
         extent: [10.686,
             44.931,
@@ -63,6 +69,9 @@ const sampleRecord3 = {
     tags: ["subject1", "subject2"],
     description: "sample abstract",
     thumbnail: "img.jpg",
+    capabilities: {
+        Style: []
+    },
     boundingBox: {
         extent: [10.686,
             44.931,

@@ -10,10 +10,11 @@ const React = require('react');
 const SharingLinks = require('./SharingLinks');
 const Message = require('../I18N/Message');
 const {Image, Panel, Button, Glyphicon} = require('react-bootstrap');
-const {head, memoize} = require('lodash');
+const {head, memoize, isObject, isArray} = require('lodash');
 const assign = require('object-assign');
 
 const CoordinatesUtils = require('../../utils/CoordinatesUtils');
+const LayersUtils = require('../../utils/LayersUtils');
 
 const defaultThumb = require('./img/default.jpg');
 
@@ -51,7 +52,8 @@ class RecordItem extends React.Component {
         showGetCapLinks: PropTypes.bool,
         addAuthentication: PropTypes.bool,
         crs: PropTypes.string,
-        onError: PropTypes.func
+        onError: PropTypes.func,
+        currentLocale: PropTypes.string
     };
 
     static defaultProps = {
@@ -64,7 +66,8 @@ class RecordItem extends React.Component {
         buttonSize: "small",
         onCopy: () => {},
         showGetCapLinks: false,
-        crs: "EPSG:3857"
+        crs: "EPSG:3857",
+        currentLocale: 'en-US'
     };
 
     state = {};
@@ -109,10 +112,14 @@ class RecordItem extends React.Component {
         return links;
     };
 
+    getTitle = (title) => {
+        return isObject(title) ? title[this.props.currentLocale] || title.default : title || '';
+    };
+
     renderThumb = (thumbURL, record) => {
         let thumbSrc = thumbURL || defaultThumb;
 
-        return (<Image src={thumbSrc} alt={record && record.title} style={{
+        return (<Image src={thumbSrc} alt={record && this.getTitle(record.title)} style={{
             "float": "left",
             width: "150px",
             maxHeight: "150px",
@@ -192,7 +199,7 @@ class RecordItem extends React.Component {
             <Panel className="record-item">
                 {this.renderThumb(record && record.thumbnail, record)}
                 <div>
-                    <h4>{record && record.title}</h4>
+                    <h4>{record && this.getTitle(record.title)}</h4>
                     <h4><small>{record && record.identifier}</small></h4>
                     <p className="record-item-description">{this.renderDescription(record)}</p>
                 </div>
@@ -215,6 +222,11 @@ class RecordItem extends React.Component {
         if (wms.SRS.length > 0 && !CoordinatesUtils.isAllowedSRS(this.props.crs, allowedSRS)) {
             this.props.onError('catalog.srs_not_allowed');
         } else {
+
+            const currentLocale = this.props.currentLocale ? head(this.props.currentLocale.split('-')) : null;
+            const availableStyles = this.props.record.capabilities && isArray(this.props.record.capabilities.Style) ? this.props.record.capabilities.Style : [];
+            const style = LayersUtils.getLocalizedStyle('', availableStyles, currentLocale || 'en');
+
             this.props.onLayerAdd({
                 type: "wms",
                 url: url,
@@ -233,7 +245,9 @@ class RecordItem extends React.Component {
                 },
                 links: this.getLinks(this.props.record),
                 params: params,
-                allowedSRS: allowedSRS
+                allowedSRS: allowedSRS,
+                style,
+                availableStyles
             });
             if (this.props.record.boundingBox && this.props.zoomToLayer) {
                 let extent = this.props.record.boundingBox.extent;
