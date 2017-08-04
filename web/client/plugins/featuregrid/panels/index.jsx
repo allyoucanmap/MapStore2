@@ -23,7 +23,6 @@ const Toolbar = connect(
         isDrawing: isDrawingSelector,
         isSimpleGeom: isSimpleGeomSelector,
         selectedCount: selectedFeaturesCount,
-        disableToolbar: state => state && state.featuregrid && state.featuregrid.disableToolbar,
         isDownloadOpen: state => state && state.controls && state.controls.wfsdownload && state.controls.wfsdownload.enabled,
         isColumnsOpen: state => state && state.featuregrid && state.featuregrid.tools && state.featuregrid.tools.settings,
         isEditingAllowed: (state) => isAdminUserSelector(state) || canEditSelector(state)
@@ -79,7 +78,7 @@ const dialogs = {
 };
 const panelDefaultProperties = {
     settings: {
-        style: { padding: '0 12px', overflow: "auto", flex: "0 0 14em", boxShadow: "inset 0px 0px 10px rgba(0, 0, 0, 0.4)"}
+        style: { padding: '0 12px', overflow: "auto", flex: "0 0 14em", boxShadow: "inset 0px 0px 10px rgba(0, 0, 0, 0.4)", height: "100%", minWidth: 195}
     }
 };
 

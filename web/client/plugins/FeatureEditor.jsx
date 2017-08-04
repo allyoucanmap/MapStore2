@@ -20,6 +20,7 @@ const BorderLayout = require('../components/layout/BorderLayout');
 const EMPTY_ARR = [];
 const EMPTY_OBJ = {};
 const {gridTools, gridEvents, pageEvents, toolbarEvents} = require('./featuregrid/index');
+const ContainerDimensions = require('react-container-dimensions').default;
 
 const FeatureDock = (props = {
     tools: EMPTY_OBJ,
@@ -40,27 +41,33 @@ const FeatureDock = (props = {
     // columns={[<aside style={{backgroundColor: "red", flex: "0 0 12em"}}>column-selector</aside>]}
     return (<Dock {...dockProps} >
         {props.open &&
-        <BorderLayout
-            key={"feature-grid-container"}
-            header={getHeader()}
-            columns={getPanels(props.tools)}
-            footer={getFooter(props)}>
-            {getDialogs(props.tools)}
-            <Grid
-                emptyRowsView={getEmptyRowsView()}
-                focusOnEdit={props.focusOnEdit}
-                newFeatures={props.newFeatures}
-                changes={props.changes}
-                mode={props.mode}
-                select={props.select}
-                key={"feature-grid-container"}
-                columnSettings={props.attributes}
-                gridEvents={props.gridEvents}
-                describeFeatureType={props.describe}
-                features={props.features}
-                minHeight={600}
-                tools={props.gridTools}
-         /></BorderLayout>}
+            <ContainerDimensions>
+            { ({ height }) =>
+                // added height to solve resize issue in firefox, edge and ie
+                <BorderLayout
+                    key={"feature-grid-container"}
+                    height={height - (62 + 32)}
+                    header={getHeader()}
+                    columns={getPanels(props.tools)}
+                    footer={getFooter(props)}>
+                    {getDialogs(props.tools)}
+                    <Grid
+                        emptyRowsView={getEmptyRowsView()}
+                        focusOnEdit={props.focusOnEdit}
+                        newFeatures={props.newFeatures}
+                        changes={props.changes}
+                        mode={props.mode}
+                        select={props.select}
+                        key={"feature-grid-container"}
+                        columnSettings={props.attributes}
+                        gridEvents={props.gridEvents}
+                        describeFeatureType={props.describe}
+                        features={props.features}
+                        tools={props.gridTools}/>
+                </BorderLayout>
+            }
+        </ContainerDimensions>
+        }
     </Dock>);
 };
 const selector = createSelector(
