@@ -256,19 +256,6 @@ const wfsQueryEpic = (action$, store) =>
             );
         });
 
-
-function validateExtent(extent, proj) {
-    const minxEpsg4326 = -180.0;
-    const maxxEpsg4326 = 180.0;
-    if (extent[0] <= CoordinatesUtils.reproject([minxEpsg4326, 0], "EPSG:4326", proj ).x) {
-        extent[0] = CoordinatesUtils.reproject([minxEpsg4326, 0], "EPSG:4326", proj ).x;
-    }
-    if (extent[2] >= CoordinatesUtils.reproject([maxxEpsg4326, 0], "EPSG:4326", proj ).x) {
-        extent[2] = CoordinatesUtils.reproject([maxxEpsg4326, 0], "EPSG:4326", proj ).x;
-    }
-    return extent;
-}
-
 const viewportSelectedEpic = (action$, store) =>
     action$.ofType(SELECT_VIEWPORT_SPATIAL_METHOD, CHANGE_MAP_VIEW)
         .switchMap((action) => {
@@ -276,26 +263,11 @@ const viewportSelectedEpic = (action$, store) =>
             const map = action.type === CHANGE_MAP_VIEW ? action : mapSelector(store.getState());
             if (action.type === SELECT_VIEWPORT_SPATIAL_METHOD ||
                 action.type === CHANGE_MAP_VIEW && spatialFieldMethodSelector(store.getState()) === "Viewport") {
-                let projection = map.projection;
+                const projection = isLeaflet(store.getState()) ? 'EPSG:4326' : map.projection;
                 const bounds = Object.keys(map.bbox.bounds).reduce((p, c) => {
                     return assign({}, p, {[c]: parseFloat(map.bbox.bounds[c])});
                 }, {});
-                let extent = [bounds.minx, bounds.miny, bounds.maxx, bounds.maxy];
-                if (isLeaflet(store.getState())) {
-                    projection = "EPSG:4326";
-                }
-                extent = validateExtent(extent, projection);
-                let start = [extent[0], extent[1]];
-                let end = [extent[2], extent[3]];
-                const center = [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2];
-                const coordinates = [[start, [start[0], end[1]], end, [end[0], start[1]], start]];
-                const geometry = {
-                    type: "Polygon",
-                    radius: 0,
-                    projection,
-                    extent, center, coordinates
-                };
-                return Rx.Observable.of(updateGeometrySpatialField(geometry));
+                return Rx.Observable.of(updateGeometrySpatialField(CoordinatesUtils.getViewportGeometry(bounds, projection)));
             }
             return Rx.Observable.empty();
         });

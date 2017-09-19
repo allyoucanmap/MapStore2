@@ -96,7 +96,6 @@ describe('FilterUtils', () => {
         let filter = FilterUtils.toOGCFilter("ft_name_test", filterObj);
         expect(filter).toExist();
     });
-
     it('Calculate CQL filter', () => {
         let filterObj = {
             filterFields: [{
@@ -184,7 +183,6 @@ describe('FilterUtils', () => {
         let filter = FilterUtils.toCQLFilter(filterObj);
         expect(filter).toExist();
     });
-
     it('Check for pagination wfs 1.1.0', () => {
         let filterObj = {
             pagination: {
@@ -218,7 +216,6 @@ describe('FilterUtils', () => {
         expect(filter.indexOf('maxFeatures="20"') !== -1).toBe(true);
         expect(filter.indexOf('startIndex="1"') !== -1).toBe(true);
     });
-
     it('Check for pagination wfs 2.0', () => {
         let filterObj = {
             pagination: {
@@ -252,7 +249,6 @@ describe('FilterUtils', () => {
         expect(filter.indexOf('count="20"') !== -1).toBe(true);
         expect(filter.indexOf('startIndex="1"') !== -1).toBe(true);
     });
-
     it('Check for no pagination', () => {
         let filterObj = {
             spatialField: {
@@ -282,6 +278,263 @@ describe('FilterUtils', () => {
         expect(filter.indexOf('count="20"') !== -1).toBe(false);
         expect(filter.indexOf('maxFeatures="20"') !== -1).toBe(false);
         expect(filter.indexOf('startIndex="1"') !== -1).toBe(false);
+    });
+    it('Check for empty string', () => {
+        let filterObj = {
+            filterFields: [{
+                attribute: "attributeEmpty",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "1",
+                type: "string",
+                value: ''
+            }]
+        };
+        let expected = '<wfs:GetFeature service="WFS" version="2.0" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:fes="http://www.opengis.net/fes/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"><wfs:Query typeNames="ft_name_test" srsName="EPSG:4326"><fes:Filter><fes:PropertyIsEqualTo><fes:ValueReference>attributeEmpty</fes:ValueReference><fes:Literal></fes:Literal></fes:PropertyIsEqualTo></fes:Filter></wfs:Query></wfs:GetFeature>';
+        let filter = FilterUtils.toOGCFilter("ft_name_test", filterObj);
+        expect(filter).toEqual(expected);
+    });
+    it('Test checkOperatorValidity', () => {
+        let filterObj = {
+            filterFields: [{
+                attribute: "attributeNull",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "1",
+                type: "string",
+                value: null
+            }, {
+                attribute: "attributeUndefined",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "2",
+                type: "string",
+                value: undefined
+            }, {
+                attribute: "attributeNull2",
+                groupId: 1,
+                exception: null,
+                operator: "isNull",
+                rowId: "3",
+                type: "string",
+                value: undefined
+            }, {
+                attribute: "attributeUndefined2",
+                groupId: 1,
+                exception: null,
+                operator: "isNull",
+                rowId: "4",
+                type: "string",
+                value: null // valid value for isnull operator
+            }]
+        };
+
+        filterObj.filterFields.forEach((f, i) => {
+            let valid = FilterUtils.checkOperatorValidity(f.value, f.operator);
+            if (i <= 2) {
+                expect(valid).toEqual(false);
+            } else {
+                expect(valid).toEqual(true);
+            }
+        });
+    });
+    it('Check for undefined or null values for string and number and list in ogc filter', () => {
+        let filterObj = {
+            filterFields: [{
+                attribute: "attributeNull",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "1",
+                type: "string",
+                value: null
+            }, {
+                attribute: "attributeUndefined",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "2",
+                type: "string",
+                value: undefined
+            }]
+        };
+        let filterObjNumbers = {
+            filterFields: [{
+                attribute: "attributeNumberNull",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "1",
+                type: "number",
+                value: null
+            }, {
+                attribute: "attributeNumberUndefined",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "2",
+                type: "number",
+                value: undefined
+            }]
+        };
+        let filterObjList = {
+            filterFields: [{
+                attribute: "attributeListNull",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "1",
+                type: "list",
+                value: null
+            }, {
+                attribute: "attributeListUndefined",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "2",
+                type: "list",
+                value: undefined
+            }]
+        };
+        let expected = '<wfs:GetFeature service="WFS" version="2.0" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:fes="http://www.opengis.net/fes/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"><wfs:Query typeNames="ft_name_test" srsName="EPSG:4326"></wfs:Query></wfs:GetFeature>';
+        let filter = FilterUtils.toOGCFilter("ft_name_test", filterObj);
+        let filterNumber = FilterUtils.toOGCFilter("ft_name_test", filterObjNumbers);
+        let filterList = FilterUtils.toOGCFilter("ft_name_test", filterObjList);
+        expect(filter).toEqual(expected);
+        expect(filterNumber).toEqual(expected);
+        expect(filterList).toEqual(expected);
+    });
+    it('Check for undefined or null values for string and number and list WITH GROUP in ogc filter', () => {
+        let filterObj = {
+            filterFields: [{
+                attribute: "attributeNull",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "1",
+                type: "string",
+                value: null
+            }, {
+                attribute: "attributeUndefined",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "2",
+                type: "string",
+                value: undefined
+            }],
+            groupFields: [{
+                id: 1,
+                index: 0,
+                logic: "OR"
+            }]
+        };
+        let filterObjNumbers = {
+            filterFields: [{
+                attribute: "attributeNumberNull",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "1",
+                type: "number",
+                value: null
+            }, {
+                attribute: "attributeNumberUndefined",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "2",
+                type: "number",
+                value: undefined
+            }],
+            groupFields: [{
+                id: 1,
+                index: 0,
+                logic: "AND"
+            }]
+        };
+        let filterObjList = {
+            filterFields: [{
+                attribute: "attributeListNull",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "1",
+                type: "list",
+                value: null
+            }, {
+                attribute: "attributeListUndefined",
+                groupId: 1,
+                exception: null,
+                operator: "=",
+                rowId: "2",
+                type: "list",
+                value: undefined
+            }],
+            groupFields: [{
+                id: 1,
+                index: 0,
+                logic: "AND NOT"
+            }]
+        };
+        let expected = '<wfs:GetFeature service="WFS" version="2.0" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:fes="http://www.opengis.net/fes/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"><wfs:Query typeNames="ft_name_test" srsName="EPSG:4326"></wfs:Query></wfs:GetFeature>';
+        let filter = FilterUtils.toOGCFilter("ft_name_test", filterObj);
+        let filterNumber = FilterUtils.toOGCFilter("ft_name_test", filterObjNumbers);
+        let filterList = FilterUtils.toOGCFilter("ft_name_test", filterObjList);
+        expect(filter).toEqual(expected);
+        expect(filterNumber).toEqual(expected);
+        expect(filterList).toEqual(expected);
+    });
+    it('Check for undefined or null values for isNull operator in ogc filter', () => {
+        let filterObj = {
+            filterFields: [{
+                attribute: "attributeNull",
+                groupId: 1,
+                exception: null,
+                operator: "isNull",
+                rowId: "1",
+                type: "string",
+                value: null
+            }, {
+                attribute: "attributeUndefined",
+                groupId: 1,
+                exception: null,
+                operator: "isNull",
+                rowId: "2",
+                type: "string",
+                value: undefined
+            }, {
+                attribute: "attributeValid",
+                groupId: 1,
+                exception: null,
+                operator: "isNull",
+                rowId: "3",
+                type: "string",
+                value: "isNull"
+            }]
+        };
+        let expected = '<wfs:GetFeature service="WFS" version="2.0" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:fes="http://www.opengis.net/fes/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"><wfs:Query typeNames="ft_name_test" srsName="EPSG:4326"><fes:Filter><fes:PropertyIsNull><fes:ValueReference>attributeNull</fes:ValueReference></fes:PropertyIsNull><fes:PropertyIsNull><fes:ValueReference>attributeValid</fes:ValueReference></fes:PropertyIsNull></fes:Filter></wfs:Query></wfs:GetFeature>';
+        let filter = FilterUtils.toOGCFilter("ft_name_test", filterObj);
+        expect(filter).toEqual(expected);
+    });
+    it('Check with no filterFields or empty array for filterFields', () => {
+        let filterObj = {
+            filterFields: []
+        };
+        let filterObjNoFields1 = {
+            filterFields: null
+        };
+        let filterObjNoFields2 = {};
+        let expected = '<wfs:GetFeature service="WFS" version="2.0" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:fes="http://www.opengis.net/fes/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"><wfs:Query typeNames="ft_name_test" srsName="EPSG:4326"></wfs:Query></wfs:GetFeature>';
+        let filter = FilterUtils.toOGCFilter("ft_name_test", filterObj);
+        let filterNoFields1 = FilterUtils.toOGCFilter("ft_name_test", filterObjNoFields1);
+        let filterNoFields2 = FilterUtils.toOGCFilter("ft_name_test", filterObjNoFields2);
+        expect(filter).toEqual(expected);
+        expect(filterNoFields1).toEqual(expected);
+        expect(filterNoFields2).toEqual(expected);
     });
     it('Check SimpleFilterField ogc', () => {
         let filterObj = {
@@ -484,5 +737,75 @@ describe('FilterUtils', () => {
 
         let filter = FilterUtils.processOGCCrossLayerFilter(crossLayerFilterObj);
         expect(filter).toEqual(expected);
+    });
+
+
+    it('Check if toOGCFilter generate double bbox', () => {
+        const filterObj = {
+            featureTypeName: 'feature',
+            filterFields: [],
+            filterType: 'OGC',
+            groupFields: [{id: 1, index: 0, logic: 'OR'}],
+            hits: false,
+            ogcVersion: '1.1.0',
+            pagination: {
+                maxFeatures: 20,
+                startIndex: 0
+            },
+            sortOptions: null,
+            spatialField: {
+                attribute: 'the_geom',
+                geometry: {
+                    center: [174.19921875, 24.04052578726085],
+                    coordinates: [
+                        [[[-180, -10.228437266155943], [-180, 58.309488840677645], [-125.33203125, 58.309488840677645], [-125.33203125, -10.228437266155943], [-180, -10.228437266155943]]],
+                        [[[113.73046875, -10.228437266155943], [113.73046875, 58.309488840677645], [180, 58.309488840677645], [180, -10.228437266155943], [113.73046875, -10.228437266155943]]]
+                    ],
+                    extent: [
+                        [-180, 23.200960808078566, -134.47265625, 54.39335222384589],
+                        [160.400390625, 23.200960808078566, 180, 54.39335222384589]
+                    ],
+                    projection: 'EPSG:4326',
+                    radius: 0,
+                    type: 'MultiPolygon'
+                },
+                method: 'Viewport',
+                operation: 'BBOX'
+            }
+        };
+
+        const expected = '<wfs:GetFeature ' +
+          'startIndex="0" ' +
+          'maxFeatures="20" ' +
+          'service="WFS" ' +
+          'version="1.1.0" ' +
+          'xmlns:gml="http://www.opengis.net/gml" ' +
+          'xmlns:wfs="http://www.opengis.net/wfs" ' +
+          'xmlns:ogc="http://www.opengis.net/ogc" ' +
+          'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+          'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
+          '<wfs:Query typeName="feature" srsName="EPSG:4326">' +
+            '<ogc:Filter>' +
+              '<ogc:Or>' +
+                '<ogc:BBOX>' +
+                  '<ogc:PropertyName>the_geom</ogc:PropertyName>' +
+                  '<gml:Envelope srsName="EPSG:4326">' +
+                    '<gml:lowerCorner>-180 23.200960808078566</gml:lowerCorner>' +
+                    '<gml:upperCorner>-134.47265625 54.39335222384589</gml:upperCorner>' +
+                  '</gml:Envelope>' +
+                '</ogc:BBOX>' +
+                '<ogc:BBOX>' +
+                  '<ogc:PropertyName>the_geom</ogc:PropertyName>' +
+                  '<gml:Envelope srsName="EPSG:4326">' +
+                    '<gml:lowerCorner>160.400390625 23.200960808078566</gml:lowerCorner>' +
+                    '<gml:upperCorner>180 54.39335222384589</gml:upperCorner>' +
+                  '</gml:Envelope>' +
+                '</ogc:BBOX>' +
+              '</ogc:Or>' +
+            '</ogc:Filter>' +
+          '</wfs:Query>' +
+        '</wfs:GetFeature>';
+
+        expect(FilterUtils.toOGCFilter(filterObj.featureTypeName, filterObj, filterObj.ogcVersion, filterObj.sortOptions, filterObj.hits)).toEqual(expected);
     });
 });
