@@ -644,7 +644,7 @@ const FilterUtils = {
             }
         } else {
             let val = (!isNil(value)) && (value.lowBound !== null && value.lowBound !== undefined) ? value.lowBound : value;
-            if (val ) {
+            if (!isNil(val)) {
                 fieldFilter = attribute + operator + "'" + val + "'";
             }
         }
