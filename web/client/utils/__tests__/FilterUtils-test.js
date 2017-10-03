@@ -807,4 +807,28 @@ describe('FilterUtils', () => {
 
         expect(FilterUtils.toOGCFilter(filterObj.featureTypeName, filterObj, filterObj.ogcVersion, filterObj.sortOptions, filterObj.hits)).toEqual(expected);
     });
+    it('Check if CQL filter returns 0 value', () => {
+        const filterObj = {
+            filterFields: [
+                {
+                    attribute: 'id',
+                    groupId: 1,
+                    operator: '=',
+                    rowId: 1507017811539,
+                    type: 'number',
+                    value: 0
+                }
+            ],
+            groupFields: [
+                {
+                    id: 1,
+                    index: 0,
+                    logic: 'AND'
+                }
+            ]
+        };
+
+        expect(FilterUtils.toCQLFilter(filterObj)).toBe("(id='0')");
+    });
+
 });
