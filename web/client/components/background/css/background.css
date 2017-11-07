@@ -1,6 +1,6 @@
 
 .background-plugin-position {
-    bottom: 0;
+    bottom: 45px;
     left: 0;
     position: absolute;
     z-index: 100;
@@ -8,6 +8,15 @@
     -moz-transition: all 0.3s;
     -o-transition: all 0.3s;
     transition: all 0.3s;
+}
+
+.background-plugin-position.ms2-drawer-open {
+    left: 300px;
+}
+
+.background-plugin-position.ms2-featuregrid-open {
+    top: 0;
+    bottom: auto;
 }
 
 .background-list-container {

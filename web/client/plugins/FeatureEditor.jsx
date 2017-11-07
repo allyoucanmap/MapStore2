@@ -7,6 +7,7 @@
  */
 const React = require('react');
 const {connect} = require('react-redux');
+const assign = require('object-assign');
 const {createSelector} = require('reselect');
 const {bindActionCreators} = require('redux');
 const {get} = require('lodash');
@@ -20,7 +21,7 @@ const BorderLayout = require('../components/layout/BorderLayout');
 const EMPTY_ARR = [];
 const EMPTY_OBJ = {};
 const {gridTools, gridEvents, pageEvents, toolbarEvents} = require('./featuregrid/index');
-const {initPlugin} = require('../actions/featuregrid');
+const {initPlugin, sizeChange} = require('../actions/featuregrid');
 const ContainerDimensions = require('react-container-dimensions').default;
 
 /**
@@ -107,7 +108,8 @@ const FeatureDock = (props = {
         zIndex: 1030
     };
     // columns={[<aside style={{backgroundColor: "red", flex: "0 0 12em"}}>column-selector</aside>]}
-    return (<Dock {...dockProps} >
+
+    return (<Dock {...dockProps} onSizeChange={size => { props.onSizeChange(size); }}>
         {props.open &&
         <ContainerDimensions>
         { ({ height }) =>
@@ -181,7 +183,7 @@ const selector = createSelector(
         changes: toChangesMap(changes)
     })
 );
-const EditorPlugin = connect(selector, (dispatch) => ({
+const EditorPlugin = connect(selector, assign({}, {onSizeChange: sizeChange}, (dispatch) => ({
     gridEvents: bindActionCreators(gridEvents, dispatch),
     pageEvents: bindActionCreators(pageEvents, dispatch),
     initPlugin: bindActionCreators((options) => initPlugin(options), dispatch),
@@ -190,7 +192,7 @@ const EditorPlugin = connect(selector, (dispatch) => ({
         ...t,
         events: bindActionCreators(t.events, dispatch)
     }))
-}))(FeatureDock);
+})))(FeatureDock);
 
 module.exports = {
      FeatureEditorPlugin: EditorPlugin,

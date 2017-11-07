@@ -112,7 +112,10 @@ class MetadataExplorerComponent extends React.Component {
             size: 0.30,
             fluid: true,
             position: "right",
-            zIndex: 1030
+            zIndex: 1030,
+            dockStyle: {
+                height: 'calc(100% - 30px)'
+            }
         }
     };
 

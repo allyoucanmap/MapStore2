@@ -24,9 +24,21 @@
 }
 
 #navigationBar .mapToolbar {
-    top: auto !important;
+    top: auto;
     bottom: 5px;
-    right: 0 !important;
+    right: 0;
+    transition: all 0.3s;
+}
+
+#navigationBar .mapToolbar.ms2-right-panel-open {
+    top: auto;
+    bottom: 5px;
+    right: 658px;
+}
+
+#navigationBar .mapToolbar.ms2-featuregrid-open {
+    top: 52px !important;
+    bottom: auto !important;
 }
 
 #navigationBar .toolbar-panel {

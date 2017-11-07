@@ -102,7 +102,8 @@ class Menu extends React.Component {
             <Sidebar styles={{
                 sidebar: {
                     zIndex: 1022,
-                    width: this.props.dynamicWidth || this.props.width
+                    width: this.props.dynamicWidth || this.props.width,
+                    height: 'calc(100% - 30px)'
                 },
                 overlay: {
                     zIndex: 1021

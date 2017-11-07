@@ -13,6 +13,8 @@ const {connect} = require('react-redux');
 require('./toolbar/assets/css/toolbar.css');
 
 const {CSSTransitionGroup} = require('react-transition-group');
+const {cssStatusSelector} = require('../selectors/controls');
+const {createSelector} = require('reselect');
 
 const assign = require('object-assign');
 
@@ -43,6 +45,7 @@ class Toolbar extends React.Component {
         buttonStyle: PropTypes.string,
         buttonSize: PropTypes.string,
         pressedButtonStyle: PropTypes.string,
+        cssStatus: PropTypes.string,
         btnConfig: PropTypes.object
     };
 
@@ -65,7 +68,8 @@ class Toolbar extends React.Component {
         panelClassName: "toolbar-panel",
         items: [],
         allVisible: true,
-        layout: "vertical",
+        layout: "horizontal",
+        cssStatus: "panel-open",
         stateSelector: "toolbar",
         buttonStyle: 'primary',
         buttonSize: null,
@@ -96,7 +100,7 @@ class Toolbar extends React.Component {
     };
 
     render() {
-        return (<ToolsContainer id={this.props.id} className={"mapToolbar btn-group-" + this.props.layout}
+        return (<ToolsContainer id={this.props.id} className={"mapToolbar btn-group-" + this.props.layout + this.props.cssStatus}
             toolCfg={this.props.btnConfig}
             container={AnimatedContainer}
             mapType={this.props.mapType}
@@ -114,11 +118,19 @@ class Toolbar extends React.Component {
     }
 }
 
+const toolbarSelector = stateSelector => createSelector([
+        state => state.controls && state.controls[stateSelector] && state.controls[stateSelector].active,
+        state => state.controls && state.controls[stateSelector] && state.controls[stateSelector].expanded,
+        cssStatusSelector
+    ], (active, allVisible, cssStatus) => ({
+        active,
+        allVisible,
+        stateSelector,
+        cssStatus,
+        layout: cssStatus.match('ms2-featuregrid-open') ? 'horizontal' : 'vertical'
+}));
+
 module.exports = {
-    ToolbarPlugin: (stateSelector = 'toolbar') => connect((state) => ({
-        active: state.controls && state.controls[stateSelector] && state.controls[stateSelector].active,
-        allVisible: state.controls && state.controls[stateSelector] && state.controls[stateSelector].expanded,
-        stateSelector
-    }))(Toolbar),
+    ToolbarPlugin: (stateSelector = 'toolbar') => connect(toolbarSelector(stateSelector))(Toolbar),
     reducers: {controls: require('../reducers/controls')}
 };
