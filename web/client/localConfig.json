@@ -210,7 +210,7 @@
                 "override": {
                   "Toolbar": {
                     "position": 11,
-                    "alwaysVisible": true
+                    "alwaysVisible": false
                   }
                 }
             },
@@ -218,7 +218,7 @@
                 "name": "Locate",
                 "override": {
                     "Toolbar": {
-                        "alwaysVisible": true
+                        "alwaysVisible": false
                     }
                 }
             }, "Home", "FeatureEditor",
@@ -299,7 +299,7 @@
               "name":"ZoomAll",
               "override": {
                 "Toolbar": {
-                  "alwaysVisible": true
+                  "alwaysVisible": false
                 }
               }
             }, {
@@ -330,7 +330,15 @@
                 "declineUrl" : "http://www.google.com"
                 }
             },
-            "OmniBar", "Login", "Save", "SaveAs", "BurgerMenu", "Expander", "Undo", "Redo", "FullScreen", "GlobeViewSwitcher", "SearchServicesConfig"
+            "OmniBar", "Login", "Save", "SaveAs", "BurgerMenu", "Expander", "Undo", "Redo",
+            {
+              "name": "FullScreen",
+              "override": {
+                "Toolbar": {
+                  "alwaysVisible": false
+                }
+              }
+            }, "GlobeViewSwitcher", "SearchServicesConfig"
         ],
         "embedded": [{
                 "name": "Map",
