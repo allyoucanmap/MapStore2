@@ -25,12 +25,13 @@ const ReactCSSTransitionGroup = require('react-addons-css-transition-group');
 module.exports = ({
     buttons = [],
     btnDefaultProps = {},
+    btnGroupProps = {},
     transitionProps = {
         transitionName: "toolbar-btn-transition",
         transitionEnterTimeout: 300,
         transitionLeaveTimeout: 300
     }} = {}) =>
-(<ButtonGroup>
+(<ButtonGroup {...btnGroupProps}>
   <ReactCSSTransitionGroup {...transitionProps}>
     {buttons.map(
         ({visible= true, ...props}, index) => visible
