@@ -73,7 +73,7 @@ const enhanceWizard = compose(lifecycle({
         }
     }})
 );
-module.exports = enhanceWizard(({onChange = () => {}, onFinish = () => {}, setPage= () => {}, setValid, data = {}, layer ={}, step=0, types, featureTypeProperties, dependencies}) =>
+module.exports = enhanceWizard(({onChange = () => {}, onFinish = () => {}, setPage= () => {}, setValid, data = {}, layer ={}, step=0, types, featureTypeProperties, dependencies, onClick = () => {}, isConnected, maps}) =>
     (<Wizard
         step={step}
         setPage={setPage}
@@ -91,6 +91,9 @@ module.exports = enhanceWizard(({onChange = () => {}, onFinish = () => {}, setPa
             types={types}
             data={data}
             onChange={onChange}
+            maps={maps}
+            onClick={onClick}
+            isConnected={isConnected}
             layer={data.layer || layer}
             sampleChart={renderPreview({data, layer: data.layer || layer, dependencies, setValid: v => setValid(v && isChartOptionsValid(data.options))})}
         />

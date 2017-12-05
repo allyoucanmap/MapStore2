@@ -19,7 +19,10 @@ module.exports = ({
         types,
         featureTypeProperties,
         dependencies,
-        editorData = {}}
+        editorData = {},
+        onClick = () => {},
+        maps = [],
+        isConnected}
     ) =>
         (<ChartWizard
             dependencies={dependencies}
@@ -32,4 +35,7 @@ module.exports = ({
             setValid={setValid}
             onFinish={onFinish}
             setPage={setPage}
-            onChange={onEditorChange}/>);
+            onChange={onEditorChange}
+            onClick={onClick}
+            maps={maps}
+            isConnected={isConnected}/>);

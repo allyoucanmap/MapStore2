@@ -47,7 +47,7 @@ const getColorRangeItems = (type) => {
     return COLORS;
 };
 
-module.exports = ({data = {options: {}}, onChange = () => {}, options=[], aggregationOptions = [], sampleChart}) => (<Row>
+module.exports = ({data = {options: {}}, onChange = () => {}, options=[], aggregationOptions = [], sampleChart, isConnected, maps = []}) => (<Row>
         <StepHeader title={<Message msgId={`widgets.chartOptionsTitle`} />} />
           <Col xs={12}>
               <div style={{marginBottom: "30px"}}>
@@ -114,20 +114,7 @@ module.exports = ({data = {options: {}}, onChange = () => {}, options=[], aggreg
                   onChange={v => {onChange("autoColorOptions", {...v.options, name: v.name}); }}/>
           </Col>
         </FormGroup>
-        <FormGroup controlId="mapSync" className="mapstore-block-width">
-            <Col componentClass={ControlLabel} sm={6}>
-              <Message msgId={`widgets.mapSync`} />
-            </Col>
-          <Col sm={6}>
-              <SwitchButton
-                  checked={data.mapSync}
-                  onChange={(val) => {
-                      onChange("mapSync", val);
-                  }}
-                  />
-          </Col>
-        </FormGroup>
-        <FormGroup controlId="displayLegend">
+        <FormGroup controlId="displayLegend" className="mapstore-block-width">
             <Col componentClass={ControlLabel} sm={6}>
               <Message msgId={`widgets.displayLegend.${data.type}`} />
             </Col>
@@ -140,8 +127,20 @@ module.exports = ({data = {options: {}}, onChange = () => {}, options=[], aggreg
                   />
           </Col>
         </FormGroup>
+
+        {((isConnected && maps.length > 0) || maps.length === 1) && <FormGroup controlId="mapSync" className="mapstore-block-width">
+            <Col componentClass={ControlLabel} sm={6}>
+              <Message msgId={`widgets.mapSync`} />
+            </Col>
+          <Col sm={6}>
+              <SwitchButton
+                  checked={data.mapSync}
+                  onChange={(val) => {
+                      onChange("mapSync", val);
+                  }}
+                  />
+          </Col>
+        </FormGroup>}
       </Form>
-
-
   </Col>
 </Row>);
