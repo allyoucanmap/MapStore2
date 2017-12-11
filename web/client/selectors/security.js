@@ -36,5 +36,6 @@ module.exports = {
     rulesSelector,
     userSelector,
     userRoleSelector,
-    isAdminUserSelector: (state) => userRoleSelector(state) === "ADMIN"
+    isAdminUserSelector: (state) => userRoleSelector(state) === "ADMIN",
+    securityTokenSelector: state => state.security && state.security.token
 };
