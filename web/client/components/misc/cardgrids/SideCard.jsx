@@ -8,9 +8,13 @@
 
 
 const React = require('react');
+const {Glyphicon} = require('react-bootstrap');
 
-module.exports = ({onClick=() => {}, title, preview, description, caption, tools, selected, className, ...more} = {}) =>
+module.exports = ({onClick=() => {}, title, preview, description, caption, tools, selected, className, draggable, ...more} = {}) =>
 <div className={`mapstore-side-card${selected ? ' selected' : ''} ` + className} onClick={(event) => onClick({event, title, preview, description, caption, tools, ...more})}>
+  {draggable && <div className="mapstore-side-grab">
+      <Glyphicon glyph="menu-hamburger"/>
+  </div>}
   <div className="mapstore-side-preview">
       {preview}
   </div>

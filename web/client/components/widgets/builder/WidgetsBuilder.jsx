@@ -22,7 +22,8 @@ module.exports = ({
         editorData = {},
         onClick = () => {},
         maps = [],
-        isConnected}
+        isConnected,
+        targetLayer}
     ) =>
         (<ChartWizard
             dependencies={dependencies}
@@ -37,5 +38,6 @@ module.exports = ({
             setPage={setPage}
             onChange={onEditorChange}
             onClick={onClick}
+            targetLayer={targetLayer}
             maps={maps}
             isConnected={isConnected}/>);

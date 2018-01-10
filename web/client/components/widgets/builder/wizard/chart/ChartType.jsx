@@ -52,8 +52,9 @@ module.exports = ({onSelect = () => {}, onNextPage = () => {}, types = [], type}
                         type={item.type}
                         autoColorOptions={item.type === type ? {
                             base: 0,
-                            s: 0,
-                            v: 0
+                            range: 0,
+                            s: -1.0,
+                            v: 1.0
                         } : undefined}
                      />)
             }))} />

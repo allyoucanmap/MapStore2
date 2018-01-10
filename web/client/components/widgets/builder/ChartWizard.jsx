@@ -73,7 +73,7 @@ const enhanceWizard = compose(lifecycle({
         }
     }})
 );
-module.exports = enhanceWizard(({onChange = () => {}, onFinish = () => {}, setPage= () => {}, setValid, data = {}, layer ={}, step=0, types, featureTypeProperties, dependencies, onClick = () => {}, isConnected, maps}) =>
+module.exports = enhanceWizard(({onChange = () => {}, targetLayer, onFinish = () => {}, setPage= () => {}, setValid, data = {}, layer ={}, step=0, types, featureTypeProperties, dependencies, onClick = () => {}, isConnected, maps}) =>
     (<Wizard
         step={step}
         setPage={setPage}
@@ -90,6 +90,7 @@ module.exports = enhanceWizard(({onChange = () => {}, onFinish = () => {}, setPa
             featureTypeProperties={featureTypeProperties}
             types={types}
             data={data}
+            targetLayer={targetLayer}
             onChange={onChange}
             maps={maps}
             onClick={onClick}

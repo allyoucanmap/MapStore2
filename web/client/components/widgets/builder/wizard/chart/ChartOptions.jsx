@@ -47,7 +47,7 @@ const getColorRangeItems = (type) => {
     return COLORS;
 };
 
-module.exports = ({data = {options: {}}, onChange = () => {}, options=[], aggregationOptions = [], sampleChart, isConnected, maps = []}) => (<Row>
+module.exports = ({data = {options: {}}, targetLayer, onChange = () => {}, options=[], aggregationOptions = [], sampleChart, isConnected, maps = []}) => (<Row>
         <StepHeader title={<Message msgId={`widgets.chartOptionsTitle`} />} />
           <Col xs={12}>
               <div style={{marginBottom: "30px"}}>
@@ -56,6 +56,23 @@ module.exports = ({data = {options: {}}, onChange = () => {}, options=[], aggreg
               </Col>
           <Col xs={12}>
           <Form className="chart-options-form" horizontal>
+
+          {targetLayer && <FormGroup controlId="groupByAttributes" className="mapstore-block-width">
+            <Col componentClass={ControlLabel} sm={6}>
+              Target Layer
+            </Col>
+            <Col sm={6}>
+                <Select
+                    value={''}
+                    options={[{label: 'Electric Usage'}, {label: 'Population'}]}
+                    placeholder={'Select Layer'}
+                    onChange={(val) => {
+                        onChange("options.groupByAttributes", val && val.value);
+                    }}
+                    />
+            </Col>
+          </FormGroup>}
+
         <FormGroup controlId="groupByAttributes" className="mapstore-block-width">
           <Col componentClass={ControlLabel} sm={6}>
             <Message msgId={`widgets.groupByAttributes.${data.type}`} />
