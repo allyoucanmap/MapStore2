@@ -168,7 +168,7 @@ class Toolbar extends React.Component {
 
     render() {
         const status = this.getStatus();
-        const settingModal = status === 'GROUP' || status === 'LAYER' ? this.getSettingsModal(status) : null;
+        const settingModal = /*status === 'GROUP' || status === 'LAYER' ? this.getSettingsModal(status) :*/ null;
         const layerMetadataModal = (<LayerMetadataModal
                                 key="toollayermetadatamodal"
                                 layerMetadata={this.props.layerMetadata}
