@@ -1,5 +1,4 @@
-const PropTypes = require('prop-types');
-/**
+/*
  * Copyright 2016, GeoSolutions Sas.
  * All rights reserved.
  *
@@ -8,6 +7,7 @@ const PropTypes = require('prop-types');
  */
 
 const React = require('react');
+const PropTypes = require('prop-types');
 const {Panel, Glyphicon, Modal} = require('react-bootstrap');
 const {findIndex} = require('lodash');
 
@@ -18,9 +18,14 @@ const Draggable = require('react-draggable');
 const MapInfoUtils = require('../../../utils/MapInfoUtils');
 const Spinner = require('../../misc/spinners/BasicSpinner/BasicSpinner');
 const Message = require('../../I18N/Message');
-const DefaultViewer = require('./DefaultViewer');
 const GeocodeViewer = require('./GeocodeViewer');
 const Dialog = require('../../misc/Dialog');
+
+const DockIdentifyComponent = require('./DockIdentify');
+const {switchControlledDefaultViewer, defaultViewerHanlders, defaultViewerDefaultProps} = require('./enhancers');
+const DefaultViewerComponent = defaultViewerDefaultProps(defaultViewerHanlders(require('./DefaultViewer')));
+const DefaultViewer = switchControlledDefaultViewer(DefaultViewerComponent);
+const DockIdentify = defaultViewerDefaultProps(switchControlledDefaultViewer(defaultViewerHanlders(DockIdentifyComponent)));
 
 class Identify extends React.Component {
     static propTypes = {
@@ -66,7 +71,8 @@ class Identify extends React.Component {
         allowMultiselection: PropTypes.bool,
         warning: PropTypes.string,
         currentLocale: PropTypes.string,
-        fullscreen: PropTypes.bool
+        fullscreen: PropTypes.bool,
+        isDockPanel: PropTypes.bool
     };
 
     static defaultProps = {
@@ -120,7 +126,8 @@ class Identify extends React.Component {
         className: "square-button",
         allowMultiselection: false,
         currentLocale: 'en-US',
-        fullscreen: false
+        fullscreen: false,
+        isDockPanel: false
     };
 
     state = {
@@ -247,6 +254,44 @@ class Identify extends React.Component {
     };
 
     render() {
+        if (this.props.isDockPanel) {
+            return (
+                <DockIdentify
+                    isDockPanel={false}
+                    responses={this.props.responses}
+                    latlng={this.props.point.latlng}
+                    tabs={[
+                        {
+                            title: 'Results',
+                            tooltip: 'Results',
+                            glyph: 'list',
+                            visible: true,
+                            el: this.props.viewer
+                        },
+                        {
+                            title: 'Charts',
+                            tooltip: 'Charts',
+                            glyph: 'list',
+                            visible: true,
+                            el: this.props.viewer
+                        }
+                    ]}
+                    format={this.props.format}
+                    responses={this.props.responses}
+                    viewerOptions={{...this.props.viewerOptions}}
+                    missingResponses={this.props.requests.length - this.props.responses.length}
+                    enableRevGeocode={this.props.enableRevGeocode}
+                    enabled={this.props.enabled}
+                    requests={this.props.requests}
+                    activeTab={'Results'}
+                    onClose={this.onModalHiding}
+                    showRevGeocode={this.props.showRevGeocode}
+                    showModalReverse={this.props.showModalReverse}
+                    hideRevGeocode={this.props.hideRevGeocode}
+                    revGeocodeDisplayName={this.props.reverseGeocodeData.error ? <Message msgId="identifyRevGeocodeError"/> : this.props.reverseGeocodeData.display_name}
+                    onChange={() => {}}/>
+            );
+        }
         if (this.props.enabled && this.props.requests.length !== 0) {
             return this.props.draggable && this.props.asPanel ?
                     <Draggable>

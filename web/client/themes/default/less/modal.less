@@ -201,3 +201,43 @@
     left: 0;
     z-index: 3000;
 }
+
+.ms-resizable-modal-fade-enter {
+    opacity: 0.01;
+    .modal.fade.in {
+        .modal-dialog {
+            transform: translateY(-25%);
+        }
+    }
+}
+
+.ms-resizable-modal-fade-enter.ms-resizable-modal-fade-enter-active {
+    opacity: 1;
+    transition: 0.3s ease-in;
+    .modal.fade.in {
+        .modal-dialog {
+            transition: 0.3s ease-in;
+            transform: translateY(0);
+        }
+    }
+}
+
+.ms-resizable-modal-fade-leave {
+    opacity: 1;
+    .modal.fade.in {
+        .modal-dialog {
+            transform: translateY(0);
+        }
+    }
+}
+
+.ms-resizable-modal-fade-leave.ms-resizable-modal-fade-leave-active {
+    opacity: 0.01;
+    transition: 0.3s ease-in;
+    .modal.fade.in {
+        .modal-dialog {
+            transition: 0.3s ease-in;
+            transform: translateY(-25%);
+        }
+    }
+}

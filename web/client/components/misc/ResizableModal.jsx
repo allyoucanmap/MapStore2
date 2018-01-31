@@ -11,6 +11,7 @@ const React = require('react');
 const {Glyphicon} = require('react-bootstrap');
 const Dialog = require('./Dialog');
 const Toolbar = require('./toolbar/Toolbar');
+const ReactCSSTransitionGroup = require('react-addons-css-transition-group');
 
 const sizes = {
     sm: ' ms-sm',
@@ -62,7 +63,8 @@ class ResizableModal extends React.Component {
         title: PropTypes.node,
         buttons: PropTypes.array,
         size: PropTypes.string,
-        bodyClassName: PropTypes.string
+        bodyClassName: PropTypes.string,
+        fade: PropTypes.bool
     };
 
     static defaultProps = {
@@ -74,7 +76,8 @@ class ResizableModal extends React.Component {
         fullscreenType: 'full',
         buttons: [],
         size: '',
-        bodyClassName: ''
+        bodyClassName: '',
+        fade: false
     };
 
     state = {
@@ -85,11 +88,11 @@ class ResizableModal extends React.Component {
         // TODO VERIFY that the dialog id can be customizable or a fixed value
         const sizeClassName = sizes[this.props.size] || '';
         const fullscreenClassName = this.props.fullscreen && this.state.fullscreen === 'expanded' && fullscreen.className[this.props.fullscreenType] || '';
-        return (
-            <span className={this.props.show ? "modal-fixed" : ""}>
+        const dialog = this.props.show ? (
+            <div className={this.props.show ? "modal-fixed" : ""}>
                 <Dialog
                     id="ms-resizable-modal"
-                    style={{display: this.props.show ? 'flex' : 'none'}}
+                    style={{display: 'flex'}}
                     onClickOut={this.props.clickOutEnabled ? this.props.onClose : () => {}}
                     containerClassName="ms-resizable-modal"
                     draggable={false}
@@ -123,8 +126,17 @@ class ResizableModal extends React.Component {
                         <Toolbar buttons={this.props.buttons}/>
                     </div>
                 </Dialog>
-            </span>
-        );
+            </div>
+        ) : null;
+
+        return this.props.fade ? (
+            <ReactCSSTransitionGroup
+                transitionName="ms-resizable-modal-fade"
+                transitionEnterTimeout={300}
+                transitionLeaveTimeout={300}>
+                {dialog}
+            </ReactCSSTransitionGroup>
+        ) : dialog;
     }
 }
 

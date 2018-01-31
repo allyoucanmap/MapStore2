@@ -16,7 +16,7 @@ const MapInfoUtils = {
      * specifies which info formats are currently supported
      */
     //           default format ↴
-    AVAILABLE_FORMAT: ['TEXT', 'PROPERTIES', 'HTML'],
+    AVAILABLE_FORMAT: ['TEXT', 'PROPERTIES', 'HTML', 'CUSTOM'],
 
     VIEWERS: {},
     /**
@@ -75,6 +75,9 @@ const MapInfoUtils = {
         }
         return {};
     },
+    getLayerFeatureInfo(layer) {
+        return layer.featureInfo && {...layer.featureInfo} || {};
+    },
     clickedPointToGeoJson(clickedPoint) {
         if (!clickedPoint) {
             return [];
@@ -116,7 +119,8 @@ const MapInfoUtils = {
         if (MapInfoUtils.services[layer.type]) {
             let infoFormat = MapInfoUtils.getDefaultInfoFormatValueFromLayer(layer, props);
             let viewer = MapInfoUtils.getLayerFeatureInfoViewer(layer);
-            return MapInfoUtils.services[layer.type].buildRequest(layer, props, infoFormat, viewer);
+            const featureInfo = MapInfoUtils.getLayerFeatureInfo(layer);
+            return MapInfoUtils.services[layer.type].buildRequest(layer, props, infoFormat, viewer, featureInfo);
         }
         return {};
     },

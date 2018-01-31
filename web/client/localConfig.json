@@ -10,7 +10,7 @@
     "initialMapFilter": "",
     "ignoreMobileCss": false,
     "useAuthenticationRules": true,
-    "loadAfterTheme": false,
+    "loadAfterTheme": true,
     "defaultMapOptions": {
       "cesium": {
           "flyTo": true,
@@ -140,7 +140,7 @@
                     "activateMapTitle": false,
                     "activateSortLayer": false
                 }
-            }, {
+            }, "TOCSettings", {
                 "name": "Tutorial",
                 "cfg": {
                     "preset": "default_mobile_tutorial"
@@ -211,9 +211,10 @@
             {
                 "name": "Identify",
                 "cfg": {
-                    "panelClassName": "mapstore-right-panel modal-content",
+                    
                     "draggable": false,
                     "collapsible": true,
+                    "isDockPanel": true,
                     "viewerOptions": {
                         "container": "{context.ReactSwipe}",
                         "header": "{context.SwipeHeader}",
@@ -275,7 +276,9 @@
                         {"id": "Polygon", "name": "queryform.spatialfilter.methods.poly"}
                     ]
                 }
-            }, "Tutorial", "MapFooter", {
+            },
+            "TOCSettings",
+            "Tutorial", "MapFooter", {
                 "name": "Measure"
             }, "Print", "ShapeFile", {
                 "name": "Settings",

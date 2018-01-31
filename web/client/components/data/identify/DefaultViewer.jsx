@@ -1,5 +1,4 @@
-const PropTypes = require('prop-types');
-/**
+/*
  * Copyright 2016, GeoSolutions Sas.
  * All rights reserved.
  *
@@ -8,6 +7,7 @@ const PropTypes = require('prop-types');
  */
 
 const React = require('react');
+const PropTypes = require('prop-types');
 const MapInfoUtils = require('../../../utils/MapInfoUtils');
 const FeatureInfoUtils = require('../../../utils/FeatureInfoUtils');
 const HTML = require('../../../components/I18N/HTML');
@@ -31,7 +31,12 @@ class DefaultViewer extends React.Component {
         validator: PropTypes.func,
         viewers: PropTypes.object,
         style: PropTypes.object,
-        containerProps: PropTypes.object
+        containerProps: PropTypes.object,
+        index: PropTypes.number,
+        onNext: PropTypes.func,
+        onPrevious: PropTypes.func,
+        onUpdateIndex: PropTypes.func,
+        setIndex: PropTypes.func
     };
 
     static defaultProps = {
@@ -48,7 +53,12 @@ class DefaultViewer extends React.Component {
             position: "relative",
             marginBottom: 0
         },
-        containerProps: {}
+        containerProps: {},
+        index: 0,
+        onNext: () => {},
+        onPrevious: () => {},
+        onUpdateIndex: () => {},
+        setIndex: () => {}
     };
 
     state = {
@@ -58,12 +68,13 @@ class DefaultViewer extends React.Component {
     componentWillReceiveProps(nextProps) {
         // reset current page on new requests set
         if (nextProps.requests !== this.props.requests) {
-            this.setState({index: 0});
+            // this.setState({index: 0});
+            // this.props.setIndex(0);
         }
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return nextProps.responses !== this.props.responses || nextProps.missingResponses !== this.props.missingResponses || nextState.index !== this.state.index;
+    shouldComponentUpdate(nextProps) {
+        return nextProps.responses !== this.props.responses || nextProps.missingResponses !== this.props.missingResponses || nextProps.index !== this.props.index;
     }
 
     renderEmptyLayers = (validator) => {
@@ -119,13 +130,13 @@ class DefaultViewer extends React.Component {
                     eventKey={i}
                     key={i}
                     collapsible={this.props.collapsible}
-                    header={<span><PageHeader
+                    header={PageHeader ? <span><PageHeader
                         size={responses.length}
                         {...this.props.headerOptions}
                         {...layerMetadata}
-                        index={this.state.index}
-                        onNext={() => this.next()}
-                        onPrevious={() => this.previous()}/></span>
+                        index={this.props.index}
+                        onNext={() => this.props.onNext()}
+                        onPrevious={() => this.props.onPrevious()}/></span> : null
                     }
                     style={this.props.style}>
                     <ViewerPage response={response} format={infoFormat || format && FeatureInfoUtils.INFO_FORMATS[format] || this.props.format} viewers={customViewer || this.props.viewers} layer={layerMetadata}/>
@@ -147,9 +158,9 @@ class DefaultViewer extends React.Component {
         const validResponses = validator.getValidResponses(this.props.responses);
         return (<div className="mapstore-identify-viewer">
                 <Container {...this.props.containerProps}
-                    onChangeIndex={(index) => {this.setState({index}); }}
+                    onChangeIndex={(index) => { this.props.setIndex(index); }}
                     ref="container"
-                    index={this.state.index || 0}
+                    index={this.props.index || 0}
                     key={"swiper"}
                     className="swipeable-view"
                     >
@@ -159,14 +170,6 @@ class DefaultViewer extends React.Component {
             </div>)
         ;
     }
-
-    next = () => {
-        this.setState({index: Math.min(this.props.validator(this.props.format).getValidResponses(this.props.responses).length - 1, this.state.index + 1)});
-    };
-
-    previous = () => {
-        this.setState({index: Math.max(0, this.state.index - 1) });
-    };
 }
 
 module.exports = DefaultViewer;
