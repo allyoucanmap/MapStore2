@@ -87,7 +87,7 @@ class Dialog extends React.Component {
                 {this.renderRole('footer')}
             </div> : <span/>}
         </div>);
-        const dialog = this.props.draggable ? (<Draggable start={this.props.start} handle=".draggable-header, .draggable-header *">
+        const dialog = this.props.draggable ? (<Draggable defaultPosition={this.props.start} handle=".draggable-header, .draggable-header *">
             {body}
         </Draggable>) : body;
         let containerStyle = assign({}, this.props.style, this.props.backgroundStyle);

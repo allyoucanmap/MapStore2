@@ -1,5 +1,4 @@
-const PropTypes = require('prop-types');
-/**
+/*
  * Copyright 2016, GeoSolutions Sas.
  * All rights reserved.
  *
@@ -7,20 +6,129 @@ const PropTypes = require('prop-types');
  * LICENSE file in the root directory of this source tree.
  */
 
+const Rx = require('rxjs');
 const React = require('react');
-const {Panel, Glyphicon, Modal} = require('react-bootstrap');
-const {findIndex} = require('lodash');
-
-require('./css/identify.css');
-
-const Draggable = require('react-draggable');
-
+const axios = require('axios');
+const PropTypes = require('prop-types');
+const {compose, mapPropsStream} = require('recompose');
+const {findIndex, isArray, head} = require('lodash');
 const MapInfoUtils = require('../../../utils/MapInfoUtils');
-const Spinner = require('../../misc/spinners/BasicSpinner/BasicSpinner');
 const Message = require('../../I18N/Message');
-const DefaultViewer = require('./DefaultViewer');
-const GeocodeViewer = require('./GeocodeViewer');
-const Dialog = require('../../misc/Dialog');
+const loadingState = require('../../misc/enhancers/loadingState');
+const emptyState = require('../../misc/enhancers/emptyState');
+const {switchControlledDefaultViewer, defaultViewerHanlders, defaultViewerDefaultProps, changeTab} = require('./enhancers');
+
+// const DefaultViewerComponent = (defaultViewerHanlders(require('./DefaultViewer')));
+// const {Panel, Glyphicon, Modal} = require('react-bootstrap');
+// require('./css/identify.css');
+// const Spinner = require('../../misc/spinners/BasicSpinner/BasicSpinner');
+// const GeocodeViewer = require('./GeocodeViewer');
+// const Dialog = require('../../misc/Dialog');
+
+const filterRequestParams = (layer, includeOptions, excludeParams) => {
+    let includeOpt = includeOptions || [];
+    let excludeList = excludeParams || [];
+    let options = Object.keys(layer).reduce((op, next) => {
+        if (next !== "params" && includeOpt.indexOf(next) !== -1) {
+            op[next] = layer[next];
+        } else if (next === "params" && excludeList.length > 0) {
+            let params = layer[next];
+            Object.keys(params).forEach((n) => {
+                if (findIndex(excludeList, (el) => {return el === n; }) === -1) {
+                    op[n] = params[n];
+                }
+            }, {});
+        }
+        return op;
+    }, {});
+    return options;
+};
+
+const getFeatureInfoRequest = (basePath, requestParams, options = {}) => {
+    const params = {...options, ...requestParams};
+    return axios.get(basePath, {params});
+};
+
+const createFeatureInfoJSONRequest = (layerId, identifyProps) => {
+    const layer = identifyProps.layers && head(identifyProps.layers
+        .filter(l => l.id === layerId)
+        .filter(identifyProps.queryableLayersFilter)
+        .filter(identifyProps.layer ? l => l.id === identifyProps.layer : () => true)) || null;
+    if (!layer) {
+        return Rx.Observable.empty();
+    }
+
+    const {url, request} = identifyProps.buildRequest(layer, identifyProps);
+    const options = filterRequestParams(layer, identifyProps.includeOptions, identifyProps.excludeParams);
+    return getFeatureInfoRequest(url, {...request, info_format: 'application/json'}, options);
+};
+
+const DefaultViewer = compose(
+    defaultViewerDefaultProps,
+    defaultViewerHanlders,
+    loadingState(({responses}) => responses.length === 0),
+    switchControlledDefaultViewer
+)(require('./DefaultViewer'));
+
+const IdentifyContainer = compose(
+    changeTab,
+    defaultViewerDefaultProps,
+    switchControlledDefaultViewer,
+    defaultViewerHanlders
+)(require('./IdentifyContainer'));
+
+const ChartViewer = compose(
+    //
+    mapPropsStream(props$ => props$
+        .distinctUntilKeyChanged('data')
+        .filter(({data} = {}) => data)
+        .switchMap(({data, identifyProps} = {}) => {
+            const layerId = data && data.queryParams && data.queryParams.id;
+            return (data.response && data.response.features && isArray(data.response.features)
+                        ? Rx.Observable.of(data.response.features)
+                        : Rx.Observable.defer(() => createFeatureInfoJSONRequest(layerId, identifyProps))
+                             .map(response => response.data && response.data.features)
+                ).map((features) =>({features, loading: false}))
+                .catch(error => Rx.Observable.of({error, loading: false}))
+                .startWith({
+                    loading: true
+                });
+        })
+        .combineLatest(props$,
+            (featuresStream, props) => ({
+                ...props,
+                ...featuresStream
+            })
+        )
+    ),
+    loadingState(({loading}) => loading),
+    emptyState(({error}) => error, {glyph: 'exclamation-sign', description: 'error'})
+)(require('./ChartViewer'));
+
+const getDefaultButtons = props => [
+    {
+        glyph: 'arrow-left',
+        visible: !props.viewerOptions.header && props.validResponses.length > 1 && props.index > 0,
+        onClick: () => {
+            props.onPrevious();
+        }
+    },
+    {
+        glyph: 'info-sign',
+        tooltip: 'OK',
+        visible: props.latlng && props.enableRevGeocode && props.lngCorrected,
+        onClick: () => {
+            props.showRevGeocode({lat: props.latlng.lat, lng: props.lngCorrected});
+        }
+    },
+    {
+        glyph: 'arrow-right',
+        visible: !props.viewerOptions.header && props.validResponses.length > 1 && props.index < props.validResponses.length - 1,
+        onClick: () => {
+            props.onNext();
+        }
+    }
+];
 
 class Identify extends React.Component {
     static propTypes = {
@@ -66,7 +174,16 @@ class Identify extends React.Component {
         allowMultiselection: PropTypes.bool,
         warning: PropTypes.string,
         currentLocale: PropTypes.string,
-        fullscreen: PropTypes.bool
+        fullscreen: PropTypes.bool,
+        showTabs: PropTypes.bool,
+        showLayerTitle: PropTypes.bool,
+        position: PropTypes.string,
+        size: PropTypes.number,
+        fluid: PropTypes.bool,
+        showCoords: PropTypes.bool,
+        charts: PropTypes.array,
+        chartsViewer: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
+        getButtons: PropTypes.func
     };
 
     static defaultProps = {
@@ -114,23 +231,33 @@ class Identify extends React.Component {
         panelClassName: "modal-dialog info-panel modal-content",
         headerClassName: "modal-header",
         bodyClassName: "modal-body info-wrap",
-        asPanel: false,
+        asPanel: true,
         headerGlyph: "",
         closeGlyph: "1-close",
         className: "square-button",
         allowMultiselection: false,
         currentLocale: 'en-US',
-        fullscreen: false
+        fullscreen: false,
+        showTabs: true,
+        showCoords: true,
+        showLayerTitle: true,
+        position: 'right',
+        size: 660,
+        charts: [],
+        chartsViewer: ChartViewer,
+        getButtons: getDefaultButtons
     };
-
+    /*
     state = {
         fullClass: ''
     };
+    */
     componentDidMount() {
         if (this.props.enabled) {
             this.props.changeMousePointer('pointer');
         }
     }
+
     componentWillReceiveProps(newProps) {
         if (this.needsRefresh(newProps)) {
             if (!newProps.point.modifiers || newProps.point.modifiers.ctrl !== true || !newProps.allowMultiselection) {
@@ -142,7 +269,7 @@ class Identify extends React.Component {
             queryableLayers.forEach((layer) => {
                 const {url, request, metadata} = this.props.buildRequest(layer, newProps);
                 if (url) {
-                    this.props.sendRequest(url, request, metadata, this.filterRequestParams(layer));
+                    this.props.sendRequest(url, request, metadata, filterRequestParams(layer, this.props.includeOptions, this.props.excludeParams));
                 } else {
                     this.props.localRequest(layer, request, metadata);
                 }
@@ -174,6 +301,7 @@ class Identify extends React.Component {
         this.props.purgeResults();
     };
 
+/*
     renderHeader = (missing) => {
         return (
             <div role="header">
@@ -244,9 +372,49 @@ class Identify extends React.Component {
                 </div>
             </Dialog>
         ;
-    };
+    };*/
 
     render() {
+        /*if (this.props.isDockPanel) {
+            return (
+                <DockIdentify
+                    isDockPanel={false}
+                    responses={this.props.responses}
+                    latlng={this.props.point.latlng}
+                    asPanel
+                    tabs={[
+                        {
+                            id: 'results',
+                            title: 'Results',
+                            tooltip: 'Results',
+                            glyph: 'list',
+                            visible: true,
+                            el: this.props.viewer
+                        },
+                        {
+                            id: 'chart',
+                            title: 'Charts',
+                            tooltip: 'Charts',
+                            glyph: 'stats',
+                            visible: true,
+                            el: this.props.viewer
+                        }
+                    ]}
+                    format={this.props.format}
+                    responses={this.props.responses}
+                    viewerOptions={{...this.props.viewerOptions}}
+                    missingResponses={this.props.requests.length - this.props.responses.length}
+                    enableRevGeocode={this.props.enableRevGeocode}
+                    enabled={this.props.enabled}
+                    requests={this.props.requests}
+                    activeTab={'Results'}
+                    onClose={this.onModalHiding}
+                    showRevGeocode={this.props.showRevGeocode}
+                    showModalReverse={this.props.showModalReverse}
+                    hideRevGeocode={this.props.hideRevGeocode}
+                    revGeocodeDisplayName={this.props.reverseGeocodeData.error ? <Message msgId="identifyRevGeocodeError"/> : this.props.reverseGeocodeData.display_name}/>
+            );
+        }
         if (this.props.enabled && this.props.requests.length !== 0) {
             return this.props.draggable && this.props.asPanel ?
                     <Draggable>
@@ -267,8 +435,40 @@ class Identify extends React.Component {
                 <Modal.Footer>
                 </Modal.Footer>
             </Modal>);
-        }
-        return null;
+        }*/
+
+        const missingResponses = this.props.requests.length - this.props.responses.length;
+        const revGeocodeDisplayName = this.props.reverseGeocodeData.error ? <Message msgId="identifyRevGeocodeError"/> : this.props.reverseGeocodeData.display_name;
+        const tabs = [
+            {
+                id: 'results',
+                title: 'Results',
+                tooltip: 'Results',
+                glyph: 'list',
+                visible: true,
+                el: this.props.viewer
+            },
+            {
+                id: 'chart',
+                title: 'Charts',
+                tooltip: 'Charts',
+                glyph: 'stats',
+                visible: true,
+                el: this.props.chartsViewer
+            }
+        ];
+
+        return (
+            <IdentifyContainer
+                {...this.props}
+                tabs={tabs}
+                latlng={this.props.point.latlng}
+                viewerOptions={{...this.props.viewerOptions}}
+                missingResponses={missingResponses}
+                revGeocodeDisplayName={revGeocodeDisplayName}
+                activeTab={'Results'}
+                onClose={this.onModalHiding}/>
+        );
     }
 
     needsRefresh = (props) => {
@@ -284,7 +484,7 @@ class Identify extends React.Component {
         }
         return false;
     };
-
+/*
     filterRequestParams = (layer) => {
         let includeOpt = this.props.includeOptions || [];
         let excludeList = this.props.excludeParams || [];
@@ -302,8 +502,8 @@ class Identify extends React.Component {
             return op;
         }, {});
         return options;
-    };
-
+    };*/
+/*
     setFullscreen = () => {
         const fullscreen = !this.state.fullscreen;
         this.setState({
@@ -311,6 +511,7 @@ class Identify extends React.Component {
             fullClass: fullscreen ? ' fullscreen' : ''
         });
     };
+    */
 }
 
 module.exports = Identify;
