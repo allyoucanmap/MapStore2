@@ -117,12 +117,17 @@
                 "showIn": ["Settings"],
                 "cfg": {
                     "panelClassName": "mapstore-mobile-identify",
-                    "fullscreen": true,
+                    "showFullscreen": true,
                     "draggable": false,
+                    "position": "bottom",
+                    "showTabs": false,
+                    "showCoords": false,
+                    "showLayerTitle": false,
                     "collapsible": true,
+                    "size": 0.5,
+                    "fluid": true,
                     "viewerOptions": {
                         "container": "{context.ReactSwipe}",
-                        "header": "{context.SwipeHeader}",
                         "collapsible": false
                     },
                     "bodyClass": "mobile-feature-info"
@@ -140,7 +145,7 @@
                     "activateMapTitle": false,
                     "activateSortLayer": false
                 }
-            }, {
+            }, "TOCItemsSettings", {
                 "name": "Tutorial",
                 "cfg": {
                     "preset": "default_mobile_tutorial"
@@ -210,12 +215,10 @@
             {
                 "name": "Identify",
                 "cfg": {
-                    "panelClassName": "mapstore-right-panel modal-content",
                     "draggable": false,
                     "collapsible": true,
                     "viewerOptions": {
                         "container": "{context.ReactSwipe}",
-                        "header": "{context.SwipeHeader}",
                         "draggable": false,
                         "collapsible": false,
                         "headerOptions": {
@@ -274,7 +277,9 @@
                         {"id": "Polygon", "name": "queryform.spatialfilter.methods.poly"}
                     ]
                 }
-            }, "Tutorial", "MapFooter", {
+            },
+            "TOCItemsSettings",
+            "Tutorial", "MapFooter", {
                 "name": "Measure"
             }, "Print", "ShapeFile", {
                 "name": "Settings",

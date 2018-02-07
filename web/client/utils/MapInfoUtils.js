@@ -10,13 +10,14 @@ const FeatureInfoUtils = require("./FeatureInfoUtils");
 const INFO_FORMATS = FeatureInfoUtils.INFO_FORMATS;
 const INFO_FORMATS_BY_MIME_TYPE = FeatureInfoUtils.INFO_FORMATS_BY_MIME_TYPE;
 const pointOnSurface = require('turf-point-on-surface');
+const {findIndex, has} = require('lodash');
 
 const MapInfoUtils = {
     /**
      * specifies which info formats are currently supported
      */
     //           default format ↴
-    AVAILABLE_FORMAT: ['TEXT', 'PROPERTIES', 'HTML'],
+    AVAILABLE_FORMAT: ['TEXT', 'PROPERTIES', 'HTML', 'CUSTOM'],
 
     VIEWERS: {},
     /**
@@ -73,6 +74,9 @@ const MapInfoUtils = {
         }
         return {};
     },
+    getLayerFeatureInfo(layer) {
+        return layer.featureInfo && {...layer.featureInfo} || {};
+    },
     clickedPointToGeoJson(clickedPoint) {
         if (!clickedPoint) {
             return [];
@@ -114,7 +118,8 @@ const MapInfoUtils = {
         if (MapInfoUtils.services[layer.type]) {
             let infoFormat = MapInfoUtils.getDefaultInfoFormatValueFromLayer(layer, props);
             let viewer = MapInfoUtils.getLayerFeatureInfoViewer(layer);
-            return MapInfoUtils.services[layer.type].buildRequest(layer, props, infoFormat, viewer);
+            const featureInfo = MapInfoUtils.getLayerFeatureInfo(layer);
+            return MapInfoUtils.services[layer.type].buildRequest(layer, props, infoFormat, viewer, featureInfo);
         }
         return {};
     },
@@ -183,6 +188,33 @@ const MapInfoUtils = {
      */
     setViewer: (type, viewer) => {
         MapInfoUtils.VIEWERS[type] = viewer;
+    },
+    filterRequestParams: (layer, includeOptions, excludeParams) => {
+        let includeOpt = includeOptions || [];
+        let excludeList = excludeParams || [];
+        let options = Object.keys(layer).reduce((op, next) => {
+            if (next !== "params" && includeOpt.indexOf(next) !== -1) {
+                op[next] = layer[next];
+            } else if (next === "params" && excludeList.length > 0) {
+                let params = layer[next];
+                Object.keys(params).forEach((n) => {
+                    if (findIndex(excludeList, (el) => {return el === n; }) === -1) {
+                        op[n] = params[n];
+                    }
+                }, {});
+            }
+            return op;
+        }, {});
+        return options;
+    },
+    validateStringVariable: (feature, variable) => {
+        const path = variable.substring(2, variable.length - 1).trim();
+        return has(feature, path);
+    },
+    getEscapedTemplate: (template, feature, regex) => {
+        const matchVariables = template.match(regex);
+        const replacedTag = matchVariables && matchVariables.map(temp => ({ previous: temp, next: MapInfoUtils.validateStringVariable(feature, temp.replace(/(<([^>]+)>)/ig, '')) && temp.replace(/(<([^>]+)>)/ig, '') || ''})) || null;
+        return replacedTag && replacedTag.reduce((temp, variable) => temp.replace(variable.previous, variable.next), template) || template || '';
     }
 };
 

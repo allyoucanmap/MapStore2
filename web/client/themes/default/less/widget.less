@@ -5,79 +5,79 @@
     &.react-grid-layout > * {
         pointer-events: auto;
     }
-    .mapstore-widget-card {
-        background: @ms2-color-background;
-        margin: 20px 0;
-        overflow: visible;
-        position: absolute;
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        webkit-box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-        -moz-box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-        .mapstore-widget-layer {
-            text-align: center;
-            margin: 10px 5%;
-            font-style: italic;
+}
+.mapstore-widget-card {
+    background: @ms2-color-background;
+    margin: 20px 0;
+    overflow: visible;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    webkit-box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    -moz-box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    .mapstore-widget-layer {
+        text-align: center;
+        margin: 10px 5%;
+        font-style: italic;
+    }
+    .mapstore-widget-header {
+        height: 32px;
+        text-align: center;
+        width: 90%;
+        margin: 10px 5%;
+        font-size: 22px;
+        font-weight: bold;
+        border-bottom: 1px solid @ms2-color-shade-lighter;
+        color: @ms2-color-primary;
+        .widget-title {
+            text-overflow: ellipsis;
+            width: calc(100% - 30px);
+            font-size: 14px;
         }
-        .mapstore-widget-header {
-            height: 32px;
-            text-align: center;
-            width: 90%;
-            margin: 10px 5%;
-            font-size: 22px;
-            font-weight: bold;
-            border-bottom: 1px solid @ms2-color-shade-lighter;
-            color: @ms2-color-primary;
-            .widget-title {
-                text-overflow: ellipsis;
-                width: calc(100% - 30px);
-                font-size: 14px;
-            }
-            .mapstore-info-popover .glyphicon {
-                margin-top: 7px;
-                position: absolute;
-                left: 22px;
-                font-size: 14px;
-                color: @ms2-color-primary;
-            }
-        }
-        .mapstore-widget-description {
-            text-align: center;
-            width: 90%;
-            margin: 5px 5%;
-        }
-        .mapstore-widget-options {
+        .mapstore-info-popover .glyphicon {
+            margin-top: 7px;
             position: absolute;
-            font-size: 18px;
+            left: 22px;
+            font-size: 14px;
             color: @ms2-color-primary;
-            right: 20px;
         }
-        .widget-menu {
-            border: none;
-            top: -2px;
-            left: 7px;
-        }
-        .mapstore-widget-chart {
-            height: 100%;
-            width: 90%;
-            margin: 0 5%;
-            overflow: hidden;
-        }
-        .loader-container {
-            height: 100%;
-            width: 90%;
-            margin: 0 5%;
-            overflow: hidden;
-        }
-        .mapstore-widget-table {
-            height: 100%;
-            width: 90%;
-            margin: 0 5%;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
+    }
+    .mapstore-widget-description {
+        text-align: center;
+        width: 90%;
+        margin: 5px 5%;
+    }
+    .mapstore-widget-options {
+        position: absolute;
+        font-size: 18px;
+        color: @ms2-color-primary;
+        right: 20px;
+    }
+    .widget-menu {
+        border: none;
+        top: -2px;
+        left: 7px;
+    }
+    .mapstore-widget-chart {
+        height: 100%;
+        width: 90%;
+        margin: 0 5%;
+        overflow: hidden;
+    }
+    .loader-container {
+        height: 100%;
+        width: 90%;
+        margin: 0 5%;
+        overflow: hidden;
+    }
+    .mapstore-widget-table {
+        height: 100%;
+        width: 90%;
+        margin: 0 5%;
+        overflow-x: hidden;
+        overflow-y: auto;
     }
 }
 
