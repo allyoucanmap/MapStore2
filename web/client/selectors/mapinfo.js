@@ -44,6 +44,7 @@ const drawSupportActiveSelector = (state) => {
 const gridEditingSelector = createSelector(modeSelector, (mode) => mode === 'EDIT');
 const annotationsEditingSelector = (state) => get(state, "annotations.editing");
 const mapInfoDisabledSelector = (state) => !get(state, "mapInfo.enabled", false);
+const zoomToMarkerSelector = (state) => get(state, "mapInfo.zoomToMarker", false);
 
 /**
  * selects stopGetFeatureInfo from state
@@ -58,5 +59,6 @@ const stopGetFeatureInfoSelector = createSelector(mapInfoDisabledSelector, measu
 module.exports = {
     generalInfoFormatSelector,
     mapInfoRequestsSelector,
-    stopGetFeatureInfoSelector
+    stopGetFeatureInfoSelector,
+    zoomToMarkerSelector
 };

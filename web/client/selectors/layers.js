@@ -10,6 +10,8 @@ const {createSelector} = require('reselect');
 
 const MapInfoUtils = require('../utils/MapInfoUtils');
 const LayersUtils = require('../utils/LayersUtils');
+const {getNormalizedLatLon} = require('../utils/CoordinatesUtils');
+const {zoomToMarkerSelector} = require('../selectors/mapinfo');
 const {head, isEmpty, find} = require('lodash');
 
 const layersSelector = state => state.layers && state.layers.flat || state.layers || state.config && state.config.layers || [];
@@ -23,11 +25,11 @@ const geoColderSelector = state => state.search && state.search;
 // to avoid this separate loading from the layer object
 
 const layerSelectorWithMarkers = createSelector(
-    [layersSelector, markerSelector, geoColderSelector],
-    (layers = [], markerPosition, geocoder) => {
+    [layersSelector, markerSelector, geoColderSelector, zoomToMarkerSelector],
+    (layers = [], markerPosition, geocoder, zoomToMarker) => {
         let newLayers = [...layers];
         if ( markerPosition ) {
-            newLayers.push(MapInfoUtils.getMarkerLayer("GetFeatureInfo", markerPosition.latlng));
+            newLayers.push(MapInfoUtils.getMarkerLayer("GetFeatureInfo", zoomToMarker ? getNormalizedLatLon(markerPosition.latlng) : markerPosition.latlng));
         }
         if (geocoder && geocoder.markerPosition) {
             newLayers.push(MapInfoUtils.getMarkerLayer("GeoCoder", geocoder.markerPosition, "marker",
