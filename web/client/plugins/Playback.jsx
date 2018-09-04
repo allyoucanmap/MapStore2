@@ -43,11 +43,7 @@ class PlaybackPlugin extends React.Component {
             <div
                 className={"playback-plugin"}
                 style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    marginBottom: 30,
-                    left: 0,
-                    zIndex: 1000
+                    
                 }}>
                 <Playback />
             </div>
@@ -58,7 +54,12 @@ class PlaybackPlugin extends React.Component {
 
 module.exports = {
     PlaybackPlugin: assign(PlaybackPlugin, {
-        disablePluginIf: "{state('featuregridmode') === 'EDIT'}"
+        disablePluginIf: "{state('featuregridmode') === 'EDIT'}",
+        Timeline: {
+            name: 'playback',
+            position: 1,
+            priority: 1
+        }
     }),
     epics: require('../epics/playback'),
     reducers: {

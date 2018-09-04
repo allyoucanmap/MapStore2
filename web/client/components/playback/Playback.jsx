@@ -29,7 +29,7 @@ module.exports = collapsible(({
     currentTime,
     statusMap,
     play = () => {}, pause = () => {}, stop = () => {}
-}) => (<SwitchPanel expanded onSwitch={() => setCollapsed(true)}>
+}) => ( <div>
             <div style={{margin: 10}}>
                 <h1>Current time</h1>
             <h2>{(new Date(currentTime)).toDateString()}</h2>
@@ -51,4 +51,5 @@ module.exports = collapsible(({
             ]
         } />
         </div>
-        </SwitchPanel>));
+        </div>
+        ));

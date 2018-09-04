@@ -101,6 +101,7 @@ const enhance = compose(
             key: 'timeline',
             customTimes: {currentTime},
             options: {
+                
                 stack: false,
                 showMajorLabels: true,
                 showCurrentTime: false,
