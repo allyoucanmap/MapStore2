@@ -38,14 +38,12 @@ const Playback = compose(
 )(require('../components/playback/Playback'));
 
 class PlaybackPlugin extends React.Component {
+
+
     render() {
         return (
-            <div
-                className={"playback-plugin"}
-                style={{
-                    
-                }}>
-                <Playback />
+            <div className={"playback-plugin"}>
+                <Playback {...this.props}/>
             </div>
         );
     }

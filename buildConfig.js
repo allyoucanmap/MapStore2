@@ -176,6 +176,13 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
                     host: "dev.mapstore.geo-solutions.it"
                 }
             },
+            '/geoserver': {
+                target: "https://wms.eumetsat.int",
+                secure: false,
+                headers: {
+                    host: "wms.eumetsat.int"
+                }
+            },
             '/docs': {
                 target: "http://localhost:8081",
                 pathRewrite: {'/docs': '/mapstore/docs'}
