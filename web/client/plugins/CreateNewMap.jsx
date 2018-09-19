@@ -9,7 +9,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const {connect} = require('react-redux');
 
-const {ButtonToolbar, Button: ButtonB, Grid, Col, Glyphicon} = require('react-bootstrap');
+const {DropdownButton, MenuItem, ButtonToolbar, Button: ButtonB, Grid, Col, Glyphicon} = require('react-bootstrap');
 const tooltip = require('../components/misc/enhancers/tooltip');
 const Button = tooltip(ButtonB);
 const {mapTypeSelector} = require('../selectors/maptype');
@@ -49,9 +49,22 @@ class CreateNewMap extends React.Component {
         return (<Grid fluid={this.props.fluid} style={{marginBottom: "30px", padding: 0, display}}>
         <Col {...this.props.colProps} >
             <ButtonToolbar>
-            <Button tooltipId="newMap" className="square-button" bsStyle="primary" onClick={() => { this.context.router.history.push("/viewer/" + this.props.mapType + "/new"); }}>
+            {/*<Button tooltipId="newMap" className="square-button" bsStyle="primary" onClick={() => { this.context.router.history.push("/viewer/" + this.props.mapType + "/new"); }}>
                 <Glyphicon glyph="add-map" />
-            </Button>
+            </Button>*/}
+            <DropdownButton
+                noCaret
+                className="square-button" bsStyle="primary"
+                title={<Glyphicon glyph="add-map" />}>
+                <MenuItem header>SELECT PROJECTION</MenuItem>
+                <MenuItem
+                    eventKey="2"
+                    onClick={() => { this.context.router.history.push("/viewer/" + this.props.mapType + "/new"); }}>
+                    EPSG:3857</MenuItem>
+                <MenuItem
+                    eventKey="3"
+                    onClick={() => { this.context.router.history.push("/viewer/" + this.props.mapType + "/new"); }}>EPSG:4326</MenuItem>
+            </DropdownButton>
             {this.props.showNewDashboard ?
                 <Button tooltipId="resources.dashboards.newDashboard" className="square-button" bsStyle="primary" onClick={() => { this.context.router.history.push("/dashboard/"); }}>
                     <Glyphicon glyph="add-dashboard" />
@@ -75,7 +88,7 @@ class CreateNewMap extends React.Component {
 module.exports = {
     CreateNewMapPlugin: connect((state) => ({
         mapType: mapTypeSelector(state),
-        isLoggedIn: state && state.security && state.security.user && state.security.user.enabled && !(state.browser && state.browser.mobile) && true || false,
-        user: state && state.security && state.security.user
+        isLoggedIn: true, // state && state.security && state.security.user && state.security.user.enabled && !(state.browser && state.browser.mobile) && true || false,
+        user: {role: 'ADMIN'} // state && state.security && state.security.user
     }))(CreateNewMap)
 };

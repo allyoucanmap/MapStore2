@@ -140,7 +140,7 @@ class MapCard extends React.Component {
 
         return (
            <GridCard className="map-thumb" style={this.getCardStyle()} header={this.props.map.title || this.props.map.name}
-                actions={availableAction} onClick={this.onClick}
+                actions={[]} onClick={() => {}}
                >
                <div className="map-thumb-description">{this.props.map.description}</div>
                 {this.props.map.icon ?

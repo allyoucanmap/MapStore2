@@ -49,12 +49,7 @@ module.exports = {
                         .let(wrapStartStop(
                             dashboardsLoading(true, "loading"),
                             dashboardsLoading(false, "loading"),
-                            () => Rx.Observable.of(error({
-                                title: "notification.error",
-                                message: "resources.dashboards.errorLoadingDashboards",
-                                autoDismiss: 6,
-                                position: "tc"
-                            }))
+                            () => Rx.Observable.empty()
                         ))
             ),
     deleteDashboard: action$ => action$
@@ -63,12 +58,7 @@ module.exports = {
         .let(wrapStartStop(
             dashboardsLoading(true, "loading"),
             dashboardsLoading(false, "loading"),
-            () => Rx.Observable.of(error({
-                title: "notification.error",
-                message: "resources.dashboards.deleteError",
-                autoDismiss: 6,
-                position: "tc"
-            }))
+            () => Rx.Observable.empty()
         )),
     reloadOnDashboards: (action$, { getState = () => { } }) =>
         action$.ofType(DASHBOARD_DELETED, RELOAD, ATTRIBUTE_UPDATED)

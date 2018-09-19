@@ -117,7 +117,7 @@ const mapsPluginSelector = createSelector([
 ], (mapType, searchText, maps, featuredEnabled, role) => ({
     mapType,
     searchText,
-    maps: maps.map(map => ({...map, featuredEnabled: featuredEnabled && role === 'ADMIN'}))
+    maps: [{ "canDelete": false, "canEdit": false, "canCopy": true, "creation": "2018-07-18 12:47:04.212", "lastUpdate": "2018-07-19 10:55:30.119", "description": "", "id": 6238, "name": "My Map", "thumbnail": "NODATA", "owner": "user" }].map(map => ({...map, featuredEnabled: featuredEnabled && role === 'ADMIN'}))
 }));
 
 const MapsPlugin = connect(mapsPluginSelector, {

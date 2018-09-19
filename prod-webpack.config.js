@@ -15,16 +15,16 @@ const paths = {
 module.exports = require('./buildConfig')(
     assign({
             "mapstore2": path.join(__dirname, "web", "client", "product", "app"),
-            "embedded": path.join(__dirname, "web", "client", "product", "embedded"),
-            "ms2-api": path.join(__dirname, "web", "client", "product", "api")
-        },
-        require('./examples')
+            // "embedded": path.join(__dirname, "web", "client", "product", "embedded"),
+            // "ms2-api": path.join(__dirname, "web", "client", "product", "api")
+        }/*,
+        require('./examples')*/
     ),
     themeEntries,
     paths,
     extractThemesPlugin,
     true,
-    "/mapstore/dist/",
+    "/mockups/mapstore2/newmapepsg/dist/",
     undefined,
     [
         new HtmlWebpackPlugin({
