@@ -123,7 +123,7 @@ class SettingsButton extends React.Component {
             .filter(this.isEnabled)
             .map((setting) => settingsFirst[setting])
             // TODO: here every item (item.tool) we emit should have a "key" property
-            .concat(this.props.items.map((item) => item.tool))
+            .concat(this.props.items.sort((a, b) => a.position > b.position).map((item) => item.tool))
             .concat(
                 Object.keys(settingsLast)
                     .filter(this.isEnabled)
