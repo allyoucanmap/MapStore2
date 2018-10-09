@@ -31,7 +31,7 @@ class MapFooter extends React.Component {
     }
 
     getPanels = () => {
-        return this.props.items.filter((item) => item.tools).reduce((previous, current) => {
+        return this.props.items.filter((item) => item.tools).sort((a, b) => a.position > b.position).reduce((previous, current) => {
             return previous.concat(
                 current.tools.map((tool, index) => ({
                     name: current.name + index,

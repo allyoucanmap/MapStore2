@@ -32,7 +32,7 @@ class CRSSelector extends React.Component {
 
 module.exports = {
     CRSSelectorPlugin: assign(CRSSelector, {
-        BurgerMenu: {
+        /*BurgerMenu: {
             name: 'crs',
             position: 2,
             tool: () => (
@@ -56,9 +56,9 @@ module.exports = {
                     <option value={'4326'} key={'4326'}>{'EPSG:4326'}</option>
                 </FormControl>
             </FormGroup>)
-        },
+        },*/
         MapFooter: {
-            position: 1,
+            position: 10,
             tool: () => (
                 <DropdownButton
                     dropup
@@ -67,6 +67,7 @@ module.exports = {
                     tooltip="Projection"
                     tooltipPosition="left"
                     bsStyle="primary"
+                    
                     className="map-footer-btn"
                     title={<Glyphicon glyph="crs" />}>
                     <MenuItem active eventKey="2">
