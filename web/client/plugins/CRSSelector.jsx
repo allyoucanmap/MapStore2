@@ -6,29 +6,77 @@
  * LICENSE file in the root directory of this source tree.
  */
 const React = require('react');
+const ReactDOM = require('react-dom');
 // const PropTypes = require('prop-types');
 const assign = require('object-assign');
-const {Glyphicon, MenuItem, DropdownButton: DropdownButtonRB, FormGroup, ControlLabel, FormControl} = require('react-bootstrap');
+const { Glyphicon, ListGroupItem, ListGroup, FormControl, Dropdown, Button: ButtonRB } = require('react-bootstrap');
 const tooltip = require('../components/misc/enhancers/tooltip');
-const DropdownButton = tooltip(DropdownButtonRB);
+const Button = tooltip(ButtonRB);
+const {withState} = require('recompose');
 // const {connect} = require('react-redux');
 
 // const {mapTypeSelector} = require('../selectors/maptype');
 
 
 class CRSSelector extends React.Component {
-    static propTypes = {
-
-    };
-
-    static defaultProps = {
-
-    };
-
     render() {
-        return <div></div>;
+        return null;
     }
 }
+
+class CustomMenu extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+    }
+
+    state = {};
+
+    render() {
+        const { children, selected } = this.props;
+        const { value = '' } = this.state;
+
+        return (
+            <div className="dropdown-menu" style={{
+                left: 'auto',
+                right: 0
+            }}>
+                <ListGroupItem
+                    className="ms-prj-header"
+                    bsSize="sm">
+                    <div>Selected:</div>
+                    <div>{selected}</div>
+                </ListGroupItem>
+                <ListGroup style={{ maxHeight: 150, overflowY: 'auto', marginBottom: 0}}>
+                    {React.Children.toArray(children).filter(
+                        child => !value.trim() || child.props.children.indexOf(value) !== -1
+                    )}
+                </ListGroup>
+                <FormControl
+                    ref={c => {
+                        this.input = c;
+                    }}
+                    type="text"
+                    placeholder="Filter projection"
+                    onChange={this.handleChange}
+                    value={value}
+                />
+            </div>
+        );
+    }
+
+    handleChange = (e) => {
+        this.setState({ value: e.target.value });
+    }
+
+    focusNext = () => {
+        const input = ReactDOM.findDOMNode(this.input);
+
+        if (input) {
+            input.focus();
+        }
+    }
+}
+
 
 module.exports = {
     CRSSelectorPlugin: assign(CRSSelector, {
@@ -59,22 +107,55 @@ module.exports = {
         },*/
         MapFooter: {
             position: 10,
-            tool: () => (
-                <DropdownButton
+            tool: withState('state', 'setState', {
+                projections: [
+                    {
+                        value: 'EPSG:3857'
+                    },
+                    {
+                        value: 'EPSG:900913'
+                    },
+                    {
+                        value: 'EPSG:4326'
+                    },
+                    {
+                        value: 'EPSG:3003'
+                    },
+                    {
+                        value: 'EPSG:3003'
+                    },
+                    {
+                        value: 'EPSG:3995'
+                    }
+                ],
+                selected: 'EPSG:3857'
+            })(({state, setState}) => (
+                <Dropdown
                     dropup
-                    noCaret
-                    pullRight
-                    tooltip="Projection"
-                    tooltipPosition="left"
-                    bsStyle="primary"
-                    
-                    className="map-footer-btn"
-                    title={<Glyphicon glyph="crs" />}>
-                    <MenuItem active eventKey="2">
-                        EPSG:3857</MenuItem>
-                    <MenuItem eventKey="3"
-                        >EPSG:4326</MenuItem>
-                </DropdownButton>)
+                    className="ms-prj-selector">
+                    <Button
+                        bsRole="toggle"
+                        bsStyle="primary"
+                        className="map-footer-btn"
+                        tooltip="Select projection"
+                        tooltipPosition="top">
+                        <Glyphicon glyph="crs" />
+                    </Button>
+                    <CustomMenu bsRole="menu" selected={state.selected}>
+                        {state.projections.map(crs =>
+                            <ListGroupItem
+                            key={crs.value}
+                            active={state.selected === crs.value}
+                            eventKey={crs.value}
+                            onClick={() => setState({
+                                projections: state.projections.map(prj => ({...prj, active: prj.value === crs.value})),
+                                selected: crs.value
+                            })}>
+                                {crs.value}
+                            </ListGroupItem>)
+                        }
+                    </CustomMenu>
+                </Dropdown>))
         }
     }),
     reducers: {},
