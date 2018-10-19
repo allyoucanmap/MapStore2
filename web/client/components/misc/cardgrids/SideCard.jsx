@@ -27,14 +27,14 @@ const React = require('react');
  */
 
 
-module.exports = ({body, className = '', style = {}, onClick=() => {}, size, title, preview, description, caption, tools, selected,
+module.exports = ({body, className = '', style = {}, onClick=() => {}, size, title, previewSrc, preview, description, caption, tools, selected,
  onMouseEnter = () => {}, onMouseLeave = () => {}, ...more} = {}) =>
 <div className={`mapstore-side-card${selected ? ' selected' : ''}${size ? ' ms-' + size : ''} ${className}`}
         onClick={() => onClick({title, preview, description, caption, tools, ...more})}
         style={style} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
         <div className="ms-head">
-            {preview && <div className="mapstore-side-preview">
-                {preview}
+            {(preview || previewSrc) && <div className="mapstore-side-preview">
+                {preview || previewSrc && <img src={previewSrc}/>}
             </div>}
             <div className="mapstore-side-card-info">
                 <div className="mapstore-side-card-title">

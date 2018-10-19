@@ -18,6 +18,9 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
         filename: "[name].js",
         chunkFilename: prod ? "[name].[hash].chunk.js" : "[name].js"
     },
+    node: {
+        fs: 'empty'
+    },
     plugins: [
         new CopyWebpackPlugin([
             { from: path.join(paths.base, 'node_modules', 'bootstrap', 'less'), to: path.join(paths.dist, "bootstrap", "less") }
@@ -141,11 +144,7 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
     devServer: {
         proxy: {
             '/rest/geostore': {
-                target: "https://dev.mapstore.geo-solutions.it/mapstore",
-                secure: false,
-                headers: {
-                    host: "dev.mapstore.geo-solutions.it"
-                }
+                target: "http://localhost:8082/mapstore"
             },
             '/pdf': {
                 target: "https://dev.mapstore.geo-solutions.it/mapstore",
@@ -171,6 +170,9 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
             '/docs': {
                 target: "http://localhost:8081",
                 pathRewrite: {'/docs': '/mapstore/docs'}
+            },
+            '/geoserver': {
+                target: "http://localhost:8080"
             }
         }
     },

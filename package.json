@@ -98,6 +98,7 @@
     "codemirror": "5.18.2",
     "colorbrewer": "1.0.0",
     "create-react-class": "15.6.2",
+    "css": "^2.2.4",
     "css-tree": "1.0.0-alpha24",
     "element-closest": "2.0.2",
     "es6-object-assign": "1.1.0",

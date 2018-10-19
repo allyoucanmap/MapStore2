@@ -20,6 +20,8 @@ const defaultSettingsTabs = require('./tocitemssettings/defaultSettingsTabs');
 const LayersUtils = require('../utils/LayersUtils');
 const {mapLayoutValuesSelector} = require('../selectors/maplayout');
 const {isAdminUserSelector} = require('../selectors/security');
+const {toggleStyleEditor} = require('../actions/styleeditor');
+const {statusStyleSelector} = require('../selectors/styleeditor');
 
 const tocItemsSettingsSelector = createSelector([
     layerSettingSelector,
@@ -27,15 +29,17 @@ const tocItemsSettingsSelector = createSelector([
     groupsSelector,
     currentLocaleSelector,
     state => mapLayoutValuesSelector(state, {height: true}),
-    isAdminUserSelector
-], (settings, layers, groups, currentLocale, dockStyle, isAdmin) => ({
+    isAdminUserSelector,
+    statusStyleSelector
+], (settings, layers, groups, currentLocale, dockStyle, isAdmin, styleStatus) => ({
     settings,
     element: settings.nodeType === 'layers' && isArray(layers) && head(layers.filter(layer => layer.id === settings.node)) ||
     settings.nodeType === 'groups' && isArray(groups) && head(groups.filter(group => group.id === settings.node)) || {},
     groups,
     currentLocale,
     dockStyle,
-    isAdmin
+    isAdmin,
+    locked: !!styleStatus
 }));
 
 /**
@@ -65,7 +69,8 @@ const TOCItemsSettingsPlugin = compose(
         onHideSettings: hideSettings,
         onUpdateSettings: updateSettings,
         onUpdateNode: updateNode,
-        onRetrieveLayerData: getLayerCapabilities
+        onRetrieveLayerData: getLayerCapabilities,
+        onToggleStyleEditor: toggleStyleEditor
     }),
     withState('activeTab', 'onSetTab', 'general'),
     updateSettingsLifecycle,

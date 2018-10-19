@@ -64,11 +64,12 @@ const settingsLifecycle = compose(
                 );
             }
         },
-        onClose: ({ onUpdateInitialSettings = () => {}, onUpdateOriginalSettings = () => {}, onUpdateNode, originalSettings, settings, onHideSettings, onShowAlertModal }) => forceClose => {
+        onClose: ({ onUpdateInitialSettings = () => {}, onUpdateOriginalSettings = () => {}, onUpdateNode, originalSettings, settings, onHideSettings, onShowAlertModal }) => (forceClose, tabsCloseActions) => {
             const originalOptions = Object.keys(settings.options).reduce((options, key) => ({ ...options, [key]: key === 'opacity' && !originalSettings[key] && 1.0 || originalSettings[key] }), {});
             if (!isEqual(originalOptions, settings.options) && !forceClose) {
                 onShowAlertModal(true);
             } else {
+                tabsCloseActions.forEach(tabOnClose => { tabOnClose(); });
                 onUpdateNode(
                     settings.node,
                     settings.nodeType,
