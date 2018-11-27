@@ -18,8 +18,9 @@ numberLocalizer();
 require('react-widgets/lib/less/react-widgets.less');
 const LocaleUtils = require('../../utils/LocaleUtils');
 const {createFont} = require('../../utils/AnnotationsUtils');
-const Message = require('../I18N/Message');
+// const Message = require('../I18N/Message');
 const tinycolor = require("tinycolor2");
+const SwitchPanel = require('../misc/switch/SwitchPanel');
 
 class TextStyler extends React.Component {
     static propTypes = {
@@ -62,6 +63,10 @@ class TextStyler extends React.Component {
         const {styleType, shapeStyle} = this.props;
         const style = shapeStyle[styleType];
         return (<Grid fluid style={{ width: '100%' }} className="ms-style">
+        <SwitchPanel
+                    title="Text Style"
+                    locked
+                    expanded>
                     <Row>
                         <Col xs={12}>
                             <div className="ms-marker-preview" style={{display: 'flex', width: '100%', height: 104}}>
@@ -76,25 +81,14 @@ class TextStyler extends React.Component {
                         </Col>
                     </Row>
                     <Row>
-                        <Col xs={6}>
-                            <Message msgId="draw.font.textColor"/>
-                        </Col>
-                        <Col xs={6} style={{position: 'static'}}>
-                            <ColorSelector color={this.addOpacityToColor(tinycolor(style.color).toRgb(), style.opacity)}
-                                width={this.props.width}
-                                onChangeColor={c => {
-                                    const color = tinycolor(c).toHexString();
-                                    const opacity = c.a;
-                                    const newStyle = assign({}, shapeStyle, {
-                                        [styleType]: assign({}, style, {color, opacity})
-                                    });
-                                    this.props.setStyleParameter(newStyle);
-                                }}/>
-                        </Col>
-                    </Row>
+                    <Col xs={12}>
+                        <strong>Font</strong>
+                    </Col>
+                </Row>
                     <Row>
                         <Col xs={6}>
-                            <Message msgId="draw.font.family"/>
+                            {/*<Message msgId="draw.font.family"/>*/}
+                            Family
                         </Col>
                         <Col xs={6} style={{position: 'static'}}>
                             <Combobox
@@ -120,7 +114,8 @@ class TextStyler extends React.Component {
                     </Row>
                     <Row>
                         <Col xs={6}>
-                            <Message msgId="draw.font.size"/>
+                            {/*<Message msgId="draw.font.size"/>*/}
+                            Size
                         </Col>
                         <Col xs={4} style={{position: 'static'}}>
                             <FormControl
@@ -159,31 +154,8 @@ class TextStyler extends React.Component {
                     </Row>
                     <Row>
                         <Col xs={6}>
-                            <Message msgId="draw.font.textAlign"/>
-                        </Col>
-                        <Col xs={6} style={{position: 'static'}}>
-                            <Combobox
-                                value={style.textAlign || "center"}
-                                textField="label"
-                                valueField="value"
-                                messages={messages}
-                                data={this.props.alignValues}
-                                onChange={(e) => {
-                                    let textAlign = e.value ? e.value : e;
-                                    if (this.props.alignValues.map(f => f.value).indexOf(textAlign) === -1) {
-                                        textAlign = "center";
-                                    }
-                                    const newStyle = assign({}, shapeStyle, {
-                                        [styleType]: assign({}, style, {textAlign})
-                                    });
-                                    this.props.setStyleParameter(newStyle);
-                                }}
-                            />
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col xs={6}>
-                            <Message msgId="draw.font.style"/>
+                            {/*<Message msgId="draw.font.style"/>*/}
+                            Style
                         </Col>
                         <Col xs={6} style={{position: 'static'}}>
                             <Combobox
@@ -208,7 +180,8 @@ class TextStyler extends React.Component {
                     </Row>
                     <Row>
                         <Col xs={6}>
-                            <Message msgId="draw.font.weight"/>
+                            {/*<Message msgId="draw.font.weight"/>*/}
+                            Weight
                         </Col>
                         <Col xs={6} style={{position: 'static'}}>
                             <Combobox
@@ -231,6 +204,57 @@ class TextStyler extends React.Component {
                             />
                         </Col>
                     </Row>
+                    <hr />
+                <Row>
+                    <Col xs={12}>
+                        <strong>Text</strong>
+                    </Col>
+                </Row>
+                    <Row>
+                        <Col xs={6}>
+                            {/*<Message msgId="draw.font.textColor"/>*/}
+                            Color
+                        </Col>
+                        <Col xs={6} style={{position: 'static'}}>
+                            <ColorSelector color={this.addOpacityToColor(tinycolor(style.color).toRgb(), style.opacity)}
+                                width={this.props.width}
+                                onChangeColor={c => {
+                                    const color = tinycolor(c).toHexString();
+                                    const opacity = c.a;
+                                    const newStyle = assign({}, shapeStyle, {
+                                        [styleType]: assign({}, style, {color, opacity})
+                                    });
+                                    this.props.setStyleParameter(newStyle);
+                                }}/>
+                        </Col>
+                    </Row>
+
+                    <Row>
+                        <Col xs={6}>
+                            {/*<Message msgId="draw.font.textAlign"/>*/}
+                            Align
+                        </Col>
+                        <Col xs={6} style={{position: 'static'}}>
+                            <Combobox
+                                value={style.textAlign || "center"}
+                                textField="label"
+                                valueField="value"
+                                messages={messages}
+                                data={this.props.alignValues}
+                                onChange={(e) => {
+                                    let textAlign = e.value ? e.value : e;
+                                    if (this.props.alignValues.map(f => f.value).indexOf(textAlign) === -1) {
+                                        textAlign = "center";
+                                    }
+                                    const newStyle = assign({}, shapeStyle, {
+                                        [styleType]: assign({}, style, {textAlign})
+                                    });
+                                    this.props.setStyleParameter(newStyle);
+                                }}
+                            />
+                        </Col>
+                    </Row>
+                    </SwitchPanel>
                 </Grid>);
     }
     addOpacityToColor = (color, opacity) => {
