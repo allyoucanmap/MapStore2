@@ -401,6 +401,12 @@ class AnnotationsEditor extends React.Component {
                                 return null;
                             }
                         }, {
+                            glyph: 'ok',
+                            visible: !!this.state.editStyle,
+                            // visible: !this.state.editStyle,
+                            tooltip: 'Apply style',
+                            onClick: () => { }
+                        }, {
                             glyph: 'trash',
                             tooltipId: "annotations.deleteFeature",
                             visible: !this.state.editStyle,

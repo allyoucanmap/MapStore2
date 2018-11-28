@@ -165,7 +165,7 @@ class CoordinateEditor extends React.Component {
                 </FormGroup>)
             },
             {
-                glyph: validationCompleteButton ? 'ok' : 'exclamation-mark text-danger',
+                glyph: validationCompleteButton ? 'ok-sign text-success' : 'exclamation-mark text-danger',
                 tooltipId: validationCompleteButton ? 'annotations.editor.valid' : componentsValidation[type].notValid,
                 visible: true
             },
