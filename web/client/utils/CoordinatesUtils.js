@@ -564,7 +564,7 @@ const CoordinatesUtils = {
                 arcs = [...arcs, ...grCircle.geometry.coordinates];
             }
         }
-        return arcs;
+        return coordinates;
     },
     coordsOLtoLeaflet: ({coordinates, type}) => {
         switch (type) {

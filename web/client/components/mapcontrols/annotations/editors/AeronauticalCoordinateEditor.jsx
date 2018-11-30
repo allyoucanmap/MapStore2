@@ -86,7 +86,7 @@ class AeronauticalCoordinateEditor extends React.Component {
     }
 
     render() {
-        const inputStyle = { padding: 0, textAlign: "center" };
+        const inputStyle = { padding: 0, textAlign: "center", borderRight: 'none' };
         const degreesInvalidStyle = isNaN(this.props.degrees) ? {borderColor: "red"} : {};
         const minutesInvalidStyle = isNaN(this.props.minutes) ? {borderColor: "red"} : {};
         const secondsInvalidStyle = isNaN(this.props.seconds) ? {borderColor: "red"} : {};
@@ -96,14 +96,13 @@ class AeronauticalCoordinateEditor extends React.Component {
             overflow: "visible",
             zIndex: 3,
             left: -23,
-            fontSize: 20,
             width: 0,
             height: 0
         };
         const {step: stepSeconds} = this.props.aeronauticalOptions.seconds;
         return (
             <FormGroup style={{display: "inline-flex"}}>
-                <div style={{flex: 1}}>
+                <div style={{width: 50, display: 'flex'}}>
                     <FormControl
                         key={this.props.coordinate + "degree"}
                         value={this.props.degrees}
@@ -112,12 +111,12 @@ class AeronauticalCoordinateEditor extends React.Component {
                         step={1}
                         max={this.props.maxDegrees}
                         min={-1}
-                        style={{ width: 60, ...inputStyle, ...degreesInvalidStyle }}
+                        style={{ width: '100%', ...inputStyle, ...degreesInvalidStyle }}
                         type="number"
                     />
                     <span style={labelStyle}>&deg;</span>
                 </div>
-                <div style={{flex: 1}}>
+                <div style={{width: 50, display: 'flex' }}>
                 <FormControl
                     key={this.props.coordinate + "minutes"}
                     placeholder={"m"}
@@ -131,7 +130,7 @@ class AeronauticalCoordinateEditor extends React.Component {
                 />
                 <span style={labelStyle}>&prime;</span>
                 </div>
-                <div style={{flex: 1}}>
+                <div style={{flex: 1, display: 'flex'}}>
                     <FormControl
                         key={this.props.coordinate + "seconds"}
                         value={this.props.seconds}
@@ -151,7 +150,7 @@ class AeronauticalCoordinateEditor extends React.Component {
                         componentClass="select" placeholder="select"
                         value={this.props.direction}
                         onChange={e => this.onChange("direction", e.target.value)}
-                        style={{ width: 60 }}>
+                        style={{ width: 47, paddingLeft: 4, paddingRight: 4 }}>
                         {this.props.directions.map((d) => <option key={d} value={d}>{d}</option>)}
                     </FormControl>
                 </div>
