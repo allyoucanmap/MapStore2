@@ -48,6 +48,8 @@ class StyleCanvas extends React.Component {
         ctx.fillStyle = this.props.shapeStyle.fill ? `rgba(${ this.props.shapeStyle.fill.r }, ${ this.props.shapeStyle.fill.g }, ${ this.props.shapeStyle.fill.b }, ${ this.props.shapeStyle.fill.a })` : null;
         ctx.strokeStyle = this.props.shapeStyle.color ? `rgba(${ this.props.shapeStyle.color.r }, ${ this.props.shapeStyle.color.g }, ${ this.props.shapeStyle.color.b }, ${ this.props.shapeStyle.color.a })` : null;
         ctx.lineWidth = this.props.shapeStyle.width || this.props.shapeStyle.weight;
+        if (this.props.shapeStyle.lineDash) ctx.setLineDash(this.props.shapeStyle.lineDash);
+
         switch (this.props.geomType) {
         case 'Polygon': {
             this.paintPolygon(ctx);

@@ -28,6 +28,35 @@
 
 .mapstore-annotations-info-viewer-styler {
     min-height: 600px;
+    .mapstore-switch-panel {
+        .shadow-soft;
+        border: none;
+        padding: 8px;
+    }
+    .mapstore-annotations-info-viewer-styler-container {
+        .ms2-border-layout-content {
+            overflow: auto;
+        }
+    }
+
+    .ms-style {
+        .Select {
+            border-radius: 0;
+            > * {
+                border-radius: 0;
+            }
+            width: 100%;
+            margin: 0;
+        }
+        .Select-menu-outer {
+            z-index: 10;
+            .shadow-soft;
+        }
+        .row {
+            display: flex;
+            align-items: center;
+        } 
+    }
 }
 
 .mapstore-annotations-info-viewer-styler .Select {
@@ -216,9 +245,9 @@
     .ms2-border-layout-content {
         .row {
             &:first-child {
-                margin-top: 15px;
+                margin-top: 8px;
             }
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
         .noTopMargin.row {
             &:first-child {

@@ -14,9 +14,11 @@ const POLYGON = "polygon";
 const CIRCLE = "circle";
 const TEXT = "text";
 const Toolbar = require('../../misc/toolbar/Toolbar');
+const BorderLayout = require('../../layout/BorderLayout');
 const Portal = require('../../misc/Portal');
 const GeometryEditor = require('./GeometryEditor');
 const PolygonStyler = require('../../style/PolygonStyler');
+const MarkerStyler = require('../../style/MarkerStyler');
 const CircleStyler = require('../../style/CircleStyler');
 const TextStyler = require('../../style/TextStyler');
 const PolylineStyler = require('../../style/PolylineStyler');
@@ -36,6 +38,43 @@ const Select = require('react-select');
 const PluginsUtils = require('../../../utils/PluginsUtils');
 const defaultConfig = require('./AnnotationsConfig');
 const bbox = require('@turf/bbox');
+
+const Stylers = {
+    marker: props => <MarkerStyler
+        getConfig={props.getConfig}
+        setStyleParameter={(style) => { props.onSetStyle(style); props.onSetUnsavedStyle(true); props.onSetUnsavedChanges(true); }}
+        shapeStyle={props.shapeStyle}
+        width={props.width}/>,
+    text: props => <TextStyler
+        setStyleParameter={(style) => { props.onSetStyle(style); props.onSetUnsavedStyle(true); props.onSetUnsavedChanges(true); }}
+        shapeStyle={props.shapeStyle}
+        width={props.width}/>,
+    lineString: props => <PolylineStyler
+        getConfig={props.getConfig}
+        setStyleParameter={(style) => { props.onSetStyle(style); props.onSetUnsavedStyle(true); props.onSetUnsavedChanges(true); }}
+        shapeStyle={props.shapeStyle}
+        width={props.width}/>,
+    polygon: props => <PolygonStyler
+        setStyleParameter={(style) => { props.onSetStyle(style); props.onSetUnsavedStyle(true); props.onSetUnsavedChanges(true); }}
+        shapeStyle={props.shapeStyle}
+        width={props.width}/>,
+    circle: props => <CircleStyler
+        getConfig={props.getConfig}
+        setStyleParameter={(style) => { props.onSetStyle(style); props.onSetUnsavedStyle(true); props.onSetUnsavedChanges(true); }}
+        shapeStyle={props.shapeStyle}
+        width={props.width}/>
+};
+
+const StyleComponentRandomName = props => {
+    const Styler = Stylers[props.stylerType];
+    const shapeStyle = props.editing.style || {fillColor: '#ff0000', strokeColor: '#ff0000'};
+    return (<div className="mapstore-annotations-info-viewer-items mapstore-annotations-info-viewer-styler">
+        <BorderLayout
+            className="mapstore-annotations-info-viewer-styler-container">
+            <Styler {...props} shapeStyle={shapeStyle}/>
+        </BorderLayout>
+    </div>);
+};
 
 /**
  * (Default) Viewer / Editor for Annotations.
@@ -326,12 +365,12 @@ class AnnotationsEditor extends React.Component {
                             tooltipId: "annotations.deleteGeometry",
                             visible: this.props.editing && this.props.editing.features && this.props.editing.features.length,
                             onClick: this.props.onDeleteGeometry
-                        }, {
+                        }, /*{
                             glyph: 'dropper',
                             tooltipId: "annotations.styleGeometry",
                             visible: this.props.editing && this.props.editing.features && this.props.editing.features.length,
                             onClick: this.props.onStyleGeometry
-                        }, {
+                        },*/ {
                             glyph: 'floppy-disk',
                             tooltipId: "annotations.save",
                             visible: true,
@@ -353,21 +392,35 @@ class AnnotationsEditor extends React.Component {
                             tooltipId: "annotations.back",
                             visible: true,
                             onClick: () => {
+                                if (this.state.editStyle) return this.setState({editStyle: false});
                                 if (this.props.unsavedGeometry) {
                                     this.props.onToggleUnsavedGeometryModal();
                                 } else {
                                     this.props.onResetCoordEditor();
                                 }
+                                return null;
                             }
+                        }, {
+                            glyph: 'ok',
+                            visible: !!this.state.editStyle,
+                            // visible: !this.state.editStyle,
+                            tooltip: 'Apply style',
+                            onClick: () => { }
                         }, {
                             glyph: 'trash',
                             tooltipId: "annotations.deleteFeature",
-                            visible: true,
+                            visible: !this.state.editStyle,
                             onClick: this.props.onToggleDeleteFtModal
+                        }, {
+                            glyph: 'dropper',
+                            tooltipId: "annotations.styleGeometry",
+                            visible: !this.state.editStyle,
+                            onClick: () => this.setState({editStyle: true})
+
                         }, {
                             glyph: 'floppy-disk',
                             tooltipId: "annotations.save",
-                            visible: true,
+                            visible: !this.state.editStyle,
                             disabled: this.props.selected && this.props.selected.properties && !this.props.selected.properties.isValidFeature,
                             onClick: () => {
                                 if (this.props.selected) {
@@ -542,7 +595,9 @@ class AnnotationsEditor extends React.Component {
         if (items.length === 0) {
             return null;
         }
-        return (
+        return this.state.editStyle ?
+            <StyleComponentRandomName {...this.props} getConfig={this.getConfig}/>
+            : (
             <div className="mapstore-annotations-info-viewer-items">
                 <Grid fluid>
                     {!this.props.coordinateEditorEnabled && <Row>
