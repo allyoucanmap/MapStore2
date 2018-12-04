@@ -153,7 +153,8 @@ class MapPlugin extends React.Component {
         actions: PropTypes.object,
         features: PropTypes.array,
         securityToken: PropTypes.string,
-        elevationEnabled: PropTypes.bool
+        elevationEnabled: PropTypes.bool,
+        style: PropTypes.object
     };
 
     static defaultProps = {
@@ -186,7 +187,8 @@ class MapPlugin extends React.Component {
         },
         securityToken: '',
         additionalLayers: [],
-        elevationEnabled: false
+        elevationEnabled: false,
+        style: {}
     };
 
     componentWillMount() {
@@ -275,6 +277,7 @@ class MapPlugin extends React.Component {
 
             return (
                 <plugins.Map id="map"
+                    style={this.props.style}
                     {...this.props.options}
                     projectionDefs={this.props.projectionDefs}
                     {...this.props.map}
@@ -331,8 +334,9 @@ const selector = createSelector(
         highlighedFeatures,
         (state) => state.mapInitialConfig && state.mapInitialConfig.loadingError && state.mapInitialConfig.loadingError.data,
         securityTokenSelector,
-        (state) => state.mousePosition && state.mousePosition.enabled
-    ], (projectionDefs, map, mapType, layers, features, loadingError, securityToken, elevationEnabled) => ({
+        (state) => state.mousePosition && state.mousePosition.enabled,
+        state => state.controls && state.controls.map && state.controls.map.style || {}
+    ], (projectionDefs, map, mapType, layers, features, loadingError, securityToken, elevationEnabled, style) => ({
         projectionDefs,
         map,
         mapType,
@@ -340,7 +344,8 @@ const selector = createSelector(
         features,
         loadingError,
         securityToken,
-        elevationEnabled
+        elevationEnabled,
+        style
     })
 );
 module.exports = {
