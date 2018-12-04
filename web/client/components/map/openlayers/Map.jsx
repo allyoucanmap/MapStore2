@@ -123,7 +123,31 @@ class OpenlayersMap extends React.Component {
                 let coords = ol.proj.toLonLat(pos, this.props.projection);
                 let tLng = CoordinatesUtils.normalizeLng(coords[0]);
                 let layerInfo;
+                let features = {};
+
                 map.forEachFeatureAtPixel(event.pixel, (feature, layer) => {
+                    const properties = feature.getProperties();
+                    const extent = feature.getGeometry().getExtent();
+                    features = {
+                        ...features,
+                        [layer.get('msId')]: [
+                        ...(features[layer.get('msId')] || []),
+                        {
+                            bbox: [...extent],
+                            crs: 'EPSG:4326',
+                            type: 'Feature',
+                            geometry: {
+                                type: feature.getGeometry().getType()
+                            },
+                            properties: properties && Object.keys(properties)
+                            .filter(key => key !== 'geometry')
+                            .reduce((newProperties, key) => ({
+                                ...newProperties,
+                                [key]: properties[key]
+                            }), {}) || {}
+                        }
+                    ]};
+
                     if (layer && layer.get('handleClickOnLayer')) {
                         layerInfo = layer.get('msId');
                         const geom = feature.getGeometry();
@@ -133,6 +157,7 @@ class OpenlayersMap extends React.Component {
                     }
                     tLng = CoordinatesUtils.normalizeLng(coords[0]);
                 });
+
                 const getElevation = this.map.get('elevationLayer') && this.map.get('elevationLayer').get('getElevation');
                 this.props.onClick({
                     pixel: {
@@ -149,7 +174,7 @@ class OpenlayersMap extends React.Component {
                         ctrl: event.originalEvent.ctrlKey,
                         shift: event.originalEvent.shiftKey
                     }
-                }, layerInfo);
+                }, layerInfo, features);
             }
         });
         const mouseMove = throttle(this.mouseMoveEvent, 100);

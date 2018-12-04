@@ -110,7 +110,7 @@ const identifyLifecycle = compose(
                         if (url) {
                             sendRequest(url, request, metadata, MapInfoUtils.filterRequestParams(layer, includeOptions, excludeParams));
                         } else {
-                            localRequest(layer, request, metadata);
+                            localRequest({...layer, features: layer.features || newProps.clickedFeatures && newProps.clickedFeatures[layer.name] || []}, request, metadata);
                         }
                     });
                 }

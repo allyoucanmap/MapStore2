@@ -174,7 +174,8 @@ const MapInfoUtils = {
     services: {
         wms: require('./mapinfo/wms'),
         wmts: require('./mapinfo/wmts'),
-        vector: require('./mapinfo/vector')
+        vector: require('./mapinfo/vector'),
+        vectortile: require('./mapinfo/vectortile')
     },
     /**
      * To get the custom viewer with the given type

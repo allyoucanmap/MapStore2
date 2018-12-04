@@ -209,11 +209,12 @@ function updateCenterToMarker(status) {
     };
 }
 
-function featureInfoClick(point, layer) {
+function featureInfoClick(point, layer, features) {
     return {
         type: FEATURE_INFO_CLICK,
         point,
-        layer
+        layer,
+        features
     };
 }
 

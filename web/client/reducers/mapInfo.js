@@ -89,7 +89,8 @@ function mapInfo(state = initState, action) {
     case FEATURE_INFO_CLICK: {
         return assign({}, state, {
             clickPoint: action.point,
-            clickLayer: action.layer || null
+            clickLayer: action.layer || null,
+            clickedFeatures: action.features || null
         });
     }
     case CHANGE_MAPINFO_FORMAT: {
@@ -153,7 +154,7 @@ function mapInfo(state = initState, action) {
         }
         let resolution = action.metadata && action.metadata.resolution || 1;
         let bufferedPoint = buffer(point, (action.metadata.buffer || 1) * resolution, unit);
-        const intersected = (action.layer.features || []).filter(
+        const intersected = action.layer.type === 'vectortile' && (action.layer.features || []) || (action.layer.features || []).filter(
                     (feature) => {
                         try {
                             // TODO: instead of create a fixed buffer, we should check the feature style to create the proper buffer.

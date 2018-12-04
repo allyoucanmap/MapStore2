@@ -54,7 +54,7 @@ module.exports = {
             const {disableAlwaysOn = false} = (store.getState()).mapInfo;
             return disableAlwaysOn || !stopGetFeatureInfoSelector(store.getState() || {});
         })
-        .map(({point, layer}) => featureInfoClick(point, layer)),
+        .map(({point, layer, features}) => featureInfoClick(point, layer, features)),
     /**
      * Centers marker on visible map if it's hidden by layout
      * @param {external:Observable} action$ manages `FEATURE_INFO_CLICK` and `LOAD_FEATURE_INFO`.
