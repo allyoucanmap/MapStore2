@@ -48,7 +48,8 @@ const StyleList = ({
     onSelect,
     formatColors = {
         sld: '#33ffaa',
-        css: '#ffaa33'
+        css: '#ffaa33',
+        mbs: '#f2f2f2'
     },
     filterText,
     onFilter = () => {}

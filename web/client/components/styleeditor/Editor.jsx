@@ -25,6 +25,7 @@ require('codemirror/addon/hint/show-hint');
 
 /* SLD styling highlight */
 require('codemirror/mode/xml/xml');
+require('codemirror/mode/javascript/javascript');
 
 require('./mode/geocss')(CM);
 require('./hint/geocss')(CM);
