@@ -22,7 +22,7 @@ function tileXYZToOpenlayersOptions(options) {
     let urls = options.url.match(/(\{s\})/) ? getUrls(options) : [template(options.url, options)];
     let sourceOpt = assign({}, {
         urls: urls,
-        attributions: options.attribution ? [new ol.Attribution({ html: options.attribution})] : [],
+        attributions: options.attribution ? [options.attribution] : [],
         maxZoom: options.maxZoom ? options.maxZoom : 18,
         minZoom: options.minZoom ? options.minZoom : 0 // dosen't affect ol layer rendering UNSUPPORTED
     });

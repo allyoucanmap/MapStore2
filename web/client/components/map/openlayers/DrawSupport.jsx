@@ -15,7 +15,7 @@ const uuid = require('uuid');
 const {isSimpleGeomType, getSimpleGeomType} = require('../../../utils/MapUtils');
 const {reprojectGeoJson, calculateDistance, reproject} = require('../../../utils/CoordinatesUtils');
 const VectorStyle = require('./VectorStyle');
-const wgs84Sphere = new ol.Sphere(6378137);
+// const wgs84Sphere = new ol.Sphere(6378137);
 
 /**
  * Component that allows to draw and edit geometries as (Point, LineString, Polygon, Rectangle, Circle, MultiGeometries)
@@ -351,7 +351,7 @@ class DrawSupport extends React.Component {
                             return this.reprojectCoordinatesToWGS84(coordinate, projection);
                         });
                         let radius = calculateDistance(wgs84Coordinates, 'haversine');
-                        let coords = ol.geom.Polygon.circular(wgs84Sphere, wgs84Coordinates[0], radius, roiProps.maxPoints).clone().transform('EPSG:4326', projection).getCoordinates();
+                        let coords = []; // ol.geom.Polygon.circular(wgs84Sphere, wgs84Coordinates[0], radius, roiProps.maxPoints).clone().transform('EPSG:4326', projection).getCoordinates();
                         geom.setCoordinates(coords);
                         return geom;
                     };
@@ -724,7 +724,7 @@ class DrawSupport extends React.Component {
                     && !isNaN(parseFloat(center.y));
                 geometry = isCircle ?
                 options.geodesic ?
-                ol.geom.Polygon.circular(wgs84Sphere, this.reprojectCoordinatesToWGS84([center.x, center.y], projection), radius, 100).clone().transform('EPSG:4326', projection)
+                null // ol.geom.Polygon.circular(wgs84Sphere, this.reprojectCoordinatesToWGS84([center.x, center.y], projection), radius, 100).clone().transform('EPSG:4326', projection)
                 : ol.geom.Polygon.fromCircle(new ol.geom.Circle([center.x, center.y], radius), 100)
                     : new ol.geom.Polygon(coordinates && isArray(coordinates[0]) ? coordinates : []);
 

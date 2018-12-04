@@ -11,7 +11,8 @@ const PropTypes = require('prop-types');
 const {round} = require('lodash');
 const assign = require('object-assign');
 const ol = require('openlayers');
-const wgs84Sphere = new ol.Sphere(6378137);
+// console.log(ol);
+// const wgs84Sphere = new ol.sphere(6378137);
 const {reprojectGeoJson, reproject, calculateAzimuth, calculateDistance, transformLineToArcs} = require('../../../utils/CoordinatesUtils');
 const {convertUom, getFormattedBearingValue} = require('../../../utils/MeasureUtils');
 const {getMessageById} = require('../../../utils/LocaleUtils');
@@ -299,7 +300,7 @@ class MeasurementSupport extends React.Component {
 
     calculateGeodesicArea = (coordinates) => {
         let reprojectedCoordinates = this.reprojectedCoordinates(coordinates);
-        return Math.abs(wgs84Sphere.geodesicArea(reprojectedCoordinates));
+        return Math.abs(ol.sphere.getArea(reprojectedCoordinates));
     };
 
     /**
