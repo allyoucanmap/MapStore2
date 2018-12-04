@@ -9,7 +9,7 @@
 const Rx = require('rxjs');
 const Api = require('../api/WMS');
 const { REFRESH_LAYERS, UPDATE_LAYERS_DIMENSION, UPDATE_SETTINGS_PARAMS, layersRefreshed, updateNode, updateSettings, layersRefreshError, changeLayerParams} = require('../actions/layers');
-const {getLayersWithDimension, layerSettingSelector} = require('../selectors/layers');
+const {getLayersWithDimension, layerSettingSelector, getSelectedLayer} = require('../selectors/layers');
 
 const { setControlProperty } = require('../actions/controls');
 const { initialSettingsSelector, originalSettingsSelector } = require('../selectors/controls');
@@ -127,6 +127,7 @@ const updateSettingsParamsEpic = (action$, store) =>
 
             const state = store.getState();
             const settings = layerSettingSelector(state);
+            const selectedLayer = getSelectedLayer(state);
             const initialSettings = initialSettingsSelector(state);
             const orig = originalSettingsSelector(state);
 
@@ -141,8 +142,8 @@ const updateSettingsParamsEpic = (action$, store) =>
                 // update changed keys to verify only modified values (internal state)
                 setControlProperty('layersettings', 'originalSettings', originalSettings),
                 ...(update ? [updateNode(
-                    settings.node,
-                    settings.nodeType,
+                    settings.node || selectedLayer.id,
+                    settings.nodeType || 'layers',
                     { ...settings.options, ...newParams }
                 )] : [])
             );
