@@ -135,6 +135,7 @@ Layers.registerType('wms', {
         const sourceOptions = addTileLoadFunction({
             urls: urls,
             params: queryParameters,
+            attributions: options.attribution ? [options.attribution] : [],
             tileGrid: new ol.tilegrid.TileGrid({
                 extent: extent,
                 resolutions: mapUtils.getResolutions(),
@@ -146,7 +147,7 @@ Layers.registerType('wms', {
             opacity: options.opacity !== undefined ? options.opacity : 1,
             visible: options.visibility !== false,
             zIndex: options.zIndex,
-            source: new ol.source.TileWMS(sourceOptions)
+            source: new ol.source.TileWMS({...sourceOptions})
         });
         layer.set('map', map);
         if (options.useForElevation) {
