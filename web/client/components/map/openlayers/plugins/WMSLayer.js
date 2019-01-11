@@ -9,7 +9,7 @@ const React = require('react');
 const Message = require('../../../../components/I18N/Message');
 const Layers = require('../../../../utils/openlayers/Layers');
 const ol = require('openlayers');
-const {isNil} = require('lodash');
+const {isNil, isEqual} = require('lodash');
 const objectAssign = require('object-assign');
 const CoordinatesUtils = require('../../../../utils/CoordinatesUtils');
 const ProxyUtils = require('../../../../utils/ProxyUtils');
@@ -18,6 +18,9 @@ const {optionsToVendorParams} = require('../../../../utils/VendorParamsUtils');
 const SecurityUtils = require('../../../../utils/SecurityUtils');
 const mapUtils = require('../../../../utils/MapUtils');
 const ElevationUtils = require('../../../../utils/ElevationUtils');
+const { getStyleParser, getStyle, isVector } = require('../../../../utils/VectorTileUtils');
+const styleParser = getStyleParser('ol');
+
 /**
     @param {object} options of the layer
     @return the Openlayers options from the layers ones and/or default.
@@ -113,51 +116,87 @@ function getElevation(pos) {
     }
 }
 
-Layers.registerType('wms', {
-    create: (options, map) => {
-        const urls = getWMSURLs(isArray(options.url) ? options.url : [options.url]);
-        const queryParameters = wmsToOpenlayersOptions(options) || {};
-        urls.forEach(url => SecurityUtils.addAuthenticationParameter(url, queryParameters, options.securityToken));
-        if (options.singleTile) {
-            return new ol.layer.Image({
-                opacity: options.opacity !== undefined ? options.opacity : 1,
-                visible: options.visibility !== false,
-                zIndex: options.zIndex,
-                source: new ol.source.ImageWMS({
-                    url: urls[0],
-                    params: queryParameters,
-                    ratio: options.ratio || 1
-                })
-            });
-        }
-        const mapSrs = map && map.getView() && map.getView().getProjection() && map.getView().getProjection().getCode() || 'EPSG:3857';
-        const extent = ol.proj.get(CoordinatesUtils.normalizeSRS(options.srs || mapSrs, options.allowedSRS)).getExtent();
-        const sourceOptions = addTileLoadFunction({
-            urls: urls,
-            params: queryParameters,
-            attributions: options.attribution ? [options.attribution] : [],
-            tileGrid: new ol.tilegrid.TileGrid({
-                extent: extent,
-                resolutions: mapUtils.getResolutions(),
-                tileSize: options.tileSize ? options.tileSize : 256,
-                origin: options.origin ? options.origin : [extent[0], extent[1]]
-            })
-        }, options);
-        const layer = new ol.layer.Tile({
+const applyStyle = (options, layer) => {
+    getStyle(options, (data) => {
+        const styleFunc = data.format === 'css' ? styleParser.sld : styleParser[data.format] || styleParser.mapstore;
+        if (styleFunc) styleFunc({...data, styleBody: data.code}, options, layer);
+    });
+};
+
+const create = (options, map) => {
+    const urls = getWMSURLs(isArray(options.url) ? options.url : [options.url]);
+    const queryParameters = wmsToOpenlayersOptions(options) || {};
+    urls.forEach(url => SecurityUtils.addAuthenticationParameter(url, queryParameters, options.securityToken));
+    if (options.singleTile) {
+        return new ol.layer.Image({
             opacity: options.opacity !== undefined ? options.opacity : 1,
             visible: options.visibility !== false,
             zIndex: options.zIndex,
-            source: new ol.source.TileWMS({...sourceOptions})
+            source: new ol.source.ImageWMS({
+                url: urls[0],
+                params: queryParameters,
+                ratio: options.ratio || 1
+            })
         });
-        layer.set('map', map);
-        if (options.useForElevation) {
-            layer.set('nodata', options.nodata);
-            layer.set('getElevation', getElevation.bind(layer));
-        }
-        return layer;
-    },
+    }
+    const mapSrs = map && map.getView() && map.getView().getProjection() && map.getView().getProjection().getCode() || 'EPSG:3857';
+    const extent = ol.proj.get(CoordinatesUtils.normalizeSRS(options.srs || mapSrs, options.allowedSRS)).getExtent();
+    const sourceOptions = addTileLoadFunction({
+        urls: urls,
+        params: queryParameters,
+        attributions: options.attribution ? [options.attribution] : [],
+        tileGrid: new ol.tilegrid.TileGrid({
+            extent: extent,
+            resolutions: mapUtils.getResolutions(),
+            tileSize: options.tileSize ? options.tileSize : 256,
+            origin: options.origin ? options.origin : [extent[0], extent[1]]
+        })
+    }, options);
+
+    const wmsSource = new ol.source.TileWMS({...sourceOptions});
+    let vectorSource;
+    const vectorFormat = isVector(options);
+    if (vectorFormat && vectorFormat.name && ol.format[vectorFormat.name]) {
+        vectorSource = new ol.source.VectorTile({
+            ...sourceOptions,
+            format: new ol.format[vectorFormat.name](),
+            tileUrlFunction: (tileCoord, pixelRatio, projection) => wmsSource.tileUrlFunction(tileCoord, pixelRatio, projection)
+        });
+    }
+    const layer = new ol.layer[vectorSource ? 'VectorTile' : 'Tile']({
+        opacity: options.opacity !== undefined ? options.opacity : 1,
+        visible: options.visibility !== false,
+        zIndex: options.zIndex,
+        source: vectorSource || wmsSource
+    });
+    layer.set('map', map);
+    if (options.useForElevation) {
+        layer.set('nodata', options.nodata);
+        layer.set('getElevation', getElevation.bind(layer));
+    }
+    if (vectorSource) {
+        layer.set('wmsSource', wmsSource);
+        applyStyle(options, layer);
+    }
+    return layer;
+};
+Layers.registerType('wms', {
+    create,
     update: (layer, newOptions, oldOptions, map) => {
-        if (oldOptions && layer && layer.getSource() && layer.getSource().updateParams) {
+        const newVectorFormat = isVector(newOptions);
+        const oldVectorFormat = isVector(oldOptions);
+        if (!isEqual(oldVectorFormat, newVectorFormat) || newVectorFormat) {
+            if (oldOptions.singleTile !== newOptions.singleTile
+                || oldOptions.securityToken !== newOptions.securityToken
+                || oldOptions.ratio !== newOptions.ratio
+                || !isEqual(oldVectorFormat, newVectorFormat)) {
+                return create(newOptions, map);
+            } else if (isEqual(oldVectorFormat, newVectorFormat)
+                && (oldOptions.style !== newOptions.style
+                || oldOptions._v_ !== newOptions._v_)) {
+                applyStyle(newOptions, layer);
+            }
+        } else if (oldOptions && layer && layer.getSource() && layer.getSource().updateParams) {
             let changed = false;
             if (oldOptions.params && newOptions.params) {
                 changed = Object.keys(oldOptions.params).reduce((found, param) => {

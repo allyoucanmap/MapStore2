@@ -144,8 +144,8 @@ const styleParser = {
                 return olFeaturedTypeStyles.reduce((plainOlStyles, {olStyles, zIndexes}, idx) => {
                     return [
                         ...plainOlStyles,
-                        ...olStyles.map((olStyle, jdx) => {
-                            const zIndex = (zIndexLayers[layerName] || 0) + Z_INDEX_STEP_FTS * idx - zIndexes[jdx];
+                        ...olStyles.map((olStyle /*, jdx*/) => {
+                            const zIndex = (zIndexLayers[layerName] || 0) + Z_INDEX_STEP_FTS * idx; /*- zIndexes[jdx];*/
                             olStyle.setZIndex(zIndex);
                             return olStyle;
                         })
