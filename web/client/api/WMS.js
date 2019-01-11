@@ -94,7 +94,11 @@ const Api = {
                         });
                         return json;
                     }
-                    let json = unmarshaller.unmarshalString(response.data);
+                    // workaround not the soultion
+                    const caps = response.data
+                        && response.data.replace(/\<qos\-wms\:QualityOfServiceMetadata>[\s\S]*?<\/qos\-wms\:QualityOfServiceMetadata>/g, '');
+                    //
+                    let json = unmarshaller.unmarshalString(caps);
                     return json && json.value;
                 }));
             });

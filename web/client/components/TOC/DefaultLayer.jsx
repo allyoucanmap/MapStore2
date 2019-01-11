@@ -19,9 +19,11 @@ const LayersTool = require('./fragments/LayersTool');
 const OpacitySlider = require('./fragments/OpacitySlider');
 const withTooltip = require('../data/featuregrid/enhancers/withTooltip');
 const localizedProps = require('../misc/enhancers/localizedProps');
-
+const SwitchButton = require('../misc/switch/SwitchButton');
 const GlyphIndicator = localizedProps('tooltip')(withTooltip(Glyphicon));
 
+const vectorFormat = 'application/vnd.mapbox-vector-tile';
+// 'application/vnd.mapbox-vector-tile'
 class DefaultLayer extends React.Component {
     static propTypes = {
         node: PropTypes.object,
@@ -147,7 +149,27 @@ class DefaultLayer extends React.Component {
                     <Title tooltip={this.props.titleTooltip} filterText={this.props.filterText} node={this.props.node} currentLocale={this.props.currentLocale} onClick={this.props.onSelect} onContextMenu={this.props.onContextMenu} />
                     {this.props.node.loading ? <div className="toc-inline-loader"></div> : this.renderToolsLegend(isEmpty)}
                     {this.props.indicators ? this.renderIndicators() : null}
+                    {this.props.node.type === 'wms' && <SwitchButton
+                        checked={this.props.node.format === vectorFormat}
+                        onChange={() => {
+                            this.props.onUpdateNode(
+                                this.props.node.id,
+                                'layers',
+                                {
+                                    format: this.props.node.format === 'image/png'
+                                     ? vectorFormat
+                                     : 'image/png'
+                                }
+                            );
+                        }}
+                        />}
+
                 </div>
+                {this.props.node.type === 'wms' && <div style={{ padding: 6, textAlign: 'center' }}>
+                    <i>{this.props.node.format === vectorFormat
+                        ? 'render client side'
+                        : 'render server side'}</i>
+                </div>}
                 {!this.props.activateOpacityTool || this.props.node.expanded || !this.props.node.visibility || this.props.node.loadingError === 'Error' ? null : this.renderOpacitySlider(this.props.hideOpacityTooltip)}
                 {isEmpty ? null : this.renderCollapsible()}
             </Node>
