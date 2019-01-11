@@ -7,7 +7,7 @@
  */
 const axios = require('../../libs/ajax');
 const assign = require('object-assign');
-const { getNameParts, stringifyNameParts } = require('../../utils/StyleEditorUtils');
+const { getNameParts, stringifyNameParts, getStyleBaseUrl } = require('../../utils/StyleEditorUtils');
 
 const contentTypes = {
     css: 'application/vnd.geoserver.geocss+css',
@@ -36,7 +36,6 @@ const formatRequestData = ({options = {}, format, baseUrl, name, workspace}, isN
     };
 };
 
-const getStyleBaseUrl = ({geoserverBaseUrl, workspace, name, fileName}) => `${geoserverBaseUrl}rest/${workspace && `workspaces/${workspace}/` || ''}styles/${ fileName ? fileName : `${encodeURIComponent(name)}.json`}`;
 
 /**
 * Api for GeoServer styles via rest
@@ -145,13 +144,13 @@ const Api = {
     * @param {string} params.styleName style name
     * @return {object} GeoServer style object with code params eg: {...otherStyleParams, code: '* { stroke: #ff0000; }'}
     */
-    getStyleCodeByName: ({baseUrl: geoserverBaseUrl, styleName, options}) => {
+    getStyleCodeByName: ({baseUrl: geoserverBaseUrl, styleName, options, format}) => {
         const {name, workspace} = getNameParts(styleName);
         const url = getStyleBaseUrl({name, workspace, geoserverBaseUrl});
         return axios.get(url, options)
             .then(response => {
                 return response.data && response.data.style && response.data.style.filename ?
-                    axios.get(getStyleBaseUrl({workspace, geoserverBaseUrl, fileName: response.data.style.filename})).then(({data: code}) => ({...response.data.style, code}))
+                    axios.get(getStyleBaseUrl({workspace, geoserverBaseUrl, fileName: `${response.data.style.name}.${format || response.data.style.format}`})).then(({data: code}) => ({...response.data.style, code}))
                     : null;
             });
     }

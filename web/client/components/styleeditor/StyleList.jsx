@@ -49,7 +49,12 @@ const StyleList = ({
     formatColors = {
         sld: '#33ffaa',
         css: '#ffaa33',
-        mbs: '#f2f2f2'
+        mbstyle: '#f2f2f2'
+    },
+    formatNames = {
+        sld: 'sld',
+        css: 'css',
+        mbstyle: 'mbs'
     },
     filterText,
     onFilter = () => {}
@@ -81,16 +86,13 @@ const StyleList = ({
                                 backgroundColor="#333333"
                                 texts={[
                                     {
-                                        text: style.format.toUpperCase(),
+                                        text: formatNames[style.format] && formatNames[style.format].toUpperCase() || style.format.toUpperCase(),
                                         fill: formatColors[style.format] || '#f2f2f2',
                                         style: {
                                             fontSize: 70,
                                             fontWeight: 'bold'
                                         }
-                                    }]}/> || <Glyphicon glyph="geoserver" />,
-                        tools: defaultStyle === style.name &&
-                        <Glyphicon glyph="star" tooltipId="styleeditor.defaultStyle"/>
-                        || <Glyphicon glyph="ok" tooltipId="styleeditor.availableStyle"/>
+                                    }]}/> || <Glyphicon glyph="geoserver" />
                     }))} />
         </BorderLayout>
     );

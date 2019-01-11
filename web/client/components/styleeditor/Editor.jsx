@@ -70,7 +70,8 @@ class Editor extends React.Component {
         hintProperties: PropTypes.object,
         error: PropTypes.object,
         inlineWidgets: PropTypes.array,
-        loading: PropTypes.bool
+        loading: PropTypes.bool,
+        readOnly: PropTypes.bool
     };
 
     static defaultProps = {
@@ -115,7 +116,7 @@ class Editor extends React.Component {
     }
 
     onRenderToken = editor => {
-
+        if (this.props.readOnly) return null;
         const lineCount = editor.lineCount();
 
         if (this.inlineWidgets) {
@@ -151,6 +152,8 @@ class Editor extends React.Component {
                 }, [...this.inlineWidgets]);
             });
         });
+
+        return null;
     };
 
     onAutocomplete = instance => {
@@ -177,6 +180,7 @@ class Editor extends React.Component {
     };
 
     render() {
+
         return (
             <BorderLayout
                 className="ms-style-editor"
@@ -217,7 +221,8 @@ class Editor extends React.Component {
                         lineNumbers: true,
                         styleSelectedText: true,
                         indentUnit: 2,
-                        tabSize: 2
+                        tabSize: 2,
+                        readOnly: this.props.readOnly
                     }} />
                 {this.state.token &&
                     <div className="ms-inline-widget-container">

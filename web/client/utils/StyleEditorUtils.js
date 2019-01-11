@@ -139,7 +139,8 @@ const StyleEditorUtils = {
      * @param  {object} styleObj.workspace {name: 'name of workspace'}
      * @return  {string} combination of workspace and name, eg. 'workspace:stylename'
      */
-    stringifyNameParts: ({name, workspace}) => `${workspace && workspace.name && `${workspace.name}:` || ''}${name}`
+    stringifyNameParts: ({name, workspace}) => `${workspace && workspace.name && `${workspace.name}:` || ''}${name}`,
+    getStyleBaseUrl: ({geoserverBaseUrl, workspace, name, fileName}) => `${geoserverBaseUrl}rest/${workspace && `workspaces/${workspace}/` || ''}styles/${ fileName ? fileName : `${encodeURIComponent(name)}.json`}`
 };
 
 module.exports = StyleEditorUtils;
