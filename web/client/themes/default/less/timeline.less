@@ -90,7 +90,7 @@
                         left: 50%;
                         margin-left: 1px;
                         transform: translateX(-50%);
-                        color: @ms2-color-text;
+                        color: lighten(@ms2-color-text, 20%);
                     }
                 }
                 
@@ -193,13 +193,23 @@
             }
             
             &:hover {
-                .ms-time-color-active;
+                .ms-time-color-active(
+                    lighten(@ms2-color-text, 20%),
+                    lighten(@ms2-color-text, 20%),
+                    'transparent',
+                    lighten(@ms2-color-text, 20%)
+                );
             }
             &:active {
                 cursor: grabbing;
                 cursor: -moz-grabbing;
                 cursor: -webkit-grabbing;
-                .ms-time-color-active;
+                .ms-time-color-active(
+                    lighten(@ms2-color-text, 20%),
+                    lighten(@ms2-color-text, 20%),
+                    'transparent',
+                    lighten(@ms2-color-text, 20%)
+                );
                 z-index: 67;
             }
         }
@@ -225,11 +235,11 @@
                 }
                 &:hover, &:active {
                     .ms-time-color-active(
-                        @ms2-color-text,
+                        lighten(@ms2-color-text, 20%),
                         'transparent',
                         'transparent',
                         'transparent',
-                        @ms2-color-text
+                        lighten(@ms2-color-text, 20%)
                     );
                     z-index: 67;
                 }
@@ -251,9 +261,9 @@
                 
                 &:hover, &:active {
                     .ms-time-color-active(
-                        @ms2-color-text,
+                        lighten(@ms2-color-text, 20%),
                         'transparent',
-                        @ms2-color-text,
+                        lighten(@ms2-color-text, 20%),
                         'transparent',
                         'transparent'
                     );
