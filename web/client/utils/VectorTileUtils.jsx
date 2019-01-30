@@ -6,10 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const { head } = require('lodash');
+const { head, uniq, trim, get } = require('lodash');
 const url = require('url');
 const StyleAPI = require('../api/geoserver/Styles');
 const { normalizeUrl } = require('./PrintUtils');
+const derefLayers = require('@mapbox/mapbox-gl-style-spec/deref').default;
+const uuidv1 = require('uuid/v1');
+const {
+    Reader: sldReader,
+    getLayerNames: sldGetLayerNames
+} = require('@nieuwlandgeo/sldreader/src/index');
 
 const styles = {};
 const originalStyles = {};
@@ -72,6 +78,70 @@ const getStyle = (options, callback = () => {}) => {
     return null;
 };
 
+const splitCode = (format, styleBody) => {
+    if (format === 'sld') {
+        const styledLayerDescriptor = sldReader(styleBody);
+        const layerNames = sldGetLayerNames(styledLayerDescriptor);
+        const splittedCode = styleBody.split('<sld:NamedLayer>')
+            .filter((str) => str.indexOf('?xml') === -1)
+            .map((str) => trim(str.replace(/\<\/sld\:NamedLayer\>|<\/sld\:StyledLayerDescriptor\>/g, '')));
+
+        return splittedCode.map(code => {
+            const layer = head(layerNames.filter((name) => code.indexOf(name) !== -1));
+            if (!layer) {
+                return null;
+            }
+            return {
+                layer,
+                code,
+                format
+            };
+        }).filter(val => val);
+    }
+    if (format === 'mbstyle' && styleBody && styleBody.layers) {
+        const allLayers = derefLayers(styleBody.layers);
+        const layerNames = uniq(allLayers.map(layer => layer['source-layer']));
+        const sprite = styleBody.sprite;
+        return layerNames.map((layer) => {
+            const code = styleBody.layers.filter(ly => ly['source-layer'] === layer);
+            return {
+                layer,
+                code,
+                format,
+                ...(sprite ? { sprite } : {})
+            };
+        });
+    }
+    return [ ];
+};
+
+const wrapSplittedStyle = (format, splittedStyles, layerName) => {
+    if (format === 'sld') {
+        const namedLayers = splittedStyles.reduce((body, { code, layer }) => {
+            const str = code.replace(/\<sld\:Name>[\s\S]*?<\/sld\:Name>/g, '');
+            return body + `<sld:NamedLayer><sld:Name>${layer}</sld:Name>${str}</sld:NamedLayer>`;
+        }, '');
+        const xml = `<?xml version="1.0" encoding="ISO-8859-1"?><sld:StyledLayerDescriptor xsi:schemaLocation="http://www.opengis.net/sld StyledLayerDescriptor.xsd" xmlns="http://www.opengis.net/sld" xmlns:sld="http://www.opengis.net/sld" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0.0">${namedLayers}</sld:StyledLayerDescriptor>`;
+        return xml;
+    }
+    if (format === 'mbstyle') {
+        const allLayers = splittedStyles.reduce((body, { code, layer }) => [...body, ...code.map((ly) => ({ ...ly, id: uuidv1(), source: layerName, 'source-layer': layer }))], '');
+        const sprite = get(splittedStyles[0] || {}, 'sprite');
+        return {
+            version: 8,
+            name: layerName,
+            ...(sprite ? { sprite } : {} ),
+            sources: {
+                [layerName]: {
+                    type: 'vector'
+                }
+            },
+            layers: allLayers
+        };
+    }
+    return '';
+};
+
 const getOriginalStyle = (options) => {
     const availableStyles = options.availableStyles || [];
     const currenStyle = !options.style
@@ -112,5 +182,7 @@ module.exports = {
     getStyle,
     updateStyle,
     isValid,
-    getOriginalStyle
+    getOriginalStyle,
+    splitCode,
+    wrapSplittedStyle
 };

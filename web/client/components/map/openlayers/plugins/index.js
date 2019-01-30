@@ -17,5 +17,6 @@ module.exports = {
     VectorLayer: require('./VectorLayer'),
     WMSLayer: require('./WMSLayer'),
     WMTSLayer: require('./WMTSLayer'),
-    VectorTileLayer: require('./VectorTileLayer')
+    VectorTileLayer: require('./VectorTileLayer'),
+    WFS3Layer: require('./WFS3Layer')
 };

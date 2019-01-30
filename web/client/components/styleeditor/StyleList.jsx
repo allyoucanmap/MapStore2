@@ -57,14 +57,15 @@ const StyleList = ({
         mbstyle: 'mbs'
     },
     filterText,
-    onFilter = () => {}
+    onFilter = () => {},
+    hideFilter
 }) => (
         <BorderLayout
             header={
-                <Filter
+                !hideFilter ? <Filter
                     filterPlaceholder="styleeditor.styleListfilterPlaceholder"
                     filterText={filterText}
-                    onFilter={onFilter}/>
+                    onFilter={onFilter}/> : null
             }>
             <SideGrid
                 size="sm"

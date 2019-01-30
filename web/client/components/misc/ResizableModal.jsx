@@ -69,7 +69,7 @@ const ResizableModal = ({
     disabledClose = false,
     showFullscreen = false,
     fullscreenType = 'full',
-    buttons = [],
+    buttons,
     size = '',
     bodyClassName = '',
     children,
@@ -112,7 +112,7 @@ const ResizableModal = ({
                 <div role="body" className={bodyClassName}>
                     {children}
                 </div>
-                <div role="footer">
+                {buttons && <div role="footer">
                     {loading ? <LoadingSpinner style={{
                         position: "absolute",
                         left: 0,
@@ -120,7 +120,7 @@ const ResizableModal = ({
                         margin: 18
                     }}/> : null}
                     <Toolbar buttons={buttons}/>
-                </div>
+                </div>}
             </Dialog>
         </div>) : null;
     return fade ?

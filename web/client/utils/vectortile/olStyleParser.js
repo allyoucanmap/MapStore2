@@ -85,8 +85,8 @@ module.exports = {
     mapstore: ({styleBody}, options, olLayer) => {
         if (olLayer) olLayer.setStyle(getStyle(options));
     },
-    mbstyle: ({styleBody, spriteData, sprite}, options, olLayer) => {
-        const styleFunction = olmsStylefunction(olLayer, makeValidMBStyle(styleBody, options), options.name, undefined, spriteData, getSpriteUrl(sprite));
+    mbstyle: ({styleBody, spriteData, sprite, spriteUrl}, options, olLayer) => {
+        const styleFunction = olmsStylefunction(olLayer, makeValidMBStyle(styleBody, options), options.name, undefined, spriteData, spriteUrl || getSpriteUrl(sprite));
         if (olLayer) olLayer.setStyle(styleFunction);
     },
     sld: ({styleBody}, options, olLayer) => {
