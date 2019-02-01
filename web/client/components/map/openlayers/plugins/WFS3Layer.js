@@ -16,23 +16,34 @@ const url = require('url');
 const applyStyle = (options, layer) => {
     const { format } = options.style;
     const styleFunc = format === 'css' ? styleParser.sld : styleParser[format] || styleParser.mapstore;
-    if (styleFunc) styleFunc({ ...options.style, styleBody: wrapSplittedStyle(format, [ options.style ], options.name) }, options, layer);
+    if (options.name !== options.originalName && format === 'mbstyle') {
+        const name = options.originalName && options.originalName.replace(/\//g, '_') || options.name;
+        const styles = [ options.style ].map(({ ...sty}) => ({ ...sty, layer: name }));
+        if (styleFunc) styleFunc({ ...options.style, styleBody: wrapSplittedStyle(format, styles, name) }, options, layer);
+        return null;
+    }
+    if (styleFunc) styleFunc({ ...options.style, styleBody: wrapSplittedStyle(format, [ options.style ], name) }, options, layer);
+    return null;
 };
 
 Layers.registerType('wfs3', {
     create: (options) => {
-
-        let template = head((options.links || []).filter(({ rel }) => rel === 'tiles'));
+        let template = head((options.links || []).filter(({ rel, type }) => rel === 'tiles' && type === 'application/vnd.mapbox-vector-tile'));
         if (!template) {
             const firstLink = head((options.links || []).filter(({ rel }) => rel === 'item')) || {};
             const parsedUrl = url.parse(firstLink.href || '');
             template = {href: `${parsedUrl.protocol}//${parsedUrl.hostname}${trimEnd(parsedUrl.pathname, 'items')}tiles/default/{level}/{row}/{col}?f=mvt`};
         }
-        const layerUrl = (template.href || '')
+        const pathUrl = (template.href || '')
             .replace(/\{tilingSchemeId\}/, options.tilingSchemeId || 'GoogleMapsCompatible')
             .replace(/\{level\}/, '{z}')
             .replace(/\{row\}/, '{y}')
             .replace(/\{col\}/, '{x}');
+
+        const { protocol, host } = url.parse(get(options, 'service.collectionsUrl') || '');
+        const { path } = url.parse(pathUrl);
+
+        const layerUrl = `${protocol}//${host}${path}`;
 
         const tileGrid = options.tilingSchemeId === 'GoogleMapsCompatible' || !options.tilingSchemeId ?
             ol.tilegrid.createXYZ()
