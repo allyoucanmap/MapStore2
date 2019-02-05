@@ -8,7 +8,7 @@
 
 const React = require('react');
 const assign = require('object-assign');
-const {omit, isObject, head, isArray, isString, memoize, get, isEmpty} = require('lodash');
+const {omit, isObject, head, isArray, isString, memoize, get} = require('lodash');
 const {combineReducers} = require('redux');
 const {connect} = require('react-redux');
 const url = require('url');
