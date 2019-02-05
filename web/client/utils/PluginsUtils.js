@@ -8,7 +8,7 @@
 
 const React = require('react');
 const assign = require('object-assign');
-const {omit, isObject, head, isArray, isString, memoize, get} = require('lodash');
+const {omit, isObject, head, isArray, isString, memoize, get, isEmpty} = require('lodash');
 const {combineReducers} = require('redux');
 const {connect} = require('react-redux');
 const url = require('url');
@@ -266,7 +266,16 @@ const PluginsUtils = {
         const stateSelector = isObject(pluginDef) ? pluginDef.stateSelector : id || undefined;
         const isDefault = isObject(pluginDef) ? typeof pluginDef.isDefault === 'undefined' && true || pluginDef.isDefault : true;
         const pluginKey = (isObject(pluginDef) ? pluginDef.name : pluginDef) + 'Plugin';
-        const impl = plugins[pluginKey];
+        const implKeys = plugins[pluginKey] && Object.keys(plugins[pluginKey]) || [];
+        const overrideKeys = isObject(pluginDef) && pluginDef.override && Object.keys(pluginDef.override) || [];
+        const overrideConfig = overrideKeys.filter(key => implKeys.indexOf(key) === -1)
+            .reduce((override, key) => {
+                return {
+                    ...override,
+                    [key]: pluginDef.override[key]
+                };
+            }, {});
+        const impl = plugins[pluginKey] && assign(plugins[pluginKey], overrideConfig || {});
         if (!impl) {
             return null;
         }
