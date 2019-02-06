@@ -113,10 +113,12 @@ const includeLoadedItem = (name, loadedPlugins, plugin) => {
     return plugin;
 };
 
-const getMorePrioritizedContainer = (pluginImpl, plugins, priority) => {
+const getMorePrioritizedContainer = (pluginImpl, plugins, priority, name) => {
+    const cfgObj = name && isPluginConfigured(plugins, name + 'Plugin');
     return plugins.reduce((previous, current) => {
         const pluginName = current.name || current;
-        return pluginImpl[pluginName] && pluginImpl[pluginName].priority > previous.priority ? {plugin: {name: pluginName, impl: pluginImpl[pluginName]}, priority: pluginImpl[pluginName].priority} : previous;
+        const container = pluginImpl && pluginImpl[pluginName] || cfgObj && cfgObj.override && cfgObj.override[pluginName];
+        return container && container.priority > previous.priority ? {plugin: {name: pluginName, impl: container}, priority: container.priority} : previous;
     }, {plugin: null, priority: priority});
 };
 
@@ -290,12 +292,15 @@ const PluginsUtils = {
     getPluginItems,
     getConfiguredPlugin: (pluginDef, loadedPlugins, loaderComponent) => {
         if (pluginDef) {
-            const Plugin = loadedPlugins && loadedPlugins[pluginDef.name] || (pluginDef.plugin && !pluginDef.plugin.loadPlugin && pluginDef.plugin);
+            const impl = loadedPlugins && loadedPlugins[pluginDef.name] || (pluginDef.plugin && !pluginDef.plugin.loadPlugin && pluginDef.plugin);
+            const id = isObject(pluginDef) ? pluginDef.id : null;
+            const stateSelector = isObject(pluginDef) ? pluginDef.stateSelector : id || undefined;
+            const Plugin = impl.loadPlugin || impl.displayName || impl.prototype.isReactComponent ? impl : impl(stateSelector);
             const result = (props) => {
                 return Plugin ? (<Plugin key={pluginDef.id}
-                    {...props} {...pluginDef.cfg} pluginCfg={pluginDef.cfg} />) : loaderComponent;
+                    {...props} {...pluginDef.cfg} pluginCfg={pluginDef.cfg} items={pluginDef.items || []} />) : loaderComponent;
             };
-            result.loaded = !!Plugin;
+            result.loaded = !!impl;
             return result;
         }
         return pluginDef;
