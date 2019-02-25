@@ -9,8 +9,10 @@
 const React = require('react');
 const ResizableModal = require('../../misc/ResizableModal');
 const Portal = require('../../misc/Portal');
+const {withState} = require('recompose');
 const Message = require('../../I18N/Message');
-const {Glyphicon, Row, Col} = require('react-bootstrap');
+const {Glyphicon, Row, Col, DropdownButton, MenuItem} = require('react-bootstrap');
+const CoordinatesRow = require('../../mapcontrols/annotations/CoordinatesRow');
 
 /**
  * Component for rendering lat and lng of the current selected point
@@ -23,7 +25,18 @@ const {Glyphicon, Row, Col} = require('react-bootstrap');
  * @prop {node} revGeocodeDisplayName text/info displayed on modal
  */
 
-module.exports = ({latlng, enableRevGeocode, hideRevGeocode = () => {}, showModalReverse, revGeocodeDisplayName}) => {
+const formats = [
+    {
+        value: 'decimal',
+        text: <Message msgId="annotations.editor.decimal"/>
+    },
+    {
+        value: 'aeronautical',
+        text: <Message msgId="annotations.editor.aeronautical"/>
+    }
+];
+
+module.exports = withState('format', 'onChangeFormat', 'decimal')(({latlng, enableRevGeocode, hideRevGeocode = () => {}, showModalReverse, revGeocodeDisplayName, onChangeFormat = () => {}, format = ''}) => {
 
     let lngCorrected = null;
     if (latlng) {
@@ -36,9 +49,37 @@ module.exports = ({latlng, enableRevGeocode, hideRevGeocode = () => {}, showModa
 
     return enableRevGeocode && latlng && lngCorrected ? (
         <Row key="ms-geocode-coords" className="ms-geoscode-viewer text-center">
-            <Col xs={12}>
+            <Col xs={12}/>
+            {/*<Col xs={12}>
                 <div className="ms-geocode-coords">{latlng ? 'Lat: ' + (Math.round(latlng.lat * 100000) / 100000) + '- Long: ' + lngCorrected : null}</div>
-            </Col>
+            </Col>*/}
+            <CoordinatesRow
+                onMouseEnter={() => {}}
+                removeVisible={false}
+                showLabel
+                format={format}
+                notDraggable
+                component={{lat: (Math.round(latlng.lat * 100000) / 100000), lon: lngCorrected}}
+                tools={
+                    [
+                        {
+                            el: () => (
+                                <DropdownButton
+                                    noCaret
+                                    title={<Glyphicon glyph="cog"/>}
+                                    style={{marginTop: 20}}
+                                    pullRight
+                                    className="square-button-md no-border"
+                                    tooltip="Format">
+                                    {formats.map(({text, value}) => <MenuItem
+                                        active={format === value}
+                                        key={value}
+                                        onClick={() => onChangeFormat(value)}>{text}</MenuItem>)}
+                                </DropdownButton>
+                            )
+                        }
+                    ]
+                }/>
             <Portal>
                 <ResizableModal
                     fade
@@ -60,4 +101,4 @@ module.exports = ({latlng, enableRevGeocode, hideRevGeocode = () => {}, showModa
             </Portal>
         </Row>
     ) : null;
-};
+});

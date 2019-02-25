@@ -288,7 +288,7 @@ class AnnotationsEditor extends React.Component {
                                 onClick: () => { this.props.onCancel(); this.props.onCleanHighlight(); }
                             }, {
                                 glyph: 'zoom-to',
-                                tooltipId: "annotations.zoomTo",
+                                tooltipId: "Zoom to annotation",
                                 visible: true,
                                 onClick: () => { this.zoom(); }
                             }, {
@@ -636,7 +636,7 @@ class AnnotationsEditor extends React.Component {
                 modal
                 onClose={this.props.onCancelClose}
                 onConfirm={this.props.onConfirmClose}
-                confirmButtonBSStyle="default"
+
                 closeGlyph="1-close"
                 confirmButtonContent={<Message msgId="annotations.confirm" />}
                 closeText={<Message msgId="annotations.cancel" />}>
@@ -648,7 +648,7 @@ class AnnotationsEditor extends React.Component {
                 modal
                 onClose={this.props.onCancelRemove}
                 onConfirm={() => this.props.onConfirmRemove(this.props.removing)}
-                confirmButtonBSStyle="default"
+
                 closeGlyph="1-close"
                 confirmButtonContent={<Message msgId="annotations.confirm" />}
                 closeText={<Message msgId="annotations.cancel" />}>
@@ -669,7 +669,7 @@ class AnnotationsEditor extends React.Component {
                 modal
                 onClose={this.props.onCancelClose}
                 onConfirm={this.props.onConfirmClose}
-                confirmButtonBSStyle="default"
+
                 closeGlyph="1-close"
                 confirmButtonContent={<Message msgId="annotations.confirm" />}
                 closeText={<Message msgId="annotations.cancel" />}>
@@ -681,7 +681,7 @@ class AnnotationsEditor extends React.Component {
                 modal
                 onClose={this.props.onToggleUnsavedChangesModal}
                 onConfirm={() => { this.props.onCancelEdit(); this.props.onToggleUnsavedChangesModal(); }}
-                confirmButtonBSStyle="default"
+
                 closeGlyph="1-close"
                 confirmButtonContent={<Message msgId="annotations.confirm" />}
                 closeText={<Message msgId="annotations.cancel" />}>
@@ -693,7 +693,7 @@ class AnnotationsEditor extends React.Component {
                 modal
                 onClose={this.props.onToggleUnsavedGeometryModal}
                 onConfirm={() => { this.props.onResetCoordEditor(); }}
-                confirmButtonBSStyle="default"
+
                 closeGlyph="1-close"
                 title={<Message msgId="annotations.titleUndoGeom" />}
                 confirmButtonContent={<Message msgId="annotations.confirmGeom" />}
@@ -706,7 +706,7 @@ class AnnotationsEditor extends React.Component {
                 modal
                 onClose={this.props.onToggleUnsavedStyleModal}
                 onConfirm={() => { this.props.onCancelStyle(); this.props.onToggleUnsavedStyleModal(); }}
-                confirmButtonBSStyle="default"
+
                 closeGlyph="1-close"
                 confirmButtonContent={<Message msgId="annotations.confirm" />}
                 closeText={<Message msgId="annotations.cancel" />}>
@@ -718,7 +718,7 @@ class AnnotationsEditor extends React.Component {
                 modal
                 onClose={this.props.onToggleDeleteFtModal}
                 onConfirm={() => { this.props.onConfirmDeleteFeature(); this.props.onToggleDeleteFtModal(); }}
-                confirmButtonBSStyle="default"
+
                 closeGlyph="1-close"
                 confirmButtonContent={<Message msgId="annotations.confirm" />}
                 closeText={<Message msgId="annotations.cancel" />}>
@@ -736,7 +736,7 @@ class AnnotationsEditor extends React.Component {
                     this.setState({removing: null});
                     this.props.onConfirmRemove(this.state.removing);
                 }}
-                confirmButtonBSStyle="default"
+
                 closeGlyph="1-close"
                 confirmButtonContent={<Message msgId="annotations.confirm" />}
                 closeText={<Message msgId="annotations.cancel" />}>

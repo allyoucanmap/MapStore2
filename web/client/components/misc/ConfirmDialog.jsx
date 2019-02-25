@@ -42,7 +42,6 @@ class UserDialog extends React.Component {
         modal: true,
         title: <Message msgId="confirmTitle" />,
         closeGlyph: "",
-        confirmButtonBSStyle: "danger",
         confirmButtonDisabled: false,
         confirmButtonContent: <Message msgId="confirm" /> || "Confirm",
         closeText: <Message msgId="close" />,
@@ -62,9 +61,9 @@ class UserDialog extends React.Component {
             </div>
             <div role="footer">
                 <ButtonGroup>
-                    <Button onClick={this.props.onConfirm} disabled={this.props.confirmButtonDisabled} bsStyle={this.props.confirmButtonBSStyle}>{this.props.confirmButtonContent}
+                    <Button onClick={this.props.onConfirm} disabled={this.props.confirmButtonDisabled} bsStyle={this.props.confirmButtonBSStyle || "primary"}>{this.props.confirmButtonContent}
                     </Button>
-                    <Button onClick={this.props.onClose}>{this.props.closeText}</Button>
+                    <Button bsStyle="primary" onClick={this.props.onClose} style={{marginLeft: 4}}>{this.props.closeText}</Button>
                 </ButtonGroup>
             </div>
         </Dialog>);

@@ -7,7 +7,8 @@
  */
 
 const React = require('react');
-const {Row, Col} = require('react-bootstrap');
+const {Row, Col, Alert} = require('react-bootstrap');
+const {withState} = require('recompose');
 const Toolbar = require('../../misc/toolbar/Toolbar');
 const Message = require('../../I18N/Message');
 const MapInfoUtils = require('../../../utils/MapInfoUtils');
@@ -27,7 +28,7 @@ const Portal = require('../../misc/Portal');
  * @prop {function} getButtons must return an array of object representing the toolbar buttons, eg (props) => [{ glyph: 'info-sign', tooltip: 'hello!'}]
  */
 
-module.exports = props => {
+module.exports = withState('showHighlighted', 'onShowHighlighted')(props => {
     const {
         enabled,
         requests = [],
@@ -51,7 +52,9 @@ module.exports = props => {
         setIndex,
         warning,
         clearWarning,
-        zIndex
+        zIndex,
+        showHighlighted,
+        onShowHighlighted
     } = props;
 
     const latlng = point && point.latlng || null;
@@ -126,6 +129,23 @@ module.exports = props => {
                     </div>
                 </ResizableModal>
             </Portal>
+
+            <Portal>
+                <ResizableModal
+                    fade
+                    title={<Message msgId="warning"/>}
+                    size="xs"
+                    show={showHighlighted === 'modal'}
+                    onClose={() => {
+                        onShowHighlighted();
+                    }}>
+                    <Alert bsStyle="warning" style={{position: 'absolute', height: '100%', margin: 0, width: '100%', display: 'flex', alignItems: 'center',
+    justifyContent: 'center'}}>
+                        Current feature will be higlighted on map.
+                        When multiple features are selected, only the one displayed in the GFI shall be highlighted.
+                    </Alert>
+                </ResizableModal>
+            </Portal>
         </div>
     );
-};
+});

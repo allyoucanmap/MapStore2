@@ -4,7 +4,7 @@ const {Row, Col, Glyphicon} = require('react-bootstrap');
 const Toolbar = require('../../misc/toolbar/Toolbar');
 const draggableComponent = require('../../misc/enhancers/draggableComponent');
 const CoordinateEntry = require('./CoordinateEntry');
-
+const {branch, renderComponent} = require('recompose');
 /**
 
 */
@@ -23,7 +23,9 @@ class CoordinatesRowComponent extends React.Component {
         aeronauticalOptions: PropTypes.object,
         isDraggable: PropTypes.bool,
         removeVisible: PropTypes.bool,
-        removeEnabled: PropTypes.bool
+        removeEnabled: PropTypes.bool,
+        tools: PropTypes.array,
+        showLabel: PropTypes.bool
     };
     render() {
         const {idx} = this.props;
@@ -32,7 +34,7 @@ class CoordinatesRowComponent extends React.Component {
             <Row className="coordinateRow" style={rowStyle} onMouseEnter={() => {
                 this.props.onMouseEnter(this.props.component);
             }} onMouseLeave={this.props.onMouseLeave}>
-                <Col xs={1}>
+                {this.props.connectDragSource && <Col xs={1}>
                     {this.props.connectDragSource(<div
                         className="square-button-md no-border btn btn-default"
                         style={{display: "flex" /*workaround for firefox*/}}
@@ -42,8 +44,9 @@ class CoordinatesRowComponent extends React.Component {
                         disabled={!this.props.isDraggable}
                         style={{pointerEvents: !this.props.isDraggable ? "none" : "auto"}}
                     /></div>)}
-                </Col>
+                </Col>}
                 <Col xs={5}>
+                    {this.props.showLabel && <span>Latitude</span>}
                     <CoordinateEntry
                         format={this.props.format}
                         aeronauticalOptions={this.props.aeronauticalOptions}
@@ -66,6 +69,7 @@ class CoordinatesRowComponent extends React.Component {
                     />
                 </Col>
                 <Col xs={5}>
+                    {this.props.showLabel && <span>Longitude</span>}
                     <CoordinateEntry
                         format={this.props.format}
                         aeronauticalOptions={this.props.aeronauticalOptions}
@@ -93,6 +97,7 @@ class CoordinatesRowComponent extends React.Component {
                         btnDefaultProps={{ className: 'square-button-md no-border'}}
                         buttons={
                         [
+                            ...(this.props.tools || []),
                             {
                                 visible: this.props.removeVisible,
                                 disabled: !this.props.removeEnabled,
@@ -109,4 +114,7 @@ class CoordinatesRowComponent extends React.Component {
     }
 }
 
-module.exports = draggableComponent(CoordinatesRowComponent);
+module.exports = branch(
+    ({notDraggable}) => notDraggable,
+    renderComponent(CoordinatesRowComponent)
+)(draggableComponent(CoordinatesRowComponent));

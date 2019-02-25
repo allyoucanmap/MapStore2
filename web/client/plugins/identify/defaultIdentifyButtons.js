@@ -6,7 +6,7 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
+let mockCntDontCopy = 0;
 module.exports = props => [
     {
         glyph: 'arrow-left',
@@ -23,6 +23,21 @@ module.exports = props => [
         onClick: () => {
             props.showRevGeocode({lat: props.latlng.lat, lng: props.lngCorrected});
         }
+    },
+    {
+        glyph: 'map-filter',
+        bsStyle: props.showHighlighted ? 'success' : 'primary',
+        tooltip: props.showHighlighted ? 'Hide highlighted features' : 'Show highlighted features',
+        visible: true,
+        onClick: () => {
+            props.onShowHighlighted(mockCntDontCopy === 0 ? 'modal' : !props.showHighlighted);
+            mockCntDontCopy++;
+        }
+    },
+    {
+        glyph: 'zoom-to',
+        tooltip: 'Zoom to all features',
+        visible: true
     },
     {
         glyph: 'arrow-right',
