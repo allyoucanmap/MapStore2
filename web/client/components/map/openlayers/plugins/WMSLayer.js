@@ -123,6 +123,8 @@ Layers.registerType('wms', {
                 opacity: options.opacity !== undefined ? options.opacity : 1,
                 visible: options.visibility !== false,
                 zIndex: options.zIndex,
+                minResolution: options.minResolution,
+                maxResolution: options.maxResolution,
                 source: new ol.source.ImageWMS({
                     url: urls[0],
                     params: queryParameters,
@@ -146,6 +148,8 @@ Layers.registerType('wms', {
             opacity: options.opacity !== undefined ? options.opacity : 1,
             visible: options.visibility !== false,
             zIndex: options.zIndex,
+            minResolution: options.minResolution,
+            maxResolution: options.maxResolution,
             source: new ol.source.TileWMS(sourceOptions)
         });
         layer.set('map', map);
@@ -211,6 +215,8 @@ Layers.registerType('wms', {
                         opacity: newOptions.opacity !== undefined ? newOptions.opacity : 1,
                         visible: newOptions.visibility !== false,
                         zIndex: newOptions.zIndex,
+                        minResolution: newOptions.minResolution,
+                        maxResolution: newOptions.maxResolution,
                         source: new ol.source.ImageWMS({
                             url: urls[0],
                             params: queryParameters,
@@ -225,6 +231,8 @@ Layers.registerType('wms', {
                         opacity: newOptions.opacity !== undefined ? newOptions.opacity : 1,
                         visible: newOptions.visibility !== false,
                         zIndex: newOptions.zIndex,
+                        minResolution: newOptions.minResolution,
+                        maxResolution: newOptions.maxResolution,
                         source: new ol.source.TileWMS(objectAssign({
                             urls: urls,
                             params: queryParameters,
