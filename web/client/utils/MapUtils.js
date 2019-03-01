@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const {isString, trim, isNumber} = require('lodash');
+const {isString, trim, isNumber, last} = require('lodash');
 
 const DEFAULT_SCREEN_DPI = 96;
 
@@ -414,6 +414,22 @@ const parseLayoutValue = (value, size = 0) => {
     return isNumber(value) ? value : 0;
 };
 
+/**
+ * Given a resulution return the related zoom
+ * @param resolution scale resolution
+ * @return {number} zoom or undefined if not inside max and min map resolutions
+ */
+const getZoomFromResolution = (resolution) => {
+    const resolutions = getResolutions();
+    const resAndZoom = resolutions.map((res, zoom) => ({ res, zoom }));
+    const top = last(resAndZoom.filter(({ res }) => res > resolution));
+    const bottom = head(resAndZoom.filter(({ res }) => res < resolution));
+    if (!top || !bottom) return undefined;
+    const diffTopBottom = Math.abs(top.res - bottom.res);
+    const diffResBottom = Math.abs(resolution - bottom.res);
+    return diffResBottom > diffTopBottom / 2 ? top.zoom : bottom.zoom;
+};
+
 module.exports = {
     EXTENT_TO_ZOOM_HOOK,
     RESOLUTIONS_HOOK,
@@ -445,5 +461,6 @@ module.exports = {
     getSimpleGeomType,
     extractTileMatrixSetFromLayers,
     getIdFromUri,
-    parseLayoutValue
+    parseLayoutValue,
+    getZoomFromResolution
 };

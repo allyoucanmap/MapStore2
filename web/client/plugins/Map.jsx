@@ -282,7 +282,7 @@ class MapPlugin extends React.Component {
         const projection = this.props.map.projection || 'EPSG:3857';
         return [...this.props.layers, ...this.props.additionalLayers].filter(this.filterLayer).map((layer, index) => {
             return (
-                <plugins.Layer type={layer.type} srs={projection} position={index} key={layer.id || layer.name} options={layer} securityToken={this.props.securityToken}>
+                <plugins.Layer type={layer.type} srs={projection} zoom={this.props.map.zoom} position={index} key={layer.id || layer.name} options={layer} securityToken={this.props.securityToken}>
                     {this.renderLayerContent(layer, projection)}
                 </plugins.Layer>
             );

@@ -19,6 +19,8 @@ const SecurityUtils = require('../../../../utils/SecurityUtils');
 const ElevationUtils = require('../../../../utils/ElevationUtils');
 require('leaflet.nontiledlayer');
 
+const MapUtils = require('../../../../utils/MapUtils');
+
 L.NonTiledLayer.WMSCustom = L.NonTiledLayer.WMS.extend({
     initialize: function(url, options) { // (String, Object)
         this._wmsUrl = url;
@@ -173,7 +175,8 @@ function wmsToLeafletOptions(options) {
         SRS: CoordinatesUtils.normalizeSRS(options.srs || 'EPSG:3857', options.allowedSRS),
         CRS: CoordinatesUtils.normalizeSRS(options.srs || 'EPSG:3857', options.allowedSRS),
         tileSize: options.tileSize || 256,
-        maxZoom: options.maxZoom || 23,
+        minZoom: options.maxResolution && MapUtils.getZoomFromResolution(options.maxResolution),
+        maxZoom: options.minResolution && MapUtils.getZoomFromResolution(options.minResolution) || options.maxZoom || 23,
         maxNativeZoom: options.maxNativeZoom || 18
     }, objectAssign(
         (options._v_ ? {_v_: options._v_} : {}),

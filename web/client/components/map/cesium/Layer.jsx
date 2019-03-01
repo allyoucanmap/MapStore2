@@ -9,6 +9,8 @@ var React = require('react');
 var Layers = require('../../../utils/cesium/Layers');
 var assign = require('object-assign');
 const PropTypes = require('prop-types');
+const {isNil} = require('lodash');
+const MapUtils = require('../../../utils/MapUtils');
 
 class CesiumLayer extends React.Component {
     static propTypes = {
@@ -17,19 +19,21 @@ class CesiumLayer extends React.Component {
         options: PropTypes.object,
         onCreationError: PropTypes.func,
         position: PropTypes.number,
-        securityToken: PropTypes.string
+        securityToken: PropTypes.string,
+        zoom: PropTypes.number
     };
 
     componentDidMount() {
         this.createLayer(this.props.type, this.props.options, this.props.position, this.props.map, this.props.securityToken);
-        if (this.props.options && this.layer && this.props.options.visibility !== false) {
+        const visibility = this.inResolutionsRange(this.props.options && this.props.options.visibility !== false, this.props);
+        if (this.layer && visibility) {
             this.addLayer(this.props);
             this.updateZIndex();
         }
     }
 
     componentWillReceiveProps(newProps) {
-        const newVisibility = newProps.options && newProps.options.visibility !== false;
+        const newVisibility = this.inResolutionsRange(newProps.options && newProps.options.visibility !== false, newProps);
         this.setLayerVisibility(newVisibility, newProps);
 
         const newOpacity = newProps.options && newProps.options.opacity !== undefined ? newProps.options.opacity : 1.0;
@@ -41,7 +45,7 @@ class CesiumLayer extends React.Component {
                 this.provider._position = newProps.position;
             }
         }
-        if (this.props.options && this.props.options.params && this.layer.updateParams && newProps.options.visibility) {
+        if (this.props.options && this.props.options.params && this.layer.updateParams && newVisibility) {
             const changed = Object.keys(this.props.options.params).reduce((found, param) => {
                 if (newProps.options.params[param] !== this.props.options.params[param]) {
                     return true;
@@ -115,8 +119,23 @@ class CesiumLayer extends React.Component {
         }
     };
 
+    inResolutionsRange = (currentValue, props) => {
+        const options = props.options;
+        if ((!isNil(options.minResolution) || !isNil(options.maxResolution))) {
+            const currentZoom = props.zoom;
+            const minZoom = options.maxResolution && MapUtils.getZoomFromResolution(options.maxResolution);
+            const maxZoom = options.minResolution && MapUtils.getZoomFromResolution(options.minResolution);
+            if (!isNil(currentZoom) && !isNil(maxZoom) && !isNil(minZoom) && !(currentZoom < maxZoom && currentZoom > minZoom)
+            || !isNil(currentZoom) && isNil(maxZoom) && currentZoom <= minZoom
+            || !isNil(currentZoom) && isNil(minZoom) && currentZoom >= maxZoom) {
+                return false;
+            }
+        }
+        return currentValue;
+    };
+
     setLayerVisibility = (visibility, newProps) => {
-        var oldVisibility = this.props.options && this.props.options.visibility !== false;
+        const oldVisibility = this.inResolutionsRange(this.props.options && this.props.options.visibility !== false, this.props);
         if (visibility !== oldVisibility) {
             if (visibility) {
                 this.addLayer(newProps);

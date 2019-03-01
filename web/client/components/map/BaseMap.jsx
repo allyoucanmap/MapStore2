@@ -72,7 +72,7 @@ class BaseMap extends React.Component {
 
     renderLayers = () => {
         const projection = this.props.map.projection || 'EPSG:3857';
-        const { plugins } = this.props;
+        const { plugins, map = {} } = this.props;
         const { Layer } = plugins;
         return this.props.layers.map((layer, index) => {
             return (
@@ -82,6 +82,7 @@ class BaseMap extends React.Component {
                     position={index}
                     key={layer.id || layer.name}
                     options={layer}
+                    zoom={map.zoom}
                     >
                     {this.renderLayerContent(layer, projection)}
                 </Layer>
