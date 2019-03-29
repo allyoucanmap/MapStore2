@@ -21,3 +21,6 @@ web/docs
 .classpath
 .project
 .settings/
+assets/video/
+assets/img/
+package-lock.json

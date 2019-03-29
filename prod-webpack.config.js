@@ -1,50 +1,52 @@
-const path = require("path");
-const assign = require('object-assign');
-
-const themeEntries = require('./themes.js').themeEntries;
+var webpackConfig = require('./webpack.config.js');
+var path = require("path");
+var LoaderOptionsPlugin = require("webpack/lib/LoaderOptionsPlugin");
+var ParallelUglifyPlugin = require("webpack-parallel-uglify-plugin");
+var DefinePlugin = require("webpack/lib/DefinePlugin");
+var NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
 const extractThemesPlugin = require('./themes.js').extractThemesPlugin;
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 
-const paths = {
-    base: __dirname,
-    dist: path.join(__dirname, "web", "client", "dist"),
-    framework: path.join(__dirname, "web", "client"),
-    code: path.join(__dirname, "web", "client")
-};
+webpackConfig.plugins = [
+    new CopyWebpackPlugin([
+        { from: path.join(__dirname, 'node_modules', 'bootstrap', 'less'), to: path.join(__dirname, "web", "client", "dist", "bootstrap", "less") }
+    ]),
+    new LoaderOptionsPlugin({
+        debug: false,
+        options: {
+            postcss: {
+                plugins: [
+                  require('postcss-prefix-selector')({prefix: '.GeoStory', exclude: ['.GeoStory', '.ms2', '[data-ms2-container]']})
+                ]
+            },
+            context: __dirname
+        }
+    }),
+    new DefinePlugin({
+        "__DEVTOOLS__": false
+    }),
+    new DefinePlugin({
+      'process.env': {
+        'NODE_ENV': '"production"'
+      }
+    }),
+    new NormalModuleReplacementPlugin(/leaflet$/, path.join(__dirname, "web", "client", "libs", "leaflet")),
+    new NormalModuleReplacementPlugin(/openlayers$/, path.join(__dirname, "web", "client", "libs", "openlayers")),
+    new NormalModuleReplacementPlugin(/cesium$/, path.join(__dirname, "web", "client", "libs", "cesium")),
+    new NormalModuleReplacementPlugin(/proj4$/, path.join(__dirname, "web", "client", "libs", "proj4")),
+    new ParallelUglifyPlugin({
+        uglifyJS: {
+            sourceMap: false,
+            compress: {warnings: false},
+            mangle: true
+        }
+    }),
+    extractThemesPlugin
+];
+webpackConfig.devtool = undefined;
 
-module.exports = require('./buildConfig')(
-    assign({
-            "mapstore2": path.join(__dirname, "web", "client", "product", "app"),
-            "embedded": path.join(__dirname, "web", "client", "product", "embedded"),
-            "ms2-api": path.join(__dirname, "web", "client", "product", "api")
-        },
-        require('./examples')
-    ),
-    themeEntries,
-    paths,
-    extractThemesPlugin,
-    true,
-    "dist/",
-    undefined,
-    [
-        new HtmlWebpackPlugin({
-            template: path.join(paths.framework, 'indexTemplate.html'),
-            chunks: ['mapstore2'],
-            inject: true,
-            hash: true
-        }),
-        new HtmlWebpackPlugin({
-            template: path.join(paths.framework, 'embeddedTemplate.html'),
-            chunks: ['embedded'],
-            inject: true,
-            hash: true,
-            filename: 'embedded.html'
-        }), new HtmlWebpackPlugin({
-            template: path.join(paths.framework, 'apiTemplate.html'),
-            chunks: ['ms2-api'],
-            inject: 'head',
-            hash: true,
-            filename: 'api.html'
-        })
-    ]
-);
+// this is a workaround for this issue https://github.com/webpack/file-loader/issues/3
+// use `__webpack_public_path__` in the index.html when fixed
+webpackConfig.output.publicPath = "/GeoStory/dist/";
+
+module.exports = webpackConfig;

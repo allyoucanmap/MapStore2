@@ -1,0 +1,217 @@
+
+@import '~draft-js-inline-toolbar-plugin/lib/plugin.css';
+@import '~react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+
+@ms-story-bg: #ffffff;
+@ms-story-text: #333333;
+@ms-story-border: #ddd;
+@ms-story-bg-invert: #333333;
+@ms-story-text-invert: #ffffff;
+
+.ms-background {
+    position: absolute;
+    display: flex !important;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    z-index: 0;
+    background-color: @ms-story-bg;
+    & > * {
+        width: 100%;
+    }
+    &.cover {
+        & > * {
+            width: unset;
+            flex-shrink: 0;
+            min-width: 100%;
+            min-height: 100%;
+        }
+    }
+    &.ms-invert {
+        background-color: @ms-story-bg-invert;
+    }
+}
+
+.ms-cascade-section {
+    .shadow-far;
+    &.ms-title {
+        z-index: 2;
+    }
+    &.ms-paragraph {
+        z-index: 3;
+        .ms-text-editor-main span {
+            font-size: @font-size-base * 1.5;
+            font-family: @font-family-serif;
+        }
+    }
+    &.ms-immersive {
+        z-index: 1;
+        .ms-text-editor-main span {
+            font-size: @font-size-base * 1.25;
+            font-family: @font-family-serif;
+        }
+    }
+}
+
+#ms-parallax-container {
+    .popover {
+        pointer-events: auto;
+    }
+}
+
+.ms-parallax-container {
+    & > div:not(.ms-cascade-bg-container) {
+        pointer-events: none;
+        top: 0;
+    }
+}
+
+.ms-cascade-field {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+
+    background-color: @ms-story-bg;
+
+    h1 {
+        font-size: @font-size-h1 * 2;
+        font-family: @font-family-base;
+        border-bottom: 2px solid @ms-story-text;
+    }
+    h2 {
+        font-size: @font-size-h1 * 1.75;
+        font-family: @font-family-base;
+        border-bottom: 2px solid @ms-story-text;
+    }
+
+    p {
+        font-size: @font-size-base * 1.5;
+        font-family: @font-family-serif;
+        pointer-events: auto;
+        & > div {
+            font-family: @font-family-serif;
+            font-size: @font-size-base * 1.5;
+        }
+    }
+
+    .ms-cascade-wrapper {
+        width: 100%;
+        max-width: 800px;
+        padding: 0 16px;
+        margin: 0 auto;
+        margin-top: @square-btn-size / 2;
+        margin-bottom: @square-btn-size;
+        & > div {
+            pointer-events: auto;
+        }
+    }
+
+    .ms-cascade-field-text {
+        position: relative;
+        background-color: fade(@ms-story-bg, 75%);
+        pointer-events: auto;
+        padding: 16px;
+        margin: auto;
+        .shadow-far;
+        &.ms-left {
+            margin-left: 0;
+        }
+        &.ms-right {
+            margin-right: 0;
+        }
+        &.ms-medium {
+            width: ~"calc(50% - 16px)";
+        }
+        &.ms-small {
+            width: ~"calc(30% - 16px)";
+        }
+        &.ms-auto {
+           display: table;
+        }
+        &.ms-invert {
+            background-color: fade(@ms-story-bg-invert, 80%);
+            color: @ms-story-text-invert;
+            h1, h2 {
+                border-bottom: 2px solid @ms-story-text-invert;
+            }
+        }
+        &.ms-transparent {
+            background-color: transparent;
+            .box-shadow(unset);
+        }
+        
+        p {
+            font-size: @font-size-base * 1.25;
+            font-family: @font-family-serif;
+            max-width: unset;
+        }
+    }
+
+    .ms-cascade-field-centered {
+        max-width: 100%;
+        max-height: ~"calc(100% - 64px)";
+        margin: auto 0;
+        z-index: 2;
+        & > div {
+            margin: @square-btn-size auto;
+            padding: 16px;
+        }
+    }
+}
+
+.ms-cascade-bg {
+    background-color: @ms-story-bg;
+    &-enter {
+        opacity: 0.01;
+        &-active {
+            opacity: 1;
+            transition: 0.3s ease-in;
+        }
+    }
+    &-leave {
+        opacity: 1;
+        &-active {
+            opacity: 0.01;
+            transition: 0.3s ease-in;
+        }
+    }
+    // issue when background map has top > 0 on immersive layout
+    &.ms-disabled, &.ms-disabled * {
+        pointer-events: none !important;
+    }
+}
+
+.ms-cascade-edit-tools {
+    & > * {
+        pointer-events: auto;
+    }
+}
+
+.ms-text-editor {
+    position: relative;
+
+    &-toolbar {
+        position: absolute;
+        width: 100%;
+        top: 0;
+        transform: translateY(-100% - 16px);
+        .shadow-soft;
+        &-btn {
+            &.rdw-option-active {
+                border-color: @ms2-color-primary, 40%;
+            }
+        }
+    }
+    &-main {
+        border: 1px solid @ms-story-border;
+        padding: 4px;
+    }
+}
+
+// issue in react-draft-wysiwyg align not working on multiline p
+.public-DraftStyleDefault-ltr {
+    text-align: inherit;
+}

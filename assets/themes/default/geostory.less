@@ -1,0 +1,42 @@
+
+.ms-geostory-builder {
+    width: 400px !important;
+    > .ms2-border-layout-body > .ms2-border-layout-content {
+        position: relative;
+    }
+    .msSideGrid {
+        margin: 8px 16px;
+        width: ~"calc(100% - 32px)";
+        position: relative;
+        .mapstore-side-card:hover {
+            transform: unset;
+        }
+        .mapstore-side-card {
+            // wrong position on drag event of image overlay
+            // but this cause issue when scroll bar disappear
+            .erd_scroll_detection_container  {
+                display: none;
+            }
+        }
+        
+    }
+}
+
+.ms-cascade-story {
+    position: absolute;
+    .ms-cascade-story-header {
+        .shadow-soft;
+        z-index: 2;
+        background-color: @ms2-color-background;
+        padding: 8px;
+    }
+    > .ms2-border-layout-body > .ms2-border-layout-content {
+        position: relative;
+        overflow: hidden;
+    }
+}
+
+.ms-geostory-left-panel {
+    .shadow-soft;
+    z-index: 2;
+}
