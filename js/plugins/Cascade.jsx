@@ -106,7 +106,9 @@ class Cascade extends React.Component {
             <BorderLayout
                 className="ms-cascade-story"
                 header={
-                    <ButtonToolbar className="ms-cascade-story-header">
+                    !this.props.readOnly
+                    ? undefined
+                    : <ButtonToolbar className="ms-cascade-story-header">
                         {this.props.sections.map(({ type, id: sectionId, contents }) => {
                             const { offset, fieldsData = {} } = this._sectionsData[sectionId] || {};
                             return (
