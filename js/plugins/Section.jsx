@@ -13,7 +13,8 @@ class Section extends React.Component {
         onUpdate: PropTypes.func,
         excludeClassName: PropTypes.string,
         needsUpdate: PropTypes.number,
-        onAdd: PropTypes.func
+        onAdd: PropTypes.func,
+        readOnly: PropTypes.bool
     };
 
     static defaultProps = {
@@ -94,7 +95,7 @@ class Section extends React.Component {
                     transform: 'translate3d(0px, 0px, 0px)'
                 }}>
                 {this.props.children}
-                <div
+                {!this.props.readOnly && <div
                     className={`${this.props.excludeClassName || ''} ms-cascade-edit-tools text-center`}
                     style={{
                         position: 'absolute',
@@ -108,7 +109,7 @@ class Section extends React.Component {
                         id={this.props.id}
                         type={this.props.type}
                         onAdd={this.props.onAdd}/>
-                </div>
+                </div>}
             </div>
         );
     }

@@ -37,7 +37,9 @@ class Cascade extends React.Component {
         height: PropTypes.number,
         sections: PropTypes.array,
         onEdit: PropTypes.func,
-        onAdd: PropTypes.func
+        onAdd: PropTypes.func,
+        readOnly: PropTypes.bool,
+        onUpdate: PropTypes.func
     };
 
     static defaultProps = {
@@ -45,7 +47,8 @@ class Cascade extends React.Component {
         height: 0,
         sections: [],
         onEdit: () => { },
-        onAdd: () => { }
+        onAdd: () => { },
+        onUpdate: () => { }
     };
 
     state = {
@@ -59,7 +62,15 @@ class Cascade extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (!prevState.update && this.state.update) {
             const height = this.props.sections.map(({id: key}) => this._sectionsData[key].height || 0).reduce((previous, current) => previous + current);
-            if (this.parallax) this.setState({ pages: height / this.parallax.space });
+            const pages = height / this.parallax.space;
+            if (this.parallax) {
+                this.setState({ pages});
+                const page = this.parallax.current / this.parallax.space;
+                this.props.onUpdate({
+                    page,
+                    pages
+                });
+            }
             this.setState({ update: false });
         }
     }
@@ -129,6 +140,18 @@ class Cascade extends React.Component {
                                 className="ms-parallax-container"
                                 ref={ref => this.parallax = ref}
                                 pages={this.state.pages}
+                                onScroll={() => {
+                                    if (this.parallax) {
+                                        const page = Math.round(this.parallax.current / this.parallax.space);
+                                        if (page !== this.state.page) {
+                                            this.props.onUpdate({
+                                                page,
+                                                pages: Math.round(this.state.pages)
+                                            });
+                                            this.setState({ page });
+                                        }
+                                    }
+                                }}
                                 background={
                                     <Background
                                         height={height}
@@ -145,6 +168,7 @@ class Cascade extends React.Component {
                                             viewHeight={height}
                                             needsUpdate={_needsUpdate}
                                             type={sectionType}
+                                            readOnly={this.props.readOnly}
                                             onAdd={(data) => this.props.onAdd(data)}
                                             onUpdate={(data) => {
                                                 this.getSectionData(data);
@@ -163,9 +187,9 @@ class Cascade extends React.Component {
                                                         <Field
                                                             {...foreground}
                                                             id={contentId}
-                                                            edit
                                                             height={height}
                                                             width={width}
+                                                            readOnly={this.props.readOnly}
                                                             onChange={(key, value) => this.props.onEdit({ sectionId, contentId, key, value })} />
                                                     </Wrapper>
                                                     : null;

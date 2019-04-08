@@ -138,7 +138,10 @@ export class Parallax extends React.PureComponent {
     /** Scrolls horizontally or vertically */
     horizontal: PropTypes.bool,
 
-    background: PropTypes.node
+    background: PropTypes.node,
+
+    // Add this function to listen on scroll
+    onScroll: PropTypes.func
   }
 
   static defaultProps = {
@@ -171,6 +174,7 @@ export class Parallax extends React.PureComponent {
       this.busy = true
       this.scrollerRaf()
       this.current = event.target[getScrollType(horizontal)]
+      this.props.onScroll();
     }
   }
 
@@ -196,7 +200,10 @@ export class Parallax extends React.PureComponent {
     setTimeout(this.update, 150)
   }
 
-  scrollStop = event => this.controller.stop()
+  scrollStop = event => {
+    this.props.onScroll();
+    return this.controller.stop();
+  }
 
   scrollTo(offset) {
     const { horizontal, config } = this.props

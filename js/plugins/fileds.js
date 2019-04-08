@@ -44,7 +44,8 @@ class MediaEditor extends React.Component {
         text: PropTypes.array,
         size: PropTypes.string,
         position: PropTypes.string,
-        onChange: PropTypes.func
+        onChange: PropTypes.func,
+        readOnly: PropTypes.bool
     };
 
     render() {
@@ -75,7 +76,8 @@ class ContentEditor extends React.Component {
     static propTypes = {
         id: PropTypes.string,
         text: PropTypes.array,
-        onChange: PropTypes.func
+        onChange: PropTypes.func,
+        readOnly: PropTypes.bool
     };
 
     state = {};
@@ -98,7 +100,7 @@ class ContentEditor extends React.Component {
                 {this.state.text.map((atom, idx) => {
                     return (
                         <div>
-                            {this.state.text.length > 1 && <div className="text-right" style={{paddingBottom: 8}}>
+                            {!this.props.readOnly && <div className="text-right" style={{paddingBottom: 8}}>
                                 <Toolbar
                                     btnDefaultProps={{
                                         className: 'square-button-md no-border'
@@ -107,6 +109,7 @@ class ContentEditor extends React.Component {
                                         {
                                             glyph: 'trash',
                                             tooltip: 'Remove content',
+                                            visible: this.state.text.length > 1 ? true : false,
                                             onClick: () => this.removeContent(atom.id)
                                         },
                                         {
@@ -194,6 +197,7 @@ class ContentEditor extends React.Component {
                                         {
                                             glyph: 'trash',
                                             tooltip: 'Remove content',
+                                            visible: this.state.text.length > 1 ? true : false,
                                             onClick: () => this.removeContent(atom.id)
                                         }
                                     ]}/>
@@ -202,14 +206,16 @@ class ContentEditor extends React.Component {
                                 <TextEditor
                                     key={atom.id}
                                     html={atom.html}
+                                    readOnly={this.props.readOnly}
                                     onChange={(value) => this.updateContent(atom.id, 'html', value)} />}
                             {atom.type === 'media' &&
                                 <MediaEditor
                                     id={`${this.props.id}_${atom.id}`}
                                     key={atom.id}
                                     position={atom.position}
+                                    readOnly={this.props.readOnly}
                                     size={atom.size}/>}
-                            <div
+                            {!this.props.readOnly && <div
                                 className="text-center"
                                 style={{ width: '100%' }}>
                                 <ToolbarPopover
@@ -249,7 +255,7 @@ class ContentEditor extends React.Component {
                                     } >
                                     <Glyphicon glyph="plus"/>
                                 </ToolbarPopover>
-                            </div>
+                            </div>}
                         </div>
                     );
                 })}
@@ -314,7 +320,7 @@ const fields = {
                             tagName="h1"
                             className="ms-cascade-title"
                             html={props.title}
-                            disabled={!props.edit}
+                            disabled={props.readOnly}
                             onChange={(event) => {
                                 props.onChange('title', event.target.value);
                             }} />
@@ -323,7 +329,7 @@ const fields = {
                             tagName="h3"
                             className="ms-cascade-description"
                             html={props.description}
-                            disabled={!props.edit}
+                            disabled={props.readOnly}
                             onChange={(event) => props.onChange('description', event.target.value)} />
                     </TextWrapper>
                 }>
@@ -350,7 +356,7 @@ const fields = {
                             tagName="h1"
                             className="ms-cascade-title"
                             html={props.title}
-                            disabled={!props.edit}
+                            disabled={props.readOnly}
                             onChange={(event) => props.onChange('title', event.target.value)} />
                     </TextWrapper>
                 }>
@@ -370,6 +376,7 @@ const fields = {
                     <ContentEditor
                         id={props.id}
                         text={props.text}
+                        readOnly={props.readOnly}
                         onChange={(value) => props.onChange('text', value)}/>
                 </PageWrapper>
             </Container>
@@ -393,6 +400,7 @@ const fields = {
                         <ContentEditor
                             id={props.id}
                             text={props.text}
+                            readOnly={props.readOnly}
                             onChange={(value) => props.onChange('text', value)}/>
                     </TextWrapper>
                 } />

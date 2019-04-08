@@ -122,12 +122,15 @@ class Builder extends React.Component {
         sections: PropTypes.array,
         // selected: PropTypes.string,
         onSort: PropTypes.func,
-        onRemove: PropTypes.func
+        onRemove: PropTypes.func,
+        onPreview: PropTypes.func,
+        readOnly: PropTypes.bool
     };
 
     static defaultProps = {
         sections: [ ],
-        onSort: () => {}
+        onSort: () => {},
+        onPreview: () => {}
     };
 
     state = {};
@@ -144,27 +147,31 @@ class Builder extends React.Component {
                                 bsStyle: 'primary'
                             }}
                             buttons={[
-                                {
+                                /*{
                                     glyph: 'floppy-disk'
-                                },
+                                },*/
                                 {
                                     glyph: 'trash',
-                                    tooltio: 'Remove selected section',
+                                    tooltip: 'Remove selected section',
                                     disabled: !this.state.selected || this.props.sections.length === 1,
                                     onClick: () => {
                                         this.props.onRemove(this.state.selected);
                                     }
                                 },
                                 {
-                                    glyph: 'eye-open'
+                                    glyph: 'eye-open',
+                                    tooltip: 'Show preview',
+                                    onClick: () => this.props.onPreview()
                                 },
                                 {
+                                    tooltip: 'Settings',
                                     glyph: 'cog'
                                 },
-                                {
+                                /*{
                                     glyph: 'lock'
-                                },
+                                },*/
                                 {
+                                    tooltip: 'Share this story',
                                     glyph: 'share'
                                 }
                             ]}/>

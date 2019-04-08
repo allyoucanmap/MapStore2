@@ -13,7 +13,8 @@ class TextEditor extends React.Component {
         toolbar: PropTypes.object,
         placeholder: PropTypes.string,
         className: PropTypes.string,
-        onChange: PropTypes.func
+        onChange: PropTypes.func,
+        readOnly: PropTypes.bool
     };
 
     static defaultProps = {
@@ -53,6 +54,7 @@ class TextEditor extends React.Component {
                 <Editor
                     editorState={editorState}
                     toolbarOnFocus
+                    readOnly={this.props.readOnly}
                     placeholder={this.props.placeholder}
                     toolbarStyle={{ }}
                     toolbar={{
