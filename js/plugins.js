@@ -10,7 +10,9 @@ module.exports = {
     plugins: {
         GeoStoryPlugin: require('./plugins/GeoStory'),
         OmniBarPlugin: require('@mapstore/plugins/OmniBar'),
-        LoginPlugin: require('@mapstore/plugins/Login')
+        LoginPlugin: require('@mapstore/plugins/Login'),
+        BurgerMenuPlugin: require('@mapstore/plugins/BurgerMenu'),
+        SaveMockPlugin: require('./plugins/SaveMock')
     },
     requires: {}
 };

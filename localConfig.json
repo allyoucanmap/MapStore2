@@ -13,7 +13,9 @@
                     "containerPosition": "header"
                 }
             },
-            "Login"
+            "Login",
+            "BurgerMenu",
+            "SaveMock"
         ]
     }
 }
