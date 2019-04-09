@@ -14,7 +14,8 @@ module.exports = {
         BurgerMenuPlugin: require('@mapstore/plugins/BurgerMenu'),
         NavMenuPlugin: require('@mapstore/product/plugins/NavMenu'),
         AttributionPlugin: require('@mapstore/product/plugins/Attribution'),
-        SaveMockPlugin: require('./plugins/SaveMock')
+        SaveMockPlugin: require('./plugins/SaveMock'),
+        ShareMockPlugin: require('./plugins/ShareMock')
     },
     requires: {}
 };
