@@ -7,16 +7,23 @@
  */
 
 module.exports = {
-    pages: [{
-        name: "geostory",
-        path: "/geostory",
-        component: require('./pages/GeoStory')
-    },
-    {
-        name: "home",
-        path: "/",
-        component: require('./pages/GeoStory')
-    }],
+    pages: [
+        {
+            name: "geostory",
+            path: "/",
+            component: require('./pages/GeoStory')
+        },
+        {
+            name: "geostory",
+            path: "/:indexh",
+            component: require('./pages/GeoStory')
+        },
+        {
+            name: "geostory",
+            path: "/:indexh/:indexv",
+            component: require('./pages/GeoStory')
+        }
+    ],
     pluginsDef: require('./plugins.js'),
     initialState: {
         defaultState: {},

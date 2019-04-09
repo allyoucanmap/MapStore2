@@ -18,7 +18,14 @@
                 display: none;
             }
         }
-        
+    }
+    .empty-state-container {
+        margin: auto;
+    }
+}
+.msSideGrid {
+    .mapstore-side-card:hover {
+        transform: unset;
     }
 }
 
@@ -39,4 +46,13 @@
 .ms-geostory-left-panel {
     .shadow-soft;
     z-index: 2;
+}
+
+.ms-geostory-layout {
+    position: absolute;
+    top: unset;
+    z-index: 5;
+    .msSideGrid {
+        position: relative;
+    }
 }

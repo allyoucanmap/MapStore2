@@ -12,6 +12,8 @@ module.exports = {
         OmniBarPlugin: require('@mapstore/plugins/OmniBar'),
         LoginPlugin: require('@mapstore/plugins/Login'),
         BurgerMenuPlugin: require('@mapstore/plugins/BurgerMenu'),
+        NavMenuPlugin: require('@mapstore/product/plugins/NavMenu'),
+        AttributionPlugin: require('@mapstore/product/plugins/Attribution'),
         SaveMockPlugin: require('./plugins/SaveMock')
     },
     requires: {}

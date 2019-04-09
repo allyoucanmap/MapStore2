@@ -15,7 +15,9 @@
             },
             "Login",
             "BurgerMenu",
-            "SaveMock"
+            "SaveMock",
+            "NavMenu",
+            "Attribution"
         ]
     }
 }

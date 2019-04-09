@@ -8,6 +8,7 @@ import ContainerDimensions from 'react-container-dimensions';
 import BorderLayout from '@mapstore/components/layout/BorderLayout';
 import SideGrid from '@mapstore/components/misc/cardgrids/SideGrid';
 import Toolbar from '@mapstore/components/misc/toolbar/Toolbar';
+import emptyState from '@mapstore/components/misc/enhancers/emptyState';
 
 import draggableContainer from './mapstore/draggableContainer';
 import draggableComponent from './mapstore/draggableComponent';
@@ -15,7 +16,10 @@ import SideCard from './mapstore/SideCard';
 import Media from './Media';
 
 const DraggableSideCard = draggableComponent(SideCard);
-const DraggableSideGrid = draggableContainer(SideGrid);
+const DraggableSideGrid = emptyState(({ readOnly }) => readOnly, {
+    glyph: 'story',
+    title: 'GeoStory Editor'
+})(draggableContainer(SideGrid));
 
 const Icon = ({ type }) => {
     const glyphs = {
@@ -140,20 +144,22 @@ class Builder extends React.Component {
             <BorderLayout
                 className="ms-geostory-builder"
                 header={
-                    <div className="text-center" style={{ padding: '8px 16px' }}>
+                    <div
+                        className="text-center"
+                        style={{
+                            padding: '8px 16px',
+                            borderBottom: '1px solid #ddd'
+                        }}>
                         <Toolbar
                             btnDefaultProps={{
                                 className: 'square-button-md',
                                 bsStyle: 'primary'
                             }}
                             buttons={[
-                                /*{
-                                    glyph: 'floppy-disk'
-                                },*/
                                 {
                                     glyph: 'trash',
                                     tooltip: 'Remove selected section',
-                                    disabled: !this.state.selected || this.props.sections.length === 1,
+                                    disabled: !this.state.selected || this.props.sections.length === 1 || this.props.readOnly,
                                     onClick: () => {
                                         this.props.onRemove(this.state.selected);
                                     }
@@ -161,26 +167,29 @@ class Builder extends React.Component {
                                 {
                                     glyph: 'eye-open',
                                     tooltip: 'Show preview',
+                                    disabled: this.props.readOnly,
                                     onClick: () => this.props.onPreview()
                                 },
                                 {
                                     tooltip: 'Settings',
+                                    disabled: this.props.readOnly,
                                     glyph: 'cog'
-                                },
-                                /*{
-                                    glyph: 'lock'
-                                },*/
+                                }
+                                /*,
                                 {
                                     tooltip: 'Share this story',
+                                    disabled: this.props.readOnly,
                                     glyph: 'share'
                                 }
+                                */
                             ]}/>
                     </div>
                 }>
                 <div
-                    style={{ position: 'absolute', width: '100%' }}>
+                    style={{ position: 'absolute', width: '100%', height: '100%', display: 'flex' }}>
                     <DraggableSideGrid
                         isDraggable
+                        readOnly={this.props.readOnly}
                         containerId="ms-story-builder"
                         cardComponent={DraggableSideCard}
                         size="sm"
