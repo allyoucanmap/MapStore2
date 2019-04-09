@@ -7,6 +7,10 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { createSelector } from 'reselect';
+import { get, capitalize } from 'lodash';
 import BorderLayout from '@mapstore/components/layout/BorderLayout';
 import Toolbar from '@mapstore/components/misc/toolbar/Toolbar';
 import ResizableModal from '@mapstore/components/misc/ResizableModal';
@@ -28,6 +32,8 @@ class GeoStory extends React.Component {
 
     static propTypes = {
         // sections: PropTypes.array
+        layoutType: PropTypes.string,
+        readOnly: PropTypes.bool
     };
 
     static defaultProps = {
@@ -38,9 +44,18 @@ class GeoStory extends React.Component {
         page: 0,
         space: 0,
         current: 0,
-        // layoutType: 'Cascade',
-        sections: stories[0].sections
+        sections: []
     };
+
+    componentWillMount() {
+        if (this.props.layoutType) {
+            this.setState({
+                sections: stories[0].sections,
+                layoutType: capitalize(this.props.layoutType),
+                readOnly: this.props.readOnly
+            });
+        }
+    }
 
     render() {
         const SelectedLayout = Layout[this.state.layoutType];
@@ -181,7 +196,10 @@ class GeoStory extends React.Component {
                     show={!this.state.layoutType}
                     title="Create a New Story">
                     <SideGrid
-                        onItemClick={({ title }) => this.setState({ layoutType: title })}
+                        onItemClick={({ title }) => this.setState({
+                            layoutType: title,
+                            sections: [ stories[0].sections[0] ]
+                        })}
                         items={[
                             {
                                 preview: <img src={cascadeImage}/>,
@@ -202,4 +220,15 @@ class GeoStory extends React.Component {
     }
 }
 
-export const GeoStoryPlugin = GeoStory;
+export const GeoStoryPlugin = connect(
+    createSelector(
+        [
+            state => get(state, 'controls.geostory.layout'),
+            state => get(state, 'controls.geostory.readOnly')
+        ],
+        (layoutType, readOnly) => ({
+            layoutType,
+            readOnly
+        })
+    )
+)(GeoStory);

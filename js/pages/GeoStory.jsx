@@ -9,6 +9,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const { connect } = require('react-redux');
+const { get } = require('lodash');
 
 const url = require('url');
 const urlQuery = url.parse(window.location.href, true).query;
@@ -16,7 +17,7 @@ const urlQuery = url.parse(window.location.href, true).query;
 const ConfigUtils = require('@mapstore/utils/ConfigUtils');
 
 const { loadMapConfig } = require('@mapstore/actions/config');
-const { resetControls } = require('@mapstore/actions/controls');
+const { resetControls, setControlProperty } = require('@mapstore/actions/controls');
 const { mapSelector } = require('@mapstore/selectors/map');
 const HolyGrail = require('@mapstore/containers/HolyGrail');
 
@@ -29,7 +30,9 @@ class GeoStory extends React.Component {
         loadMapConfig: PropTypes.func,
         reset: PropTypes.func,
         plugins: PropTypes.object,
-        onPermalink: PropTypes.func
+        onPermalink: PropTypes.func,
+        setLayout: PropTypes.func,
+        setReadOnly: PropTypes.func
     };
 
     static defaultProps = {
@@ -38,8 +41,21 @@ class GeoStory extends React.Component {
         loadMapConfig: () => { },
         reset: () => { },
         map: {},
-        onPermalink: () => {}
+        onPermalink: () => {},
+        setLayout: () => {},
+        setReadOnly: () => {}
     };
+
+    componentWillMount() {
+        const indexh = get(this.props.match, 'params.indexh');
+        const indexv = get(this.props.match, 'params.indexv');
+        if (indexh === 'cascade' || indexh === 'slides') {
+            this.props.setLayout(indexh);
+        }
+        if (indexv === 'read-only') {
+            this.props.setReadOnly();
+        }
+    }
 
     render() {
         const plugins = ConfigUtils.getConfigProp('plugins') || {};
@@ -68,6 +84,8 @@ module.exports = connect((state) => ({
     }),
     {
         loadMapConfig,
-        reset: resetControls
+        reset: resetControls,
+        setLayout: setControlProperty.bind(null, 'geostory', 'layout'),
+        setReadOnly: setControlProperty.bind(null, 'geostory', 'readOnly', true)
     }
 )(GeoStory);
