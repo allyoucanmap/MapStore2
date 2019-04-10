@@ -31,13 +31,8 @@ const Layout = {
 class GeoStory extends React.Component {
 
     static propTypes = {
-        // sections: PropTypes.array
         layoutType: PropTypes.string,
         readOnly: PropTypes.bool
-    };
-
-    static defaultProps = {
-        // sections: stories[0].sections
     };
 
     state = {

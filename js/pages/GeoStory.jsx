@@ -49,11 +49,12 @@ class GeoStory extends React.Component {
     componentWillMount() {
         const indexh = get(this.props.match, 'params.indexh');
         const indexv = get(this.props.match, 'params.indexv');
-        if (indexh === 'cascade' || indexh === 'slides') {
-            this.props.setLayout(indexh);
-        }
-        if (indexv === 'read-only') {
-            this.props.setReadOnly();
+        if (indexh !== 'create') {
+            const type = (indexh === 'cascade' || indexh === 'slides') && indexh || 'cascade';
+            this.props.setLayout(type);
+            if (indexv === 'read-only') {
+                this.props.setReadOnly();
+            }
         }
     }
 
