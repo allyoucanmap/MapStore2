@@ -47,6 +47,6 @@ webpackConfig.devtool = undefined;
 
 // this is a workaround for this issue https://github.com/webpack/file-loader/issues/3
 // use `__webpack_public_path__` in the index.html when fixed
-webpackConfig.output.publicPath = "/GeoStory/dist/";
+webpackConfig.output.publicPath = "/mockups/mapstore2/geostory/dist/";
 
 module.exports = webpackConfig;
