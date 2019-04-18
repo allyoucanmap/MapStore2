@@ -1,32 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ContentEditable from "react-contenteditable";
-import { Glyphicon, DropdownButton as DropdownButtonRB, MenuItem } from 'react-bootstrap';
+import { Glyphicon } from 'react-bootstrap';
 
 import Toolbar from '@mapstore/components/misc/toolbar/Toolbar';
-import tooltip from '@mapstore/components/misc/enhancers/tooltip';
 
 import Container from './Container';
 import Media from './Media';
 import ToolbarPopover from './ToolbarPopover';
 import TextEditor from './TextEditor';
+import TextWrapper from './TextWrapper';
+import MediaEditor from './MediaEditor';
 
-const DropdownButton = tooltip(DropdownButtonRB);
-
-const TextWrapper = (props) => {
-    const alignClass = ` text-${props.align || 'center'}`;
-    const positionClass = `${props.position ? ` ms-${props.position}` : ''}`;
-    const sizeClass = `${props.size ? ` ms-${props.size}` : ''}`;
-    const invertClass = `${props.invert ? ` ms-invert` : ''}`;
-    const transparentClass = `${props.transparent ? ` ms-transparent` : ''}`;
-    return (
-        <div
-            className={`ms-cascade-field-text${positionClass}${sizeClass}${invertClass}${transparentClass}${alignClass}`}
-            style={props.style || {}}>
-            {props.children}
-        </div>
-    );
-};
+import { camelCase, mapKeys } from 'lodash';
 
 const PageWrapper = (props) => {
     return (
@@ -35,41 +21,6 @@ const PageWrapper = (props) => {
         </div>
     );
 };
-
-
-class MediaEditor extends React.Component {
-
-    static propTypes = {
-        id: PropTypes.string,
-        text: PropTypes.array,
-        size: PropTypes.string,
-        position: PropTypes.string,
-        onChange: PropTypes.func,
-        readOnly: PropTypes.bool
-    };
-
-    render() {
-        return (
-            <TextWrapper
-                size="medium"
-                position={this.props.position || 'center'}
-                size={this.props.size || 'medium'}
-                style={{
-                    padding: 0,
-                    boxShadow: 'none'
-                }}>
-                <Media
-                    id={this.props.id}
-                    type="image"
-                    src={'assets/img/stsci-h-p1821a-m-1699x2000.png'}
-                    style={{
-                        minHeight: 200,
-                        position: 'relative'
-                    }}/>
-            </TextWrapper>
-        );
-    }
-}
 
 class ContentEditor extends React.Component {
 
@@ -87,7 +38,7 @@ class ContentEditor extends React.Component {
             text: [
                 {
                     id: 0,
-                    type: 'text',
+                    field: 'text',
                     html: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa, quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt, explicabo. Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos'
                 }
             ]
@@ -96,7 +47,7 @@ class ContentEditor extends React.Component {
 
     render() {
         return (
-            <div>
+            <div className={`ms-content-editor${this.props.readOnly ? ' ms-read-only' : ''}`}>
                 {this.state.text.map((atom, idx) => {
                     return (
                         <div>
@@ -105,95 +56,7 @@ class ContentEditor extends React.Component {
                                     btnDefaultProps={{
                                         className: 'square-button-md no-border'
                                     }}
-                                    buttons={atom.type === 'media' ? [
-                                        {
-                                            glyph: 'trash',
-                                            tooltip: 'Remove content',
-                                            visible: this.state.text.length > 1 ? true : false,
-                                            onClick: () => this.removeContent(atom.id)
-                                        },
-                                        {
-                                            Element: () => {
-                                                const items = [
-                                                    {
-                                                        key: 'small',
-                                                        label: 'Small'
-                                                    },
-                                                    {
-                                                        key: 'medium',
-                                                        label: 'Medium'
-                                                    },
-                                                    {
-                                                        key: 'large',
-                                                        label: 'Large'
-                                                    }
-                                                ];
-                                                return (
-                                                    <DropdownButton
-                                                        noCaret
-                                                        tooltip="Change size"
-                                                        className="square-button-md no-border"
-                                                        pullRight
-                                                        title={<Glyphicon glyph="resize-horizontal"/>}>
-                                                        {items.filter(item => item.key !== atom.size).map((item) => (
-                                                            <MenuItem
-                                                                key={item.key}
-                                                                onClick={() => {
-                                                                    this.updateContent(atom.id, 'size', item.key);
-                                                                }}>
-                                                                {item.label}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </DropdownButton>
-                                                );
-                                            }
-                                        },
-                                        {
-                                            Element: () => {
-                                                const items = [
-                                                    {
-                                                        key: 'left',
-                                                        label: 'Align left',
-                                                        glyph: 'align-left'
-                                                    },
-                                                    {
-                                                        key: 'center',
-                                                        label: 'Align center',
-                                                        glyph: 'align-center'
-                                                    },
-                                                    {
-                                                        key: 'right',
-                                                        label: 'Align right',
-                                                        glyph: 'align-right'
-                                                    }
-                                                ];
-                                                return (
-                                                    <DropdownButton
-                                                        noCaret
-                                                        disabled={!!(atom.size === 'large')}
-                                                        tooltip="Align content"
-                                                        className="square-button-md no-border"
-                                                        pullRight
-                                                        title={<Glyphicon glyph={`align-${atom.position || 'center'}`}/>}>
-                                                        {items.filter(item => item.key !== atom.position).map((item) => (
-                                                            <MenuItem
-                                                                key={item.key}
-                                                                onClick={() => {
-                                                                    this.updateContent(atom.id, 'position', item.key);
-                                                                }}>
-                                                                <Glyphicon glyph={`align-${item.key}`}/> {item.label}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </DropdownButton>
-                                                );
-                                            }
-                                        },
-                                        {
-                                            tooltip: 'Edit media content',
-                                            glyph: 'cog'
-                                        }
-
-                                    ] : [
+                                    buttons={[
                                         {
                                             glyph: 'trash',
                                             tooltip: 'Remove content',
@@ -202,19 +65,22 @@ class ContentEditor extends React.Component {
                                         }
                                     ]}/>
                             </div>}
-                            {atom.type === 'text' &&
+                            {atom.field === 'text' &&
                                 <TextEditor
                                     key={atom.id}
                                     html={atom.html}
                                     readOnly={this.props.readOnly}
-                                    onChange={(value) => this.updateContent(atom.id, 'html', value)} />}
-                            {atom.type === 'media' &&
+                                    onChange={(html) => this.updateContent(atom.id, { html })} />}
+                            {atom.field === 'media' &&
                                 <MediaEditor
                                     id={`${this.props.id}_${atom.id}`}
                                     key={atom.id}
                                     position={atom.position}
                                     readOnly={this.props.readOnly}
-                                    size={atom.size}/>}
+                                    type={atom.type || 'image'}
+                                    src={atom.src}
+                                    size={atom.size}
+                                    onChange={(value) => this.updateContent(atom.id, value)}/>}
                             {!this.props.readOnly && <div
                                 className="text-center"
                                 style={{ width: '100%' }}>
@@ -234,7 +100,7 @@ class ContentEditor extends React.Component {
                                                     onClick: () => {
                                                         this.addContent(idx, {
                                                             id: this.state.text.length,
-                                                            type: 'text',
+                                                            field: 'text',
                                                             html: ''
                                                         });
                                                     }
@@ -245,9 +111,9 @@ class ContentEditor extends React.Component {
                                                     onClick: () => {
                                                         this.addContent(idx, {
                                                             id: this.state.text.length,
-                                                            type: 'media',
+                                                            field: 'media',
                                                             position: 'center',
-                                                            size: 'medium'
+                                                            size: 'full'
                                                         });
                                                     }
                                                 }
@@ -284,12 +150,12 @@ class ContentEditor extends React.Component {
         this.props.onChange(text);
     }
 
-    updateContent = (id, key, value) => {
+    updateContent = (id, value) => {
         const text = this.state.text.map(atom => {
             if (atom.id === id) {
                 return {
                     ...atom,
-                    [key]: value
+                    ...value
                 };
             }
             return atom;
@@ -333,7 +199,18 @@ const fields = {
                             onChange={(event) => props.onChange('description', event.target.value)} />
                     </TextWrapper>
                 }>
-                {props.mediaSrc && <Media id={props.id} type={props.mediaType} cover={props.mediaCover} src={props.mediaSrc} />}
+                {props.mediaSrc && <Media
+                    id={props.id}
+                    type={props.mediaType}
+                    cover={props.mediaCover}
+                    src={props.mediaSrc}
+                    readOnly={props.readOnly}
+                    onChange={(changedValue) => {
+                        const newValues = mapKeys(changedValue, (value, key) => {
+                            return camelCase(`media-${key}`);
+                        });
+                        props.onChange(undefined, newValues);
+                    }} />}
             </Container>
         );
     },
@@ -360,7 +237,18 @@ const fields = {
                             onChange={(event) => props.onChange('title', event.target.value)} />
                     </TextWrapper>
                 }>
-                {props.mediaSrc && <Media id={props.id} type={props.mediaType} cover={props.mediaCover} src={props.mediaSrc} />}
+                {props.mediaSrc && <Media
+                    id={props.id}
+                    type={props.mediaType}
+                    cover={props.mediaCover}
+                    src={props.mediaSrc}
+                    readOnly={props.readOnly}
+                    onChange={(changedValue) => {
+                        const newValues = mapKeys(changedValue, (value, key) => {
+                            return camelCase(`media-${key}`);
+                        });
+                        props.onChange(undefined, newValues);
+                    }} />}
             </Container>
         );
     },

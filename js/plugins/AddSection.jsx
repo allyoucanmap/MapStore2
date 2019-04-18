@@ -51,11 +51,24 @@ class AddSection extends React.Component {
                                         section: sectionTemplates('paragraph')
                                     });
                                 }
-                            }/*,
+                            },
                             {
-                                glyph: 'picture',
-                                tooltip: 'Add immersive section'
-                            }*/
+                                glyph: this.props.type === 'immersive' ? 'picture' : 'book',
+                                tooltip: this.props.type === 'immersive' ? 'Add immersive content' : 'Add immersive section',
+                                onClick: () => {
+                                    if (!(this.props.type === 'immersive')) {
+                                        this.props.onAdd({
+                                            id: this.props.id,
+                                            section: sectionTemplates('immersive')
+                                        });
+                                    } else {
+                                        this.props.onAdd({
+                                            id: this.props.id,
+                                            content: sectionTemplates('immersiveContent')
+                                        });
+                                    }
+                                }
+                            }
                         ]} />
                 }>
                 <Glyphicon

@@ -53,6 +53,41 @@ const sectionTemplates = (type) => {
                     }
                 }
             ]
+        },
+        immersive: {
+            type: 'immersive',
+            title: 'Immersive',
+            id: uuidv1(),
+            contents: [
+                {
+                    id: uuidv1(),
+                    type: 'column',
+                    layer: 'block',
+                    background: {
+                        type: 'image',
+                        cover: true,
+                        src: 'assets/img/map.png'
+                    },
+                    foreground: {
+                        textContainerPosition: 'left',
+                        text: 'Add your text'
+                    }
+                }
+            ]
+        },
+        immersiveContent: {
+            id: uuidv1(),
+            type: 'column',
+            layer: 'block',
+            background: {
+                type: 'image',
+                cover: true,
+                src: 'assets/img/map.png'
+            },
+            foreground: {
+                textContainerPosition: 'left',
+                text: 'Add your text'
+            }
         }
     };
     return section[type] || { };

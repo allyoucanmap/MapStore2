@@ -15,22 +15,98 @@
     height: 100%;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
     z-index: 0;
     background-color: @ms-story-bg;
-    & > * {
-        width: 100%;
+    border: 1px dashed @ms2-color-shade-lighter;
+    &.ms-read-only {
+        border: none;
+    }
+    &.ms-small {
+        width: 25%;
+        padding: 16px;
+    }
+    &.ms-medium {
+        width: 40%;
+        padding: 16px;
+    }
+    &.ms-large {
+        width: 65%;
+        padding: 16px;
+    }
+    &.ms-small, &.ms-medium, &.ms-large {
+        > *:not(.ms-background-tools) {
+            .shadow-soft;
+        }
+    }
+    &.ms-left {
+        left: 0;
+    }
+    &.ms-center {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    &.ms-right {
+        left: 100%;
+        transform: translateX(-100%);
+    }
+    &.ms-horizontal {
+        
+        > *:not(.ms-background-tools) {
+            width: 100%;
+        }
+    }
+    &.ms-vertical {
+        > *:not(.ms-background-tools) {
+            height: 100%;
+            margin: auto;
+        }
     }
     &.cover {
-        & > * {
+        display: flex !important;
+        overflow: hidden;
+        padding: 0;
+        & > *:not(.ms-background-tools) {
             width: unset;
             flex-shrink: 0;
             min-width: 100%;
             min-height: 100%;
+            height: unset;
+            margin: unset;
         }
     }
     &.ms-invert {
         background-color: @ms-story-bg-invert;
+    }
+    .ms-background-tools {
+        position: absolute;
+        z-index: 2000;
+        top: 0;
+        left: 0;
+        margin: 4px;
+        .shadow-far;
+        .btn {
+            pointer-events: auto !important;
+        }
+    }
+
+    .ms-background-credits {
+        position: absolute;
+        z-index: 2000;
+        bottom: 0;
+        right: 0;
+        top: unset;
+        left: unset;
+        margin: 4px;
+        margin-right: 22px;
+        background-color: fade(@ms2-color-background, 50%);
+        color: @ms2-color-text;
+        padding: 0 4px;
+        padding-bottom: 2px;
+        font-size: @font-size-small;
+    }
+
+    &.ms-transparent {
+        background-color: transparent;
     }
 }
 
@@ -164,6 +240,9 @@
 
 .ms-cascade-bg {
     background-color: @ms-story-bg;
+    > span {
+        position: static !important;
+    }
     &-enter {
         opacity: 0.01;
         &-active {
@@ -211,7 +290,26 @@
     }
 }
 
+.ms-content-editor {
+    &.ms-read-only {
+        & > div + div {
+            margin-top: 32px;
+        }
+        .ms-text-editor-main {
+            border: none;
+        }
+    }
+    .ms-background  {
+        & > *:not(.ms-background-tools):not(img) {
+            position: absolute;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    }
+}
+
 // issue in react-draft-wysiwyg align not working on multiline p
 .public-DraftStyleDefault-ltr {
     text-align: inherit;
 }
+

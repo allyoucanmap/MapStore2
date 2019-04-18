@@ -24,6 +24,9 @@
     }
 }
 .msSideGrid {
+    margin: 8px 16px;
+    width: ~"calc(100% - 32px)";
+    position: relative;
     .mapstore-side-card:hover {
         transform: unset;
     }
@@ -54,5 +57,17 @@
     z-index: 5;
     .msSideGrid {
         position: relative;
+    }
+}
+
+.ms-media-modal {
+    &-layout {
+        > .ms2-border-layout-body > .ms2-border-layout-content {
+            position: relative;
+            margin: 8px;
+            .ms-background > * {
+                .shadow-far;
+            }
+        }
     }
 }

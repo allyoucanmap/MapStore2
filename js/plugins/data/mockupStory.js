@@ -9,6 +9,7 @@ const stories = [
             {
                 type: 'cover',
                 id: uuidv1(),
+                title: 'Intro',
                 contents: [
                     {
                         id: uuidv1(),
@@ -18,7 +19,8 @@ const stories = [
                         background: {
                             type: 'image',
                             cover: true,
-                            src: 'assets/img/stsci-h-p1821a-m-1699x2000.png'
+                            src: 'assets/img/stsci-h-p1821a-m-1699x2000.png',
+                            credits: '© Copyright Test'
                         },
                         foreground: {
                             cover: true,
@@ -32,6 +34,7 @@ const stories = [
                 type: 'paragraph',
                 id: uuidv1(),
                 pages: 1,
+                title: 'Abstract',
                 contents: [
                     {
                         id: uuidv1(),
@@ -49,6 +52,7 @@ const stories = [
                 type: 'immersive',
                 id: uuidv1(),
                 immersive: true,
+                title: 'Maps...',
                 contents: [
                     {
                         id: uuidv1(),
@@ -96,10 +100,11 @@ const stories = [
             {
                 type: 'cover',
                 id: uuidv1(),
+                title: 'Title...',
                 contents: [
                     {
                         id: uuidv1(),
-                        type: 'cover',
+                        type: 'title',
                         foreground: {
                             title: 'Another Title',
                             description: 'with description',
@@ -115,6 +120,7 @@ const stories = [
             {
                 type: 'immersive',
                 id: uuidv1(),
+                title: 'Maps and Video...',
                 contents: [
                     {
                         id: uuidv1(),

@@ -12,14 +12,17 @@ class Background extends React.Component {
         height: PropTypes.number,
         sections: PropTypes.array,
         sectionsData: PropTypes.object,
-        parallax: PropTypes.object
+        parallax: PropTypes.object,
+        onChange: PropTypes.func,
+        readOnly: PropTypes.bool
     };
 
     static defaultProps = {
         width: 0,
         height: 0,
         sections: [],
-        sectionsData: {}
+        sectionsData: {},
+        onChange: () => {}
     };
 
     state = {
@@ -88,7 +91,7 @@ class Background extends React.Component {
                                         page >= bg.offset - 0.5 && page < bg.offset + bg.factor - 0.5
                                         || backgrounds.length === 1
                                     )
-                                    .map(({ cover, src, id: bgId, type, invert }) => {
+                                    .map(({ cover, src, id: bgId, type, invert, position, size, credits }) => {
                                         return (
                                             <Media
                                                 key={bgId}
@@ -96,7 +99,18 @@ class Background extends React.Component {
                                                 type={type}
                                                 cover={cover}
                                                 src={src}
-                                                invert={invert} />
+                                                invert={invert}
+                                                position={position}
+                                                size={size}
+                                                credits={credits}
+                                                readOnly={this.props.readOnly}
+                                                onChange={(value) => this.props.onChange({
+                                                    sectionId,
+                                                    contentId: bgId,
+                                                    // key: '',
+                                                    value,
+                                                    position: 'background'
+                                                })} />
                                         );
                                     }
                                     )}

@@ -23,6 +23,8 @@ import SideGrid from '@mapstore/components/misc/cardgrids/SideGrid';
 import cascadeImage from '../../assets/icons/cascade.svg';
 import slidesImage from '../../assets/icons/slides.svg';
 
+import { ButtonToolbar } from 'react-bootstrap';
+
 const Layout = {
     Cascade,
     Slides
@@ -64,8 +66,27 @@ class GeoStory extends React.Component {
                         style={{ order: -1 }}>
                         <Builder
                             sections={this.state.sections}
+                            currentSlide={this.state.currentSlide}
                             readOnly={this.state.readOnly || !SelectedLayout}
                             onPreview={() => this.setState({ readOnly: !this.state.readOnly })}
+                            onChange={(data) => {
+                                const { sectionId, ...value } = data;
+                                const sections = this.state.sections.map(section => {
+                                    if (section.id === sectionId) {
+                                        return {
+                                            ...section,
+                                            ...value
+                                        };
+                                    }
+                                    return section;
+                                });
+                                this.setState({
+                                    sections: sections.map(section => ({ ...section, _needsUpdate: (section._needsUpdate || 0) + 1 }))
+                                });
+                            }}
+                            onZoomTo={(slidePosition) => {
+                                this.setState({ slidePosition });
+                            }}
                             onRemove={(removeId) => {
                                 this.setState({
                                     sections: this.state.sections
@@ -102,6 +123,7 @@ class GeoStory extends React.Component {
                     {this.state.readOnly && <div
                         style={{
                             padding: 4,
+                            display: 'flex',
                             backgroundColor: '#ffffff',
                             borderBottom: '1px solid #ddd'
                         }}>
@@ -122,6 +144,35 @@ class GeoStory extends React.Component {
                                     tooltip: 'Show story in fullscreen'
                                 }
                             ]}/>
+                        <div style={{ flex: 1, display: 'flex' }}>
+                            <ButtonToolbar
+                                style={{ marginRight: 0, marginLeft: 'auto' }}>
+                                {<Toolbar
+                                    btnDefaultProps={{
+                                        bsSize: 'xs',
+                                        style: {
+                                            marginRight: 4
+                                        }
+                                    }}
+                                    buttons={
+                                        this.state.sections.map((section) => {
+                                            const content = section.contents[0];
+                                            const selected = this.state.currentSlide.sectionId === section.id;
+                                            return {
+                                                text: section.title || section.type,
+                                                bsStyle: selected ? 'primary' : 'default',
+                                                className: selected ? '' : 'btn-tray',
+                                                onClick: selected ? () => {} : () => this.setState({
+                                                    slidePosition: {
+                                                        sectionId: section.id,
+                                                        contentId: content.id
+                                                    }
+                                                })
+                                            };
+                                        })}/>
+                                }
+                            </ButtonToolbar>
+                        </div>
                     </div>}
                     <div style={{ flex: 1 }}>
                         <div
@@ -133,20 +184,21 @@ class GeoStory extends React.Component {
                             <SelectedLayout
                                 sections={this.state.sections}
                                 readOnly={this.state.readOnly}
-                                onUpdate={({ page, pages }) => this.setState({ page, pages })}
+                                slidePosition={this.state.slidePosition}
+                                onUpdate={({ page, pages, currentSlide }) => this.setState({ page, pages, currentSlide })}
                                 onEdit={(data) => {
-                                    const { sectionId, contentId, key, value } = data;
+                                    const { sectionId, contentId, key, value, position = 'foreground' } = data;
                                     const sections = this.state.sections.map(section => {
                                         if (section.id === sectionId) {
                                             const contents = (section.contents || [])
                                                 .map((content) => {
                                                     if (content.id === contentId) {
-                                                        // CHANGES FROM FOREGROUND, NEEDS BACKGROUND ALSO
+                                                        const newProperties = key ? { [key]: value } : value;
                                                         return {
                                                             ...(content || {}),
-                                                            foreground: {
-                                                                ...(content.foreground || {}),
-                                                                [key]: value
+                                                            [position]: {
+                                                                ...(content[position] || {}),
+                                                                ...newProperties
                                                             }
                                                         };
                                                     }
@@ -166,11 +218,25 @@ class GeoStory extends React.Component {
                                 onAdd={(data) => {
                                     const sections = this.state.sections.reduce((newSections, section) => {
                                         if (section.id === data.id) {
-                                            return [
-                                                ...newSections,
-                                                section,
-                                                data.section
-                                            ];
+                                            if (data.section) {
+                                                return [
+                                                    ...newSections,
+                                                    section,
+                                                    data.section
+                                                ];
+                                            }
+                                            if (data.content) {
+                                                return [
+                                                    ...newSections,
+                                                    {
+                                                        ...section,
+                                                        contents: [
+                                                            ...section.contents,
+                                                            data.content
+                                                        ]
+                                                    }
+                                                ];
+                                            }
                                         }
                                         return [
                                             ...newSections,

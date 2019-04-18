@@ -1,9 +1,10 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Glyphicon } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, ControlLabel, Glyphicon, Checkbox } from 'react-bootstrap';
 import { capitalize, head } from 'lodash';
 import ContainerDimensions from 'react-container-dimensions';
+import ContentEditable from 'react-contenteditable';
 
 import BorderLayout from '@mapstore/components/layout/BorderLayout';
 import SideGrid from '@mapstore/components/misc/cardgrids/SideGrid';
@@ -13,7 +14,7 @@ import emptyState from '@mapstore/components/misc/enhancers/emptyState';
 import draggableContainer from './mapstore/draggableContainer';
 import draggableComponent from './mapstore/draggableComponent';
 import SideCard from './mapstore/SideCard';
-import Media from './Media';
+import MediaSource from './MediaSource';
 
 const DraggableSideCard = draggableComponent(SideCard);
 const DraggableSideGrid = emptyState(({ readOnly }) => readOnly, {
@@ -35,7 +36,14 @@ const Icon = ({ type }) => {
 };
 
 const getMediaPropsFromContent = (content = {}) => {
-    if (content.background) return content.background;
+    if (content.background) {
+        const { type, src, cover } = content.background;
+        return {
+            type,
+            src,
+            cover
+        };
+    }
     if (content.foreground && content.foreground.mediaType && content.foreground.mediaSrc) {
         return {
             type: content.foreground.mediaType,
@@ -54,7 +62,7 @@ const Preview = ({ width, content = {} }) => {
     return mediaProps ? (
         <div style={{ position: 'relative', width, height }}>
             <div style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: '#dddddd', display: 'flex' }}>
-                {mediaProps && mediaProps.type !== 'map' && <Media {...mediaProps} cover={false}/>}
+                {mediaProps && mediaProps.type !== 'map' && <MediaSource {...mediaProps} cover />}
                 {mediaProps && mediaProps.type === 'map' && <Glyphicon glyph="1-map" style={{ fontSize: height / 2, margin: 'auto' }}/>}
             </div>
         </div>
@@ -64,24 +72,57 @@ const Preview = ({ width, content = {} }) => {
 const mapSectionsToItems = ({
     contents,
     type,
+    title,
     id,
     selected,
     onSort = () => {},
-    onSelect = () => {}
+    onSelect = () => {},
+    onChange = () => {},
+    onZoomTo = () => {},
+    compactCards,
+    currentSlide = {}
 }) => {
-    // const { title, text } = contents && contents.length === 1 && contents[0].foreground || {};
     return {
         id: id,
         selected: id === selected,
         preview: <Icon type={type}/>,
-        title: /*title || text ||*/ capitalize(type) + ' Section',
+        tools: <Toolbar
+            btnDefaultProps={{
+                className: 'square-button-md no-border'
+            }}
+            buttons={[
+                {
+                    glyph: 'zoom-to',
+                    tooltip: 'Zoom to content',
+                    onClick: (event) => {
+                        event.stopPropagation();
+                        onZoomTo({
+                            sectionId: id
+                        });
+                    }
+                }
+            ]}/>,
+        title: <ContentEditable
+            key="title"
+            tagName="span"
+            html={title}
+            style={{
+                minHeight: 20,
+                display: 'block'
+            }}
+            onChange={(event) => {
+                onChange({
+                    title: event.target.value
+                });
+            }} />,
         description: `type: ${type}`,
         onClick: (data, event) => {
             event.stopPropagation();
             onSelect(id);
         },
         style: {
-            borderTop: '2px solid #333333'
+            borderTop: currentSlide.sectionId === id ? 'none' : '2px solid #333333',
+            outline: currentSlide.sectionId === id ? '2px solid #09b3d4' : 'none'
         },
         body: contents && contents.length > 1
             ? <div style={{ position: 'relative' }}>
@@ -103,9 +144,29 @@ const mapSectionsToItems = ({
                                 onSelect(content.id);
                             },
                             preview: <Icon type={content.type + (foreground.textContainerPosition || '')}/>,
+                            tools: <Toolbar
+                                btnDefaultProps={{
+                                    className: 'square-button-md no-border'
+                                }}
+                                buttons={[
+                                    {
+                                        glyph: 'zoom-to',
+                                        tooltip: 'Zoom to content',
+                                        onClick: (event) => {
+                                            event.stopPropagation();
+                                            onZoomTo({
+                                                sectionId: id,
+                                                contentId: content.id
+                                            });
+                                        }
+                                    }
+                                ]}/>,
                             title: capitalize(content.type),
                             description: `type: ${content.type}`,
-                            body: (
+                            style: {
+                                outline: currentSlide.contentId === content.id ? '2px solid #09b3d4' : 'none'
+                            },
+                            body: compactCards ? null : (
                                 <ContainerDimensions>
                                     <Preview content={content}/>
                                 </ContainerDimensions>
@@ -113,35 +174,137 @@ const mapSectionsToItems = ({
                         };
                     })}/>
             </div>
-            :
+            : compactCards ? null :
             <ContainerDimensions>
                 <Preview content={contents[0]}/>
             </ContainerDimensions>
     };
 };
 
+// Same structure as MediaForm
+const Settings = ({
+    onBack = () => {},
+    // onChange = () => {},
+    // onSave = () => {},
+    form = [
+        {
+            placeholder: 'Enter title',
+            type: 'text',
+            id: 'title',
+            label: 'Title'
+        },
+        {
+            placeholder: 'Enter logo src (image format)',
+            type: 'text',
+            id: 'logo',
+            label: 'Logo'
+        },
+        {
+            type: 'checkbox',
+            id: 'autoplay',
+            placeholder: 'Enable autoplay',
+            label: 'Autoplay'
+        },
+        {
+            type: 'checkbox',
+            id: 'navbar',
+            placeholder: 'Show navbar',
+            label: 'Navbar'
+        }
+    ]
+}) => {
+    // const [ properties, setProperties ] = useState(media);
+
+    return (
+        <BorderLayout
+            className="ms-geostory-builder"
+            header={
+                <div
+                    className="text-center"
+                    key="toolbar"
+                    style={{
+                        borderBottom: '1px solid #ddd',
+                        padding: 8
+                    }}>
+                    <Toolbar
+                        btnGroupProps={{
+                            style: {
+                                marginBottom: 8
+                            }
+                        }}
+                        btnDefaultProps={{
+                            bsStyle: 'primary',
+                            className: 'square-button-md'
+                        }}
+                        buttons={[{
+                            glyph: 'arrow-left',
+                            tooltip: 'Back to builder',
+                            onClick: () => onBack()
+                        }, {
+                            tooltip: 'Save settings',
+                            glyph: 'floppy-disk'
+                        }]}/>
+                    <h4>Story Settings</h4>
+                </div>
+            }>
+            <Form style={{ padding: 8 }}>
+                {form.map((field) => field.type === 'checkbox'
+                ? (
+                    <FormGroup key={field.id}>
+                        {field.label && <ControlLabel>
+                            {field.label}
+                        </ControlLabel>}
+                        <Checkbox>
+                            {field.placeholder}
+                        </Checkbox>
+                    </FormGroup>
+                )
+                : (
+                    <FormGroup key={field.id}>
+                        {field.label && <ControlLabel>
+                            {field.label}
+                        </ControlLabel>}
+                        <FormControl
+                            type={field.type}
+                            placeholder={field.placeholder} />
+                    </FormGroup>
+                ))}
+            </Form>
+        </BorderLayout>
+    );
+};
+
 class Builder extends React.Component {
 
     static propTypes = {
         sections: PropTypes.array,
+        currentSlide: PropTypes.object,
         // selected: PropTypes.string,
         onSort: PropTypes.func,
         onRemove: PropTypes.func,
         onPreview: PropTypes.func,
-        readOnly: PropTypes.bool
+        readOnly: PropTypes.bool,
+        onChange: PropTypes.func,
+        onZoomTo: PropTypes.func
     };
 
     static defaultProps = {
         sections: [ ],
         onSort: () => {},
-        onPreview: () => {}
+        onPreview: () => {},
+        onChange: () => {},
+        onZoomTo: () => {}
     };
 
-    state = {};
+    state = {
+        compactCards: true
+    };
 
     render() {
-        return (
-            <BorderLayout
+        return ( this.state.status === 'settings' ?
+            <Settings
+                onBack={() => this.setState({ status: '' })}/>
+            : <BorderLayout
                 className="ms-geostory-builder"
                 header={
                     <div
@@ -173,7 +336,16 @@ class Builder extends React.Component {
                                 {
                                     tooltip: 'Settings',
                                     disabled: this.props.readOnly,
-                                    glyph: 'cog'
+                                    glyph: 'cog',
+                                    onClick: () => this.setState({ status: 'settings' })
+                                },
+                                {
+                                    tooltip: this.state.compactCards ? 'Show preview in cards' : 'Hide preview in cards',
+                                    disabled: this.props.readOnly,
+                                    bsStyle: this.state.compactCards ? 'primary' : 'success',
+                                    active: !this.state.compactCards,
+                                    glyph: 'list-alt',
+                                    onClick: () => this.setState({ compactCards: !this.state.compactCards })
                                 }
                                 /*,
                                 {
@@ -201,7 +373,14 @@ class Builder extends React.Component {
                         items={
                             this.props.sections.map((item) => mapSectionsToItems({
                                 ...item,
+                                compactCards: this.state.compactCards,
                                 selected: this.state.selected,
+                                onZoomTo: this.props.onZoomTo,
+                                currentSlide: this.props.currentSlide,
+                                onChange: (value) => this.props.onChange({
+                                    sectionId: item.id,
+                                    ...value
+                                }),
                                 onSelect: (selectedId) => {
                                     const selected = selectedId === this.state.selected ? null : selectedId;
                                     this.setState({ selected });

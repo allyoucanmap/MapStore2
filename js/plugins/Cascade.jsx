@@ -9,10 +9,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { head } from 'lodash';
-import Toolbar from '@mapstore/components/misc/toolbar/Toolbar';
 import ContainerDimensions from 'react-container-dimensions';
 import BorderLayout from '@mapstore/components/layout/BorderLayout';
-import { ButtonToolbar } from 'react-bootstrap';
 import Section from './Section';
 import Background from './Background';
 import { Parallax, ParallaxLayer } from './spring/Parallax';
@@ -47,7 +45,8 @@ class Cascade extends React.Component {
         onEdit: PropTypes.func,
         onAdd: PropTypes.func,
         readOnly: PropTypes.bool,
-        onUpdate: PropTypes.func
+        onUpdate: PropTypes.func,
+        slidePosition: PropTypes.Object
     };
 
     static defaultProps = {
@@ -74,12 +73,24 @@ class Cascade extends React.Component {
             if (this.parallax) {
                 this.setState({ pages});
                 const page = this.parallax.current / this.parallax.space;
+                const currentSlide = this.getCurrentSlide();
                 this.props.onUpdate({
                     page,
-                    pages
+                    pages,
+                    currentSlide
                 });
             }
             this.setState({ update: false });
+        }
+
+        if (this.props.slidePosition
+        && (!prevProps.slidePosition
+            || this.props.slidePosition.sectionId !== prevProps.slidePosition.sectionId
+            || this.props.slidePosition.contentId !== prevProps.slidePosition.contentId)) {
+            const { offset, fieldsData = {} } = this._sectionsData[this.props.slidePosition.sectionId] || {};
+            const { offset: fieldOffset } = this.props.slidePosition.contentId
+                && fieldsData[this.props.slidePosition.contentId] || { offset: 0 };
+            this.scrollTo(offset + fieldOffset);
         }
     }
 
@@ -109,39 +120,35 @@ class Cascade extends React.Component {
             }, {});
     };
 
+    getCurrentSlide = () => {
+        const currentOffset = this.parallax.current / this.parallax.space;
+        const plainOffset = Object.keys(this._sectionsData)
+            .reduce((sectionsAcc, sectionId) => {
+                const { fieldsData, offset: sectionOffset } = this._sectionsData[sectionId];
+                return [
+                    ...sectionsAcc,
+                    ...Object.keys(fieldsData)
+                        .reduce((contentsAcc, contentId) => {
+                            const { offset: contentOffset } = fieldsData[contentId];
+                            return [
+                                ...contentsAcc,
+                                {
+                                    contentId,
+                                    sectionId,
+                                    offset: sectionOffset + contentOffset
+                                }
+                            ];
+                        }, [ ])
+                ];
+            }, [])
+            .sort((a, b) => a.offset > b.offset ? 1 : -1);
+        const currentSlide = plainOffset.filter(({ offset }) => offset <= currentOffset + 0.1);
+        return currentSlide[currentSlide.length - 1] || plainOffset[0];
+    };
+
     render() {
         return (
-            <BorderLayout
-                className="ms-cascade-story"
-                header={
-                    !this.props.readOnly
-                    ? undefined
-                    : <ButtonToolbar className="ms-cascade-story-header">
-                        {this.props.sections.map(({ type, id: sectionId, contents }) => {
-                            const { offset, fieldsData = {} } = this._sectionsData[sectionId] || {};
-                            return (
-                                <Toolbar
-                                    buttons={[
-                                        ...(contents.length === 1 ? [{
-                                            text: type,
-                                            bsSize: 'xs',
-                                            bsStyle: 'primary',
-                                            onClick: () => this.scrollTo(offset)
-                                        }] : []),
-                                        ...(contents.length > 1 ? contents.map(({ id: contentId, type: fieldType }) => {
-                                            const { offset: fieldOffset } = fieldsData[contentId] || {};
-                                            return {
-                                                text: fieldType,
-                                                bsSize: 'xs',
-                                                bsStyle: 'primary',
-                                                onClick: () => this.scrollTo(offset + fieldOffset)
-                                            };
-                                        }) : [])
-                                    ]} />
-                            );
-                        })}
-                    </ButtonToolbar>
-                }>
+            <BorderLayout className="ms-cascade-story">
                 <ContainerDimensions>
                     {({ width, height }) =>
                         <div style={{ position: 'absolute', width: '100%', height: '100%' }}>
@@ -153,12 +160,18 @@ class Cascade extends React.Component {
                                 onScroll={() => {
                                     if (this.parallax) {
                                         const page = Math.round(this.parallax.current / this.parallax.space);
+                                        const currentSlide = this.getCurrentSlide();
                                         if (page !== this.state.page) {
                                             this.props.onUpdate({
                                                 page,
-                                                pages: Math.round(this.state.pages)
+                                                pages: Math.round(this.state.pages),
+                                                currentSlide
                                             });
                                             this.setState({ page });
+                                        } else {
+                                            this.props.onUpdate({
+                                                currentSlide
+                                            });
                                         }
                                     }
                                 }}
@@ -166,9 +179,11 @@ class Cascade extends React.Component {
                                     <Background
                                         height={height}
                                         width={width}
+                                        readOnly={this.props.readOnly}
                                         sections={this.props.sections}
                                         sectionsData={this._sectionsData}
-                                        parallax={this.parallax} />
+                                        parallax={this.parallax}
+                                        onChange={(value) => this.props.onEdit(value)} />
                                 }>
                                 {this.props.sections.map(({ contents = [], id: sectionId, type: sectionType, _needsUpdate }) => {
                                     return (
