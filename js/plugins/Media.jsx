@@ -3,7 +3,10 @@ import React, { useState } from 'react';
 import MediaModal from './MediaModal';
 import MediaSource from './MediaSource';
 import Toolbar from '@mapstore/components/misc/toolbar/Toolbar';
-import { DropdownButton, Glyphicon, MenuItem } from 'react-bootstrap';
+import { DropdownButton as DropdownButtonRB, Glyphicon, MenuItem } from 'react-bootstrap';
+import tooltip from '@mapstore/components/misc/enhancers/tooltip';
+
+const DropdownButton = tooltip(DropdownButtonRB);
 
 const Media = ({
     id,
@@ -49,25 +52,22 @@ const Media = ({
                     buttons={readOnly ? [] : [
                         {
                             glyph: 'pencil',
+                            tooltip: 'Change media source',
                             onClick: () => onShow(true)
                         },
                         {
                             glyph: '1-map',
                             visible: type === 'map',
+                            tooltip: 'Edit map zoom and center',
                             onClick: () => onChange({ invert: !invert })
                         },
                         {
                             glyph: 'fullscreen',
                             visible: !simpleEdit,
+                            tooltip: cover ? 'Fit the container space' : 'Cover the container space',
                             onClick: () => onChange({ cover: !cover })
                         },
                         {
-                            glyph: 'adjust',
-                            visible: !simpleEdit && !cover,
-                            onClick: () => onChange({ invert: !invert })
-                        },
-                        {
-                            visible: !cover,
                             Element: () => {
                                 const items = [
                                     {
@@ -107,7 +107,7 @@ const Media = ({
                             }
                         },
                         {
-                            visible: !cover,
+                            visible: (size === 'full' && !cover) || size !== 'full',
                             Element: () => {
                                 const items = [
                                     {
@@ -144,6 +144,11 @@ const Media = ({
                                     </DropdownButton>
                                 );
                             }
+                        },
+                        {
+                            glyph: 'dropper',
+                            visible: !simpleEdit && !cover,
+                            onClick: () => onChange({ invert: !invert })
                         }
                     ]}/>
                 <MediaModal

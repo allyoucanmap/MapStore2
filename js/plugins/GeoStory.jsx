@@ -81,7 +81,7 @@ class GeoStory extends React.Component {
                                     return section;
                                 });
                                 this.setState({
-                                    sections: sections.map(section => ({ ...section, _needsUpdate: (section._needsUpdate || 0) + 1 }))
+                                    sections: sections.map(section => ({ ...section }))
                                 });
                             }}
                             onZoomTo={(slidePosition) => {

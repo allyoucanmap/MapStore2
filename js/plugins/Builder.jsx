@@ -93,6 +93,7 @@ const mapSectionsToItems = ({
             buttons={[
                 {
                     glyph: 'zoom-to',
+                    visible: contents.length === 1,
                     tooltip: 'Zoom to content',
                     onClick: (event) => {
                         event.stopPropagation();

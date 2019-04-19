@@ -5,11 +5,12 @@
         "baseUrl": "./",
         "paths": {
             "@mapstore/*": [
-                "MapStore2/web/client/*"
+                "web/client/*"
             ]
         }
     },
     "exclude": [
+        "coverage",
         "node_modules",
         "dist"
     ]

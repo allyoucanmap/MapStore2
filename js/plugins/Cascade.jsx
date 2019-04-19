@@ -169,9 +169,12 @@ class Cascade extends React.Component {
                                             });
                                             this.setState({ page });
                                         } else {
-                                            this.props.onUpdate({
-                                                currentSlide
-                                            });
+                                            if (this._timeout) clearTimeout(this._timeout);
+                                            this._timeout = setTimeout(() => {
+                                                this.props.onUpdate({
+                                                    currentSlide
+                                                });
+                                            }, 200);
                                         }
                                     }
                                 }}

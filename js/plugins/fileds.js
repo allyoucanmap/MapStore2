@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ContentEditable from "react-contenteditable";
-import { Glyphicon } from 'react-bootstrap';
-
+import { DropdownButton as DropdownButtonRB, Glyphicon, MenuItem } from 'react-bootstrap';
 import Toolbar from '@mapstore/components/misc/toolbar/Toolbar';
+import tooltip from '@mapstore/components/misc/enhancers/tooltip';
 
 import Container from './Container';
 import Media from './Media';
@@ -14,10 +14,162 @@ import MediaEditor from './MediaEditor';
 
 import { camelCase, mapKeys } from 'lodash';
 
+const DropdownButton = tooltip(DropdownButtonRB);
+
 const PageWrapper = (props) => {
     return (
         <div className="ms-cascade-wrapper">
             {props.children}
+        </div>
+    );
+};
+
+const TextToolbar = ({
+    fields = {},
+    readOnly,
+    onChange = () => {}
+}) => {
+    const {
+        textContainerPosition,
+        textContainerSize,
+        textStyleInvert,
+        textContainerTransparent
+    } = fields;
+    return (
+        <div
+            style={{
+                position: 'absolute',
+                top: -8,
+                left: -8
+            }}
+            className="shadow-soft">
+            <Toolbar
+                btnDefaultProps={{
+                    className: 'square-button-md no-border',
+                    bsStyle: 'default',
+                    style: { opacity: 0.9 }
+                }}
+                buttons={readOnly ? [] : [
+                    {
+                        Element: () => {
+                            const items = [
+                                {
+                                    key: 'small',
+                                    label: 'Small'
+                                },
+                                {
+                                    key: 'medium',
+                                    label: 'Medium'
+                                },
+                                {
+                                    key: 'large',
+                                    label: 'Large'
+                                }
+                            ];
+                            return (
+                                <DropdownButton
+                                    noCaret
+                                    tooltip="Change size"
+                                    className="square-button-md no-border"
+                                    style={{ opacity: 0.9 }}
+                                    title={<Glyphicon glyph="resize-horizontal"/>}>
+                                    {items.map((item) => (
+                                        <MenuItem
+                                            key={item.key}
+                                            active={textContainerSize === item.key}
+                                            onClick={() => onChange({ textContainerSize: item.key })}>
+                                            {item.label}
+                                        </MenuItem>
+                                    ))}
+                                </DropdownButton>
+                            );
+                        }
+                    },
+                    {
+                        Element: () => {
+                            const items = [
+                                {
+                                    key: 'left',
+                                    label: 'Align left',
+                                    glyph: 'align-left'
+                                },
+                                {
+                                    key: 'center',
+                                    label: 'Align center',
+                                    glyph: 'align-center'
+                                },
+                                {
+                                    key: 'right',
+                                    label: 'Align right',
+                                    glyph: 'align-right'
+                                }
+                            ];
+                            return (
+                                <DropdownButton
+                                    noCaret
+                                    tooltip="Align content"
+                                    className="square-button-md no-border"
+                                    style={{ opacity: 0.9 }}
+                                    title={<Glyphicon glyph={`align-${textContainerPosition || 'center'}`}/>}>
+                                    {items.map((item) => (
+                                        <MenuItem
+                                            key={item.key}
+                                            active={textContainerPosition === item.key}
+                                            onClick={() => onChange({ textContainerPosition: item.key })}>
+                                            <Glyphicon glyph={`align-${item.key}`}/> {item.label}
+                                        </MenuItem>
+                                    ))}
+                                </DropdownButton>
+                            );
+                        }
+                    },
+                    {
+                        Element: () => {
+                            const items = [
+                                {
+                                    key: 'light',
+                                    values: {
+                                        textStyleInvert: false
+                                    },
+                                    label: 'Light'
+                                },
+                                {
+                                    key: 'dark',
+                                    values: {
+                                        textStyleInvert: true
+                                    },
+                                    label: 'Dark'
+                                }
+                            ];
+                            return (
+                                <DropdownButton
+                                    noCaret
+                                    tooltip="Change field theme"
+                                    className="square-button-md no-border"
+                                    style={{ opacity: 0.9 }}
+                                    title={<Glyphicon glyph="dropper"/>}>
+                                    {items.map((item) => (
+                                        <MenuItem
+                                            key={item.key}
+                                            active={ textStyleInvert && item.key === 'dark' || !textStyleInvert && item.key === 'light'}
+                                            onClick={() => onChange(item.values)}>
+                                            {item.label}
+                                        </MenuItem>
+                                    ))}
+                                </DropdownButton>
+                            );
+                        }
+                    },
+                    {
+                        glyph: 'adjust',
+                        tooltip: !textContainerTransparent ? 'Apply transparency to field background' : 'Remove transparency to field background',
+                        onClick: () => {
+                            onChange({
+                                textContainerTransparent: !textContainerTransparent
+                            });
+                        }
+                    }
+                ]}/>
         </div>
     );
 };
@@ -181,6 +333,12 @@ const fields = {
                         transparent={props.textContainerTransparent}
                         invert={props.textStyleInvert}
                         align={props.textAlign}>
+                        <TextToolbar
+                            fields={props}
+                            readOnly={props.readOnly}
+                            onChange={(values) => {
+                                props.onChange(undefined, values);
+                            }}/>
                         <ContentEditable
                             key="title"
                             tagName="h1"
@@ -228,6 +386,12 @@ const fields = {
                         transparent={props.textContainerTransparent}
                         invert={props.textStyleInvert}
                         align={props.textAlign}>
+                        <TextToolbar
+                            fields={props}
+                            readOnly={props.readOnly}
+                            onChange={(values) => {
+                                props.onChange(undefined, values);
+                            }}/>
                         <ContentEditable
                             key="title"
                             tagName="h1"
@@ -285,6 +449,12 @@ const fields = {
                         transparent={props.textContainerTransparent}
                         invert={props.textStyleInvert}
                         align={props.textAlign || 'left'}>
+                        <TextToolbar
+                            fields={props}
+                            readOnly={props.readOnly}
+                            onChange={(values) => {
+                                props.onChange(undefined, values);
+                            }}/>
                         <ContentEditor
                             id={props.id}
                             text={props.text}
