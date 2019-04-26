@@ -1,4 +1,4 @@
-.catalog-close {
+/*.catalog-close {
     float: right
 }
 
@@ -133,5 +133,39 @@
     }
     .link-button {
         min-width: 70px;
+    }
+}
+*/
+
+.catalog-panel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    .panel-body {
+        padding: 0;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        > div > form, > form {
+            padding: 0 16px;
+        }
+    }
+    .row {
+        margin: 0;
+        overflow-x: hidden;
+        padding-bottom: 16px;
+    }
+    .catalog-pagination {
+        text-align: center;
+        padding-bottom: 16px;
+    }
+    .catalog-metadata {
+        padding: 16px;
+        padding-left: 112px;
+    }
+    .metadata-template-editor {
+        .ql-editor {
+            height: 200px;
+        }
     }
 }

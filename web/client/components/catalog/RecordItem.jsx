@@ -9,8 +9,11 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const SharingLinks = require('./SharingLinks');
 const Message = require('../I18N/Message');
-const {Image, Panel, Button: ButtonRB, Glyphicon} = require('react-bootstrap');
-const { isObject } = require('lodash');
+const {Image, Button: ButtonRB, Glyphicon} = require('react-bootstrap');
+const { isObject, template } = require('lodash');
+
+const MapInfoUtils = require('../../utils/MapInfoUtils');
+const HtmlRenderer = require('../misc/HtmlRenderer');
 
 const CoordinatesUtils = require('../../utils/CoordinatesUtils');
 const ContainerDimensions = require('react-container-dimensions').default;
@@ -19,6 +22,9 @@ const {getRecordLinks, recordToLayer, extractOGCServicesReferences, buildSRSMap,
 const tooltip = require('../misc/enhancers/tooltip');
 const Button = tooltip(ButtonRB);
 const defaultThumb = require('./img/default.jpg');
+
+import SideCard from '../misc/cardgrids/SideCard';
+import Toolbar from '../misc/toolbar/Toolbar';
 
 class RecordItem extends React.Component {
     static propTypes = {
@@ -50,11 +56,11 @@ class RecordItem extends React.Component {
         onLayerAdd: () => {},
         onZoomToExtent: () => {},
         style: {},
-        showGetCapLinks: false,
+        showGetCapLinks: true,
         zoomToLayer: true,
         hideThumbnail: false,
         hideIdentifier: false,
-        hideExpand: true
+        hideExpand: false
     };
 
     state = {};
@@ -95,12 +101,12 @@ class RecordItem extends React.Component {
             buttons.push(
                 <Button
                     key="wms-button"
-                    className="record-button"
+                    tooltipId="catalog.addToMap"
+                    className="square-button-md"
                     bsStyle="primary"
-                    bsSize={this.props.buttonSize}
                     onClick={() => { this.addLayer(wms); }}
                     key="addlayer">
-                        <Glyphicon glyph="plus" />&nbsp;<Message msgId="catalog.addToMap"/>
+                        <Glyphicon glyph="plus" />
                 </Button>
             );
         }
@@ -108,12 +114,12 @@ class RecordItem extends React.Component {
             buttons.push(
                 <Button
                     key="wmts-button"
-                    className="record-button"
+                    tooltipId="catalog.addToMap"
+                    className="square-button-md"
                     bsStyle="primary"
-                    bsSize={this.props.buttonSize}
                     onClick={() => { this.addwmtsLayer(wmts); }}
                     key="addwmtsLayer">
-                        <Glyphicon glyph="plus" />&nbsp;<Message msgId="catalog.addToMap"/>
+                        <Glyphicon glyph="plus" />
                 </Button>
             );
         }
@@ -121,29 +127,25 @@ class RecordItem extends React.Component {
             buttons.push(
                 <Button
                     key="wmts-button"
-                    className="record-button"
+                    tooltipId="catalog.addToMap"
+                    className="square-button-md"
                     bsStyle="primary"
-                    bsSize={this.props.buttonSize}
                     onClick={() => { this.addEsriLayer(); }}
                     key="addwmtsLayer">
-                        <Glyphicon glyph="plus" />&nbsp;<Message msgId="catalog.addToMap"/>
+                        <Glyphicon glyph="plus" />
                 </Button>
             );
         }
         // create get capabilities links that will be used to share layers info
-        if (this.props.showGetCapLinks) {
-            let links = getRecordLinks(record);
-            if (links.length > 0) {
-                buttons.push(<SharingLinks key="sharing-links" popoverContainer={this} links={links}
-                    onCopy={this.props.onCopy} buttonSize={this.props.buttonSize} addAuthentication={this.props.addAuthentication}/>);
-            }
+        // if (this.props.showGetCapLinks) {
+        let links = getRecordLinks(record);
+        if (links.length > 0) {
+            buttons.push(<SharingLinks key="sharing-links" popoverContainer={this} links={links}
+                onCopy={this.props.onCopy} buttonSize={this.props.buttonSize} addAuthentication={this.props.addAuthentication}/>);
         }
+        // }
 
-        return (
-            <div className="record-buttons">
-                {buttons}
-            </div>
-        );
+        return buttons;
     };
 
     renderDescription = (record) => {
@@ -161,7 +163,58 @@ class RecordItem extends React.Component {
         let record = this.props.record;
         const {wms, wmts} = extractOGCServicesReferences(record);
         const {esri} = extractEsriReferences(record);
-        return (
+        return record ? (
+            <ContainerDimensions>
+                {({ width }) =>
+                <SideCard
+                    fullText={this.state.fullText}
+                    preview={!this.props.hideThumbnail && this.renderThumb(record && record.thumbnail, record)}
+                    title={record && this.getTitle(record.title)}
+                    description={this.renderDescription(record)}
+                    caption={<div>
+                        {!this.props.hideIdentifier && <div>{record && record.identifier}</div>}
+                        <div>{!wms && !wmts && !esri && <small className="text-danger"><Message msgId="catalog.missingReference"/></small>}</div>
+                        {!this.props.hideExpand &&
+                            <div
+                                className="ms-ruler"
+                                style={{visibility: 'hidden', height: 0, whiteSpace: 'nowrap', position: 'absolute' }}
+                                ref={ruler => { this.descriptionRuler = ruler; }}>{this.renderDescription(record)}</div>}
+                    </div>}
+                    tools={
+                        <Toolbar
+                            btnDefaultProps={{
+                                className: 'square-button-md',
+                                bsStyle: 'primary'
+                            }}
+                            btnGroupProps={{
+                                style: {
+                                    margin: 10
+                                }
+                            }}
+                            buttons={[
+                                ...(record && this.renderButtons(record) || []).map(Element => ({ Element: () => Element })),
+                                {
+                                    glyph: this.state.fullText ? 'chevron-down' : 'chevron-left',
+                                    visible: this.displayExpand(width - (104 + 83)) || record.metadataTemplate,
+                                    tooltip: this.state.fullText ? 'Collapse metadata' : 'Expand metadata',
+                                    onClick: () => this.setState({ fullText: !this.state.fullText })
+                                }
+                            ]}/>
+                    }
+                    body={
+                        <div>
+                            {this.state.fullText && record.metadataTemplate
+                                ? (
+                                    <div className="catalog-metadata ql-editor">
+                                        <HtmlRenderer html={template(MapInfoUtils.getCleanTemplate(record.metadataTemplate || '', record, /\$\{.*?\}/g, 2, 1))(record)}/>
+                                    </div>
+                                )
+                                : null}
+                        </div>
+                    }/>}
+            </ContainerDimensions>
+        ) : null;
+        /*return (
             <Panel className="record-item">
                 {!this.props.hideThumbnail && <div className="record-item-thumb">
                     {this.renderThumb(record && record.thumbnail, record)}
@@ -191,7 +244,7 @@ class RecordItem extends React.Component {
                     {this.renderButtons(record)}
                 </div>
             </Panel>
-        );
+        );*/
     }
 
     isLinkCopied = (key) => {

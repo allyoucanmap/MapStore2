@@ -124,7 +124,7 @@
  
     }
     &:hover {
-        transform: scale(1.05);
+        // transform: scale(1.05);
         cursor: pointer;
         .shadow-far;
     }
@@ -174,6 +174,23 @@
     }
     &.ms-over {
         .shadow-soft;
+    }
+
+    &.full-text {
+        .ms-head {
+            height: auto;
+        }
+        .mapstore-side-card-info {
+            overflow: hidden;
+            & > div {
+                span {
+                    text-overflow: ellipsis;
+                    white-space: unset;
+                    overflow: visible;
+                    width: 100%;
+                }
+            }
+        }
     }
 }
 

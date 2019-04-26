@@ -12,7 +12,7 @@ const LocaleUtils = require('../../utils/LocaleUtils');
 const assign = require('object-assign');
 const BorderLayout = require('../layout/BorderLayout');
 const Select = require('react-select');
-
+const ReactQuill = require('react-quill');
 const {FormControl, FormGroup, Alert, Pagination, Checkbox, Button, Panel, Form, Col, InputGroup, ControlLabel, Glyphicon} = require('react-bootstrap');
 const Spinner = require('react-spinkit');
 
@@ -208,7 +208,7 @@ class Catalog extends React.Component {
     renderRecords = () => {
         return (<div className="catalog-results">
                 <RecordGrid {...this.props.gridOptions} key="records"
-                    records={this.props.records}
+                    records={this.props.records.map((record) => this.state.metadataTemplate ? { ...record, metadataTemplate: this.state.metadataTemplate } : record)}
                     authkeyParamNames={this.props.authkeyParamNames}
                     catalogURL={this.isValidServiceSelected() && this.props.services[this.props.selectedService].url || ""}
                     catalogType={this.props.services[this.props.selectedService] && this.props.services[this.props.selectedService].type}
@@ -367,6 +367,25 @@ class Catalog extends React.Component {
                             <Checkbox value="autoload" onChange={(e) => this.props.onChangeAutoload(e.target.checked)} checked={this.props.newService.autoload}>
                               <Message msgId="catalog.autoload"/>
                             </Checkbox>
+                        </Col>
+                    </FormGroup>
+                    <FormGroup controlId="metadata-template" key="metadata-template" className="metadata-template-editor">
+                        <Col xs={12}>
+                        <ControlLabel>Metadata Template</ControlLabel>
+                            <ReactQuill
+                                modules={{
+                                    toolbar: [
+                                        [{ 'size': ['small', false, 'large', 'huge'] }, 'bold', 'italic', 'underline', 'blockquote'],
+                                        [{ 'list': 'bullet' }, { 'align': [] }],
+                                        [{ 'color': [] }, { 'background': [] }, 'clean'], ['link']
+                                    ]
+                                }}
+                                value={this.state.metadataTemplate || ''}
+                                onChange={(metadataTemplate) => {
+                                    if (metadataTemplate && metadataTemplate !== '<p><br></p>') {
+                                        this.setState({ metadataTemplate });
+                                    }
+                                }}/>
                         </Col>
                     </FormGroup>
                     <FormGroup controlId="buttons" key="butStons">

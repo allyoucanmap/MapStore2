@@ -45,14 +45,13 @@ class SharingLink extends React.Component {
         const copyButton =
             (<CopyToClipboard text={url} onCopy={this.props.onCopy}>
                 <OverlayTrigger placement="right" overlay={tooltip} onExited={() => this.setState({showCopiedToolTip: false})}>
-                    <Button bsSize={this.props.bsSize} bsStyle="primary" className="link-button" onClick={() => this.setState({showCopiedToolTip: true})}>
-                        <Glyphicon glyph="paperclip"/>&nbsp;{this.props.labelId
-                                && <Message msgId={this.props.labelId}/>}
+                    <Button tooltipId={this.props.labelId} className="square-button-md" bsStyle="primary" onClick={() => this.setState({showCopiedToolTip: true})}>
+                        <Glyphicon glyph="paperclip"/>
                     </Button>
                 </OverlayTrigger>
             </CopyToClipboard>)
         ;
-        return (
+        return copyButton; /*(
             <div className="link-sharing">
                 <FormGroup bsSize={this.props.bsSize} >
                   <FormControl className="link-input"
@@ -60,7 +59,7 @@ class SharingLink extends React.Component {
                   {copyButton}
                 </FormGroup>
             </div>
-        );
+        );*/
     }
 }
 
