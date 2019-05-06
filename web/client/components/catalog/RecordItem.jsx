@@ -195,7 +195,7 @@ class RecordItem extends React.Component {
                                 ...(record && this.renderButtons(record) || []).map(Element => ({ Element: () => Element })),
                                 {
                                     glyph: this.state.fullText ? 'chevron-down' : 'chevron-left',
-                                    visible: this.displayExpand(width - (104 + 83)) || record.metadataTemplate,
+                                    visible: (this.displayExpand(width - (104 + 83)) || record.metadataTemplate) ? true : false,
                                     tooltip: this.state.fullText ? 'Collapse metadata' : 'Expand metadata',
                                     onClick: () => this.setState({ fullText: !this.state.fullText })
                                 }

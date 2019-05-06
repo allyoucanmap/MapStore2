@@ -24,7 +24,7 @@ module.exports = require('./buildConfig')(
     paths,
     extractThemesPlugin,
     true,
-    "dist/",
+    "/mockups/mapstore2/catalog-template/dist/",
     undefined,
     [
         new HtmlWebpackPlugin({

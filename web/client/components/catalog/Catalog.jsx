@@ -15,7 +15,7 @@ const Select = require('react-select');
 const ReactQuill = require('react-quill');
 const {FormControl, FormGroup, Alert, Pagination, Checkbox, Button, Panel, Form, Col, InputGroup, ControlLabel, Glyphicon} = require('react-bootstrap');
 const Spinner = require('react-spinkit');
-
+const SwitchPanel = require('../misc/switch/SwitchPanel');
 const RecordGrid = require('./RecordGrid');
 
 class Catalog extends React.Component {
@@ -362,32 +362,39 @@ class Catalog extends React.Component {
                                 onChange={(e) => this.props.onChangeTitle(e.target.value)}/>
                         </Col>
                     </FormGroup>
-                    <FormGroup controlId="autoload" key="autoload">
-                        <Col xs={12}>
-                            <Checkbox value="autoload" onChange={(e) => this.props.onChangeAutoload(e.target.checked)} checked={this.props.newService.autoload}>
-                              <Message msgId="catalog.autoload"/>
-                            </Checkbox>
-                        </Col>
-                    </FormGroup>
-                    <FormGroup controlId="metadata-template" key="metadata-template" className="metadata-template-editor">
-                        <Col xs={12}>
-                        <ControlLabel>Metadata Template</ControlLabel>
-                            <ReactQuill
-                                modules={{
-                                    toolbar: [
-                                        [{ 'size': ['small', false, 'large', 'huge'] }, 'bold', 'italic', 'underline', 'blockquote'],
-                                        [{ 'list': 'bullet' }, { 'align': [] }],
-                                        [{ 'color': [] }, { 'background': [] }, 'clean'], ['link']
-                                    ]
-                                }}
-                                value={this.state.metadataTemplate || ''}
-                                onChange={(metadataTemplate) => {
-                                    if (metadataTemplate && metadataTemplate !== '<p><br></p>') {
-                                        this.setState({ metadataTemplate });
-                                    }
-                                }}/>
-                        </Col>
-                    </FormGroup>
+                    <SwitchPanel
+                        title="Advanced Settings"
+                        expanded={this.state.advancedSettings}
+                        onSwitch={() => this.setState({ advancedSettings: !this.state.advancedSettings })}>
+                        <div>
+                            <FormGroup controlId="autoload" key="autoload">
+                                <Col xs={12}>
+                                    <Checkbox value="autoload" onChange={(e) => this.props.onChangeAutoload(e.target.checked)} checked={this.props.newService.autoload}>
+                                    <Message msgId="catalog.autoload"/>
+                                    </Checkbox>
+                                </Col>
+                            </FormGroup>
+                            <FormGroup controlId="metadata-template" key="metadata-template" className="metadata-template-editor">
+                                <Col xs={12}>
+                                <ControlLabel>Metadata Template</ControlLabel>
+                                    <ReactQuill
+                                        modules={{
+                                            toolbar: [
+                                                [{ 'size': ['small', false, 'large', 'huge'] }, 'bold', 'italic', 'underline', 'blockquote'],
+                                                [{ 'list': 'bullet' }, { 'align': [] }],
+                                                [{ 'color': [] }, { 'background': [] }, 'clean'], ['link']
+                                            ]
+                                        }}
+                                        value={this.state.metadataTemplate || ''}
+                                        onChange={(metadataTemplate) => {
+                                            if (metadataTemplate && metadataTemplate !== '<p><br></p>') {
+                                                this.setState({ metadataTemplate });
+                                            }
+                                        }}/>
+                                </Col>
+                            </FormGroup>
+                        </div>
+                    </SwitchPanel>
                     <FormGroup controlId="buttons" key="butStons">
                         <Col xs={12}>
                             {this.renderButtons()}
