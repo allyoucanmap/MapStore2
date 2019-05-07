@@ -44,6 +44,7 @@ class Slides extends React.Component {
                                                 type={bgType}
                                                 cover={cover}
                                                 src={src}
+                                                readOnly={this.props.readOnly}
                                                 invert={invert} />
                                         </div>
                                         <Field

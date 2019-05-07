@@ -41,7 +41,8 @@ class GeoStory extends React.Component {
         page: 0,
         space: 0,
         current: 0,
-        sections: []
+        sections: [],
+        currentSlide: {}
     };
 
     componentWillMount() {
