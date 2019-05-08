@@ -160,8 +160,7 @@
         padding-bottom: 16px;
     }
     .catalog-metadata {
-        padding: 16px;
-        padding-left: 112px;
+        padding: 16px 0;
     }
     .metadata-template-editor {
         .ql-editor {
@@ -171,8 +170,15 @@
     .mapstore-switch-panel {
         .shadow-soft;
         padding: 0 16px;
+        margin: 16px;
         .panel-body {
             position: static;
+            padding-bottom: 16px;
+        }
+    }
+    .catalog-results {
+        > .record-grid > .row {
+            overflow: hidden;
         }
     }
 }

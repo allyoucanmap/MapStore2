@@ -153,9 +153,25 @@ class RecordItem extends React.Component {
             return null;
         }
         if (typeof record.description === "string") {
-            return record.description;
+            return (
+                this.state.fullText && record.metadataTemplate
+                    ? (
+                        <div className="catalog-metadata ql-editor">
+                            <HtmlRenderer html={template(MapInfoUtils.getCleanTemplate(record.metadataTemplate || '', record, /\$\{.*?\}/g, 2, 1))(record)}/>
+                        </div>
+                    )
+                    : record.metadataTemplate ? '' : record.description
+            );
         } else if (Array.isArray(record.description)) {
-            return record.description.join(", ");
+            return (
+                this.state.fullText && record.metadataTemplate
+                    ? (
+                        <div className="catalog-metadata ql-editor">
+                            <HtmlRenderer html={template(MapInfoUtils.getCleanTemplate(record.metadataTemplate || '', record, /\$\{.*?\}/g, 2, 1))(record)}/>
+                        </div>
+                    )
+                    : record.metadataTemplate ? '' : record.description.join(", ")
+            );
         }
     };
 
@@ -201,7 +217,7 @@ class RecordItem extends React.Component {
                                 }
                             ]}/>
                     }
-                    body={
+                    /*body={
                         <div>
                             {this.state.fullText && record.metadataTemplate
                                 ? (
@@ -211,7 +227,7 @@ class RecordItem extends React.Component {
                                 )
                                 : null}
                         </div>
-                    }/>}
+                    }*//>}
             </ContainerDimensions>
         ) : null;
         /*return (
