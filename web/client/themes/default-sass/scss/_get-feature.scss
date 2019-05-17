@@ -1,0 +1,32 @@
+
+.coordinateRow {
+    margin: 8px 0px;
+    border: 1px solid #dddddd;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    input {
+        font-size: 12px;
+        font-family: Menlo, Monaco, Consolas, Courier New, monospace;
+    }
+    .col-xs-5, .col-xs-1, .col-xs-2 {
+        padding: 0;
+        float: unset;
+        width: auto;
+        margin: 0 4px;
+    }
+    .col-xs-5 {
+        display: grid;
+        flex: 1;
+    }
+    &.GFI-coord-editor .col-xs-2 {
+        min-width: unset !important;
+    }
+    .form-group {
+        margin: 4px 0;
+    }
+    .pull-right.btn-group {
+        margin-top: 20px;
+    }
+}

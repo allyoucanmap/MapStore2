@@ -1,0 +1,83 @@
+.square-button {
+    // !important due to vertical btn-group eg. dashboard
+    height: $square-btn-size;
+    width: $square-btn-size;
+    outline: 0;
+    .glyphicon {
+        margin: auto;
+        font-size: $icon-size;
+    }
+    .ms-loader {
+        height: $icon-size;
+        width: $icon-size;
+        margin: auto;
+        > div {
+            margin: auto;
+            @include mapstore-circle-loader($icon-size / 10, $icon-size, $ms2-color-text-primary);
+        }
+    }
+}
+
+.btn-group-vertical > .square-button {
+    width: $square-btn-size;
+}
+
+.square-button-md {
+    // !important due to vertical btn-group eg. dashboard
+    &.input-group-addon {
+        display: flex;
+    }
+    &, .btn-group-vertical & {
+        height: $square-btn-medium-size;
+        width: $square-btn-medium-size;
+        padding: 0;
+        outline: 0;
+    }
+
+    .glyphicon {
+        margin: auto;
+        font-size: $icon-size-md;
+    }
+    .ms-loader {
+        height: $icon-size-md;
+        width: $icon-size-md;
+        margin: auto;
+        > div {
+            margin: auto;
+            @include mapstore-circle-loader($icon-size-md / 10, $icon-size-md, $ms2-color-text-primary);
+        }
+    }
+}
+
+.square-button-sm {
+     &, .btn-group-vertical & {
+        height: $square-btn-small-size;
+        width: $square-btn-small-size ;
+        padding: 0;
+        outline: 0 ;
+     }
+    .glyphicon {
+        margin: auto;
+        font-size: $icon-size-sm;
+    }
+}
+
+.square-button,
+.square-button-md,
+.square-button-sm {
+    &.disabled,
+    &[disabled],
+    fieldset[disabled] & {
+        &,
+        &.active,
+        &.focus,
+        &:active,
+        &:focus,
+        &:hover {
+            background-color: $ms2-color-disabled;
+            border-color: $ms2-color-disabled;
+            color: $ms2-color-text-disabled;
+            opacity: 1.0;
+        }
+    }
+}

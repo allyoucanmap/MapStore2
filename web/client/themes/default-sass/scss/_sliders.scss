@@ -1,0 +1,150 @@
+@import "~react-nouislider/example/nouislider.css";
+
+.noUi-target {
+    border-color: none;
+    cursor: pointer;
+    background-color: lighten($ms2-color-primary, 10%);
+    &.noUi-horizontal {
+        height: 4px;
+        margin: 10px 0;
+        border-radius: 0;
+        border: none;
+        .noUi-base {
+            .noUi-origin {
+                background-color: $ms2-color-shade-lighter;
+                .noUi-handle {
+                    border: none;
+                    border-top: 1px solid $ms2-color-background;
+                    width: 10px;
+                    height: 15px;
+                    left: -5px;
+                    top: -8px;
+                    @include shadow;
+                    background-color: $ms2-color-primary;
+                    cursor: pointer;
+                    border-radius: $border-radius-base;
+
+                    &:hover {
+                        background-color: darken($ms2-color-primary, 10%);
+                    }
+                    &:before,
+                    &:after {
+                        height: $square-btn-small-size;
+                        width: $square-btn-small-size;
+                        background: transparent;
+                        left: 0;
+                        top: 0;
+                    }
+                    &:before {
+                        font-family: 'mapstore2';
+                        text-align: center;
+                        color: $ms2-color-text-primary;
+                    }
+                    .noUi-tooltip {
+                        cursor: pointer;
+                        &:hover {
+                            background-color: darken($ms2-color-primary, 10%);
+                        }
+                    }
+                }
+            }
+        }
+        .noUi-pips {
+            &.noUi-pips-horizontal {
+                .noUi-value {
+                    text-align: right;
+                    -ms-transform: rotate(270deg); // IE 9
+                    -webkit-transform: rotate(270deg); // Chrome, Safari, Opera
+                    transform: rotate(270deg);
+                    &.noUi-value-horizontal {
+                        margin-left: -30px;
+                        margin-top: 22px;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.noUi-target[disabled="true"] {
+    cursor: not-allowed;
+    &.noUi-horizontal {
+        .noUi-base {
+            .noUi-origin {
+                .noUi-handle {
+                    cursor: not-allowed;
+                    .noUi-tooltip {
+                        &:hover {
+                            cursor: not-allowed;
+                            background-color: $ms2-color-primary;
+                        }
+                    }
+                    &:hover {
+                        cursor: not-allowed;
+                        background-color: $ms2-color-primary;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.mapstore-slider {
+    &.with-tooltip {
+        .noUi-target {
+            &.noUi-horizontal {
+                $ms-slider-margin: 13px;
+                padding: 0 $ms-slider-margin;
+                .noUi-base {
+                    &:before,
+                    &:after {
+                        content: "";
+                        position: absolute;
+                        top: 0;
+                        height: 100%;
+                        display: block;
+                    }
+                    &:before {
+                        left: -$ms-slider-margin;
+                        width: $ms-slider-margin;
+                        
+                    }
+                    &:after {
+                        right: -$ms-slider-margin;
+                        /* hide primary color background */
+                        width: $ms-slider-margin + 4;
+                        background-color: $ms2-color-shade-lighter;
+                    }
+                    .noUi-origin {
+                        .noUi-handle {
+                            &:before,
+                            &:after {
+                                display: none;
+                            }
+                            left: -18px;
+                            width: 36px;
+                            height: 16px;
+                            top: -8px;
+                            .noUi-tooltip {
+                                padding: 0;
+                                top: 0;
+                                left: 0;
+                                font-size: 10px;
+                                border: none;
+                                border-radius: $border-radius-base;
+                                background-color: $ms2-color-primary;
+                                color: $ms2-color-text-primary;
+                                height: 15px;
+                                width: 36px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                line-height: $square-btn-small-size;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

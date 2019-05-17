@@ -1,0 +1,101 @@
+
+.mapstore-map-footer {
+
+    position: absolute;
+    overflow: hidden;
+    bottom: 0;
+    height: 30px;
+    width: 100%;
+    background-color: $ms2-color-background;
+    -webkit-box-shadow: 3px 0px 6px rgba(0, 0, 0, 0.12), 4px 0 8px rgba(0, 0, 0, 0.24);
+	-moz-box-shadow: 3px 0px 6px rgba(0, 0, 0, 0.12), 4px 0 8px rgba(0, 0, 0, 0.24);
+	box-shadow: 3px 0px 6px rgba(0, 0, 0, 0.12), 4px 0 8px rgba(0, 0, 0, 0.24);
+    & > div {
+        float: right;
+    }
+
+    .map-footer-btn {
+        height: 25px;
+        width: 25px !important;
+        padding: 0;
+        margin-right: 5px;
+        margin-top: 2px;
+        span {
+            color: $ms2-color-text-primary;
+        }
+
+    }
+
+    .leaflet-control-attribution {
+        display: flex;
+        max-height: 2.6em;
+        img {
+            max-height: 2.6em;
+        }
+        position: absolute;
+        width: 50%;
+        height: 30px;
+        font-size: 11px;
+        background-color: transparent;
+        color: $ms2-color-text;
+        overflow: hidden;
+        padding-right: 100px;
+   }
+
+   .ol-attribution.ol-uncollapsible {
+        ul {
+            display: flex;
+            li {
+                margin: auto 2px;
+            }
+        }
+       max-height: 2.6em;
+       img {
+           max-height: 2.6em;
+       }
+       position: absolute;
+       left: 0;
+       height: 30px;
+       text-align: left;
+       background-color: transparent;
+       color: $ms2-color-text;
+       width: 50%;
+       overflow: hidden;
+       font-size: 11px;
+   }
+
+   .dropup {
+        z-index: 1100;
+        .dropdown-menu {
+            margin-right: 5px;
+        }
+    }
+}
+
+.ms-prj-selector {
+    border: none;
+
+    .dropdown-toggle-primary {
+        // @include btn-primary;
+        box-shadow: none;
+        border-width: 1px;
+        border: transparent;
+    }
+    // &.open {
+        // .dropdown-toggle-primary {
+            // @include btn-success;
+            // @include active;
+        // }
+    // }
+
+    .ms-prj-header {
+        font-size: $font-size-small;
+        @include shadow-soft;
+        font-weight: bold;
+        z-index: 10;
+    }
+    .dropdown-menu {
+        border: none;
+        @include shadow;
+    }
+}

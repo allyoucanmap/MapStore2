@@ -7,6 +7,12 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const ParallelUglifyPlugin = require("webpack-parallel-uglify-plugin");
 
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+
+const _extractThemesPlugin = new ExtractTextPlugin({
+    filename: '[name].css'
+});
+
 /**
  * Webpack configuration builder.
  * Returns a webpack configuration object for the given parameters.
@@ -34,7 +40,9 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
     entry: assign({
         'webpack-dev-server': 'webpack-dev-server/client?http://0.0.0.0:8081', // WebpackDevServer host and port
         'webpack': 'webpack/hot/only-dev-server' // "only" prevents reload on syntax errors
-    }, bundles, themeEntries),
+    }, bundles, {
+        'themes/default': path.join(__dirname, "..", "web", "client", "themes", 'default-sass', 'theme.scss')
+    }),
     output: {
         path: paths.dist,
         publicPath,
@@ -42,9 +50,9 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
         chunkFilename: prod ? "[name].[hash].chunk.js" : "[name].js"
     },
     plugins: [
-        new CopyWebpackPlugin([
+        /*new CopyWebpackPlugin([
             { from: path.join(paths.base, 'node_modules', 'bootstrap', 'less'), to: path.join(paths.dist, "bootstrap", "less") }
-        ]),
+        ]),*/
 		new CopyWebpackPlugin([
             { from: path.join(paths.base, 'node_modules', 'react-nouislider', 'example'), to: path.join(paths.dist, "react-nouislider", "example") }
         ]),
@@ -71,7 +79,7 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
         new NormalModuleReplacementPlugin(/openlayers$/, path.join(paths.framework, "libs", "openlayers")),
         new NormalModuleReplacementPlugin(/proj4$/, path.join(paths.framework, "libs", "proj4")),
         new NoEmitOnErrorsPlugin(),
-        extractThemesPlugin
+        _extractThemesPlugin
     ].concat(prod && prodPlugins || []).concat(prod ? [new ParallelUglifyPlugin({
         uglifyJS: {
             sourceMap: false,
@@ -108,8 +116,19 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
                 }]
             },
             {
+                test: /\.scss$/,
+                use: _extractThemesPlugin.extract({
+                    use: [
+                        { loader: "to-string-loader" },
+                        { loader: "css-loader" },
+                        { loader: "sass-loader" }
+                    ],
+                    fallback: "style-loader"
+                })
+            },
+            {
                 test: /themes[\\\/]?.+\.less$/,
-                use: extractThemesPlugin.extract({
+                use: _extractThemesPlugin.extract({
                         fallback: 'style-loader',
                         use: ['css-loader', 'postcss-loader', 'less-loader']
                     })

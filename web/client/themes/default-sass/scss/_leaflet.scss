@@ -1,0 +1,57 @@
+/* Leaflet minimap style */
+.leaflet-control-minimap {
+	border: solid $ms2-color-primary 4px !important;
+}
+
+.leaflet-control-minimap a {
+	background-color: $ms2-color-primary !important;
+}
+
+.leaflet-control-minimap-toggle-display {
+	// background-image: url("../img/toggle.svg") !important;
+}
+
+.leaflet-oldie .leaflet-control-minimap-toggle-display {
+	// background-image: url("../img/toggle.png") !important;
+}
+
+/* scale bar */
+.leaflet-control-scale-line {
+    border-color: $ms2-color-text;
+	background-color: transparent;
+	color: $ms2-color-text;
+    text-align: center;
+}
+
+.leafletbottom.leafletright, .leaflet-control-minimap{
+    bottom: 47px !important;
+    right: 49px !important;
+}
+
+.leaflet-control-scale {
+    top: 10px;
+	right: 10px;
+	clear: none;
+    z-index: 1000;
+}
+
+.leaflet-control-attribution {
+    color: $ms2-color-text;
+    max-height: 2.6em;
+    img {
+        max-height: 2.6em;
+    }
+    a {
+        color: $ms2-color-primary;
+    }
+}
+
+.leaflet-bottom.leaflet-right {
+    margin-bottom: 0 !important;
+    z-index: 500;
+}
+
+.leaflet-edit-marker-selected {
+	background: transparent;
+	border: none;
+}

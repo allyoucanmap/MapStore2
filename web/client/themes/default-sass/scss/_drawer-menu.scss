@@ -1,0 +1,43 @@
+/* drawer menu */
+
+#drawer-menu-button {
+    @include shadow;
+    left: 0;
+    top: 0;
+}
+
+#mapstore-drawermenu {
+
+    .nav-body {
+        overflow: hidden;
+    }
+
+    .panel-heading {
+        border: none;
+        padding: 0;
+    }
+
+    .panel-body {
+        border: none;
+        padding: 0;
+    }
+
+    .navHeader {
+        & > .glyphicon {
+            display: block;
+            float: left;
+            background-color: transparent;
+            font-size: $icon-size;
+            margin: floor(($padding-left-square - 1) / 1.230769231 /* font ratio height/width */) ($padding-left-square - 1);
+            &:hover {
+                background-color: transparent;
+                color: darken($ms2-color-primary, 10%);
+            }
+        }
+    }
+}
+
+.toolbar-panel #background-switcher {
+    max-height: 600px;
+    overflow: auto;
+}
