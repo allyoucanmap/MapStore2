@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Form, FormGroup, FormControl, ControlLabel, Glyphicon, Checkbox } from 'react-bootstrap';
 import { capitalize, head } from 'lodash';
@@ -15,6 +15,7 @@ import draggableContainer from './mapstore/draggableContainer';
 import draggableComponent from './mapstore/draggableComponent';
 import SideCard from './mapstore/SideCard';
 import MediaSource from './MediaSource';
+import { getThumbnail } from './GeoStoryUtils';
 
 const DraggableSideCard = draggableComponent(SideCard);
 const DraggableSideGrid = emptyState(({ readOnly }) => readOnly, {
@@ -62,8 +63,9 @@ const Preview = ({ width, content = {} }) => {
     return mediaProps ? (
         <div style={{ position: 'relative', width, height }}>
             <div style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: '#dddddd', display: 'flex' }}>
-                {mediaProps && mediaProps.type !== 'map' && <MediaSource {...mediaProps} cover />}
+                {mediaProps && mediaProps.type === 'image' && <MediaSource {...mediaProps} src={getThumbnail(mediaProps.src) || mediaProps.src} cover />}
                 {mediaProps && mediaProps.type === 'map' && <Glyphicon glyph="1-map" style={{ fontSize: height / 2, margin: 'auto' }}/>}
+                {mediaProps && mediaProps.type === 'video' && <Glyphicon glyph="playback" style={{ fontSize: height / 2, margin: 'auto' }}/>}
             </div>
         </div>
     ) : null;
@@ -204,7 +206,13 @@ const Settings = ({
             type: 'checkbox',
             id: 'autoplay',
             placeholder: 'Enable autoplay',
-            label: 'Autoplay'
+            label: 'Autoplay',
+            items: [{
+                id: 'autoplay-frame',
+                type: 'number',
+                placeholder: 'Enter autoplay interval',
+                label: 'Autoplay Interval (seconds)'
+            }]
         },
         {
             type: 'checkbox',
@@ -215,7 +223,7 @@ const Settings = ({
     ]
 }) => {
     // const [ properties, setProperties ] = useState(media);
-
+    const [values, setValue] = useState({});
     return (
         <BorderLayout
             className="ms-geostory-builder"
@@ -255,9 +263,20 @@ const Settings = ({
                         {field.label && <ControlLabel>
                             {field.label}
                         </ControlLabel>}
-                        <Checkbox>
+                        <Checkbox checked={values[field.id]} onClick={() => setValue({ ...values, [field.id]: !values[field.id] })}>
                             {field.placeholder}
                         </Checkbox>
+                        {(field.items || []).map(item => (
+                            <FormGroup key={item.id}>
+                                {item.label && <ControlLabel>
+                                    {item.label}
+                                </ControlLabel>}
+                                <FormControl
+                                    disabled={!values[field.id]}
+                                    type={item.type}
+                                    placeholder={item.placeholder} />
+                            </FormGroup>
+                        ))}
                     </FormGroup>
                 )
                 : (
@@ -298,7 +317,7 @@ class Builder extends React.Component {
     };
 
     state = {
-        compactCards: true
+        compactCards: false
     };
 
     render() {

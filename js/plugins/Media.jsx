@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MediaModal from './MediaModal';
 import MediaSource from './MediaSource';
 import Toolbar from '@mapstore/components/misc/toolbar/Toolbar';
@@ -16,6 +16,7 @@ const Media = ({
     invert,
     position,
     credits,
+    description,
     size,
     style = {},
     edit = true,
@@ -24,9 +25,13 @@ const Media = ({
     fullscreenOnClick,
     disableContainerDimension,
     readOnly,
-    simpleEdit
+    simpleEdit,
+    forceShowModal
 }) => {
     const [ show, onShow ] = useState();
+    useEffect(() => {
+        if (!src && forceShowModal) onShow(true);
+    }, [id]);
     return (
         <MediaSource
             id={id}
@@ -40,7 +45,8 @@ const Media = ({
             fullscreenOnClick={fullscreenOnClick}
             readOnly={readOnly}
             disableContainerDimension={disableContainerDimension}
-            forceHorizontal={forceHorizontal}>
+            forceHorizontal={forceHorizontal}
+            onLoadEnd={() => onChange({ invert })}>
             {edit &&
             <div className="ms-background-tools">
                 <Toolbar
@@ -161,6 +167,9 @@ const Media = ({
             </div>}
             {credits && <div className="ms-background-tools ms-background-credits">
                 <small>{credits}</small>
+            </div>}
+            {description && <div className="ms-background-tools ms-background-description">
+                <small>{description}</small>
             </div>}
         </MediaSource>
     );

@@ -10,6 +10,8 @@ const MediaEditor = ({
     src,
     position,
     readOnly,
+    description,
+    forceShowModal,
     onChange
 }) => {
 
@@ -32,6 +34,8 @@ const MediaEditor = ({
                 disableContainerDimension
                 readOnly={readOnly}
                 onChange={onChange}
+                description={description}
+                forceShowModal={forceShowModal}
                 fullscreenOnClick
                 simpleEdit
                 style={{

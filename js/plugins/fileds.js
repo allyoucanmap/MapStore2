@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import ContentEditable from "react-contenteditable";
 import { DropdownButton as DropdownButtonRB, Glyphicon, MenuItem } from 'react-bootstrap';
 import Toolbar from '@mapstore/components/misc/toolbar/Toolbar';
 import tooltip from '@mapstore/components/misc/enhancers/tooltip';
@@ -12,7 +11,7 @@ import TextEditor from './TextEditor';
 import TextWrapper from './TextWrapper';
 import MediaEditor from './MediaEditor';
 
-import { camelCase, mapKeys } from 'lodash';
+import { camelCase, mapKeys, isString, isArray } from 'lodash';
 
 const DropdownButton = tooltip(DropdownButtonRB);
 
@@ -180,18 +179,24 @@ class ContentEditor extends React.Component {
         id: PropTypes.string,
         text: PropTypes.array,
         onChange: PropTypes.func,
-        readOnly: PropTypes.bool
+        readOnly: PropTypes.bool,
+        defaultTag: PropTypes.string,
+        onlyText: PropTypes.bool
+    };
+
+    static defaultProps = {
+        defaultTag: 'div'
     };
 
     state = {};
 
     componentWillMount() {
         this.setState({
-            text: [
+            text: isArray(this.props.text) ? this.props.text : [
                 {
                     id: 0,
                     field: 'text',
-                    html: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa, quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt, explicabo. Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos'
+                    html: isString(this.props.text) ? this.props.text : `<${this.props.defaultTag}>Enter text here...</${this.props.defaultTag}>`
                 }
             ]
         });
@@ -228,16 +233,21 @@ class ContentEditor extends React.Component {
                                     id={`${this.props.id}_${atom.id}`}
                                     key={atom.id}
                                     position={atom.position}
+                                    description={atom.description}
                                     readOnly={this.props.readOnly}
                                     type={atom.type || 'image'}
                                     src={atom.src}
                                     size={atom.size}
+                                    forceShowModal={atom.forceShowModal}
                                     onChange={(value) => this.updateContent(atom.id, value)}/>}
-                            {!this.props.readOnly && <div
+                            {!this.props.readOnly && !this.props.onlyText && <div
                                 className="text-center"
                                 style={{ width: '100%' }}>
                                 <ToolbarPopover
                                     glyph="plus"
+                                    ref={(popover) => {
+                                        if (popover) this.trigger = popover.trigger;
+                                    }}
                                     container={document.querySelector('#ms-parallax-container')}
                                     placement="top"
                                     content={
@@ -255,6 +265,7 @@ class ContentEditor extends React.Component {
                                                             field: 'text',
                                                             html: ''
                                                         });
+                                                        this.trigger.hide();
                                                     }
                                                 },
                                                 {
@@ -265,8 +276,10 @@ class ContentEditor extends React.Component {
                                                             id: this.state.text.length,
                                                             field: 'media',
                                                             position: 'center',
-                                                            size: 'full'
+                                                            size: 'full',
+                                                            forceShowModal: true
                                                         });
+                                                        this.trigger.hide();
                                                     }
                                                 }
                                             ]} />
@@ -339,22 +352,13 @@ const fields = {
                             onChange={(values) => {
                                 props.onChange(undefined, values);
                             }}/>
-                        <ContentEditable
-                            key="title"
-                            tagName="h1"
-                            className="ms-cascade-title"
-                            html={props.title}
-                            disabled={props.readOnly}
-                            onChange={(event) => {
-                                props.onChange('title', event.target.value);
-                            }} />
-                        <ContentEditable
-                            key="description"
-                            tagName="h3"
-                            className="ms-cascade-description"
-                            html={props.description}
-                            disabled={props.readOnly}
-                            onChange={(event) => props.onChange('description', event.target.value)} />
+                        <ContentEditor
+                            id={props.id}
+                            text={props.text}
+                            readOnly={props.readOnly}
+                            defaultTag="h1"
+                            onlyText
+                            onChange={(value) => props.onChange('text', value)}/>
                     </TextWrapper>
                 }>
                 {props.mediaSrc && <Media
@@ -392,13 +396,13 @@ const fields = {
                             onChange={(values) => {
                                 props.onChange(undefined, values);
                             }}/>
-                        <ContentEditable
-                            key="title"
-                            tagName="h1"
-                            className="ms-cascade-title"
-                            html={props.title}
-                            disabled={props.readOnly}
-                            onChange={(event) => props.onChange('title', event.target.value)} />
+                        <ContentEditor
+                            id={props.id}
+                            text={props.text}
+                            readOnly={props.readOnly}
+                            defaultTag="h1"
+                            onlyText
+                            onChange={(value) => props.onChange('text', value)}/>
                     </TextWrapper>
                 }>
                 {props.mediaSrc && <Media

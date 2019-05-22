@@ -5,6 +5,7 @@ import { EditorState, ContentState, convertToRaw } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
+import { debounce } from 'lodash';
 
 class TextEditor extends React.Component {
 
@@ -36,6 +37,9 @@ class TextEditor extends React.Component {
                 editorState: EditorState.createEmpty()
             });
         }
+        this.update = debounce((html) => {
+            this.props.onChange(html);
+        }, 1000);
     }
 
     onEditorStateChange = (editorState) => {
@@ -43,7 +47,8 @@ class TextEditor extends React.Component {
             editorState
         });
         const html = draftToHtml(convertToRaw(editorState.getCurrentContent()));
-        this.props.onChange(html);
+        this.update.cancel();
+        this.update(html);
     };
 
     render() {
@@ -51,14 +56,40 @@ class TextEditor extends React.Component {
         const { toolbar = {}, className } = this.props;
         return (
             <div className={className}>
-                <Editor
+                {(!this.props.readOnly && this.state.enableEditing) ? <Editor
                     editorState={editorState}
                     toolbarOnFocus
                     readOnly={this.props.readOnly}
                     placeholder={this.props.placeholder}
                     toolbarStyle={{ }}
                     toolbar={{
-                        options: [ 'inline', 'textAlign', 'colorPicker', 'remove' ],
+                        options: [ 'fontFamily', 'blockType', 'inline', 'textAlign', 'colorPicker', 'remove' ],
+                        fontFamily: {
+                            options: ['inherit', 'Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Verdana'],
+                            className: undefined,
+                            component: undefined,
+                            dropdownClassName: undefined
+                        },
+                        link: {
+                            inDropdown: false,
+                            className: undefined,
+                            component: undefined,
+                            popupClassName: undefined,
+                            dropdownClassName: undefined,
+                            showOpenOptionOnHover: true,
+                            defaultTargetOption: '_self',
+                            options: ['link', 'unlink'],
+                            link: { icon: undefined, className: undefined },
+                            unlink: { icon: undefined, className: undefined },
+                            linkCallback: undefined
+                        },
+                        blockType: {
+                            inDropdown: true,
+                            options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote', 'Code'],
+                            className: undefined,
+                            component: undefined,
+                            dropdownClassName: undefined
+                        },
                         inline: {
                             options: ['bold', 'italic', 'underline', 'strikethrough', 'monospace'],
                             bold: { className: `${className}-toolbar-btn` },
@@ -81,7 +112,11 @@ class TextEditor extends React.Component {
                     wrapperClassName={`${className}-wrapper`}
                     editorClassName={`${className}-main`}
                     stripPastedStyles
-                    onEditorStateChange={this.onEditorStateChange}/>
+                    onEditorStateChange={this.onEditorStateChange}
+                    onBlur={() => this.setState({ enableEditing: false })}/>
+                    : <div onClick={() => {
+                        this.setState({ enableEditing: true });
+                    }} dangerouslySetInnerHTML={{__html: this.props.html }} />}
             </div>
         );
     }

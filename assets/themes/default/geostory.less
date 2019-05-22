@@ -70,4 +70,16 @@
             }
         }
     }
+    &.ms-media-modal-video,
+    &.ms-media-modal-map {
+        .ms-media-modal-layout {
+            > .ms2-border-layout-body > .ms2-border-layout-content {
+                position: relative;
+                margin: 0;
+                .ms-background > * {
+                    .box-shadow(none);
+                }
+            }
+        }
+    }
 }

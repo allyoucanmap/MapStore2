@@ -3,7 +3,7 @@ import MapView from '@mapstore/components/widgets/widget/MapView';
 import ContainerDimensions from 'react-container-dimensions';
 import ReactPlayer from 'react-player';
 import Portal from '@mapstore/components/misc/Portal';
-
+import { setThumbnail } from './GeoStoryUtils';
 const MediaBody = ({
     id,
     src,
@@ -17,7 +17,8 @@ const MediaBody = ({
     size,
     position,
     readOnly,
-    fullscreenOnClick
+    fullscreenOnClick,
+    onLoadEnd = () => {}
 }) => {
 
     const [ imageSize, setSize ] = useState({ });
@@ -37,6 +38,8 @@ const MediaBody = ({
             width,
             height
         });
+        onLoadEnd();
+        if (type === 'image') setThumbnail(src);
     };
 
     useEffect(() => {
@@ -44,13 +47,14 @@ const MediaBody = ({
             onLoad();
         }
     }, [ fullscreen ]);
-
+    const overflowProperty = fullscreenOnClick && fullscreenOnClick ? { overflow: 'hidden' } : {};
     const mediaSource = (
         <div
             className={fullscreen
                 ? `ms-background ms-${orientation} ms-transparent ms-read-only`
                 : `ms-background ms-${ forceHorizontal || size && size !== 'full' ? 'horizontal' : orientation}${cover ? ' cover' : ''}${invert ? ` ms-invert` : ''}${size ? ` ms-${size}` : ''}${position ? ` ms-${position}` : ''}${readOnly ? ' ms-read-only' : ''}`}
             style={{
+                ...overflowProperty,
                 cursor: readOnly && type === 'image' && fullscreenOnClick ? 'pointer' : 'default',
                 ...style
             }}

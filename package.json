@@ -116,6 +116,7 @@
         "immutable": "4.0.0-rc.12",
         "intl": "1.2.2",
         "ismobilejs": "0.4.0",
+        "jimp": "0.6.4",
         "json-2-csv": "2.1.2",
         "json-loader": "0.5.4",
         "jsonix": "2.4.1",

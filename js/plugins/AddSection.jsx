@@ -23,6 +23,9 @@ class AddSection extends React.Component {
     render() {
         return (
             <ToolbarPopover
+                ref={(popover) => {
+                    if (popover) this.trigger = popover.trigger;
+                }}
                 glyph="plus text-primary"
                 container={document.querySelector('#ms-parallax-container')}
                 placement="top"
@@ -40,6 +43,7 @@ class AddSection extends React.Component {
                                         id: this.props.id,
                                         section: sectionTemplates('title')
                                     });
+                                    this.trigger.hide();
                                 }
                             },
                             {
@@ -50,6 +54,7 @@ class AddSection extends React.Component {
                                         id: this.props.id,
                                         section: sectionTemplates('paragraph')
                                     });
+                                    this.trigger.hide();
                                 }
                             },
                             {
@@ -67,6 +72,7 @@ class AddSection extends React.Component {
                                             content: sectionTemplates('immersiveContent')
                                         });
                                     }
+                                    this.trigger.hide();
                                 }
                             }
                         ]} />

@@ -19,8 +19,7 @@ const sectionTemplates = (type) => {
                     },
                     foreground: {
                         cover: true,
-                        title: 'Title',
-                        description: 'mockup test'
+                        text: '<h1>Enter title...</h1>'
                     }
                 }
             ]
@@ -36,7 +35,7 @@ const sectionTemplates = (type) => {
                         mediaCover: true,
                         mediaSrc: 'assets/img/map.png',
                         mediaType: 'image',
-                        title: 'Title'
+                        text: '<h1>Enter title...</h1>'
                     }
                 }
             ]
@@ -49,7 +48,7 @@ const sectionTemplates = (type) => {
                     id: uuidv1(),
                     type: 'paragraph',
                     foreground: {
-                        text: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa, quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt, explicabo. Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos'
+                        text: '<p>Enter text...</p>'
                     }
                 }
             ]
@@ -70,7 +69,7 @@ const sectionTemplates = (type) => {
                     },
                     foreground: {
                         textContainerPosition: 'left',
-                        text: 'Add your text'
+                        text: '<h2>Title</h2><p>Enter content...</p>'
                     }
                 }
             ]
@@ -86,7 +85,7 @@ const sectionTemplates = (type) => {
             },
             foreground: {
                 textContainerPosition: 'left',
-                text: 'Add your text'
+                text: '<h2>Title</h2><p>Enter content...</p>'
             }
         }
     };

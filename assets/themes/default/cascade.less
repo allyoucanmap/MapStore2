@@ -103,6 +103,23 @@
         padding: 0 4px;
         padding-bottom: 2px;
         font-size: @font-size-small;
+        max-width: 50%;
+    }
+
+    .ms-background-description {
+        position: absolute;
+        z-index: 2000;
+        bottom: 0;
+        top: unset;
+        left: 0;
+        margin: 4px;
+        margin-right: 22px;
+        background-color: fade(@ms2-color-background, 75%);
+        color: @ms2-color-text;
+        padding: 0 4px;
+        padding-bottom: 2px;
+        font-size: @font-size-small;
+        max-width: 50%;
     }
 
     &.ms-transparent {
@@ -111,23 +128,99 @@
 }
 
 .ms-cascade-section {
+
     .shadow-far;
     &.ms-title {
         z-index: 2;
     }
     &.ms-paragraph {
         z-index: 3;
-        .ms-text-editor-main span {
-            font-size: @font-size-base * 1.5;
+        .ms-text-editor {
             font-family: @font-family-serif;
         }
     }
     &.ms-immersive {
         z-index: 1;
-        .ms-text-editor-main span {
-            font-size: @font-size-base * 1.25;
+        .ms-text-editor {
             font-family: @font-family-serif;
         }
+        .ms-text-editor * {
+            font-family: inherit;
+        }
+        /*.ms-text-editor-main span {
+            // font-size: @font-size-base * 1.25;
+            // font-family: @font-family-serif;
+        }*/
+
+        .ms-text-editor div, .ms-text-editor p {
+            font-size: @font-size-base;
+        }
+        .ms-text-editor em, .ms-text-editor span {
+            font-size: inherit;
+            font-family: inherit;
+        }
+        .ms-text-editor h1 {
+            font-size: @font-size-h1;
+        }
+        .ms-text-editor h2  {
+            font-size: @font-size-h2;
+        }
+        .ms-text-editor h3  {
+            font-size: @font-size-h3;
+        }
+        .ms-text-editor h4  {
+            font-size: @font-size-h4;
+        }
+        .ms-text-editor h5  {
+            font-size: @font-size-h5;
+        }
+        .ms-text-editor h6  {
+            font-size: @font-size-h6;
+        }
+        .ms-text-editor blockquote  {
+            font-size: @font-size-base;
+        }
+    
+        .ms-text-editor pre  {
+            font-size: @font-size-base;
+        }
+
+        .ms-text-editor-main div {
+            font-size: @font-size-base;
+        }
+        .ms-text-editor-main h1 > div {
+            font-size: @font-size-h1;
+        }
+        .ms-text-editor-main h2 > div  {
+            font-size: @font-size-h2;
+        }
+        .ms-text-editor-main h3 > div  {
+            font-size: @font-size-h3;
+        }
+        .ms-text-editor-main h4 > div  {
+            font-size: @font-size-h4;
+        }
+        .ms-text-editor-main h5 > div  {
+            font-size: @font-size-h5;
+        }
+        .ms-text-editor-main h6 > div  {
+            font-size: @font-size-h6;
+        }
+        .ms-text-editor-main blockquote > div  {
+            font-size: @font-size-base;
+        }
+    
+        .ms-text-editor-main pre > div  {
+            font-size: @font-size-base;
+        }
+    
+        .ms-text-editor-main div span > span {
+            font-size: inherit;
+            font-family: inherit;
+        }
+
+
+        
     }
 }
 
@@ -153,17 +246,17 @@
     background-color: @ms-story-bg;
 
     h1 {
-        font-size: @font-size-h1 * 2;
-        font-family: @font-family-base;
+        // font-size: @font-size-h1 * 2;
+        // font-family: @font-family-base;
         border-bottom: 2px solid @ms-story-text;
     }
     h2 {
-        font-size: @font-size-h1 * 1.75;
-        font-family: @font-family-base;
+        // font-size: @font-size-h1 * 1.75;
+        // font-family: @font-family-base;
         border-bottom: 2px solid @ms-story-text;
     }
 
-    p {
+    /*p {
         font-size: @font-size-base * 1.5;
         font-family: @font-family-serif;
         pointer-events: auto;
@@ -171,7 +264,7 @@
             font-family: @font-family-serif;
             font-size: @font-size-base * 1.5;
         }
-    }
+    }*/
 
     .ms-cascade-wrapper {
         width: 100%;
@@ -220,8 +313,8 @@
         }
         
         p {
-            font-size: @font-size-base * 1.25;
-            font-family: @font-family-serif;
+            /*font-size: @font-size-base * 1.25;
+            font-family: @font-family-serif;*/
             max-width: unset;
         }
     }
@@ -271,22 +364,106 @@
 
 .ms-text-editor {
     position: relative;
+    &-main {
+        div {
+            margin: 0;
+        }
+        border: 1px solid @ms-story-border;
+        padding: 4px;
+    }
+
+    div, p {
+        font-size: @font-size-base * 1.5;
+    }
+
+    em, span {
+        font-size: inherit;
+        font-family: inherit;
+    }
+
+    * {
+        font-family: inherit;
+    }
+
+    h1 {
+        font-size: @font-size-h1 * 1.75;
+    }
+    h2 {
+        font-size: @font-size-h2 * 1.75;
+    }
+    h3 {
+        font-size: @font-size-h3 * 1.75;
+    }
+    h4 {
+        font-size: @font-size-h4 * 1.75;
+    }
+    h5 {
+        font-size: @font-size-h5 * 1.75;
+    }
+    h6 {
+        font-size: @font-size-h6 * 1.75;
+    }
+    blockquote {
+        font-size: @font-size-base * 1.5;
+    }
+
+    pre {
+        font-size: @font-size-base * 1.5;
+    }
+
+    .ms-text-editor-main div {
+        font-size: @font-size-base * 1.5;
+    }
+    .ms-text-editor-main h1 > div {
+        font-size: @font-size-h1 * 1.75;
+    }
+    .ms-text-editor-main h2 > div  {
+        font-size: @font-size-h2 * 1.75;
+    }
+    .ms-text-editor-main h3 > div  {
+        font-size: @font-size-h3 * 1.75;
+    }
+    .ms-text-editor-main h4 > div  {
+        font-size: @font-size-h4 * 1.75;
+    }
+    .ms-text-editor-main h5 > div  {
+        font-size: @font-size-h5 * 1.75;
+    }
+    .ms-text-editor-main h6 > div  {
+        font-size: @font-size-h6 * 1.75;
+    }
+    .ms-text-editor-main blockquote > div  {
+        font-size: @font-size-base * 1.5;
+    }
+
+    .ms-text-editor-main pre > div  {
+        font-size: @font-size-base * 1.5;
+    }
+
+    .ms-text-editor-main div span > span, .ms-text-editor-main em {
+        font-size: inherit;
+        font-family: inherit;
+    }
 
     &-toolbar {
         position: absolute;
         width: 100%;
+        z-index: 2;
         top: 0;
         transform: translateY(-100% - 16px);
+        font-family: @font-family-base;
+        font-size: @font-size-base;
+        & * {
+            font-family: @font-family-base;
+            font-size: @font-size-base;
+            text-align: left;
+        }
         .shadow-soft;
         &-btn {
             &.rdw-option-active {
                 border-color: @ms2-color-primary, 40%;
             }
         }
-    }
-    &-main {
-        border: 1px solid @ms-story-border;
-        padding: 4px;
     }
 }
 

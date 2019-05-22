@@ -442,9 +442,9 @@ const types = {
         View: function({ media }) {
             return (
                 <MediaSource
-                    adjust
                     id="ms-media-preview"
                     type="video"
+                    cover
                     src={media.src}/>
             );
         }
@@ -505,7 +505,7 @@ const types = {
                 <MediaSource
                     id="ms-media-preview"
                     type="map"
-                    adjust
+                    cover
                     src={media.src || defaultMapConfig}/>
             );
         }
@@ -537,7 +537,7 @@ const MediaModal = function({
                 title="Media"
                 show={show}
                 onClose={() => onShow(false)}
-                className="ms-media-modal"
+                className={`ms-media-modal ms-media-modal-${currentType}`}
                 size="lg"
                 buttons={[
                     {
