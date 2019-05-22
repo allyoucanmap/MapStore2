@@ -263,7 +263,7 @@ class ContentEditor extends React.Component {
                                                         this.addContent(idx, {
                                                             id: this.state.text.length,
                                                             field: 'text',
-                                                            html: ''
+                                                            html: '<p>Enter text...</p>'
                                                         });
                                                         this.trigger.hide();
                                                     }
