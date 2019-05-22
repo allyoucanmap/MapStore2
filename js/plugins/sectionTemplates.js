@@ -15,7 +15,7 @@ const sectionTemplates = (type) => {
                     background: {
                         type: 'image',
                         cover: true,
-                        src: 'assets/img/stsci-h-p1821a-m-1699x2000.png'
+                        src: 'assets/img/stsci-h-p1821a-m-1699x2000.jpg'
                     },
                     foreground: {
                         cover: true,
@@ -33,7 +33,7 @@ const sectionTemplates = (type) => {
                     type: 'title',
                     foreground: {
                         mediaCover: true,
-                        mediaSrc: 'assets/img/map.png',
+                        mediaSrc: 'assets/img/map.jpg',
                         mediaType: 'image',
                         text: '<h1>Enter title...</h1>'
                     }
@@ -65,7 +65,7 @@ const sectionTemplates = (type) => {
                     background: {
                         type: 'image',
                         cover: true,
-                        src: 'assets/img/map.png'
+                        src: 'assets/img/map.jpg'
                     },
                     foreground: {
                         textContainerPosition: 'left',
@@ -81,7 +81,7 @@ const sectionTemplates = (type) => {
             background: {
                 type: 'image',
                 cover: true,
-                src: 'assets/img/map.png'
+                src: 'assets/img/map.jpg'
             },
             foreground: {
                 textContainerPosition: 'left',

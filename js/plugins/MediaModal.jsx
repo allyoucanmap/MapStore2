@@ -12,7 +12,7 @@ import mapConfig from './data/mapConfig';
 
 let mockImages = [
     {
-        src: 'assets/img/stsci-h-p1821a-m-1699x2000.png',
+        src: 'assets/img/stsci-h-p1821a-m-1699x2000.jpg',
         title: 'Universe'
     },
     {
@@ -25,7 +25,7 @@ let mockImages = [
         description: 'JCMT on Mauna Kea'
     },
     {
-        src: 'assets/img/map.png',
+        src: 'assets/img/map.jpg',
         title: 'Observatory',
         description: 'JCMT on Mauna Kea'
     },
@@ -35,7 +35,7 @@ let mockImages = [
         description: 'JCMT on Mauna Kea'
     },
     {
-        src: 'assets/img/cover.png',
+        src: 'assets/img/cover.jpg',
         title: 'Observatory',
         description: 'JCMT on Mauna Kea'
     },

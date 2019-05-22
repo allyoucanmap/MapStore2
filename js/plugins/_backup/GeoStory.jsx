@@ -677,7 +677,7 @@ class Section extends React.Component {
                                                             offset: 0,
                                                             foreground: {
                                                                 cover: true,
-                                                                mediaSrc: 'assets/img/map.png',
+                                                                mediaSrc: 'assets/img/map.jpg',
                                                                 title: 'Title'
                                                             }
                                                         }

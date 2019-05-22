@@ -19,7 +19,7 @@ const stories = [
                         background: {
                             type: 'image',
                             cover: true,
-                            src: 'assets/img/stsci-h-p1821a-m-1699x2000.png',
+                            src: 'assets/img/stsci-h-p1821a-m-1699x2000.jpg',
                             credits: '© Copyright Test'
                         },
                         foreground: {
