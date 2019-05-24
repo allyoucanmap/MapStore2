@@ -84,8 +84,8 @@ const StyleList = ({
                     ))
                     .map(style => ({
                         ...style,
-                        title: style.label || style.title || style.name,
-                        description: style._abstract,
+                        title: style.metadata && style.metadata.title || style.label || style.title || style.name,
+                        description: style.metadata && style.metadata.description || style._abstract,
                         selected: enabledStyle === style.name,
                         preview: style.format &&
                             <SVGPreview

@@ -5,9 +5,15 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-const axios = require('../../libs/ajax');
-const assign = require('object-assign');
-const { getNameParts, stringifyNameParts } = require('../../utils/StyleEditorUtils');
+import axios from '../../libs/ajax';
+import assign from 'object-assign';
+import { getVersion } from './About';
+import { head, get } from 'lodash';
+import { getNameParts, stringifyNameParts } from '../../utils/StyleEditorUtils';
+
+const STYLE_MODULES = [
+    { regex: /gt-css/, format: 'css' }
+];
 
 const contentTypes = {
     css: 'application/vnd.geoserver.geocss+css',
@@ -65,6 +71,25 @@ const Api = {
         opts.headers = assign({}, opts.headers, {"Content-Type": "application/vnd.ogc.sld+xml"});
         return axios.put(url, body, opts);
     },
+    getStyleService: function({ baseUrl }) {
+        return getVersion({ baseUrl })
+            .then(({ version, manifest }) => {
+                if (!version) return null;
+                const formats = (manifest || [])
+                    .map(({ name }) =>
+                        head(STYLE_MODULES
+                            .filter(({ regex }) => name.match(regex))
+                            .map(({ format }) => format))
+                    ).filter(format => format);
+                const geoserver = head(version.filter(({ name = ''}) => name.toLowerCase() === 'geoserver')) || {};
+                return {
+                    baseUrl,
+                    version: geoserver.version,
+                    formats: [...formats, 'sld'],
+                    availableUrls: []
+                };
+            });
+    },
     /**
     * Get style object
     * @memberof api.geoserver
@@ -89,10 +114,26 @@ const Api = {
     * @param {string} params.code style code
     * @return {object} response
     */
-    createStyle: ({baseUrl, code, options, format = 'sld', styleName, languageVersion}) => {
+    createStyle: ({baseUrl, code, options, format = 'sld', styleName, languageVersion, metadata}) => {
         const {name, workspace} = getNameParts(styleName);
         const data = formatRequestData({options, format, baseUrl, name, workspace, languageVersion}, true);
-        return axios.post(data.url, code, data.options);
+        return axios.post(data.url, code, data.options)
+            .then(() => {
+                const { url: putUrl } = formatRequestData({options, format, baseUrl, name, workspace, languageVersion});
+                return !metadata
+                    ? { styleName }
+                    : axios.put(
+                        `${putUrl}.json`, {
+                            style: {
+                                format,
+                                languageVersion,
+                                metadata
+                            }
+                        },
+                        { headers: { 'Content-Type': 'application/json' } })
+                    .then(() => ({ styleName, metadata }))
+                    .catch(() => ({ styleName }));
+            });
     },
     /**
     * Update a style
@@ -108,6 +149,16 @@ const Api = {
         const {name, workspace} = getNameParts(styleName);
         const data = formatRequestData({options, format, baseUrl, name, workspace, languageVersion});
         return axios.put(data.url, code, data.options);
+    },
+    /**
+    * Update a style configuration
+    * @memberof api.geoserver
+    * @return {object} response
+    */
+    updateStyleConfig: ({baseUrl, styleName, languageVersion, config = {}}) => {
+        const {name, workspace} = getNameParts(styleName);
+        const data = formatRequestData({baseUrl, name, workspace, languageVersion});
+        return axios.put(data.url, { style: config }, { headers: { 'Content-Type': 'application/json' } });
     },
     /**
     * Delete a style
@@ -140,7 +191,25 @@ const Api = {
                 styles.forEach(({name}, idx) =>
                 axios.get(getStyleBaseUrl({...getNameParts(name), geoserverBaseUrl}))
                     .then(({data}) => {
-                        responses[idx] = assign({}, styles[idx], data && data.style && {...data.style, name: stringifyNameParts(data.style)} || {});
+                        const metadata = get(data, 'style.metadata.entry');
+                        const metadataProperty = metadata
+                            ? {
+                                metadata: metadata.reduce((acc, entry) => {
+                                    const key = entry['@key'];
+                                    const value = entry.$;
+                                    return {
+                                        ...acc,
+                                        [key]: value
+                                    };
+                                }, {})
+                            }
+                            : { };
+
+                        responses[idx] = assign({}, styles[idx], data && data.style && {
+                            ...data.style,
+                            ...metadataProperty,
+                            name: stringifyNameParts(data.style)
+                        } || {});
                         count--;
                         if (count === 0) resolve(responses.filter(val => val));
                     })
