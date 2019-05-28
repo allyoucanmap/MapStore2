@@ -152,7 +152,7 @@ module.exports = ({showFeatureInfoTab = true, ...props}, {plugins, pluginsConfig
             glyph: 'dropper',
             onClose: () => settingsPlugins && settingsPlugins.StyleEditor && props.onToggleStyleEditor && props.onToggleStyleEditor(null, false),
             onClick: () => settingsPlugins && settingsPlugins.StyleEditor && props.onToggleStyleEditor && props.onToggleStyleEditor(null, true),
-            visible: props.settings.nodeType === 'layers' && props.element.type === "wms",
+            visible: props.settings.nodeType === 'layers' && (props.element.type === "wms" || props.element.type === "collection"),
             Component: props.activeTab === 'style' && props.settings.options.thematic && settingsPlugins.ThematicLayer && getConfiguredPlugin(settingsPlugins.ThematicLayer, loadedPlugins, <LoadingView width={100} height={100} />)
             || settingsPlugins.StyleEditor && getConfiguredPlugin({...settingsPlugins.StyleEditor, cfg: {...settingsPlugins.StyleEditor.cfg, active: true }}, loadedPlugins, <LoadingView width={100} height={100} />)
             || StyleList,

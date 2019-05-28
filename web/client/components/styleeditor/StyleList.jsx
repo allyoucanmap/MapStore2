@@ -17,7 +17,7 @@ const SVGPreview = require('./SVGPreview');
 const Message = require('../I18N/Message');
 const tooltip = require('../misc/enhancers/tooltip');
 const Glyphicon = tooltip(GlyphiconRB);
-
+const StyleEditorUtils = require('../../utils/StyleEditorUtils');
 const SideGrid = emptyState(
     ({items}) => items.length === 0,
     {
@@ -52,6 +52,7 @@ const getFormatText = (format) => {
  */
 
 const StyleList = ({
+    render = 'client',
     showDefaultStyleIcon,
     enabledStyle,
     defaultStyle,
@@ -74,7 +75,21 @@ const StyleList = ({
             }>
             <SideGrid
                 size="sm"
-                onItemClick={({ name }) => onSelect({ style: defaultStyle === name ? '' : name }, true)}
+                onItemClick={({ name, ...style }) => {
+                    if (render === 'client') {
+                        // console.log(style);
+                        StyleEditorUtils.getStyle(name, 'mbstyle', style.links)
+                            .then((body) => {
+                                onSelect({ style: {
+                                    name: defaultStyle === name ? '' : name,
+                                    type: 'mbstyle',
+                                    body
+                                }}, true);
+                            });
+                    } else {
+                        onSelect({ style: defaultStyle === name ? '' : name }, true);
+                    }
+                }}
                 items={availableStyles
                     .filter(({name = '', title = '', _abstract = ''}) => !filterText
                     || filterText && (

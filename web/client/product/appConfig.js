@@ -7,7 +7,7 @@
  */
 
 module.exports = {
-    pages: [{
+    pages: [/*{
         name: "home",
         path: "/",
         component: require('./pages/Maps')
@@ -19,11 +19,11 @@ module.exports = {
         name: "mapviewer",
         path: "/viewer/:mapType/:mapId",
         component: require('./pages/MapViewer')
-    }, {
+    },*/ {
         name: "mapviewer",
-        path: "/viewer/:mapId",
+        path: "/:mapId",
         component: require('./pages/MapViewer')
-    }, {
+    }/*, {
         name: "manager",
         path: "/manager",
         component: require('./pages/Manager')
@@ -43,7 +43,7 @@ module.exports = {
         name: "rulesmanager",
         path: "/rules-manager",
         component: require('./pages/RulesManager')
-    }],
+    }*/],
     initialState: {
         defaultState: {
             mousePosition: {enabled: false},

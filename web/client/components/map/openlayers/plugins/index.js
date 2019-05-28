@@ -8,6 +8,7 @@
 
 module.exports = {
     BingLayer: require('./BingLayer'),
+    Collection: require('./Collection'),
     GoogleLayer: require('./GoogleLayer'),
     GraticuleLayer: require('./GraticuleLayer'),
     MapQuest: require('./MapQuest'),
@@ -15,6 +16,7 @@ module.exports = {
     OverlayLayer: require('./OverlayLayer'),
     TileProviderLayer: require('./TileProviderLayer'),
     VectorLayer: require('./VectorLayer'),
+    WFS3Layer: require('./WFS3Layer'),
     WMSLayer: require('./WMSLayer'),
     WMTSLayer: require('./WMTSLayer')
 };

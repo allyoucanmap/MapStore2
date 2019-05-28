@@ -6,15 +6,40 @@
 * LICENSE file in the root directory of this source tree.
 */
 
-const { head, get, isArray, isString } = require('lodash');
+const { head, get, isArray, isString, mapKeys, camelCase } = require('lodash');
 const uuidv1 = require('uuid/v1');
 const url = require('url');
+const axios = require('../libs/ajax');
 const { baseTemplates, customTemplates } = require('./styleeditor/stylesTemplates');
 
 const STYLE_ID_SEPARATOR = '___';
 const STYLE_OWNER_NAME = 'styleeditor';
 
 const StyleEditorCustomUtils = {};
+
+let cachedStyles = {};
+
+/*
+const mbstyleKeys = {
+
+};
+*/
+
+const decodeStyle = function(data = {}, format) {
+    if (format === 'mbstyle') {
+        return (data.layers || [])
+            .map(({id, ...rule}) => {
+                const paint = mapKeys(rule.paint || {}, (value, key) => camelCase(key));
+                return {
+                    id,
+                    type: 'Polygon',
+                    sourceLayer: rule['source-layer'],
+                    ...paint
+                };
+            });
+    }
+    return null;
+};
 
 const EDITOR_MODES = {
     css: 'geocss',
@@ -139,7 +164,20 @@ const StyleEditorUtils = {
      * @param  {object} styleObj.workspace {name: 'name of workspace'}
      * @return  {string} combination of workspace and name, eg. 'workspace:stylename'
      */
-    stringifyNameParts: ({name, workspace}) => `${workspace && workspace.name && `${workspace.name}:` || ''}${name}`
+    stringifyNameParts: ({name, workspace}) => `${workspace && workspace.name && `${workspace.name}:` || ''}${name}`,
+
+    getStyle: function(name, format, links) {
+        const id = `${name}:${format}`;
+        if (cachedStyles[id]) return new Promise((resolve) => resolve(cachedStyles[id]));
+        const link = (links || [])
+            .filter(({ type }) => type === 'application/vnd.geoserver.mbstyle+json')
+            .map(({href}) => href)[0];
+        return axios.get(link)
+            .then(({ data }) => {
+                cachedStyles[id] = decodeStyle(data, format);
+                return cachedStyles[id];
+            });
+    }
 };
 
 module.exports = StyleEditorUtils;

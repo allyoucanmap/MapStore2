@@ -10,7 +10,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const { connect } = require('react-redux');
 const { createSelector } = require('reselect');
-const { compose, branch, toClass } = require('recompose');
+const { compose, branch, toClass, withState } = require('recompose');
 const assign = require('object-assign');
 const { isArray, isString } = require('lodash');
 
@@ -35,9 +35,20 @@ const { updateSettingsParams } = require('../actions/layers');
 
 const {
     StyleSelector,
-    StyleToolbar,
-    StyleCodeEditor
+    StyleToolbar/*,
+    StyleCodeEditor*/
 } = require('./styleeditor/index');
+
+const VisualEditor = connect(
+    createSelector([
+        getUpdatedLayer
+    ], ({ style } = {}) => ({
+        style
+    })),
+    {
+        onUpdate: updateSettingsParams
+    }
+)(require('../components/styleeditor/VisualEditor'));
 
 const { isSameOrigin } = require('../utils/StyleEditorUtils');
 
@@ -52,10 +63,13 @@ class StyleEditorPanel extends React.Component {
         userRole: PropTypes.string,
         editingAllowedRoles: PropTypes.array,
         enableSetDefaultStyle: PropTypes.bool,
-        canEdit: PropTypes.bool
+        canEdit: PropTypes.bool,
+        onVisualStyleEditor: PropTypes.func,
+        enabledVisual: PropTypes.bool
     };
 
     static defaultProps = {
+        showToolbar: true,
         layer: {},
         onInit: () => {},
         styleService: {
@@ -73,6 +87,8 @@ class StyleEditorPanel extends React.Component {
         ]
     };
 
+    state = {};
+
     componentWillMount() {
         const canEdit = !this.props.editingAllowedRoles || (isArray(this.props.editingAllowedRoles) && isString(this.props.userRole)
             && this.props.editingAllowedRoles.indexOf(this.props.userRole) !== -1);
@@ -88,13 +104,17 @@ class StyleEditorPanel extends React.Component {
                         {this.props.header}
                         <div className="text-center">
                             <StyleToolbar
+                                onVisualStyleEditor={() => {
+                                    console.log('HERE');
+                                    this.props.onVisualStyleEditor(!this.props.enabledVisual);
+                                }}
                                 enableSetDefaultStyle={this.props.enableSetDefaultStyle}/>
                         </div>
                     </div> : null
                 }
                 footer={<div style={{ height: 25 }} />}>
-                {this.props.isEditing
-                    ? <StyleCodeEditor />
+                {this.props.enabledVisual
+                    ? <VisualEditor />
                     : <StyleSelector
                         showDefaultStyleIcon={this.props.canEdit && this.props.enableSetDefaultStyle}/>}
             </BorderLayout>
@@ -128,6 +148,7 @@ const StyleEditorPlugin = compose(
         ({ active } = {}) => !active,
         () => () => null
     ),
+    withState('enabledVisual', 'onVisualStyleEditor'),
     // end
     connect(
         createSelector(

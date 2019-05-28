@@ -53,6 +53,7 @@ const StyleToolbar = ({
     onEditStyle = () => {},
     onUpdate = () => {},
     onSetDefault = () => {},
+    onVisualStyleEditor,
     disableCodeEditing
 }) => (
     <div>
@@ -150,6 +151,14 @@ const StyleToolbar = ({
                     disabled: !!loading || defaultStyles.indexOf(selectedStyle) !== -1 || !selectedStyle,
                     visible: enableSetDefaultStyle && !status && editEnabled ? true : false,
                     onClick: () => onSetDefault()
+                },
+                {
+                    glyph: '1-stilo',
+                    tooltip: 'Test Visual Style Editor',
+                    visible: !!onVisualStyleEditor,
+                    onClick: () => {
+                        onVisualStyleEditor();
+                    }
                 },
                 ...(!!status ? [] : buttons)
             ]} />

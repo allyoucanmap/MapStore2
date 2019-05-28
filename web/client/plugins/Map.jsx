@@ -279,13 +279,32 @@ class MapPlugin extends React.Component {
 
     renderLayers = () => {
         const projection = this.props.map.projection || 'EPSG:3857';
-        return [...this.props.layers, ...this.props.additionalLayers].filter(this.filterLayer).map((layer, index) => {
-            return (
-                <plugins.Layer type={layer.type} srs={projection} position={index} key={layer.id || layer.name} options={layer} securityToken={this.props.securityToken}>
+        let zIndex = -1;
+        return [...this.props.layers, ...this.props.additionalLayers].filter(this.filterLayer)
+        .reduce((acc, layer) => {
+            if (layer.type === 'collection') {
+                const layers = (layer.collections || [])
+                    .map((collectionLayer) => {
+                        zIndex++;
+                        return (
+                            <plugins.Layer type={layer.type} srs={projection} position={zIndex} key={collectionLayer.id || collectionLayer.name} options={{ ...layer, ...collectionLayer, availableStyles: layer.availableStyles || []}} securityToken={this.props.securityToken}>
+                                {this.renderLayerContent(collectionLayer, projection)}
+                            </plugins.Layer>
+                        );
+                    });
+                return [
+                    ...acc,
+                    ...layers
+                ];
+            }
+            zIndex++;
+            return [
+                ...acc,
+                <plugins.Layer type={layer.type} srs={projection} position={zIndex} key={layer.id || layer.name} options={layer} securityToken={this.props.securityToken}>
                     {this.renderLayerContent(layer, projection)}
                 </plugins.Layer>
-            );
-        }).concat(this.props.features && this.props.features.length && this.getHighlightLayer(projection, this.props.layers.length) || []);
+            ];
+        }, []).concat(this.props.features && this.props.features.length && this.getHighlightLayer(projection, this.props.layers.length) || []);
     };
 
     renderLayerContent = (layer, projection) => {

@@ -97,7 +97,8 @@ module.exports = {
         TimelinePlugin: require('../plugins/Timeline'),
         ThematicLayerPlugin: require('../plugins/ThematicLayer'),
         FeedbackMaskPlugin: require('../plugins/FeedbackMask'),
-        StyleEditorPlugin: require('../plugins/StyleEditor')
+        StyleEditorPlugin: require('../plugins/StyleEditor'),
+        CollectionsPlugin: require('../plugins/Collections')
     },
     requires: {
         ReactSwipe: require('react-swipeable-views').default,

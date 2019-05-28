@@ -197,6 +197,15 @@ module.exports = {
                 const layer = action.layer || getSelectedLayer(state);
                 if (!layer || layer && !layer.url) return Rx.Observable.empty();
 
+                if (layer.type === 'collection') {
+                    return Rx.Observable.of(
+                        updateSettingsParams({
+                            availableStyles: layer.availableStyles || []
+                        }),
+                        loadedStyle()
+                    );
+                }
+
                 const normalizedUrl = normalizeUrl(layer.url);
                 const parsedUrl = url.parse(normalizedUrl);
 

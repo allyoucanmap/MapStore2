@@ -173,13 +173,15 @@ const getAllStyles = (state) => {
     const updatedLayer = getUpdatedLayer(state);
     const availableStyles = updatedLayer.availableStyles || [];
     const { name: defaultStyle } = head(availableStyles) || {};
-    const enabledStyle = updatedLayer.style || updatedLayer && !updatedLayer.style && defaultStyle;
+    const enabledStyle = updatedLayer.style && updatedLayer.style.name || updatedLayer.style || updatedLayer && !updatedLayer.style && defaultStyle;
     return {
         availableStyles: uniqBy(availableStyles.map(style => {
             const splittedName = style.title && style.title.split(STYLE_ID_SEPARATOR);
-            const label = splittedName[0] || style.name;
+            const label = splittedName && splittedName[0] || style.name || style.id;
             return {
                 ...style,
+                name: style.name || style.id,
+                title: style.title || style.id,
                 label
             };
         }), 'name'),
