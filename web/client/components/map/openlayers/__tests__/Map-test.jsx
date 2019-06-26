@@ -112,6 +112,34 @@ describe('OpenlayersMap', () => {
         expect(ol.proj.get('EPSG:25830')).toExist();
     });
 
+    it('custom projection with axisOrientation', () => {
+        proj.defs("EPSG:31468", "+proj=tmerc +lat_0=0 +lon_0=12 +k=1 +x_0=4500000 +y_0=0 +ellps=bessel +towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7 +units=m +no_defs");
+        const projectionDefs = [{
+            code: "EPSG:31468",
+            axisOrientation: "neu",
+            "extent": [
+                4036308.74,
+                5255076.75,
+                4617579.38,
+                6108355.90
+            ],
+            "worldExtent": [
+                5.87,
+                47.27,
+                13.84,
+                55.09
+            ]
+        }];
+        const comp = (<OpenlayersMap projection="EPSG:31468" projectionDefs={projectionDefs} center={{ y: 43.9, x: 10.3 }} zoom={11}
+        />);
+
+        const map = ReactDOM.render(comp, document.getElementById("map"));
+        expect(map).toExist();
+        expect(map.map.getView().getProjection().getCode()).toBe('EPSG:31468');
+        expect(ol.proj.get('EPSG:31468')).toExist();
+        expect(ol.proj.get('EPSG:31468').getAxisOrientation()).toBe('neu');
+    });
+
     it('check if the handler for "click" event is called with elevation', () => {
         const testHandlers = {
             handler: () => { }
@@ -774,6 +802,52 @@ describe('OpenlayersMap', () => {
             }
         });
         olMap.dispatchEvent('moveend');
+    });
+    it('test ZOOM_TO_EXTENT_HOOK with full extent', (done) => {
+        /*
+         * Converting [-180, -90, 180, 90] in EPSG:3857 caused a bounds array of [0,0,0,0],
+         * and so a zoom to maxZoom in the 0,0 coordinates
+         * To avoid this, zoom to max resolution extent.
+         * TODO: improve this to manage all degenerated bounding boxes.
+         */
+        mapUtils.registerHook(mapUtils.ZOOM_TO_EXTENT_HOOK, undefined);
+
+        const testHandlers = {
+            onMapViewChanges: () => { }
+        };
+        // fix size
+        document.querySelector('#map').setAttribute('style', "width: 200px; height: 200px");
+        const spy = expect.spyOn(testHandlers, 'onMapViewChanges');
+        const map = ReactDOM.render(<OpenlayersMap
+            id="mymap"
+            center={{ y: 0, x: 0 }}
+            zoom={11}
+            registerHooks
+            mapOptions={{ zoomAnimation: false }}
+            onMapViewChanges={testHandlers.onMapViewChanges} />,
+            document.getElementById("map"));
+        const olMap = map.map;
+        olMap.on('moveend', () => {
+            expect(spy.calls[1]).toExist();
+            expect(spy.calls[1].arguments[0].x).toEqual(0);
+            expect(spy.calls[1].arguments[0].y).toEqual(0);
+            expect(spy.calls[1].arguments[0].x).toEqual(0);
+            expect(spy.calls[1].arguments[0].y).toEqual(0);
+            // Bbox should be max.
+            expect(spy.calls[1].arguments[2].bounds.maxx).toBeGreaterThan(15654300);
+            expect(spy.calls[1].arguments[2].bounds.maxy).toBeGreaterThan(7827150);
+            expect(spy.calls[1].arguments[2].bounds.minx).toBeLessThan(-15654300);
+            expect(spy.calls[1].arguments[2].bounds.miny).toBeLessThan(-7827150);
+            done();
+
+        });
+        expect(map).toExist();
+        const hook = mapUtils.getHook(mapUtils.ZOOM_TO_EXTENT_HOOK);
+        expect(hook).toExist();
+        hook([-180, -90, 180, 90], { crs: "EPSG:4326", duration: 0 });
+        olMap.dispatchEvent('moveend');
+        expect(spy).toHaveBeenCalled();
+        expect(spy.calls[0]).toExist(); // first is called by initial render
     });
 
     it('create attribution with container', () => {
