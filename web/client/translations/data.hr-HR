@@ -1038,7 +1038,7 @@
             "success": " ispravno uvezeno"
         },
         "mapImport": {
-            "title": "Import Data",
+            "title": "Import",
             "dropZone": {
                 "heading": "<p><h4>Drop your configuration or vector files here</h4><small>or</small></p>",
                 "selectFiles": "Select Files...",
@@ -1051,9 +1051,11 @@
             }
         },
         "mapExport": {
-            "title": "Export Data"
+            "title": "Export"
         },
         "catalog": {
+            "start": "Start date ",
+            "end": "End date ",
             "notAvailable": "Not Available",
             "title": "Katalog",
             "autoload": "Traži prilikom odabira servisa",
@@ -1093,7 +1095,7 @@
             "showTemplate": "Show metadata template",
             "showPreview": "Show preview",
             "advancedSettings": "Advanced Settings",
-            "templateMetadataAvailable": "Metadata available from Dublin Core format: ${abstract}, ${boundingBox}, ${contributor}, ${description}, ${format}, ${identifier}, ${rights}, ${source}, ${title}, ${type}, ${uri}",
+            "templateMetadataAvailable": "Metadata available from Dublin Core format: abstract, boundingBox, contributor, description, format, identifier, rights, source, temporal, title, type, uri",
             "notification": {
                 "warningAddCatalogService": "Unesi ispravni url i naslov",
                 "addCatalogService": "Servis je dodan ispravno",
@@ -1501,6 +1503,10 @@
             "displayCartesian": {
                 "line": "Sakrij mrežu",
                 "bar": "Sakrij mrežu"
+            },
+            "xAxisAngle":{
+                "line": "X Axis: Label rotation angle °",
+                "bar": "X Axis: Label rotation angle °"
             },
             "yAxis":{
                 "line": "Sakrij Y os",

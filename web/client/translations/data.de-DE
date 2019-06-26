@@ -1052,7 +1052,7 @@
             "success": " erfolgreich importiert"
         },
         "mapImport": {
-                "title": "Daten importieren",
+                "title": "Einführen",
                 "dropZone": {
                     "heading": "<p> <h4> Legen Sie hier Ihre Konfigurations- oder Vektordateien ab </h4> <small> oder </small> </p>",
                     "selectFiles": "Dateien auswählen...",
@@ -1065,9 +1065,11 @@
                 }
             },
         "mapExport": {
-            "title": "Daten exportieren"
+            "title": "Export"
         },
         "catalog": {
+            "start": "Startdatum ",
+            "end": "Enddatum ",
             "notAvailable": "Nicht verfügbar",
             "title": "Katalog",
             "autoload": "Suche nach Serviceauswahl",
@@ -1107,7 +1109,7 @@
             "showTemplate": "Metadatenvorlage anzeigen",
             "showPreview": "Vorschau zeigen",
             "advancedSettings": "Erweiterte Einstellungen",
-            "templateMetadataAvailable": "Metadaten im Dublin Core-Format verfügbar: ${abstract}, ${boundingBox}, ${contributor}, ${description}, ${format}, ${identifier}, ${rights}, ${source}, ${title}, ${type}, ${uri}",
+            "templateMetadataAvailable": "Metadaten im Dublin Core-Format verfügbar: abstract, boundingBox, contributor, description, format, identifier, rights, source, temporal, title, type, uri",
             "notification": {
                 "warningAddCatalogService": "Geben Sie eine gültige URL und einen Titel ein",
                 "addCatalogService": "Service wurde korrekt hinzugefügt",
@@ -1516,7 +1518,12 @@
             "displayCartesian": {
                 "line": "Raster ausblenden",
                 "bar": "Raster ausblenden"
-            },"yAxis":{
+            },
+            "xAxisAngle":{
+                "line": "X-Achse: Beschriften Sie den Drehwinkel °",
+                "bar": "X-Achse: Beschriften Sie den Drehwinkel °"
+            },
+            "yAxis":{
                 "line": "Y-Achse ausblenden",
                 "bar": "Y-Achse ausblenden"
             },

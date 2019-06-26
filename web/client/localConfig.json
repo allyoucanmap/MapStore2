@@ -368,20 +368,7 @@
             "Playback",
             "FeedbackMask",
             "VisualStyleEditor",
-            {
-              "name": "StyleEditor",
-              "cfg": {
-                "styleService": {
-                  "baseUrl": "https://gs-stable.geo-solutions.it/geoserver/",
-                  "formats": [
-                    "sld"
-                  ],
-                  "availableUrls": [
-                    "http://gs-stable.geo-solutions.it/geoserver/"
-                  ]
-                }
-              }
-            }
+            "StyleEditor"
         ],
         "embedded": [{
                 "name": "Map",

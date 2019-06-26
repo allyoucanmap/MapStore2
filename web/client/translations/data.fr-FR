@@ -1052,7 +1052,7 @@
             "success": " Import correct"
         },
         "mapImport": {
-            "title": "Importer des données",
+            "title": "Importer",
             "dropZone": {
                 "heading": "<p> <h4> Déposez votre configuration ou vos fichiers vectoriels ici </h4> <small> ou </small> </p>",
                 "selectFiles": "Sélectionnez les fichiers...",
@@ -1065,9 +1065,11 @@
             }
         },
         "mapExport": {
-            "title": "Exporter des données"
+            "title": "Exporter"
         },
         "catalog": {
+            "start": "Date de début ",
+            "end": "Date de fin ",
             "notAvailable": "Indisponible",
             "title": "Catalogue",
             "autoload": "Recherche sur la sélection du service",
@@ -1107,7 +1109,7 @@
             "showTemplate": "Afficher le modèle de métadonnées",
             "showPreview": "Afficher l'aperçu",
             "advancedSettings": "Réglages avancés",
-            "templateMetadataAvailable": "Métadonnées disponibles au format Dublin Core: ${abstract}, ${boundingBox}, ${contributor}, ${description}, ${format}, ${identifier}, ${rights}, ${source}, ${title}, ${type}, ${uri}",
+            "templateMetadataAvailable": "Métadonnées disponibles au format Dublin Core: abstract, boundingBox, contributor, description, format, identifier, rights, source, temporal, title, type, uri",
             "notification": {
                 "warningAddCatalogService": "Insérer une URL et un titre valides",
                 "addCatalogService": "Service ajouté correctement",
@@ -1516,7 +1518,12 @@
             "displayCartesian": {
                 "line": "Masquer la grille",
                 "bar": "Masquer la grille"
-            },"yAxis":{
+            },
+            "xAxisAngle":{
+                "line": "Axe X: Angle de rotation de l'étiquette °",
+                "bar": "Axe X: Angle de rotation de l'étiquette °"
+            },
+            "yAxis":{
                 "line": "Masquer l'axe Y",
                 "bar": "Masquer l'axe Y"
             },
