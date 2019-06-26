@@ -76,17 +76,15 @@ const backgroundSelector = createSelector([
         drawerEnabledControlSelector,
         mapTypeSelector,
         currentBackgroundSelector,
-        tempBackgroundSelector,
-        state => mapLayoutValuesSelector(state, {left: true, bottom: true})
+        tempBackgroundSelector
     ],
-    (projection, map, layers, controls, drawer, maptype, currentLayer, tempLayer, style) => ({
+    (projection, map, layers, controls, drawer, maptype, currentLayer, tempLayer) => ({
         size: map && map.size || {width: 0, height: 0},
         layers: layers.filter((l) => l && l.group === "background").map((l) => invalidateUnsupportedLayer(l, maptype)) || [],
         tempLayer,
         currentLayer,
         start: controls.start || 0,
         enabled: controls.enabled,
-        style,
         projection
     }));
 
@@ -132,8 +130,15 @@ const BackgroundSelectorPlugin = connect(backgroundSelector, {
     })
 )(require('../components/background/BackgroundSelector'));
 
+import assign from 'object-assign';
+
 module.exports = {
-    BackgroundSelectorPlugin,
+    BackgroundSelectorPlugin: assign(BackgroundSelectorPlugin, {
+        Layout: {
+            container: 'body',
+            priority: 1
+        }
+    }),
     reducers: {
         controls: require('../reducers/controls')
     }

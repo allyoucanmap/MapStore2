@@ -20,7 +20,7 @@ html, body, #container, .fill {
     position:absolute;
     width: 100%;
     top: 0;
-    bottom: 28px;
+    bottom: 0;
     height: auto;
     overflow: hidden;
     z-index: 0;
@@ -68,43 +68,6 @@ html, body, #container, .fill {
 
 .modal-dialog-container {
     z-index: 2000;
-}
-
-#mapstore-scalebox-container {
-    bottom: -36px !important;
-    right: 323px !important;
-}
-
-#mapstore-mouseposition {
-    width: auto !important;
-    right: 5px !important;
-    background-color: transparent !important;
-    height: 25px !important;
-}
-
-#mapstore-mouseposition .mouseposition-separator {
-    display: inline !important;
-}
-
-#mapstore-mouseposition .label {
-    font-size: 90% !important;
-}
-
-
-#mapstore-mouseposition .mouseposition-crs {
-    font-size: 90%;
-    margin-left: 5px;
-    font-weight: bold;
-}
-
-#mapstore-getfeatureinfo.mapstore-right-panel {
-    position: absolute;
-    height: calc(100% - 30px);
-    right: 0;
-    left: auto;
-    top: 0;
-    margin-top: 0;
-    border: none;
 }
 
 .mapstore-right-panel .info-wrap {

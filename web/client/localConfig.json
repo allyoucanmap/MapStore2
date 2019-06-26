@@ -63,24 +63,18 @@
                 "isNew": true,
                 "autoload": false
             },
-            "selectedService": "gs_stable_csw",
+            "selectedService": "maps_gs_wmts",
             "services": {
-              "gs_stable_csw": {
-                "url": "https://gs-stable.geo-solutions.it/geoserver/csw",
-                "type": "csw",
-                "title": "GeoSolutions GeoServer CSW",
-                "autoload": true
-              },
-              "gs_stable_wms": {
-                "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+              "maps_gs_wms": {
+                "url": "http://localhost:8081/geoserver/wms",
                 "type": "wms",
-                "title": "GeoSolutions GeoServer WMS",
+                "title": "Maps GeoServer WMS",
                 "autoload": false
               },
-              "gs_stable_wmts": {
-                "url": "https://gs-stable.geo-solutions.it/geoserver/gwc/service/wmts",
+              "maps_gs_wmts": {
+                "url": "http://localhost:8081/geoserver/gwc/service/wmts",
                 "type": "wmts",
-                "title": "GeoSolutions GeoServer WMTS",
+                "title": "Maps GeoServer WMTS",
                 "autoload": false
               }
             }
@@ -218,7 +212,9 @@
             },
             "FeedbackMask"
         ],
-        "desktop": [ "Details",
+        "desktop": [
+          
+          "Details",
           {
             "name": "Map",
             "cfg": {
@@ -227,24 +223,11 @@
                   "interactions": {
                     "pinchRotate": false,
                     "altShiftDragRotate": false
-                  },
-                  "attribution": {
-                    "container": "#mapstore-map-footer-container"
                   }
-                },
-                "leaflet": {
-                  "attribution": {
-                    "container": "#mapstore-map-footer-container"
-                  }
-                }
-              },
-              "toolsOptions": {
-                "scalebar": {
-                  "container" : "#mapstore-map-footer-container"
                 }
               }
             }
-          }, "AutoMapUpdate", "HelpLink", "Share", "DrawerMenu", "Version", "Notifications", "BackgroundSelector", "Annotations",
+          }, "Layout", "AutoMapUpdate", "Share", "Version", "Notifications", "BackgroundSelector",
             {
                 "name": "Identify",
                 "cfg": {
@@ -294,10 +277,7 @@
                 }
             },
             "AddGroup",
-            "TOCItemsSettings",
-            "Tutorial", "MapFooter", {
-                "name": "Measure"
-            }, "Print", "MapImport", "MapExport", {
+            "TOCItemsSettings", "MapFooter", {
                 "name": "Settings",
                 "cfg": {
                     "wrap": true
@@ -308,10 +288,6 @@
                     "wrap": true
                 }
             }, {
-              "name": "About",
-              "showIn": ["BurgerMenu"]
-            }
-            , {
               "name": "MousePosition",
               "cfg": {
                 "editCRS": true,
@@ -342,6 +318,12 @@
             }, {
                 "name": "Toolbar",
                 "id": "NavigationBar",
+                "override": {
+                  "Layout": {
+                      "container": "body",
+                      "priority": 1
+                  }
+              },
                 "cfg": {
                     "id": "navigationBar"
                 }
@@ -381,10 +363,11 @@
                 "declineUrl" : "http://www.google.com"
                 }
             },
-            "OmniBar", "Login", "Save", "SaveAs", "BurgerMenu", "Expander", "Undo", "Redo", "FullScreen", "GlobeViewSwitcher", "SearchServicesConfig", "WidgetsBuilder", "Widgets", "WidgetsTray",
+            "OmniBar", "Login", "Save", "SaveAs", "BurgerMenu", "Expander", "Undo", "Redo", "FullScreen", "SearchServicesConfig", "WidgetsBuilder", "Widgets", "WidgetsTray",
             "Timeline",
             "Playback",
             "FeedbackMask",
+            "VisualStyleEditor",
             {
               "name": "StyleEditor",
               "cfg": {

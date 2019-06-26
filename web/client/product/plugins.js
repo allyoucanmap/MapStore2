@@ -100,7 +100,9 @@ module.exports = {
         ThematicLayerPlugin: require('../plugins/ThematicLayer'),
         CRSSelectorPlugin: require('../plugins/CRSSelector'),
         FeedbackMaskPlugin: require('../plugins/FeedbackMask'),
-        StyleEditorPlugin: require('../plugins/StyleEditor')
+        StyleEditorPlugin: require('../plugins/StyleEditor'),
+        LayoutPlugin: require('../plugins/Layout'),
+        VisualStyleEditorPlugin: require('../plugins/VisualStyleEditor')
     },
     requires: {
         ReactSwipe: require('react-swipeable-views').default,

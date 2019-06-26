@@ -54,14 +54,11 @@
 }
 
 #mapstore-mouseposition {
-    bottom: 5px;
-    right: 264px;
     top: auto;
     margin: 0;
     text-shadow: none;
     background-color: white;
     width: 160px;
-    height: 46px;
     padding-left: 5px;
     padding-top: 2px;
 }

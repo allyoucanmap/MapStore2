@@ -69,6 +69,8 @@ const Catalog = connect(catalogSelector, {
     onFocusServicesList: focusServicesList
 })(require('../components/catalog/Catalog'));
 
+import Container from '../components/misc/Container';
+
 // const Dialog = require('../components/misc/Dialog');
 
 class MetadataExplorerComponent extends React.Component {
@@ -89,7 +91,7 @@ class MetadataExplorerComponent extends React.Component {
         style: PropTypes.object,
         dockProps: PropTypes.object,
         zoomToLayer: PropTypes.bool,
-
+        layout: PropTypes.bool,
         // side panel properties
         width: PropTypes.number,
         dockStyle: PropTypes.object,
@@ -129,7 +131,7 @@ class MetadataExplorerComponent extends React.Component {
             group: this.props.group || undefined
         };
         const panel = <Catalog layerBaseConfig={layerBaseConfig} zoomToLayer={this.props.zoomToLayer} searchOnStartup={this.props.searchOnStartup} active={this.props.active} {...this.props}/>;
-        return (
+        /*return (
             <div id="catalog-root" style={{width: '100%', height: '100%', pointerEvents: 'none'}}>
                 <ContainerDimensions>
                     {({ width }) => (<DockPanel
@@ -147,6 +149,12 @@ class MetadataExplorerComponent extends React.Component {
                     </DockPanel>)}
                 </ContainerDimensions>
             </div>
+        );*/
+        return (
+            <Container
+                layout={this.props.layout}>
+                {panel}
+            </Container>
         );
     }
 }
@@ -215,6 +223,15 @@ const API = {
  */
 module.exports = {
     MetadataExplorerPlugin: assign(MetadataExplorerPlugin, {
+        Layout: {
+            priority: 1,
+            glyph: 'folder-open',
+            position: 2,
+            size: 300,
+            // hide: ({user} = {}) => !user,
+            tooltipId: 'mps.tocTooltip',
+            container: 'right-menu'
+        }/*,
         Toolbar: {
             name: 'metadataexplorer',
             position: 10,
@@ -235,7 +252,7 @@ module.exports = {
             action: setControlProperty.bind(null, "metadataexplorer", "enabled", true, true),
             priority: 2,
             doNotHide: true
-        }
+        }*/
     }),
     reducers: {catalog: require('../reducers/catalog')},
     epics: require("../epics/catalog")(API)

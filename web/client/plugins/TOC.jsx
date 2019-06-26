@@ -9,7 +9,7 @@ const PropTypes = require('prop-types');
 const React = require('react');
 const {connect} = require('react-redux');
 const {createSelector} = require('reselect');
-const {Glyphicon} = require('react-bootstrap');
+// const {Glyphicon} = require('react-bootstrap');
 
 const {changeLayerProperties, changeGroupProperties, toggleNode, contextNode,
        sortNode, showSettings, hideSettings, updateSettings, updateNode, removeNode,
@@ -30,7 +30,7 @@ const LocaleUtils = require('../utils/LocaleUtils');
 const Message = require('../components/I18N/Message');
 const assign = require('object-assign');
 
-const layersIcon = require('./toolbar/assets/img/layers.png');
+// const layersIcon = require('./toolbar/assets/img/layers.png');
 
 const {isObject, head} = require('lodash');
 
@@ -331,6 +331,7 @@ class LayerTree extends React.Component {
         const sections = [this.props.activateToolsContainer, this.props.activateFilterLayer, this.props.activateMapTitle].filter(s => s);
         const bodyClass = sections.length > 0 ? ' toc-body-sections-' + sections.length : ' toc-body-sections';
         return (
+            <div className="ms-toc-container">
             <div>
                 <Header
                     title={this.props.mapName}
@@ -439,6 +440,7 @@ class LayerTree extends React.Component {
                         </TOC>
                     }
                 </div>
+            </div>
             </div>
         );
     };
@@ -597,7 +599,16 @@ const API = {
 
 module.exports = {
     TOCPlugin: assign(TOCPlugin, {
-        Toolbar: {
+        Layout: {
+            priority: 1,
+            glyph: '1-layer',
+            position: 2,
+            size: 300,
+            // hide: ({user} = {}) => !user,
+            tooltipId: 'mps.tocTooltip',
+            container: 'left-menu'
+        }
+        /*Toolbar: {
             name: 'toc',
             position: 7,
             exclusive: true,
@@ -619,7 +630,7 @@ module.exports = {
                 tooltip: "toc.layers"
             },
             priority: 2
-        }
+        }*/
     }),
     reducers: {
         queryform: require('../reducers/queryform'),

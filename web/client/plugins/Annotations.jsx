@@ -110,7 +110,7 @@ const Annotations = connect(panelSelector, {
 
 const ContainerDimensions = require('react-container-dimensions').default;
 const Dock = require('react-dock').default;
-
+import Container from '../components/misc/Container';
 class AnnotationsPanel extends React.Component {
     static propTypes = {
         id: PropTypes.string,
@@ -126,7 +126,8 @@ class AnnotationsPanel extends React.Component {
         dockProps: PropTypes.object,
 
         // side panel properties
-        width: PropTypes.number
+        width: PropTypes.number,
+        layout: PropTypes.bool
     };
 
 
@@ -158,7 +159,16 @@ class AnnotationsPanel extends React.Component {
     };
 
     render() {
-        return this.props.active ? (
+
+        return (
+            <Container
+                layout={this.props.layout}>
+                <span className="ms-annotations-panel">
+                    <Annotations {...this.props} width={this.props.width}/>
+                </span>
+            </Container>
+        );
+        /*return this.props.active ? (
             <ContainerDimensions>
             { ({ width }) =>
                 <span className="ms-annotations-panel">
@@ -171,7 +181,7 @@ class AnnotationsPanel extends React.Component {
                 </span>
             }
             </ContainerDimensions>
-        ) : null;
+        ) : null;*/
     }
 }
 
@@ -216,7 +226,7 @@ module.exports = {
     AnnotationsPlugin: assign(AnnotationsPlugin, {
             disablePluginIf: "{state('mapType') === 'cesium' || state('mapType') === 'leaflet' }"
         }, {
-        BurgerMenu: {
+        /*BurgerMenu: {
             name: 'annotations',
             position: 40,
             text: <Message msgId="annotationsbutton"/>,
@@ -224,6 +234,15 @@ module.exports = {
             action: conditionalToggle,
             priority: 2,
             doNotHide: true
+        }*/
+        Layout: {
+            priority: 1,
+            glyph: 'comment',
+            position: 2,
+            size: 400,
+            // hide: ({user} = {}) => !user,
+            tooltipId: 'mps.tocTooltip',
+            container: 'right-menu'
         }
     }),
     reducers: {

@@ -266,3 +266,240 @@ div#sync-popover.popover {
         border-bottom: 3px solid @ms-tray-border;
     }
 }
+
+
+
+.menu-btn(@color; @background; @border) {
+    .button-variant(lighten(@color, 40%); darken(@background, 15%); darken(@border, 15%));
+    &.active:focus,
+    &.active.focus,
+    &:focus,
+    &.focus,
+    &:active,
+    &.active,
+    &.active:hover {
+        background-color: darken(@background, 15%);
+        border-color: darken(@border, 15%);
+        color: darken(@color, 20%);
+        .box-shadow(none);
+    }
+
+    &:active:hover {
+        background-color: darken(@background, 16%);
+        border-color: darken(@border, 16%);
+        color: darken(@color, 20%);
+        .shadow-soft-inset;
+    }
+    &:hover {
+        color: darken(@color, 10%);
+        background-color: darken(@background, 15%);
+        border-color: darken(@border, 15%);
+        .box-shadow(none);
+    }
+}
+
+.ms-menu {
+    display: flex;
+    height: 100%;
+    .ms-menu-tabs {
+        padding-top: @square-btn-size / 2;
+        width: @square-btn-size;
+        background-color: darken(@ms2-color-background, 15%);
+        &.ms-empty {
+            width: 0;
+        }
+        .ms-menu-tab {
+            display: flex;
+            .ms-tab-arrow {
+                width: @square-btn-size / 4;
+                height: @square-btn-size;
+                display: flex;
+                align-items: center;
+                & > .ms-arrow {
+                    border: none;
+                    margin-right: 0;
+                    border-top: @square-btn-size / 3 solid transparent;
+                    border-bottom: @square-btn-size / 3 solid transparent; 
+                    border-right: @square-btn-size / 3 solid @ms2-color-background;
+                    -webkit-filter: drop-shadow(-4px 2px 4px rgba(0, 0, 0, 0.2));
+                    filter: drop-shadow(-4px 2px 4px rgba(0, 0, 0, 0.2));
+                }
+            }
+            .btn-default {
+                .menu-btn(@ms2-color-text; @ms2-color-background; @ms2-color-background);
+            }
+            .btn-primary {
+                .menu-btn(@ms2-color-background; lighten(@ms2-color-text, 20%); lighten(@ms2-color-text, 20%));
+                &.active {
+                    color: @ms2-color-success;
+                }
+            }
+        }
+        &.ms-overlay {
+            .shadow-far;
+            pointer-events: auto;
+        }
+    }
+    &.ms-primary {
+        .ms-menu-tabs {
+            background-color: lighten(@ms2-color-text, 5%);
+        }
+    }
+    &.ms-default {
+        .ms-menu-tabs {
+            background-color: darken(@ms2-color-background, 15%);
+        }
+    }
+    .ms-menu-btn {
+        margin-left: @square-btn-size / 4;;
+    }
+    .ms-menu-btn-mirror {
+        margin-right: @square-btn-size / 4;;
+    }
+    &.ms-md {
+        .ms-menu-tabs {
+            padding-top: @square-btn-medium-size / 2;
+            .ms-menu-tab {
+                .ms-tab-arrow {
+                    width: @square-btn-medium-size / 4;
+                    height: @square-btn-medium-size;
+
+                    & > .ms-arrow {
+                        border-top: @square-btn-medium-size / 3 solid transparent;
+                        border-bottom: @square-btn-medium-size / 3 solid transparent; 
+                        border-right: @square-btn-medium-size / 3 solid @ms2-color-background;
+                    }
+                }
+            }
+
+            &.ms-overlay {
+                .ms-menu-tab {
+                    .ms-tab-arrow {
+                        & > .ms-arrow {
+                            border-top: @square-btn-medium-size / 2 solid transparent;
+                            border-bottom: @square-btn-medium-size / 2 solid transparent; 
+                            border-right: @square-btn-medium-size / 2 solid @ms2-color-background;
+                        }
+                    }
+                }
+            }
+        }
+        .ms-menu-btn {
+            margin-left: @square-btn-medium-size / 4;;
+        }
+        .ms-menu-btn-mirror {
+            margin-right: @square-btn-medium-size / 4;;
+        }
+        
+    }
+    &.ms-mirror {
+        flex-direction: row-reverse;
+        .ms-arrow-mirror {
+            margin-left: -2px;
+            border-top: @square-btn-size / 3 solid transparent;
+            border-bottom: @square-btn-size / 3 solid transparent; 
+            border-left: @square-btn-size / 3 solid @ms2-color-background;
+        }
+
+        &.ms-md {
+            .ms-arrow-mirror {
+                margin-left: -2px;
+                border-top: @square-btn-medium-size / 3 solid transparent;
+                border-bottom: @square-btn-medium-size / 3 solid transparent; 
+                border-left: @square-btn-medium-size / 3 solid @ms2-color-background;
+            }
+
+            .ms-overlay {
+                .ms-arrow-mirror {
+                    margin-left: -8px;
+                    border-top: @square-btn-medium-size / 2 solid transparent;
+                    border-bottom: @square-btn-medium-size / 2 solid transparent; 
+                    border-left: @square-btn-medium-size / 2 solid @ms2-color-background;
+                }
+            }
+        }
+    }
+    .ms-menu-content {
+        .shadow-soft;
+        background-color: @ms2-color-background;
+        position: relative;
+        width: 100%;
+        transition: 0.3s width;
+        overflow: hidden;
+        &.ms-overlay {
+            pointer-events: auto;
+            margin: 6px;
+            margin-bottom: @square-btn-size;
+            margin-right: 0;
+            box-shadow: none;
+            background-color: transparent;
+            overflow: visible;
+            & > div {
+                .shadow-far;
+                background-color:  @ms2-color-background;
+            }
+        }
+    }
+    &.ms-mirror {
+        .ms-menu-content {
+            &.ms-overlay {
+                margin: 6px;
+                margin-bottom: @square-btn-size;
+                margin-left: 0;
+            }
+        }
+    }
+    &.ms-closed,  &.ms-mirror.ms-closed {
+        .ms-menu-content {
+            &.ms-overlay {
+                margin: 0;
+            }
+        }
+    }
+}
+
+.mps-menu-layout {
+    overflow: visible !important;
+    & > .ms2-border-layout-body {
+        overflow: visible !important;
+        & > .ms2-border-layout-content {
+            overflow: visible;
+            background-color: transparent;
+        }
+    }
+}
+
+.mps-layout {
+    /*position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;*/
+    pointer-events: none;
+    & > .ms2-border-layout-body {
+        overflow: hidden;
+        & > .ms2-border-layout-content {
+            background-color: transparent;
+            position: relative;
+        }
+        & > * {
+            overflow: visible;
+        }
+    }
+
+    #mps-layout-body {
+        * {
+            pointer-events: auto;
+        }
+    }
+
+    & > *:not(.ms2-border-layout-body) {
+        pointer-events: auto;
+    }
+}
+
+#mapstore-navbar {
+    .navbar-dx {
+        right: 5px;
+        top: 5px;
+    }
+}

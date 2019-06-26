@@ -2,6 +2,7 @@
     // !important due to vertical btn-group eg. dashboard
     height: @square-btn-size;
     width: @square-btn-size;
+    padding: 0;
     outline: 0;
     .glyphicon {
         margin: auto;
@@ -24,6 +25,7 @@
 
 .square-button-md {
     // !important due to vertical btn-group eg. dashboard
+    padding: 0;
     &.input-group-addon {
         display: flex;
     }
@@ -50,12 +52,13 @@
 }
 
 .square-button-sm {
-     &, .btn-group-vertical & {
+    padding: 0;
+    &, .btn-group-vertical & {
         height: @square-btn-small-size;
         width: @square-btn-small-size ;
         padding: 0;
-        outline: 0 ;
-     }
+        outline: 0;
+    }
     .glyphicon {
         margin: auto;
         font-size: @icon-size-sm;

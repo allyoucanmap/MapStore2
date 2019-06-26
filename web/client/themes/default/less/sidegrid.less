@@ -1,7 +1,6 @@
 .msSideGrid {
-    margin: 30px;
-    width: ~"calc(100% - 60px)";
     position: absolute;
+    width: 100%;
     .ms-drag-over {
         margin-top: 8px;
         padding: 4px;
@@ -14,7 +13,9 @@
     }
 
     .items-list {
+        margin: 4px;
         .col-xs-12 {
+            padding: 0;
             &:hover {
                 z-index: 1;
             }
@@ -124,7 +125,6 @@
  
     }
     &:hover {
-        transform: scale(1.05);
         cursor: pointer;
         .shadow-far;
     }

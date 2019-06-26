@@ -1,16 +1,18 @@
+#mapstore-map-footer {
+    z-index: 2;
+    background-color: @ms2-color-background;
+    .shadow-soft-up();
+}
 
 .mapstore-map-footer {
-
-    position: absolute;
-    bottom: 0;
-    height: 30px;
-    width: 100%;
-    background-color: @ms2-color-background;
-    -webkit-box-shadow: 3px 0px 6px rgba(0, 0, 0, 0.12), 4px 0 8px rgba(0, 0, 0, 0.24);
-	-moz-box-shadow: 3px 0px 6px rgba(0, 0, 0, 0.12), 4px 0 8px rgba(0, 0, 0, 0.24);
-	box-shadow: 3px 0px 6px rgba(0, 0, 0, 0.12), 4px 0 8px rgba(0, 0, 0, 0.24);
+    display: flex;
+    flex-direction: row-reverse;
     & > div {
         float: right;
+    }
+
+    .form-group {
+        margin-bottom: 4px;
     }
 
     .map-footer-btn {
@@ -25,7 +27,7 @@
 
     }
 
-    .leaflet-control-attribution {
+    /*.leaflet-control-attribution {
         display: flex;
         max-height: 2.6em;
         img {
@@ -39,9 +41,9 @@
         color: @ms2-color-text;
         overflow: hidden;
         padding-right: 100px;
-   }
+   }*/
 
-   .ol-attribution.ol-uncollapsible {
+   /*.ol-attribution.ol-uncollapsible {
         ul {
             display: flex;
             li {
@@ -61,7 +63,7 @@
        width: 50%;
        overflow: hidden;
        font-size: 11px;
-   }
+   }*/
 
    .dropup {
         z-index: 1100;

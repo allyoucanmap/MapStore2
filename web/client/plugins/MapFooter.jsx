@@ -64,7 +64,14 @@ class MapFooter extends React.Component {
     }
 }
 
+import assign from 'object-assign';
+
 module.exports = {
-    MapFooterPlugin: MapFooter,
+    MapFooterPlugin: assign(MapFooter, {
+        Layout: {
+            priority: 1,
+            container: 'footer'
+        }
+    }),
     reducers: {}
 };

@@ -1,9 +1,9 @@
 .mapToolbar {
     position: absolute;
-    bottom: 5px;
+    bottom: 0;
     right: 0;
-    z-index: 1000;
-    margin-bottom: 35px;
+    z-index: 1;
+    margin-bottom: 40px;
     margin-right: 5px;
 }
 

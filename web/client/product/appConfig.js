@@ -8,41 +8,9 @@
 
 module.exports = {
     pages: [{
-        name: "home",
-        path: "/",
-        component: require('./pages/Maps')
-    }, {
-        name: "maps",
-        path: "/maps",
-        component: require('./pages/Maps')
-    }, {
         name: "mapviewer",
-        path: "/viewer/:mapType/:mapId",
+        path: "/:mapId",
         component: require('./pages/MapViewer')
-    }, {
-        name: "mapviewer",
-        path: "/viewer/:mapId",
-        component: require('./pages/MapViewer')
-    }, {
-        name: "manager",
-        path: "/manager",
-        component: require('./pages/Manager')
-    }, {
-        name: "manager",
-        path: "/manager/:tool",
-        component: require('./pages/Manager')
-    }, {
-        name: "dashboard",
-        path: "/dashboard",
-        component: require('./pages/Dashboard')
-    }, {
-        name: "dashboard",
-        path: "/dashboard/:did",
-        component: require('./pages/Dashboard')
-    }, {
-        name: "rulesmanager",
-        path: "/rules-manager",
-        component: require('./pages/RulesManager')
     }],
     initialState: {
         defaultState: {
