@@ -3,11 +3,11 @@
     "projection": "EPSG:900913",
     "units": "m",
     "center": {
-      "x": 1250000.000000,
-      "y": 5370000.000000,
-      "crs": "EPSG:900913"
+      "x": 36.103666252,
+      "y": 32.621830846,
+      "crs": "EPSG:4326"
     },
-    "zoom": 5,
+    "zoom": 14,
     "maxExtent": [
       -20037508.34,
       -20037508.34,
@@ -21,7 +21,7 @@
         "name": "mapnik",
         "source": "osm",
         "group": "background",
-        "visibility": true
+        "visibility": false
       },
       {
         "format": "image/jpeg",
@@ -52,7 +52,7 @@
         "args": [
           "Empty Background",
           {
-            "visibility": false
+            "visibility": true
           }
         ]
       }

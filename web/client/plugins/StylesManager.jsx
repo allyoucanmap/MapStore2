@@ -7,10 +7,12 @@
  */
 
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import BorderLayout from '../components/layout/BorderLayout';
 import Filter from '../components/misc/Filter';
-import { Grid } from 'react-bootstrap';
+import axios from 'axios';
+
 /*
 import Container from '../components/misc/Container';
 
@@ -28,13 +30,22 @@ import Loader from '../components/misc/Loader';
 
 import SideGrid from '../components/misc/cardgrids/SideGrid';
 
+import * as smEpics from '../epics/stylesmanager';
+
+const ogcInitMapAction = (config) => ({
+    type: 'OGC:INIT_MAP',
+    config
+});
+
 
 class StylesManager extends Component {
     static propTypes = {
+        onInit: PropTypes.func,
         styles: PropTypes.array
     };
 
     static defaultProps = {
+        onInit: () => {},
         styles: [
             {
                 "id": "night",
@@ -59,23 +70,23 @@ class StylesManager extends Component {
                 "version": "1.0.0",
                 "stylesheets": [
                     {
-                        "title": "Mapbox Style",
+                        "title": "Night_MBS",
                         "version": "8",
                         "specification": "https://docs.mapbox.com/mapbox-gl-js/style-spec/",
                         "native": true,
                         "tilingScheme": "GoogleMapsCompatible",
                         "link": {
-                            "href": "https://example.org/catalog/1.0/styles/night?f=mapbox",
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/styles/Night_MBS?f=application%2Fvnd.geoserver.mbstyle%2Bjson",
                             "rel": "stylesheet",
                             "type": "application/vnd.mapbox.style+json"
                         }
                     },
                     {
-                        "title": "OGC SLD",
+                        "title": "Night_MBS",
                         "version": "1.0",
                         "native": false,
                         "link": {
-                            "href": "https://example.org/catalog/1.0/styles/night?f=sld10",
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/styles/Night_MBS?f=application%2Fvnd.ogc.sld%2Bxml",
                             "rel": "stylesheet",
                             "type": "application/vnd.ogc.sld+xml;version=1.0"
                         }
@@ -83,130 +94,127 @@ class StylesManager extends Component {
                 ],
                 "layers": [
                     {
-                        "id": "vegetationsrf",
+                        "id": "AgricultureSrf",
                         "type": "polygon",
                         "sampleData": {
-                            "href": "https://services.interactive-instruments.de/vtp/daraa/collections/vegetationsrf/items?f=json&limit=100",
-                            "rel": "data",
-                            "type": "application/geo+json"
-                        }
-                    },
-                    {
-                        "id": "hydrographycrv",
-                        "type": "line",
-                        "sampleData": {
-                            "href": "https://services.interactive-instruments.de/vtp/daraa/collections/hydrographycrv/items?f=json&limit=100",
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/AgricultureSrf/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         },
                         "attributes": [
                             {
-                                "id": "f_code",
+                                "id": "F_CODE",
                                 "type": "string"
                             }
                         ]
-                    }
-                ]
-            },
-            {
-                "id": "topo",
-                "title": "Topographic night style",
-                "description": "This topographic basemap style is designed to be \nused in situations with low ambient light. \n\nThe style supports datasets based on the TDS 6.1\nspecification.",
-                "keywords": [
-                    "basemap",
-                    "TDS",
-                    "TDS 6.1",
-                    "OGC API"
-                ],
-                "pointOfContact": "John Doe",
-                "accessConstraints": "unclassified",
-                "dates": {
-                    "creation": "2019-01-01T10:05:00Z",
-                    "publication": "2019-01-01T11:05:00Z",
-                    "revision": "2019-02-01T11:05:00Z",
-                    "validTill": "2019-02-01T11:05:00Z",
-                    "receivedOn": "2019-02-01T11:05:00Z"
-                },
-                "scope": "style",
-                "version": "1.0.0",
-                "stylesheets": [
-                    {
-                        "title": "Mapbox Style",
-                        "version": "8",
-                        "specification": "https://docs.mapbox.com/mapbox-gl-js/style-spec/",
-                        "native": true,
-                        "tilingScheme": "GoogleMapsCompatible",
-                        "link": {
-                            "href": "https://example.org/catalog/1.0/styles/night?f=mapbox",
-                            "rel": "stylesheet",
-                            "type": "application/vnd.mapbox.style+json"
-                        }
                     },
                     {
-                        "title": "OGC SLD",
-                        "version": "1.0",
-                        "native": false,
-                        "link": {
-                            "href": "https://example.org/catalog/1.0/styles/night?f=sld10",
-                            "rel": "stylesheet",
-                            "type": "application/vnd.ogc.sld+xml;version=1.0"
-                        }
-                    }
-                ],
-"layers": [
-    {
-        "id": "satellite",
-        "type": "raster",
-        ...
-    },
-    {
-        "id": "daraa_vtp",
-        "type": "tileset",
-        "layers": [
-            ...
-        ],
-        "sampleData": {
-            ...
-        }
-    },
-    {
-        "id": "overlay-features",
-        "type": "polygon",
-        ...
-    },
-
-
-                    {
-                        "id": "vegetationsrf",
+                        "id": "VegetationSrf",
                         "type": "polygon",
                         "sampleData": {
-                            "href": "https://services.interactive-instruments.de/vtp/daraa/collections/vegetationsrf/items?f=json&limit=100",
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/VegetationSrf/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
                     },
-                    
                     {
-                        "id": "hydrographycrv",
-                        "type": "line",
+                        "id": "SettlementSrf",
+                        "type": "polygon",
                         "sampleData": {
-                            "href": "https://services.interactive-instruments.de/vtp/daraa/collections/hydrographycrv/items?f=json&limit=100",
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/SettlementSrf/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
-                        },
-                        "attributes": [
-                            {
-                                "id": "f_code",
-                                "type": "string"
-                            }
-                        ]
+                        }
+                    },
+                    {
+                        "id": "MilitarySrf",
+                        "type": "polygon",
+                        "sampleData": {
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/MilitarySrf/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    },
+                    {
+                        "id": "CultureSrf",
+                        "type": "polygon",
+                        "sampleData": {
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/CultureSrf/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    },
+                    {
+                        "id": "HydrographyCrv",
+                        "type": "line",
+                        "sampleData": {
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/HydrographyCrv/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    },
+                    {
+                        "id": "HydrographySrf",
+                        "type": "polygon",
+                        "sampleData": {
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/HydrographySrf/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    },
+                    {
+                        "id": "TransportationGroundCrv",
+                        "type": "line",
+                        "sampleData": {
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/TransportationGroundCrv/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    },
+                    {
+                        "id": "UtilityInfrastructureCrv",
+                        "type": "point",
+                        "sampleData": {
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/UtilityInfrastructureCrv/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    },
+                    {
+                        "id": "CulturePnt",
+                        "type": "point",
+                        "sampleData": {
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/CulturePnt/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    },
+                    {
+                        "id": "StructurePnt",
+                        "type": "point",
+                        "sampleData": {
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/StructurePnt/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    },
+                    {
+                        "id": "UtilityInfrastructurePnt",
+                        "type": "point",
+                        "sampleData": {
+                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/UtilityInfrastructurePnt/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
                     }
                 ]
             }
         ]
     };
 
-    state = {};
+    state = {
+        service: 'http://localhost:8080/geoserver/vtp/wfs3'
+    };
 
     render() {
         return (
@@ -214,11 +222,10 @@ class StylesManager extends Component {
                 className="ms-styles-manager"
                 style={{
                     position: 'absolute',
-                    width: '50%',
+                    width: '100%',
                     height: '100%',
                     top: 0,
-                    paddingTop: 60,
-                    marginLeft: '25%'
+                    paddingTop: 60
                 }}>
                 <BorderLayout
                     header={
@@ -226,56 +233,104 @@ class StylesManager extends Component {
                             style={{
                                 margin: 8,
                                 paddingBottom: 8,
-                                borderBottom: '1px solid #ddd'
+                                borderBottom: '1px solid #ddd',
+                                width: '50%',
+                                marginLeft: '25%'
                             }}>
+                            {/*<h2 contentEditable>{this.state.service}</h2>*/}
                             <Filter
                                 filterPlaceholder="Filter styles..."/>
                         </div>
                     }>
-                    <SideGrid
-                        cardComponent={({ id, title, description, pointOfContact }) => {
-                            return (
-                                <div
-                                    key={id}
-                                    style={{
-                                        margin: 4,
-                                        padding: 8,
-                                        border: '1px solid #ddd'
-                                    }}>
-                                    <div style={{ display: 'flex' }}>
-                                        <div>
-                                            <div style={{ width: 64, height: 64, backgroundColor: '#ddd', marginRight: 8, marginTop: 8 }}></div>
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <h4><strong>{title}</strong></h4>
-                                            <p>{description}</p>
-                                            <p>
-                                                <div><small>id: {id}</small></div>
-                                                <div><small>point of contact: {pointOfContact}</small></div>
-                                            </p>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            width: '50%',
+                            marginLeft: '25%'
+                        }}>
+                        <SideGrid
+                            cardComponent={(style) => {
+                                const { id, title, description, pointOfContact, onClick } = style || {};
+                                return (
+                                    <div
+                                        key={id}
+                                        style={{
+                                            margin: 4,
+                                            padding: 8,
+                                            border: '1px solid #ddd'
+                                        }}
+                                        onClick={onClick}>
+                                        <div style={{ display: 'flex' }}>
+                                            <div>
+                                                <div style={{ width: 64, height: 64, backgroundColor: '#ddd', marginRight: 8, marginTop: 8 }}></div>
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <h4><strong>{title}</strong></h4>
+                                                <p>{description}</p>
+                                                <p>
+                                                    <div><small>id: {id}</small></div>
+                                                    <div><small>point of contact: {pointOfContact}</small></div>
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        }}
-                        items={
-                            this.props.styles
-                                .map(({ id, title, description, pointOfContact }) => {
-                                    return {
-                                        id,
-                                        title,
-                                        description,
-                                        caption: id,
-                                        pointOfContact
-                                    };
-                                })
-                        } />
+                                );
+                            }}
+                            items={
+                                this.props.styles
+                                    .map((styleMetadata) => {
+                                        const { id, title, description, pointOfContact } = styleMetadata || {};
+                                        return {
+                                            id,
+                                            title,
+                                            description,
+                                            caption: id,
+                                            pointOfContact,
+                                            onClick: () => this.parseStyle(styleMetadata)
+                                        };
+                                    })
+                            } />
+                    </div>
                 </BorderLayout>
             </div>
         );
+    }
 
+    parseStyle = (styleMetadata) => {
+        const { layers = [], stylesheets = [] } = styleMetadata || {};
+        const stylesUrls = stylesheets
+            .map(({ link }) => {
+                return link && link.href;
+            })
+            .filter(val => val);
+        const layersUrls = layers
+            .map(({ sampleData }) => {
+                const layerUrl = sampleData && sampleData.href && sampleData.href.split('items')[0];
+                return layerUrl;
+            })
+            .filter(val => val);
+        axios.all(
+            [ ...stylesUrls, ...layersUrls]
+                .map(
+                    (url) => axios.get(url)
+                        .then(({ data }) => data )
+                        .catch(() => null )
+                )
+        )
+        .then((response) => {
+            this.props.onInit({
+                styleMetadata,
+                layers: response.filter((res, idx) => idx >= stylesUrls.length),
+                styles: response.filter((res, idx) => idx < stylesUrls.length)
+                    .map((styleBody, idx) => ({
+                        ...stylesheets[idx],
+                        styleBody
+                    }))
+            });
+        });
     }
 }
 
-export const StylesManagerPlugin = StylesManager;
+export const StylesManagerPlugin = connect(() => ({}), { onInit: ogcInitMapAction })(StylesManager);
 export const reducers = {};
+export const epics = smEpics;

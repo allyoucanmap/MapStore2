@@ -1,5 +1,6 @@
 {
     "proxyUrl": {
+        "autoDetectCORS": true,
         "url": "proxy/?url=",
         "useCORS": [
           "http://demo.geo-solutions.it/geoserver",
@@ -227,7 +228,7 @@
                 }
               }
             }
-          }, "Layout", "AutoMapUpdate", "Share", "Version", "Notifications", "BackgroundSelector",
+          }, "Layout", "AutoMapUpdate", "Version", "Notifications", "BackgroundSelector",
             {
                 "name": "Identify",
                 "cfg": {
@@ -271,8 +272,8 @@
                 "name": "TOC",
                 "cfg": {
                     "activateQueryTool": true,
-                    "activateAddLayerButton": true,
-                    "activateAddGroupButton": true,
+                    "activateAddLayerButton": false,
+                    "activateAddGroupButton": false,
                     "activateMetedataTool": false
                 }
             },
@@ -305,9 +306,6 @@
                 "filterAllowedCRS": [
                   "EPSG:4326",
                   "EPSG:3857"
-                ],
-                "allowedRoles": [
-                  "ADMIN"
                 ]
               }
             }, {
@@ -363,7 +361,7 @@
                 "declineUrl" : "http://www.google.com"
                 }
             },
-            "OmniBar", "Login", "Save", "SaveAs", "BurgerMenu", "Expander", "Undo", "Redo", "FullScreen", "SearchServicesConfig", "WidgetsBuilder", "Widgets", "WidgetsTray",
+            "OmniBar", "Login", "Save", "SaveAs", "BurgerMenu", "Expander", "Undo", "Redo", "FullScreen", "SearchServicesConfig",
             "Timeline",
             "Playback",
             "FeedbackMask",
@@ -486,7 +484,7 @@
             "cfg": {
                 "className": "navbar shadow navbar-home"
             }
-        }, "ManagerMenu", "Login","Language", "NavMenu", "Attribution", "ScrollTop", "Notifications"],
+        }, "ManagerMenu", "Login", "NavMenu", "ScrollTop", "Notifications"],
         "maps": ["HomeDescription", "Fork", "MapSearch", "CreateNewMap", "FeaturedMaps", "ContentTabs",
 
           {
@@ -520,7 +518,7 @@
                 "containerPosition": "header",
                 "className": "navbar shadow navbar-home"
             }
-        }, "Login", "Language", "NavMenu", "Attribution", "Home", {
+        }, "Login", "NavMenu", "Attribution", "Home", {
           "name": "DashboardEditor",
           "cfg": {
              "catalog": {
@@ -554,6 +552,9 @@
                 "containerPosition": "header"
             }
         }],
-        "manager": ["Header", "Redirect", "Manager", "Home", "UserManager", "GroupManager", "Footer"]
+        "manager": ["Header", "Redirect", "Manager", "Home", "UserManager", "GroupManager", "Footer"],
+        "styles-list": [
+          "StylesManager"
+        ]
     }
 }

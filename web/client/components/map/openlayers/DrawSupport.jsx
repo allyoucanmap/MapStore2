@@ -16,7 +16,7 @@ const axios = require('axios');
 const {isSimpleGeomType, getSimpleGeomType} = require('../../../utils/MapUtils');
 const {reprojectGeoJson, calculateDistance, reproject} = require('../../../utils/CoordinatesUtils');
 const {createStylesAsync} = require('../../../utils/VectorStyleUtils');
-const wgs84Sphere = new ol.Sphere(6378137);
+// const wgs84Sphere = new ol.Sphere(6378137);
 const {transformPolygonToCircle} = require('../../../utils/DrawSupportUtils');
 const {isCompletePolygon} = require('../../../utils/AnnotationsUtils');
 const VectorStyle = require('./VectorStyle');
@@ -630,12 +630,13 @@ class DrawSupport extends React.Component {
                             geom = new ol.geom.Polygon(null);
                             geom.setProperties({geodesicCenter: [...coordinates[0]]}, true);
                         }
-                        let projection = this.props.map.getView().getProjection().getCode();
-                        let wgs84Coordinates = [...coordinates].map((coordinate) => {
+                        // let projection = this.props.map.getView().getProjection().getCode();
+                        /* let wgs84Coordinates = [...coordinates].map((coordinate) => {
                             return this.reprojectCoordinatesToWGS84(coordinate, projection);
-                        });
-                        let radius = calculateDistance(wgs84Coordinates, 'haversine');
-                        let coords = ol.geom.Polygon.circular(wgs84Sphere, wgs84Coordinates[0], radius, roiProps.maxPoints).clone().transform('EPSG:4326', projection).getCoordinates();
+                        });*/
+                        // let radius = calculateDistance(wgs84Coordinates, 'haversine');
+                        // let coords = ol.geom.Polygon.circular(wgs84Sphere, wgs84Coordinates[0], radius, roiProps.maxPoints).clone().transform('EPSG:4326', projection).getCoordinates();
+                        let coords = [];
                         geom.setCoordinates(coords);
                         return geom;
                     };
@@ -1278,7 +1279,8 @@ class DrawSupport extends React.Component {
                     // TODO simplify, too much use of elvis operator
                 geometry = isCircle ?
                     options.geodesic ?
-                    ol.geom.Polygon.circular(wgs84Sphere, this.reprojectCoordinatesToWGS84([correctCenter.x, correctCenter.y], projection), radius, 100).clone().transform('EPSG:4326', projection)
+                    // ol.geom.Polygon.circular(wgs84Sphere, this.reprojectCoordinatesToWGS84([correctCenter.x, correctCenter.y], projection), radius, 100).clone().transform('EPSG:4326', projection)
+                    new ol.geom.Polygon(null)
                     : ol.geom.Polygon.fromCircle(new ol.geom.Circle([correctCenter.x, correctCenter.y], radius), 100)
                         : new ol.geom.Polygon(coordinates && isArray(coordinates[0]) ? coordinates : []);
 

@@ -67,7 +67,7 @@ class MapViewerComponent extends React.Component {
             let mapId = id === '0' ? null : id;
             let config = urlQuery && urlQuery.config || null;
             const { configUrl } = ConfigUtils.getConfigUrl({ mapId, config });
-            mapId = mapId === 'new' ? null : mapId;
+            mapId = mapId === 'editor' ? null : mapId;
             this.props.onInit();
             this.props.loadMapConfig(configUrl, mapId);
         }

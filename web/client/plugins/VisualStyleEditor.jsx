@@ -7,6 +7,7 @@
  */
 
 import React, { Component } from 'react';
+import assign from 'object-assign';
 import PropTypes from 'prop-types';
 import Container from '../components/misc/Container';
 import BorderLayout from '../components/layout/BorderLayout';
@@ -388,5 +389,6 @@ class VisualStyleEditor extends Component {
     }
 }
 
-export const VisualStyleEditorPlugin = VisualStyleEditor;
+export const VisualStyleEditorPlugin = assign(VisualStyleEditor, {});
+
 export const reducers = {};

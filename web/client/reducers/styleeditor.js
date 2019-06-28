@@ -87,6 +87,7 @@ function styleeditor(state = {}, action) {
         }
         case ERROR_STYLE: {
             const message = action.error && action.error.statusText || '';
+            const editStatusZero = action.status === 'edit' && !!(action.error && !action.error.status && action.error.message === 'Network Error') && 'status-0';
             const position = message.match(/line\s([\d]+)|column\s([\d]+)|lineNumber:\s([\d]+)|columnNumber:\s([\d]+)/g);
             const errorInfo = position && position.length === 2 && position.reduce((info, pos) => {
                 const splittedValues = pos.split(' ');
@@ -104,7 +105,7 @@ function styleeditor(state = {}, action) {
                 error: {
                     ...state.error,
                     [action.status || 'global']: {
-                        status: action.error && action.error.status || 404,
+                        status: editStatusZero || (action.error && action.error.status) || 404,
                         ...errorInfo
                     }
                 }
@@ -116,3 +117,23 @@ function styleeditor(state = {}, action) {
 }
 
 module.exports = styleeditor;
+
+[{
+    "source": "satellite",
+    // ... style params
+},
+{
+    "source": "daraa_vtp",
+    "source-layer": "vegetationsrf",
+    // ... style params
+},
+{
+    "source": "daraa_vtp",
+    "source-layer": "hydrographycrv",
+    // ... style params
+},
+// ... other layers in daraa_vtp tileset
+{
+    "source": "overlay_features"
+    // ... style params
+}]

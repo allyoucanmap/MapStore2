@@ -195,6 +195,9 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
             '/docs': {
                 target: "http://localhost:8081",
                 pathRewrite: {'/docs': '/mapstore/docs'}
+            },
+            '/geoserver': {
+                target: "http://localhost:8080"
             }
         }
     },

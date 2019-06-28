@@ -72,7 +72,7 @@ class OpenlayersMap extends React.Component {
         // It may be a good idea to check if CoordinateUtils also registered the projectionDefs
         // normally it happens ad application level.
         let center = CoordinatesUtils.reproject([this.props.center.x, this.props.center.y], 'EPSG:4326', this.props.projection);
-        ol.proj.setProj4(proj4);
+        ol.proj.proj4.register(proj4);
         let interactionsOptions = assign(this.props.interactive ? {} : {
             doubleClickZoom: false,
             dragPan: false,

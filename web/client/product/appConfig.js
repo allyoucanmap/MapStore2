@@ -6,8 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import StylesList from './pages/StylesList';
+
 module.exports = {
     pages: [{
+        name: "styles-list",
+        path: "/",
+        component: StylesList
+    }, {
         name: "mapviewer",
         path: "/:mapId",
         component: require('./pages/MapViewer')
