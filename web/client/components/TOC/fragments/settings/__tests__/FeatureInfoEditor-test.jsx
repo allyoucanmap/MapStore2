@@ -61,4 +61,29 @@ describe("test FeatureInfoEditor", () => {
         expect(spyOnShowEditor).toHaveBeenCalled();
     });
 
+    it('test on change with debounce', (done) => {
+
+        const html = '<p>html</p>';
+        const debounceTime = 300;
+
+        const cmp = ReactDOM.render(
+        <FeatureInfoEditor
+            showEditor
+            debounceTime={debounceTime}
+            onChange={(type, changedHtml) => {
+                try {
+                    expect(changedHtml).toEqual({ template: html });
+                } catch(e) {
+                    done(e);
+                }
+                done();
+            }}/>, document.getElementById("container"));
+
+        const editor = cmp.quill.getEditor();
+        editor.clipboard.dangerouslyPasteHTML(html + html + html);
+        setTimeout(() => {
+            editor.clipboard.dangerouslyPasteHTML(html);
+        }, debounceTime / 2);
+    });
+
 });
