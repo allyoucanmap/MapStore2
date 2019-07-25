@@ -53,14 +53,14 @@ class Title extends React.Component {
         return this.props.tooltip && tooltipText ? (
             <OverlayTrigger placement={this.props.node.tooltipPlacement || "top"} overlay={(<Tooltip id={"tooltip-layer-title"}>{tooltipText}</Tooltip>)}>
                 <div className="toc-title" onClick={this.props.onClick ? (e) => this.props.onClick(this.props.node.id, 'layer', e.ctrlKey) : () => {}} onContextMenu={(e) => {e.preventDefault(); this.props.onContextMenu(this.props.node); }}>
-                    {this.getFilteredTitle(title)}
+                    <span>{this.getFilteredTitle(title)}</span>
                 </div>
             </OverlayTrigger>
 
         ) :
         (
             <div className="toc-title" onClick={this.props.onClick ? (e) => this.props.onClick(this.props.node.id, 'layer', e.ctrlKey) : () => {}} onContextMenu={(e) => {e.preventDefault(); this.props.onContextMenu(this.props.node); }}>
-                {this.getFilteredTitle(title)}
+                <span>{this.getFilteredTitle(title)}</span>
             </div>
         );
     }

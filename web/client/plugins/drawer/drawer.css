@@ -48,6 +48,11 @@
 #mapstore-drawermenu .panel {
     border: none;
     box-shadow: none;
+    height: 100%;
+}
+
+#mapstore-drawermenu .panel-body {
+    height: 100%;
 }
 
 div.nav-menu {
