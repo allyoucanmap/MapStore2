@@ -5,7 +5,7 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
+const React = require('react');
 const {connect} = require('react-redux');
 const {createSelector} = require('reselect');
 const {compose, defaultProps} = require('recompose');
@@ -89,6 +89,16 @@ const TOCItemsSettingsPlugin = compose(
     })
 )(TOCItemsSettings);
 
+import assign from 'object-assign';
+const {Glyphicon, Button} = require('react-bootstrap');
 module.exports = {
-    TOCItemsSettingsPlugin
+    TOCItemsSettingsPlugin: assign(TOCItemsSettingsPlugin, {
+        TOC: {
+            priority: 1,
+            Button: ({ status, activateTool = {}, ...props }) =>
+                <Button {...props}>
+                    <Glyphicon glyph="wrench"/>
+                </Button>
+        }
+    })
 };

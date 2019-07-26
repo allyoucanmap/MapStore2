@@ -9,14 +9,42 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import JSONTree from 'react-json-tree';
 import BorderLayout from '../components/layout/BorderLayout';
-import Filter from '../components/misc/Filter';
+// import Filter from '../components/misc/Filter';
 import axios from 'axios';
+import { getLayerFromId } from '../api/WFS3';
+import { FormGroup, InputGroup, Glyphicon, FormControl } from 'react-bootstrap';
+import { head, isObject } from 'lodash';
+import Loader from '../components/misc/Loader';
+import Toolbar from '../components/misc/toolbar/Toolbar';
+import ResizableModal from '../components/misc/ResizableModal';
+
+const theme = {
+    scheme: 'monokai',
+    author: 'wimer hazenberg (http://www.monokai.nl)',
+    base00: '#000000',
+    base01: '#383830',
+    base02: '#49483e',
+    base03: '#75715e',
+    base04: '#a59f85',
+    base05: '#f8f8f2',
+    base06: '#f5f4f1',
+    base07: '#f9f8f5',
+    base08: '#f92672',
+    base09: '#fd971f',
+    base0A: '#f4bf75',
+    base0B: '#a6e22e',
+    base0C: '#a1efe4',
+    base0D: '#66d9ef',
+    base0E: '#ae81ff',
+    base0F: '#cc6633'
+};
 
 /*
 import Container from '../components/misc/Container';
 
-import Toolbar from '../components/misc/toolbar/Toolbar';
+
 import SLDParser from "geostyler-sld-parser";
 import SideGrid from '../components/misc/cardgrids/SideGrid';
 import SwitchButton from '../components/misc/switch/SwitchButton';
@@ -28,7 +56,7 @@ import Editor from '../components/styleeditor/Editor';
 import Loader from '../components/misc/Loader';
 */
 
-import SideGrid from '../components/misc/cardgrids/SideGrid';
+// import SideGrid from '../components/misc/cardgrids/SideGrid';
 
 import * as smEpics from '../epics/stylesmanager';
 
@@ -37,6 +65,127 @@ const ogcInitMapAction = (config) => ({
     config
 });
 
+
+class SearchInput extends Component {
+
+    static propTypes = {
+        service: PropTypes.string,
+        onChange: PropTypes.func,
+        loading: PropTypes.bool
+    };
+
+    state = {
+        service: ''
+    };
+
+    componentWillMount() {
+        this.setState({
+            service: this.props.service
+        });
+    }
+
+    render() {
+        const { onChange = () => {}, loading } = this.props;
+        const { service = '' } = this.state;
+        return (
+            <div
+                style={{
+                    padding: 8,
+                    borderBottom: '1px solid #ddd',
+                    width: '100%'
+                }}>
+                <div style={{ width: '50%', margin: 'auto' }}>
+                    <FormGroup
+                        controlId="service"
+                        key="service">
+                        <InputGroup>
+                            <FormControl
+                                value={service}
+                                type="text"
+                                placeholder="Enter style service..."
+                                onChange={(event) => this.setState({ service: event.target.value })}/>
+                            <InputGroup.Addon
+                                className="btn"
+                                onClick={() => loading ? () => {} : onChange(service)}>
+                                {loading && <Loader size={19}/> || <Glyphicon glyph="search"/>}
+                            </InputGroup.Addon>
+                        </InputGroup>
+                    </FormGroup>
+                    {/*<Filter filterPlaceholder="Filter styles..."/>*/}
+                </div>
+            </div>
+        );
+    }
+}
+
+class StyleList extends Component {
+
+    static propTypes = {
+        onSelect: PropTypes.func,
+        onInfo: PropTypes.func,
+        styles: PropTypes.array
+    };
+
+    render() {
+        const { onSelect = () => {}, styles = [], onInfo = () => {} } = this.props;
+        return (
+            <div
+                style={{
+                    position: 'absolute',
+                    width: '100%',
+                    display: 'flex',
+                    flexWrap: 'wrap'
+                }}>
+                {styles.map((styleMetadata) => {
+                    const { id, title, description, pointOfContact, error } = styleMetadata || {};
+                    return (
+                        <div
+                            key={id}
+                            style={{
+                                padding: 8,
+                                width: '25%'
+                            }}>
+                            <div
+                                className="shadow-soft"
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    border: '1px solid #ddd',
+                                    padding: 8,
+                                    wordBreak: 'break-word'
+                                }}
+                                onClick={() => onSelect(styleMetadata)}>
+                                <Toolbar
+                                    btnDefaultProps={{
+                                        className: 'square-button-md no-border'
+                                    }}
+                                    buttons={[
+                                        {
+                                            glyph: 'info-sign',
+                                            tooltip: 'Show all style metadata',
+                                            onClick: (event) => {
+                                                event.stopPropagation();
+                                                const { links, ...selected } = styleMetadata;
+                                                onInfo(selected);
+                                            }
+                                        }
+                                    ]}/>
+                                <div style={{ backgroundColor: '#ddd', height: 200 }}>
+
+                                </div>
+                                <h4>{error && <Glyphicon glyph="exclamation-mark" className="text-danger"/>}{title || id}</h4>
+                                <p>{description}</p>
+                                <p>
+                                    {pointOfContact && <div><small>by {pointOfContact}</small></div>}
+                                </p>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }
+}
 
 class StylesManager extends Component {
     static propTypes = {
@@ -76,7 +225,7 @@ class StylesManager extends Component {
                         "native": true,
                         "tilingScheme": "GoogleMapsCompatible",
                         "link": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/styles/Night_MBS?f=application%2Fvnd.geoserver.mbstyle%2Bjson",
+                            "href": "/geoserver/vtp/wfs3/styles/Night_MBS?f=application%2Fvnd.geoserver.mbstyle%2Bjson",
                             "rel": "stylesheet",
                             "type": "application/vnd.mapbox.style+json"
                         }
@@ -86,7 +235,7 @@ class StylesManager extends Component {
                         "version": "1.0",
                         "native": false,
                         "link": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/styles/Night_MBS?f=application%2Fvnd.ogc.sld%2Bxml",
+                            "href": "/geoserver/vtp/wfs3/styles/Night_MBS?f=application%2Fvnd.ogc.sld%2Bxml",
                             "rel": "stylesheet",
                             "type": "application/vnd.ogc.sld+xml;version=1.0"
                         }
@@ -97,7 +246,7 @@ class StylesManager extends Component {
                         "id": "AgricultureSrf",
                         "type": "polygon",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/AgricultureSrf/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/AgricultureSrf/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         },
@@ -112,7 +261,7 @@ class StylesManager extends Component {
                         "id": "VegetationSrf",
                         "type": "polygon",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/VegetationSrf/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/VegetationSrf/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -121,7 +270,7 @@ class StylesManager extends Component {
                         "id": "SettlementSrf",
                         "type": "polygon",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/SettlementSrf/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/SettlementSrf/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -130,7 +279,7 @@ class StylesManager extends Component {
                         "id": "MilitarySrf",
                         "type": "polygon",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/MilitarySrf/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/MilitarySrf/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -139,7 +288,7 @@ class StylesManager extends Component {
                         "id": "CultureSrf",
                         "type": "polygon",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/CultureSrf/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/CultureSrf/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -148,7 +297,7 @@ class StylesManager extends Component {
                         "id": "HydrographyCrv",
                         "type": "line",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/HydrographyCrv/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/HydrographyCrv/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -157,7 +306,7 @@ class StylesManager extends Component {
                         "id": "HydrographySrf",
                         "type": "polygon",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/HydrographySrf/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/HydrographySrf/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -166,7 +315,7 @@ class StylesManager extends Component {
                         "id": "TransportationGroundCrv",
                         "type": "line",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/TransportationGroundCrv/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/TransportationGroundCrv/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -175,7 +324,7 @@ class StylesManager extends Component {
                         "id": "UtilityInfrastructureCrv",
                         "type": "point",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/UtilityInfrastructureCrv/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/UtilityInfrastructureCrv/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -184,7 +333,7 @@ class StylesManager extends Component {
                         "id": "CulturePnt",
                         "type": "point",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/CulturePnt/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/CulturePnt/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -193,7 +342,7 @@ class StylesManager extends Component {
                         "id": "StructurePnt",
                         "type": "point",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/StructurePnt/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/StructurePnt/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -202,7 +351,60 @@ class StylesManager extends Component {
                         "id": "UtilityInfrastructurePnt",
                         "type": "point",
                         "sampleData": {
-                            "href": "http://localhost:8080/geoserver/vtp/wfs3/collections/UtilityInfrastructurePnt/items?f=json&limit=100",
+                            "href": "/geoserver/vtp/wfs3/collections/UtilityInfrastructurePnt/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "omt-test",
+                "title": "Test",
+                "description": "...",
+                "keywords": [
+                    "basemap",
+                    "OMT",
+                    "OGC API"
+                ],
+                "pointOfContact": "John Doe",
+                "accessConstraints": "unclassified",
+                "dates": {
+                    "creation": "2019-01-01T10:05:00Z",
+                    "publication": "2019-01-01T11:05:00Z",
+                    "revision": "2019-02-01T11:05:00Z",
+                    "validTill": "2019-02-01T11:05:00Z",
+                    "receivedOn": "2019-02-01T11:05:00Z"
+                },
+                "scope": "style",
+                "version": "1.0.0",
+                "stylesheets": [
+                    {
+                        "title": "omt-test",
+                        "version": "1.0",
+                        "native": true,
+                        "link": {
+                            "href": "/geoserver/openmaptiles/wfs3/styles/omt-test?f=application%2Fvnd.ogc.sld%2Bxml",
+                            "rel": "stylesheet",
+                            "type": "application/vnd.ogc.sld+xml;version=1.0"
+                        }
+                    }
+                ],
+                "layers": [
+                    {
+                        "id": "layer_water_z5",
+                        "type": "polygon",
+                        "sampleData": {
+                            "href": "/geoserver/openmaptiles/wfs3/collections/layer_water_z5/items?f=json&limit=100",
+                            "rel": "data",
+                            "type": "application/geo+json"
+                        }
+                    },
+                    {
+                        "id": "layer_boundary_z5",
+                        "type": "polygon",
+                        "sampleData": {
+                            "href": "/geoserver/openmaptiles/wfs3/collections/layer_boundary_z5/items?f=json&limit=100",
                             "rel": "data",
                             "type": "application/geo+json"
                         }
@@ -213,7 +415,9 @@ class StylesManager extends Component {
     };
 
     state = {
-        service: 'http://localhost:8080/geoserver/vtp/wfs3'
+        service: '/geoserver/ogc/styles',
+        styles: [],
+        loading: false
     };
 
     render() {
@@ -228,70 +432,90 @@ class StylesManager extends Component {
                     paddingTop: 60
                 }}>
                 <BorderLayout
-                    header={
-                        <div
-                            style={{
-                                margin: 8,
-                                paddingBottom: 8,
-                                borderBottom: '1px solid #ddd',
-                                width: '50%',
-                                marginLeft: '25%'
-                            }}>
-                            {/*<h2 contentEditable>{this.state.service}</h2>*/}
-                            <Filter
-                                filterPlaceholder="Filter styles..."/>
-                        </div>
+                    header={<SearchInput
+                        loading={this.state.loading}
+                        service={this.state.service}
+                        onChange={(service) => {
+                            this.setState({
+                                loading: true,
+                                error: false
+                            });
+                            axios.get(service)
+                                .then(({ data }) => {
+                                    const { links = [] } = data;
+                                    const apiUrl = head(links
+                                        .filter(({ rel, type }) => rel === 'service' && type === 'application/json')
+                                        .map(({ href }) => href));
+                                    const conformanceUrl = head(links
+                                        .filter(({ rel, type }) => rel === 'conformance' && type === 'application/json')
+                                        .map(({ href }) => href));
+                                    const dataUrl = head(links
+                                        .filter(({ rel, type }) => rel === 'data' && type === 'application/json')
+                                        .map(({ href }) => href));
+                                    return [ apiUrl, conformanceUrl, dataUrl ];
+                                })
+                                .then((urls) => {
+                                    return axios.all(urls.map(url =>
+                                        axios.get(url)
+                                            .then(({ data }) => data)
+                                            .catch(() => null)
+                                        )
+                                    );
+                                })
+                                .then((res = []) => {
+                                    const { styles } = res[2] || {};
+                                    return styles ? styles : [];
+                                })
+                                .then((styles) => {
+                                    return axios.all(
+                                        styles.map((style) => {
+                                            const describeBy = head(style.links
+                                                .filter(({ rel, type }) => rel === 'describeBy' && type === 'application/json')
+                                                .map(({ href }) => href));
+                                            return describeBy
+                                                ? axios.get(describeBy)
+                                                    .then(({ data }) => ({ ...style, ...data }))
+                                                    .catch(() => ({ ...style, error: true }))
+                                                : null;
+                                        }).filter(val => val)
+                                    );
+                                })
+                                .then((styles) => {
+                                    this.setState({
+                                        styles,
+                                        loading: false
+                                    });
+                                })
+                                .catch(({ data }) => {
+                                    this.setState({
+                                        styles: [],
+                                        loading: false,
+                                        error: isObject(data) && data.description || 'Connection error'
+                                    });
+                                });
+                        }}/>
                     }>
-                    <div
-                        style={{
-                            position: 'absolute',
-                            width: '50%',
-                            marginLeft: '25%'
-                        }}>
-                        <SideGrid
-                            cardComponent={(style) => {
-                                const { id, title, description, pointOfContact, onClick } = style || {};
-                                return (
-                                    <div
-                                        key={id}
-                                        style={{
-                                            margin: 4,
-                                            padding: 8,
-                                            border: '1px solid #ddd'
-                                        }}
-                                        onClick={onClick}>
-                                        <div style={{ display: 'flex' }}>
-                                            <div>
-                                                <div style={{ width: 64, height: 64, backgroundColor: '#ddd', marginRight: 8, marginTop: 8 }}></div>
-                                            </div>
-                                            <div style={{ flex: 1 }}>
-                                                <h4><strong>{title}</strong></h4>
-                                                <p>{description}</p>
-                                                <p>
-                                                    <div><small>id: {id}</small></div>
-                                                    <div><small>point of contact: {pointOfContact}</small></div>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            }}
-                            items={
-                                this.props.styles
-                                    .map((styleMetadata) => {
-                                        const { id, title, description, pointOfContact } = styleMetadata || {};
-                                        return {
-                                            id,
-                                            title,
-                                            description,
-                                            caption: id,
-                                            pointOfContact,
-                                            onClick: () => this.parseStyle(styleMetadata)
-                                        };
-                                    })
-                            } />
-                    </div>
+                    {this.state.error ? <div className="text-danger text-center" style={{ padding: 8 }}><Glyphicon glyph="exclamation-mark"/> {this.state.error}</div> : <StyleList
+                        styles={[...this.props.styles, ...this.state.styles]}
+                        onInfo={(styleMetadata) => this.setState({ selected: styleMetadata })}
+                        onSelect={(styleMetadata) => {
+                            this.parseStyle(styleMetadata);
+                        }}/>}
                 </BorderLayout>
+                <ResizableModal
+                    fade
+                    fitContent
+                    show={this.state.selected}
+                    title={<span><Glyphicon glyph="info-sign"/> {this.state.selected && (this.state.selected.title || this.state.selected.id)}</span>}
+                    onClose={() => this.setState({ selected: null })}>
+                    <div style={{ padding: 8 }}>
+                        {this.state.selected && <JSONTree
+                            invertTheme
+                            theme={theme}
+                            data={this.state.selected}
+                            hideRoot/>}
+                    </div>
+                </ResizableModal>
             </div>
         );
     }
@@ -304,18 +528,26 @@ class StylesManager extends Component {
             })
             .filter(val => val);
         const layersUrls = layers
-            .map(({ sampleData }) => {
-                const layerUrl = sampleData && sampleData.href && sampleData.href.split('items')[0];
-                return layerUrl;
+            .map(({ id, sampleData }) => {
+                const layerUrl = sampleData && sampleData.href && sampleData.href;
+                return {
+                    id,
+                    layerUrl
+                };
             })
             .filter(val => val);
         axios.all(
-            [ ...stylesUrls, ...layersUrls]
+            [
+                ...stylesUrls
                 .map(
                     (url) => axios.get(url)
                         .then(({ data }) => data )
                         .catch(() => null )
+                ),
+                ...layersUrls.map(({ layerUrl, id }) =>
+                    getLayerFromId(layerUrl, id)
                 )
+            ]
         )
         .then((response) => {
             this.props.onInit({

@@ -30,6 +30,7 @@ import tooltip from '../misc/enhancers/tooltip';
 const Button = tooltip(ButtonRB);
 
 import defaultThumb from './img/default.jpg';
+import { getTilingSchemes } from '../../api/WFS3';
 
 class RecordItem extends React.Component {
     static propTypes = {
@@ -115,7 +116,7 @@ class RecordItem extends React.Component {
             return null;
         }
         // let's extract the references we need
-        const {wms, wmts} = extractOGCServicesReferences(record);
+        const {wms, wmts, wfs3} = extractOGCServicesReferences(record);
         // let's extract the esri
         const {esri} = extractEsriReferences(record);
 
@@ -161,6 +162,19 @@ class RecordItem extends React.Component {
                 </Button>
             );
         }
+        if (wfs3) {
+            buttons.push(
+                <Button
+                    key="wfs3-button"
+                    tooltipId="catalog.addToMap"
+                    className="square-button-md"
+                    bsStyle="primary"
+                    onClick={() => { this.addWFS3Layer(); }}
+                    key="addwmtsLayer">
+                        <Glyphicon glyph="plus" />
+                </Button>
+            );
+        }
         // create get capabilities links that will be used to share layers info
         if (this.props.showGetCapLinks) {
             let links = getRecordLinks(record);
@@ -187,7 +201,7 @@ class RecordItem extends React.Component {
 
     render() {
         let record = this.props.record;
-        const {wms, wmts} = extractOGCServicesReferences(record);
+        const {wms, wmts, wfs3} = extractOGCServicesReferences(record);
         const {esri} = extractEsriReferences(record);
         // the preview and toolbar width depends on the values defined in the theme (variable.less)
         // IMPORTANT: if those values are changed then this defaults needs to change too
@@ -203,7 +217,7 @@ class RecordItem extends React.Component {
                     caption={
                         <div>
                             {!this.props.hideIdentifier && <div className="identifier">{record && record.identifier}</div>}
-                            <div>{!wms && !wmts && !esri && <small className="text-danger"><Message msgId="catalog.missingReference"/></small>}</div>
+                            <div>{!wms && !wmts && !esri && !wfs3 && <small className="text-danger"><Message msgId="catalog.missingReference"/></small>}</div>
                             {!this.props.hideExpand &&
                                 <div
                                     className="ms-ruler"
@@ -277,6 +291,16 @@ class RecordItem extends React.Component {
             let crs = this.props.record.boundingBox.crs;
             this.props.onZoomToExtent(extent, crs);
         }
+    };
+    addWFS3Layer = () => {
+        getTilingSchemes(this.props.record)
+            .then(({tilingSchemes, allowedSRS}) => {
+                this.props.onLayerAdd({
+                    ...this.props.record,
+                    tilingSchemes,
+                    allowedSRS
+                });
+            });
     };
     /**
      * it manages visibility of expand button.

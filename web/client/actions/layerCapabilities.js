@@ -8,8 +8,14 @@
 
 const {updateNode} = require('./layers');
 const WMS = require('../api/WMS');
+const WMTS = require('../api/WMTS');
 const WFS = require('../api/WFS');
 const WCS = require('../api/WCS');
+
+const API = {
+    wms: WMS,
+    wmts: WMTS
+};
 
 const LayersUtils = require('../utils/LayersUtils');
 
@@ -56,16 +62,17 @@ function getDescribeLayer(url, layer, options) {
 function getLayerCapabilities(layer, options) {
     // geoserver's specific. TODO parse layer.capabilitiesURL.
     const reqUrl = LayersUtils.getCapabilitiesUrl(layer);
+    const type = layer.type;
     return (dispatch) => {
         // TODO, look ad current cached capabilities;
         dispatch(updateNode(layer.id, "id", {
             capabilitiesLoading: true
         }));
-        return WMS.getCapabilities(reqUrl, options).then((capabilities) => {
-            const layerCapability = WMS.parseLayerCapabilities(capabilities, layer);
+        return API[type].getCapabilities(reqUrl, options).then((capabilities) => {
+            const layerCapability = API[type].parseLayerCapabilities(capabilities, layer);
 
             if (layerCapability) {
-                dispatch(updateNode(layer.id, "id", LayersUtils.formatCapabitiliesOptions(layerCapability)));
+                dispatch(updateNode(layer.id, "id", LayersUtils.formatCapabitiliesOptions(layerCapability, type)));
             } else {
                 dispatch(updateNode(layer.id, "id", { capabilitiesLoading: null, capabilities: { error: "error getting capabilities", details: "no layer info" }, description: null }));
             }

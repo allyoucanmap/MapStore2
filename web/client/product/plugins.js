@@ -105,9 +105,11 @@ module.exports = {
         ZoomAllPlugin: require('../plugins/ZoomAll'),
         ZoomInPlugin: require('../plugins/ZoomIn'),
         ZoomOutPlugin: require('../plugins/ZoomOut'),
+
         VisualStyleEditorPlugin: require('../plugins/VisualStyleEditor'),
         LayoutPlugin: require('../plugins/Layout'),
-        StylesManagerPlugin: require('../plugins/StylesManager')
+        StylesManagerPlugin: require('../plugins/StylesManager'),
+        WMTSSettingslugin: require('../plugins/WMTSSettings')
     },
     requires: {
         ReactSwipe: require('react-swipeable-views').default,

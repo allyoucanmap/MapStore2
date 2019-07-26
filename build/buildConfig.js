@@ -32,7 +32,7 @@ const ParallelUglifyPlugin = require("webpack-parallel-uglify-plugin");
  */
 module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publicPath, cssPrefix, prodPlugins, alias = {}, proxy) => ({
     entry: assign({
-        'webpack-dev-server': 'webpack-dev-server/client?http://0.0.0.0:8081', // WebpackDevServer host and port
+        'webpack-dev-server': 'webpack-dev-server/client?http://0.0.0.0:8088', // WebpackDevServer host and port
         'webpack': 'webpack/hot/only-dev-server' // "only" prevents reload on syntax errors
     }, bundles, themeEntries),
     output: {
@@ -82,6 +82,9 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
     resolve: {
         extensions: [".js", ".jsx"],
         alias: alias
+    },
+    node: {
+        fs: 'empty'
     },
     module: {
         noParse: [/html2canvas/],

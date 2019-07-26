@@ -89,8 +89,6 @@ export const ogcInitMapConfiguration = (action$) =>
                                     return addLayer({
                                         ...layer,
                                         id: uuidv1(),
-                                        type: 'wfs3',
-                                        visibility: true,
                                         availableStyles
                                     });
                                 })

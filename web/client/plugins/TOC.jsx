@@ -127,10 +127,12 @@ const tocSelector = createSelector(
 
 const TOC = require('../components/TOC/TOC');
 const Header = require('../components/TOC/Header');
-const Toolbar = require('../components/TOC/Toolbar');
+// const Toolbar = require('../components/TOC/Toolbar');
+const Toolbar = require('../components/misc/toolbar/Toolbar');
 const DefaultGroup = require('../components/TOC/DefaultGroup');
 const DefaultLayer = require('../components/TOC/DefaultLayer');
 const DefaultLayerOrGroup = require('../components/TOC/DefaultLayerOrGroup');
+const BorderLayout = require('../components/layout/BorderLayout');
 
 class LayerTree extends React.Component {
     static propTypes = {
@@ -204,7 +206,9 @@ class LayerTree extends React.Component {
         activateAddGroupButton: PropTypes.bool,
         catalogActive: PropTypes.bool,
         refreshLayerVersion: PropTypes.func,
-        hideOpacityTooltip: PropTypes.bool
+        hideOpacityTooltip: PropTypes.bool,
+        items: PropTypes.array,
+        buttons: PropTypes.array
     };
 
     static contextTypes = {
@@ -279,8 +283,22 @@ class LayerTree extends React.Component {
         activateAddGroupButton: false,
         catalogActive: false,
         refreshLayerVersion: () => {},
-        metadataTemplate: null
+        metadataTemplate: null,
+        items: [],
+        buttons: []
     };
+
+    getStatus = () => {
+        const {selectedLayers, selectedGroups} = this.props;
+        const isSingleGroup = this.isNestedGroup();
+        let status = selectedLayers.length === 0 & selectedGroups.length === 0 ? 'DESELECT' : '';
+        status = selectedLayers.length === 1 & selectedGroups.length === 0 ? 'LAYER' : status;
+        status = isSingleGroup ? 'GROUP' : status;
+        status = selectedLayers.length > 1 & selectedGroups.length === 0 ? 'LAYERS' : status;
+        status = selectedGroups.length > 1 && !isSingleGroup ? 'GROUPS' : status;
+        status = this.props.selectedLayers.length > 0 && this.props.selectedLayers.filter(l => l.loadingError === 'Error').length === this.props.selectedLayers.length ? `${status}_LOAD_ERROR` : status;
+        return status;
+    }
 
     getNoBackgroundLayers = (group) => {
         return group.name !== 'background';
@@ -330,6 +348,7 @@ class LayerTree extends React.Component {
         const Layer = this.getDefaultLayer();
         const sections = [this.props.activateToolsContainer, this.props.activateFilterLayer, this.props.activateMapTitle].filter(s => s);
         const bodyClass = sections.length > 0 ? ' toc-body-sections-' + sections.length : ' toc-body-sections';
+        const buttons = this.props.buttons;
         return (
             <div className="ms-toc-container">
             <div>
@@ -345,6 +364,28 @@ class LayerTree extends React.Component {
                     filterText={this.props.filterText}
                     toolbar={
                         <Toolbar
+                            buttons={buttons
+                                .map((Element) => ({
+                                    status: this.getStatus(),
+                                    className: 'square-button-md',
+                                    bsStyle: 'primary',
+                                    Element,
+                                    activateTool: {
+                                        activateToolsContainer: this.props.activateToolsContainer,
+                                        activateRemoveLayer: this.props.activateRemoveLayer,
+                                        activateZoomTool: this.props.activateZoomTool,
+                                        activateQueryTool: this.props.activateQueryTool,
+                                        activateDownloadTool: this.props.activateDownloadTool,
+                                        activateSettingsTool: this.props.activateSettingsTool,
+                                        activateAddLayer: this.props.activateAddLayerButton && !this.props.catalogActive,
+                                        activateAddGroup: this.props.activateAddGroupButton,
+                                        includeDeleteButtonInSettings: false,
+                                        activateMetedataTool: this.props.activateMetedataTool,
+                                        activateWidgetTool: this.props.activateWidgetTool
+                                    }
+                                })
+                            )}/>
+                        /*<Toolbar
                             groups={this.props.groups}
                             selectedLayers={this.props.selectedLayers}
                             selectedGroups={this.props.selectedGroups}
@@ -427,7 +468,7 @@ class LayerTree extends React.Component {
                                 onAddGroup: this.props.onAddGroup,
                                 onGetMetadataRecord: this.props.onGetMetadataRecord,
                                 onHideLayerMetadata: this.props.hideLayerMetadata,
-                                onShow: this.props.layerPropertiesChangeHandler}}/>
+                                onShow: this.props.layerPropertiesChangeHandler}}/> */
                     }/>
                 <div className={'mapstore-toc' + bodyClass}>
                     {this.props.noFilterResults && this.props.filterText ?
@@ -451,8 +492,12 @@ class LayerTree extends React.Component {
         }
         return this.renderTOC();
     }
-}
 
+    isNestedGroup = () => {
+        const splitIdGroups = this.props.selectedGroups.map(g => g.id.split('.'));
+        return head(splitIdGroups.reduce((a, b) => a[0] === b[0] ? b : [false], splitIdGroups[0]));
+    }
+}
 
 /**
  * Provides Table Of Content visualization.
@@ -593,17 +638,39 @@ const TOCPlugin = connect(tocSelector, {
     refreshLayerVersion
 })(LayerTree);
 
+class TOCContainer extends React.Component {
+    static propTypes = {
+        items: PropTypes.array
+    }
+    render() {
+        const { items = [] } = this.props;
+        const panels = items.map(({ panel }) => panel).filter(val => val);
+        const buttons = items.map(({ tool }) => tool).filter(val => val);
+        return (
+            <BorderLayout
+                columns={panels.map( (Panel, idx) => <Panel key={idx}/>)}>
+                <div style={{ position: 'relative', width: 300, height: '100%' }}>
+                    <TOCPlugin { ...this.props } buttons={buttons}/>
+                </div>
+            </BorderLayout>
+        );
+    }
+}
+
 const API = {
-    csw: require('../api/CSW')
+    csw: require('../api/CSW'),
+    wms: require('../api/WMS'),
+    wmts: require('../api/WMTS'),
+    wfs3: require('../api/WFS3')
 };
 
 module.exports = {
-    TOCPlugin: assign(TOCPlugin, {
+    TOCPlugin: assign(TOCContainer, {
         Layout: {
             priority: 1,
             glyph: '1-layer',
             position: 2,
-            size: 300,
+            size: 'auto',
             // hide: ({user} = {}) => !user,
             tooltipId: 'mps.tocTooltip',
             container: 'left-menu'

@@ -6,15 +6,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-var Layers = require('../../../../utils/openlayers/Layers');
-var ol = require('openlayers');
-const { castArray, head, last } = require('lodash');
-const SecurityUtils = require('../../../../utils/SecurityUtils');
-const WMTSUtils = require('../../../../utils/WMTSUtils');
-const CoordinatesUtils = require('../../../../utils/CoordinatesUtils');
-const mapUtils = require('../../../../utils/MapUtils');
-const assign = require('object-assign');
-const urlParser = require('url');
+import * as Layers from '../../../../utils/openlayers/Layers';
+import ol from 'openlayers';
+import { castArray, head, last } from 'lodash';
+import * as SecurityUtils from '../../../../utils/SecurityUtils';
+import * as WMTSUtils from '../../../../utils/WMTSUtils';
+import * as CoordinatesUtils from '../../../../utils/CoordinatesUtils';
+import * as MapUtils from '../../../../utils/MapUtils';
+import { isVectorFormat} from '../../../../utils/VectorTileUtils';
+import urlParser from 'url';
+
+import * as VectorStyle from '../VectorStyle';
+
+const OL_VECTOR_FORMATS = {
+    'application/vnd.mapbox-vector-tile': 'MVT',
+    'application/json;type=geojson': 'GeoJSON',
+    'application/json;type=topojson': 'TopoJSON'
+};
 
 function getWMSURLs(urls) {
     return urls.map((url) => url.split("\?")[0]);
@@ -29,7 +37,7 @@ const createLayer = options => {
     const tilMatrixSetName = WMTSUtils.getTileMatrixSet(options.tileMatrixSet, srs, options.allowedSRS, options.matrixIds);
     const tileMatrixSet = head(options.tileMatrixSet.filter(tM => tM['ows:Identifier'] === tilMatrixSetName));
     const scales = tileMatrixSet && tileMatrixSet.TileMatrix.map(t => t.ScaleDenominator);
-    const mapResolutions = mapUtils.getResolutions();
+    const mapResolutions = MapUtils.getResolutions();
     /*
      * WMTS assumes a DPI 90.7 instead of 96 as documented in the WMTSCapabilities document:
      * "The tile matrix set that has scale values calculated based on the dpi defined by OGC specification
@@ -75,36 +83,59 @@ const createLayer = options => {
     // Temporary fix for https://github.com/openlayers/openlayers/issues/8700 . It should be solved in OL 5.3.0
     // it's exclusive so the map lower resolution that draws the image in less then 0.5 pixels have to be the maxResolution
     const maxResolution = options.maxResolution || last(mapResolutions.filter((r = []) => resolutions[0] / r * TILE_SIZE < 0.5));
-    return new ol.layer.Tile({
+
+    const format = (options.availableFormats || []).indexOf(options.format) !== -1 && options.format
+        || !options.availableFormats && options.format || 'image/png';
+    const isVector = isVectorFormat(format);
+
+    const wmtsOptions = {
+        requestEncoding,
+        urls: urls.map(u => u + queryParametersString),
+        layer: options.name,
+        version: options.version || "1.0.0",
+        matrixSet: tilMatrixSetName,
+        format,
+        style: options.style,
+        tileGrid: new ol.tilegrid.WMTS({
+            origins,
+            origin: !origins ? [20037508.3428, -20037508.3428] : undefined, // Either origin or origins must be configured, never both.
+            // extent: extent,
+            resolutions,
+            matrixIds,
+            // TODO: matrixLimits from ranges
+            tileSize: options.tileSize || [TILE_SIZE, TILE_SIZE]
+        }),
+        wrapX: true
+    };
+
+    const wmtsSource = new ol.source.WMTS(wmtsOptions);
+
+    const wmtsLayer = new ol.layer[isVector ? 'VectorTile' : 'Tile']({
         opacity: options.opacity !== undefined ? options.opacity : 1,
         zIndex: options.zIndex,
         extent: extent,
         maxResolution,
         visible: options.visibility !== false,
-        source: new ol.source.WMTS(assign({
-            requestEncoding,
-            urls: urls.map(u => u + queryParametersString),
-            layer: options.name,
-            version: options.version || "1.0.0",
-            matrixSet: tilMatrixSetName,
-            format: options.format || 'image/png',
-            style: options.style,
-            tileGrid: new ol.tilegrid.WMTS({
-                origins,
-                origin: !origins ? [20037508.3428, -20037508.3428] : undefined, // Either origin or origins must be configured, never both.
-                // extent: extent,
-                resolutions,
-                matrixIds,
-                // TODO: matrixLimits from ranges
-                tileSize: options.tileSize || [TILE_SIZE, TILE_SIZE]
-            }),
-            wrapX: true
-        }))
+        source: isVector
+            ? new ol.source.VectorTile({
+                ...wmtsOptions,
+                format: new ol.format[OL_VECTOR_FORMATS[options.format]]({
+                    dataProjection: srs
+                }),
+                tileUrlFunction: (...args) => wmtsSource.tileUrlFunction(...args)
+            })
+            : wmtsSource
     });
+
+    if (isVector) wmtsLayer.setStyle(VectorStyle.getStyle(options));
+
+    return wmtsLayer;
 };
 
 const updateLayer = (layer, newOptions, oldOptions) => {
-    if (oldOptions.securityToken !== newOptions.securityToken || oldOptions.srs !== newOptions.srs) {
+    if (oldOptions.securityToken !== newOptions.securityToken || oldOptions.srs !== newOptions.srs
+    || oldOptions.format !== newOptions.format
+    || oldOptions.style !== newOptions.style) {
         return createLayer(newOptions);
     }
     return null;

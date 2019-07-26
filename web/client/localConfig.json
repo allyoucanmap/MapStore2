@@ -67,15 +67,21 @@
             "selectedService": "maps_gs_wmts",
             "services": {
               "maps_gs_wms": {
-                "url": "http://localhost:8081/geoserver/wms",
+                "url": "/geoserver/wms",
                 "type": "wms",
                 "title": "Maps GeoServer WMS",
                 "autoload": false
               },
               "maps_gs_wmts": {
-                "url": "http://localhost:8081/geoserver/gwc/service/wmts",
+                "url": "/geoserver/gwc/service/wmts",
                 "type": "wmts",
                 "title": "Maps GeoServer WMTS",
+                "autoload": false
+              },
+              "maps_gs_wfs3": {
+                "url": "/geoserver/wfs3/collections",
+                "type": "wfs3",
+                "title": "Maps GeoServer WFS3",
                 "autoload": false
               }
             }
@@ -366,7 +372,8 @@
             "Playback",
             "FeedbackMask",
             "VisualStyleEditor",
-            "StyleEditor"
+            "StyleEditor",
+            "WMTSSettings"
         ],
         "embedded": [{
                 "name": "Map",

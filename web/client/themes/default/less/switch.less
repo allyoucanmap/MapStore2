@@ -1,3 +1,5 @@
+@ms-switch-btn-size: 17px;
+
 .mapstore-switch-panel {
     .panel {
         margin: 0;
@@ -20,8 +22,8 @@
 .mapstore-switch-btn {
     position: relative;
     display: inline-block;
-    width: (@square-btn-small-size * 2) - 8px; /* 60 */
-    height: @square-btn-small-size; /* 34 */
+    width: (@ms-switch-btn-size * 2) - 8px; /* 60 */
+    height: @ms-switch-btn-size; /* 34 */
     .m-slider {
 
         position: absolute;
@@ -38,8 +40,8 @@
         &:before {
             position: absolute;
             content: " ";
-            height: @square-btn-small-size - 8px;
-            width: @square-btn-small-size - 8px;
+            height: @ms-switch-btn-size - 8px;
+            width: @ms-switch-btn-size - 8px;
             left: 4px;
             bottom: 4px;
             background-color: @ms2-color-text-primary;
@@ -57,7 +59,7 @@
                 background-color:  @ms2-color-primary;
                 opacity: 1.0;
                 &:before {
-                    transform: translateX(@square-btn-small-size - 8px);
+                    transform: translateX(@ms-switch-btn-size - 8px);
                 }
             }
         }

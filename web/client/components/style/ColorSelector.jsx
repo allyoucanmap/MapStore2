@@ -18,7 +18,8 @@ class ColorSelector extends React.Component {
         checked: PropTypes.bool,
         line: PropTypes.bool,
         width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        onChangeColor: PropTypes.func
+        onChangeColor: PropTypes.func,
+        stroke: PropTypes.bool
     };
 
     static defaultProps = {
@@ -33,6 +34,7 @@ class ColorSelector extends React.Component {
                 text=""
                 line={this.props.line}
                 value={this.props.color}
+                stroke={this.props.stroke}
                 style={{width: this.props.width}}
                 onChangeColor={(color) => {
                     this.props.onChangeColor(color);

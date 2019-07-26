@@ -284,6 +284,7 @@ const converters = {
                 }, {});
 
                 const bbox = getWMTSBBox(record);
+                const availableFormats = castArray(record && record.Format);
                 return {
                 title: getNodeText(record["ows:Title"] || record["ows:Identifier"]),
                 description: getNodeText(record["ows:Abstract"] || record["ows:Title"] || record["ows:Identifier"]),
@@ -296,6 +297,7 @@ const converters = {
                 tileMatrixSet: record.TileMatrixSet,
                 matrixIds,
                 TileMatrixSetLink: castArray(record.TileMatrixSetLink),
+                availableFormats,
                 boundingBox: {
                     extent: [
                             bbox["ows:LowerCorner"].split(" ")[0],
@@ -315,6 +317,39 @@ const converters = {
                 }]
                 };
             });
+        }
+    },
+    wfs3: (records) => {
+        if (records && records.records) {
+            return records.records
+                .map((record) => {
+                    const { extent, links } = record;
+                    const spatial = extent && extent.spatial || [-180, -90, 180, 90];
+                    const { href: url, type: format } = head((links || []).filter(({ rel }) => rel === 'tiles')) || {};
+                    const { href: tilingSchemes } = head((links || []).filter(({ rel }) => rel === 'tilingSchemes')) || {};
+                    const { href: tilingScheme } = head((links || []).filter(({ rel }) => rel === 'tilingScheme')) || {};
+                    return {
+                        identifier: record.name,
+                        references: [{ type: 'WFS3' }],
+                        name: record.name,
+                        title: record.title,
+                        type: 'wfs3',
+                        visibility: true,
+                        url,
+                        format,
+                        tilingScheme,
+                        tilingSchemes,
+                        bbox: {
+                            crs: 'EPSG:4326',
+                            bounds: {
+                                minx: spatial[0],
+                                miny: spatial[1],
+                                maxx: spatial[2],
+                                maxy: spatial[3]
+                            }
+                        }
+                    };
+                });
         }
     }
 };
@@ -342,7 +377,8 @@ const extractOGCServicesReferences = (record = { references: [] }) => ({
     wms: head(record.references.filter(reference => reference.type && (reference.type === "OGC:WMS"
         || reference.type.indexOf("OGC:WMS") > -1 && reference.type.indexOf("http-get-map") > -1))),
     wmts: head(record.references.filter(reference => reference.type && (reference.type === "OGC:WMTS"
-        || reference.type.indexOf("OGC:WMTS") > -1 && reference.type.indexOf("http-get-map") > -1)))
+        || reference.type.indexOf("OGC:WMTS") > -1 && reference.type.indexOf("http-get-map") > -1))),
+    wfs3: head(record.references.filter(reference => reference.type.indexOf("WFS3") > -1))
 });
 const extractEsriReferences = (record = { references: [] }) => ({
     esri: head(record.references.filter(reference => reference.type && (reference.type === "ESRI:SERVER"
@@ -438,6 +474,7 @@ const CatalogUtils = {
             queryable: record.queryable,
             visibility: true,
             dimensions: record.dimensions || [],
+            availableFormats: record.availableFormats || [],
             name: ogcServiceReference.params && ogcServiceReference.params.name,
             title: record.title || ogcServiceReference.params && ogcServiceReference.params.name,
             matrixIds: type === "wmts" ? record.matrixIds || [] : undefined,

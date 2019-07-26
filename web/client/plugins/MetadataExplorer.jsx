@@ -11,7 +11,7 @@ const PropTypes = require('prop-types');
 const {connect} = require('react-redux');
 const assign = require('object-assign');
 const {createSelector} = require("reselect");
-const {Glyphicon, Panel} = require('react-bootstrap');
+const {Glyphicon, Button} = require('react-bootstrap');
 const ContainerDimensions = require('react-container-dimensions').default;
 
 const {addService, deleteService, textSearch, changeCatalogFormat, changeCatalogMode,
@@ -154,7 +154,7 @@ class MetadataExplorerComponent extends React.Component {
         return (
             <Container
                 layout={this.props.layout}>
-                {panel}
+                <div id="catalog-root" style={{width: '100%', height: '100%'}}>{panel}</div>
             </Container>
         );
     }
@@ -211,7 +211,8 @@ const MetadataExplorerPlugin = connect(metadataExplorerSelector, {
 const API = {
     csw: require('../api/CSW'),
     wms: require('../api/WMS'),
-    wmts: require('../api/WMTS')
+    wmts: require('../api/WMTS'),
+    wfs3: require('../api/WFS3')
 };
 /**
  * MetadataExplorer plugin. Shows the catalogs results (CSW, WMS and WMTS).
@@ -229,14 +230,14 @@ const API = {
 module.exports = {
     MetadataExplorerPlugin: assign(MetadataExplorerPlugin, {
         Layout: {
-            priority: 1,
+            priority: 4,
             glyph: 'folder-open',
             position: 2,
-            size: 300,
+            size: 500,
             // hide: ({user} = {}) => !user,
-            tooltipId: 'mps.tocTooltip',
+            tooltipId: 'mps.catalogTooltip',
             container: 'right-menu'
-        }/*,
+        },
         Toolbar: {
             name: 'metadataexplorer',
             position: 10,
@@ -247,7 +248,7 @@ module.exports = {
             title: 'catalog.title',
             help: <Message msgId="helptexts.metadataexplorer"/>,
             icon: <Glyphicon glyph="folder-open" />,
-            priority: 1
+            priority: 2
         },
         BurgerMenu: {
             name: 'metadataexplorer',
@@ -255,9 +256,9 @@ module.exports = {
             text: <Message msgId="catalog.title"/>,
             icon: <Glyphicon glyph="folder-open"/>,
             action: setControlProperty.bind(null, "metadataexplorer", "enabled", true, true),
-            priority: 2,
+            priority: 3,
             doNotHide: true
-        }*/
+        }
     }),
     reducers: {catalog: require('../reducers/catalog')},
     epics: require("../epics/catalog")(API)

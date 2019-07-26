@@ -12,7 +12,8 @@ class ColorPicker extends React.Component {
         line: PropTypes.bool,
         style: PropTypes.object,
         disabled: PropTypes.bool,
-        pickerProps: PropTypes.object
+        pickerProps: PropTypes.object,
+        stroke: PropTypes.bool
     };
 
     static defaultProps = {
@@ -39,12 +40,22 @@ class ColorPicker extends React.Component {
         return this.props.line ?
         {
             color: `rgba(${ r }, ${ g }, ${ b }, ${ a })`,
-            background: `rgba(${ 256 - r }, ${ 256 - g }, ${ 256 - b }, 1)`
+            ...(this.props.stroke ? {
+                border: `4px solid rgba(${ 256 - r }, ${ 256 - g }, ${ 256 - b }, 1)`,
+                background: 'transparent'
+            } : {
+                background: `rgba(${ 256 - r }, ${ 256 - g }, ${ 256 - b }, 1)`
+            })
         }
       :
         {
-            background: `rgba(${ r }, ${ g }, ${ b }, ${ a })`,
-            color: `rgba(${ 256 - r }, ${ 256 - g }, ${ 256 - b }, 1)`
+            color: `rgba(${ 256 - r }, ${ 256 - g }, ${ 256 - b }, 1)`,
+            ...(this.props.stroke ? {
+                border: `4px solid rgba(${ r }, ${ g }, ${ b }, ${ a })`,
+                background: 'transparent'
+            } : {
+                background: `rgba(${ r }, ${ g }, ${ b }, ${ a })`
+            })
         };
     };
 

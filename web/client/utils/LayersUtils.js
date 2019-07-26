@@ -606,7 +606,16 @@ const LayersUtils = {
     /**
      * Return capabilities valid for the layer object
      */
-    formatCapabitiliesOptions: function(capabilities) {
+    formatCapabitiliesOptions: function(capabilities, type) {
+        if (type === 'wmts') {
+            return isObject(capabilities)
+            ? {
+                capabilities,
+                capabilitiesLoading: null,
+                availableStyles: capabilities.Style && castArray(capabilities.Style).map(style => ({ name: style['ows:Identifier'] }))
+            }
+            : {};
+        }
         return isObject(capabilities)
             ? {
                 capabilities,

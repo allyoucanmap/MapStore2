@@ -1,0 +1,86 @@
+.ms-grab-handler {
+    width: 7px;
+    overflow: hidden;
+    margin-right: 8px;
+    display: inline-block;
+}
+
+.ms-symbolizer {
+    padding: 8px;
+    margin: 4px;
+    border: 1px solid @ms2-color-shade-lighter;
+    margin-bottom: 0;
+    > div:first-child {
+        display: flex;
+        align-items: center;
+        + div {
+            padding-top: 8px;
+        }
+    }
+
+    &-info {
+        flex: 1;
+    }
+
+    &-field {
+        display: flex;
+        align-items: center;
+        padding: 4px;
+        & > div {
+            flex: 1;
+        }
+        .btn-group {
+            width: 100%;
+            
+            & > span {
+                display: flex;
+                width: 100%;
+                border-bottom: 1px solid @ms2-color-shade-lighter;
+                border-top: 1px solid @ms2-color-shade-lighter;
+                & > .btn {
+                    flex: 1;
+                }
+                & > .btn + .btn {
+                    border-left: 1px solid @ms2-color-shade-lighter !important;
+                }
+            }
+        }
+    }
+
+    & + .ms-symbolizer {
+        margin-top: 0;
+        border-top: none;
+    }
+
+    .form-group {
+        margin: 0;
+        height: @font-size-small * 1.75;
+        padding: 0;
+        position: relative;
+        
+    }
+
+    .form-control {
+        font-size: @font-size-small;
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        height: 100%;
+        padding: 2px 4px;
+    }
+}
+
+.ms-style-rule-editor {
+    .Select-menu {
+        max-height: 80px;
+    }
+    .ms-body {
+        & > div {
+            overflow: visible !important;
+            .ms2-border-layout-body  {
+                overflow: visible !important;
+            }
+        }
+        padding-bottom: 4px;
+    }
+}

@@ -15,7 +15,7 @@ const xml2js = require('xml2js');
 
 const capabilitiesCache = {};
 
-const {isArray, castArray} = require('lodash');
+const {isArray, castArray, get, head} = require('lodash');
 
 const CoordinatesUtils = require('../utils/CoordinatesUtils');
 const { getOperations, getOperation, getRequestEncoding, getDefaultStyleIdentifier, getDefaultFormat} = require('../utils/WMTSUtils');
@@ -90,6 +90,25 @@ const Api = {
             };
             return searchAndPaginate(json, startPosition, maxRecords, text, url);
         });
+    },
+    getCapabilities: function(url) {
+        return axios.get(parseUrl(url)).then((response) => {
+            let json;
+            xml2js.parseString(response.data, {explicitArray: false}, (ignore, result) => {
+                json = result;
+            });
+            return json;
+        });
+    },
+    parseLayerCapabilities: function(capabilities, layer) {
+        const layers = castArray(get(capabilities, "Capabilities.Contents.Layer"));
+        return head((layers || []).filter(layerCap => {
+            const capNameParts = (layerCap['ows:Identifier'] || '').split(':');
+            const layerNameParts = (layer.name || '').split(':');
+            const capName = capNameParts.length === 2 ? capNameParts[1] : capNameParts[0];
+            const layerName = layerNameParts.length === 2 ? layerNameParts[1] : layerNameParts[0];
+            return capName && layerName && capName === layerName;
+        }));
     },
     textSearch: function(url, startPosition, maxRecords, text) {
         return Api.getRecords(url, startPosition, maxRecords, text);
