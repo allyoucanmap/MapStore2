@@ -8,8 +8,8 @@ module.exports = compose(
     dragDropContext(html5Backend),
     branch(
         ({isDraggable = true}) => isDraggable,
-        Component => ({onSort, isDraggable, items = [], ...props}) => {
-            const draggableItems = items.map((item, sortId) => ({...item, onSort, isDraggable, sortId, key: sortId}));
+        Component => ({onSort, isDraggable, items = [], containerId, ...props}) => {
+            const draggableItems = items.map((item, sortId) => ({...item, onSort, isDraggable, sortId, key: item.id || sortId, containerId}));
             return <Component {...{...props, isDraggable}} items={draggableItems}/>;
         }
     )

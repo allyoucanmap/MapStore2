@@ -5,8 +5,9 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { get, isString, isNumber, findIndex, toPath, isObject, isArray, castArray } from "lodash";
+import { get, isString, isNumber, findIndex, isObject, isArray, castArray } from "lodash";
 import { set, unset, arrayUpdate } from '../utils/ImmutableUtils';
+import { getEffectivePath } from '../utils/GeoStoryUtils';
 
 import {
     ADD,
@@ -29,34 +30,6 @@ let INITIAL_STATE = {
     mode: 'edit', // TODO: change in to Modes.VIEW
     cardPreviewEnabled: true
 };
-
-/**
- * transforms the path with  into a path with predicates into a path with array indexes
- * @private
- * @param {string|string[]} rawPath path to transform in real path
- * @param {object} state the state to check to inspect the tree and get the real path
- */
-export const getEffectivePath = (rawPath, state) => {
-    const rawPathArray = toPath(rawPath); // converts `a.b['section'].c[{"a":"b"}]` into `["a","b","section","c","{\"a\":\"b\"}"]`
-    // use curly brackets elements as predicates of findIndex to get the correct index.
-    return rawPathArray.reduce( (path, current) => {
-        if (current && current.indexOf('{') === 0) {
-            const predicate = JSON.parse(current);
-            const currentArray = get(state, path);
-            const index = findIndex(
-                currentArray,
-                predicate
-            );
-            if (index >= 0) {
-                return [...path, index];
-            }
-            // if the predicate is not found, it will ignore the unknown part
-            return path;
-        }
-        return [...path, current];
-    }, []);
-};
-
 
 /**
  * Return the index of the where to place an item.

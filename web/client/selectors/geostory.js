@@ -6,8 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import {get, find} from 'lodash';
-import {getEffectivePath} from '../reducers/geostory';
-import { Controls } from '../utils/GeoStoryUtils';
+import { Controls, getEffectivePath } from '../utils/GeoStoryUtils';
 
 /**
  * Returns a selector using a path inside the current story

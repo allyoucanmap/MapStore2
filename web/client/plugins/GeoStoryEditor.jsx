@@ -13,10 +13,11 @@ import { createStructuredSelector } from 'reselect';
 import {
     currentStorySelector,
     cardPreviewEnabledSelector,
-    modeSelector
+    modeSelector,
+    currentPageSelector
 } from '../selectors/geostory';
 import geostory from '../reducers/geostory';
-import { setEditing, toggleCardPreview } from '../actions/geostory';
+import { setEditing, toggleCardPreview, move } from '../actions/geostory';
 
 import Builder from '../components/geostory/builder/Builder';
 import { Modes } from '../utils/GeoStoryUtils';
@@ -29,7 +30,9 @@ const GeoStoryEditor = ({
     setEditingMode = () => {},
     onToggleCardPreview = () => {},
     cardPreviewEnabled,
-    story = {}
+    story = {},
+    currentPage,
+    onSort = () => {}
 }) => (mode === Modes.EDIT ? <div
     key="left-column"
     className="ms-geostory-editor"
@@ -40,9 +43,11 @@ const GeoStoryEditor = ({
         }}
         story={story}
         mode={mode}
+        currentPage={currentPage}
         setEditing={setEditingMode}
         cardPreviewEnabled={cardPreviewEnabled}
         onToggleCardPreview={onToggleCardPreview}
+        onSort={onSort}
         />
 </div> : null);
 /**
@@ -55,10 +60,12 @@ export default createPlugin('GeoStoryEditor', {
         createStructuredSelector({
             cardPreviewEnabled: cardPreviewEnabledSelector,
             mode: modeSelector,
-            story: currentStorySelector
+            story: currentStorySelector,
+            currentPage: currentPageSelector
         }), {
             setEditingMode: setEditing,
-            onToggleCardPreview: toggleCardPreview
+            onToggleCardPreview: toggleCardPreview,
+            onSort: move
         }
     )(GeoStoryEditor),
     reducers: {

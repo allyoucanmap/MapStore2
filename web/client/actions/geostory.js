@@ -5,10 +5,10 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { isString } from 'lodash';
+import isString from 'lodash/isString';
 import uuid from "uuid";
-
 import { Modes, getDefaultSectionTemplate } from '../utils/GeoStoryUtils';
+import { createPathSelector } from '../selectors/geostory';
 
 export const ADD = "GEOSTORY:ADD";
 export const ADD_RESOURCE = "GEOSTORY:ADD_RESOURCE";
@@ -28,11 +28,12 @@ export const SET_CURRENT_STORY = "GEOSTORY:SET_CURRENT_STORY";
 export const TOGGLE_CARD_PREVIEW = "GEOSTORY:TOGGLE_CARD_PREVIEW";
 export const UPDATE = "GEOSTORY:UPDATE";
 export const UPDATE_CURRENT_PAGE = "GEOSTORY:UPDATE_CURRENT_PAGE";
+export const MOVED = "GEOSTORY:MOVED";
 
 /**
  * Adds an entry to current story. The entry can be a section, a content or anything to append in an array (even sub-content)
  *
- * @param {string} path path where to add the element. It can contain path like this `sections[{id: "abc"}].contents[{id: "def"}]` to resolve the predicate between brackets.
+ * @param {string} path path where to add the element. It can contain path like this `sections[{"id": "abc"}].contents[{"id": "def"}]` to resolve the predicate between brackets.
  * @param {string|number} [position] the ID or the index of the section where to place the section (if not present the section will be appended at the end)
  * @param {string|object} element the object to add or the template to apply. can be a section, a content or whatever. If it is a string, it will be transformed in the content template with the provided name.
  * @param {function} [localize] localization function used in case of template to localize default strings
@@ -128,7 +129,7 @@ export const setCurrentStory = (story) => ({ type: SET_CURRENT_STORY, story});
 export const toggleCardPreview = () => ({ type: TOGGLE_CARD_PREVIEW});
 /**
  * Updates a value or an object in the current Story. Useful to update contents, settings and so on.
- * @param {string} path the path of the element to modify. It can contain path like this `sections[{id: "abc"}].contents[{id: "def"}]` to resolve the predicate between brackets.
+ * @param {string} path the path of the element to modify. It can contain path like this `sections[{"id": "abc"}].contents[{"id": "def"}]` to resolve the predicate between brackets.
  * @param {object} element the object to update
  * @param {string|object} [mode="replace"] "merge" or "replace", if "merge", the object passed as element will be merged with the original one (if present and if it is an object)
  */
@@ -146,3 +147,21 @@ export const updateCurrentPage = ({sectionId}) => ({
     type: UPDATE_CURRENT_PAGE,
     sectionId
 });
+/**
+ * updates the current page with current value of sectionId (future can be extended adding other info about current content).
+ * @param {object} param0 current page information. Contains `sectionId`
+ */
+export const move = (source, target, position) => {
+    return (dispatch, getState) => {
+        const state = getState();
+        const current = createPathSelector(source)(state);
+        dispatch(add(target, position, { ...current, id: uuid() }));
+        dispatch(remove(source));
+        dispatch({
+            type: MOVED,
+            source,
+            target,
+            position
+        });
+    };
+};

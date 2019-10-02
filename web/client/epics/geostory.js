@@ -53,10 +53,7 @@ import { resourceIdSelectorCreator, createPathSelector, currentStorySelector } f
 import { mediaTypeSelector } from '../selectors/mediaEditor';
 
 import { wrapStartStop } from '../observables/epics';
-import { scrollToContent, ContentTypes, isMediaSection, Controls } from '../utils/GeoStoryUtils';
-
-import { getEffectivePath } from '../reducers/geostory';
-
+import { scrollToContent, ContentTypes, isMediaSection, Controls, getEffectivePath } from '../utils/GeoStoryUtils';
 
 /**
  * opens the media editor for new image with content type media is passed

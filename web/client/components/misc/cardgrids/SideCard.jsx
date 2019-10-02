@@ -55,6 +55,11 @@ module.exports = ({
         onMouseLeave={onMouseLeave}
         style={style}>
         <div className="ms-head">
+            {props.isDraggable && props.connectDragSource && props.connectDragSource(
+                <div className="mapstore-side-card-tool text-center">
+                    <div style={{ width: 10, overflow: 'hidden' }} >+</div>
+                </div>
+            )}
             {preview && <div className="mapstore-side-preview" style={stylePreview}>
                 {preview}
             </div>}

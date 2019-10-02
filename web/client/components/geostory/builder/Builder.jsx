@@ -31,7 +31,9 @@ class Builder extends React.Component {
         cardSelected: PropTypes.string,
         cardPreviewEnabled: PropTypes.bool,
         scrollTo: PropTypes.func,
-        setEditing: PropTypes.func
+        setEditing: PropTypes.func,
+        currentPage: PropTypes.object,
+        onSort: PropTypes.func
     };
 
     static defaultProps = {
@@ -40,7 +42,8 @@ class Builder extends React.Component {
         setEditing: () => {},
         onToggleCardPreview: () => {},
         story: {},
-        cardPreviewEnabled: true
+        cardPreviewEnabled: true,
+        onSort: () => {}
     };
 
     render() {
@@ -51,7 +54,9 @@ class Builder extends React.Component {
             setEditing,
             mode,
             cardPreviewEnabled,
-            onToggleCardPreview
+            onToggleCardPreview,
+            currentPage,
+            onSort
         } = this.props;
         return (<BorderLayout
                 className="ms-geostory-builder"
@@ -90,9 +95,11 @@ class Builder extends React.Component {
                     </div>
                 }>
             <SectionsPreview
+                currentPage={currentPage}
                 scrollTo={scrollTo}
                 cardPreviewEnabled={cardPreviewEnabled}
                 sections={story && story.sections}
+                onSort={onSort}
                 />
             </BorderLayout>
         );
