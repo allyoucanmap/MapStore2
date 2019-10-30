@@ -259,6 +259,14 @@
                 top: auto;
                 bottom: 0;
             }
+            & > .ms-content-toolbar {
+                position: absolute;
+                z-index: 10;
+                top: 0;
+                left: 0;
+                margin: 8px;
+                .shadow-soft();
+            }
             .ms-content-text {
                 display: flex;
                 /* render the toolbar has a floating container at top left corner of title container */
@@ -591,11 +599,16 @@
             }
 
             // foreground guidelines color for container size
-            &.ms-section-title .ms-content {
-                border-left: 2px dashed @ms-story-fg-guidelines;
-                border-right: 2px dashed @ms-story-fg-guidelines;
-                .ms-content-toolbar {
-                    border-top: 2px solid @ms-story-fg-guidelines;
+            &.ms-section-title {
+                > .ms-content-toolbar {
+                    border-top: 2px solid @ms-story-bg-guidelines;
+                }
+                .ms-content {
+                    border-left: 2px dashed @ms-story-fg-guidelines;
+                    border-right: 2px dashed @ms-story-fg-guidelines;
+                    .ms-content-toolbar {
+                        border-top: 2px solid @ms-story-fg-guidelines;
+                    }
                 }
             }
         }

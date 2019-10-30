@@ -7,6 +7,7 @@
  */
 
 import React, { Component } from "react";
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 
 import stickySupport from '../../../misc/enhancers/stickySupport';
@@ -14,7 +15,6 @@ import Media from '../../media/index';
 import { lists, getClassNameFromProps, Modes } from '../../../../utils/GeoStoryUtils';
 import ContentToolbar from '../../contents/ContentToolbar';
 import Message from '../../../I18N/Message';
-import { Portal } from 'react-overlays';
 import pattern from './patterns/grid.svg';
 
 /**
@@ -88,11 +88,7 @@ class Background extends Component {
                     {MediaType && <MediaType { ...this.props } enableFullscreen={false} descriptionEnabled={false}/>}
                     { this.props.mode === Modes.EDIT && (
                         parentNode
-                            ? (
-                                <Portal
-                                    container={parentNode}>
-                                    {toolbar}
-                                </Portal>
+                            ? (createPortal(toolbar, parentNode)
                             )
                             : toolbar)}
                 </div>

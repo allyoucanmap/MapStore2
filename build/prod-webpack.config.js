@@ -15,9 +15,7 @@ const paths = {
 
 module.exports = require('./buildConfig')(
     assign({
-        "mapstore2": path.join(paths.code, "product", "app"),
-        "embedded": path.join(paths.code, "product", "embedded"),
-        "ms2-api": path.join(paths.code, "product", "api")
+        "mapstore2": path.join(__dirname, "..", "web", "client", "mockup", "app")
     },
     require('./examples')
     ),

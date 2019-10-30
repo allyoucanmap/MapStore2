@@ -31,7 +31,8 @@
 .mapstore-side-card {
     .shadow-soft;
     width: 100%;
-
+    color: @ms2-color-text;
+    background-color: @ms2-color-background;
     margin: 10px 0 0 0;
     display: flex;
     transition: all 0.3s;
@@ -224,5 +225,19 @@
     }
     &.ms-disabled {
         opacity: 0.75;
+    }
+}
+
+.ms-side-list {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    overflow: auto;
+    .mapstore-side-card {
+        margin-top: 0;
+    }
+    .mapstore-side-card + .mapstore-side-card {
+        margin-top: 16px;
     }
 }

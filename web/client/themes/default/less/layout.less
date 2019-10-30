@@ -1,0 +1,179 @@
+/*
+ * Copyright 2019, GeoSolutions Sas.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+ @layout-size: 34px;
+ @arrow-size: @layout-size / 4;
+
+ .menu-btn(@color; @background; @border) {
+    .button-variant(lighten(@color, 40%); darken(@background, 15%); darken(@border, 15%));
+    &.active:focus,
+    &.active.focus,
+    &:focus,
+    &.focus,
+    &:active,
+    &.active,
+    &.active:hover {
+        background-color: darken(@background, 15%);
+        border-color: darken(@border, 15%);
+        color: darken(@color, 20%);
+        .box-shadow(none);
+    }
+
+    &:active:hover {
+        background-color: darken(@background, 16%);
+        border-color: darken(@border, 16%);
+        color: darken(@color, 20%);
+        .shadow-soft-inset;
+    }
+    &:hover {
+        color: darken(@color, 10%);
+        background-color: darken(@background, 15%);
+        border-color: darken(@border, 15%);
+        .box-shadow(none);
+    }
+}
+
+.ms-menu {
+    display: flex;
+    height: 100%;
+    .ms-menu-tabs {
+        padding-top: @layout-size / 2;
+        width: @layout-size;
+        background-color: darken(@ms2-color-background, 15%);
+        &.ms-empty {
+            width: 0;
+        }
+        .ms-menu-tab {
+            display: flex;
+            .ms-tab-arrow {
+                width: @arrow-size;
+                height: @layout-size;
+                display: flex;
+                align-items: center;
+                & > .ms-arrow {
+                    border: none;
+                    margin-right: 0;
+                    border-top: @layout-size / 3 solid transparent;
+                    border-bottom: @layout-size / 3 solid transparent; 
+                    border-right: @layout-size / 3 solid @ms2-color-background;
+                    -webkit-filter: drop-shadow(-4px 2px 4px rgba(0, 0, 0, 0.2));
+                    filter: drop-shadow(-4px 2px 4px rgba(0, 0, 0, 0.2));
+                }
+            }
+            .btn-default {
+                .menu-btn(@ms2-color-text; @ms2-color-background; @ms2-color-background);
+            }
+            .btn-primary {
+                .menu-btn(@ms2-color-background; lighten(@ms2-color-text, 20%); lighten(@ms2-color-text, 20%));
+                &.active {
+                    color: @ms2-color-success;
+                }
+            }
+        }
+        &.ms-overlay {
+            .shadow-far;
+            pointer-events: auto;
+        }
+    }
+    &.ms-primary {
+        .ms-menu-tabs {
+            background-color: lighten(@ms2-color-text, 5%);
+        }
+    }
+    &.ms-default {
+        .ms-menu-tabs {
+            background-color: darken(@ms2-color-background, 15%);
+        }
+    }
+    .ms-menu-btn {
+        margin-left: @layout-size / 4;
+    }
+    .ms-menu-btn-mirror {
+        margin-right: @layout-size / 4;
+    }
+    &.ms-mirror {
+        flex-direction: row-reverse;
+        .ms-arrow-mirror {
+            margin-left: -2px;
+            border-top: @layout-size / 3 solid transparent;
+            border-bottom: @layout-size / 3 solid transparent; 
+            border-left: @layout-size / 3 solid @ms2-color-background;
+        }
+    }
+    .ms-menu-content {
+        .shadow-soft;
+        background-color: @ms2-color-background;
+        position: relative;
+        width: 100%;
+        transition: 0.3s width;
+        overflow: hidden;
+        &.ms-overlay {
+            pointer-events: auto;
+            margin: @arrow-size / 2;
+            margin-bottom: @layout-size;
+            margin-right: 0;
+            box-shadow: none;
+            background-color: transparent;
+            overflow: visible;
+            & > div {
+                .shadow-far;
+                background-color:  @ms2-color-background;
+            }
+        }
+    }
+    &.ms-mirror {
+        .ms-menu-content {
+            &.ms-overlay {
+                margin: 6px;
+                margin-bottom: @layout-size;
+                margin-left: 0;
+            }
+        }
+    }
+    &.ms-closed,  &.ms-mirror.ms-closed {
+        .ms-menu-content {
+            &.ms-overlay {
+                margin: 0;
+            }
+        }
+    }
+}
+
+.ms-menu-layout {
+    overflow: visible !important;
+    & > .ms2-border-layout-body {
+        overflow: visible !important;
+        & > .ms2-border-layout-content {
+            overflow: visible;
+            background-color: transparent;
+        }
+    }
+}
+
+.ms-layout {
+    pointer-events: none;
+    & > .ms2-border-layout-body {
+        overflow: hidden;
+        & > .ms2-border-layout-content {
+            background-color: transparent;
+            position: relative;
+        }
+        & > * {
+            overflow: visible;
+        }
+    }
+
+    #ms-layout-body {
+        * {
+            pointer-events: auto;
+        }
+    }
+
+    & > *:not(.ms2-border-layout-body) {
+        pointer-events: auto;
+    }
+}

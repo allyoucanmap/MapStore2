@@ -6,10 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const React = require('react');
-const SideCard = require('./SideCard');
-const PropTypes = require('prop-types');
-const {Row, Col} = require('react-bootstrap');
+import React from 'react';
+import SideCard from './SideCard';
+import PropTypes from 'prop-types';
+import { Row, Col } from 'react-bootstrap';
 /**
  * Component for rendering a list of SideCard.
  * @memberof components.misc.cardgrids
@@ -29,7 +29,8 @@ class SideGrid extends React.Component {
         colProps: PropTypes.object,
         items: PropTypes.array,
         cardComponent: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-        className: PropTypes.string
+        className: PropTypes.string,
+        list: PropTypes.boolean
     };
 
     static defaultProps = {
@@ -41,22 +42,34 @@ class SideGrid extends React.Component {
     };
 
     render() {
-        const {cardComponent, items, colProps, onItemClick, size} = this.props;
+        const {cardComponent, items, colProps, onItemClick, size, list} = this.props;
         const Card = cardComponent || SideCard;
-        return (<div className={"msSideGrid" + (this.props.className ? " " + this.props.className : "")}>
-            <Row className="items-list">
-                {items.map((item, i) =>
-                    (<Col key={item.id || i} {...colProps}>
-                        <Card
-                            onClick={() => onItemClick(item)}
-                            size={size}
-                            {...item}
-                        />
-                    </Col>)
-                )}
-            </Row>
-        </div>);
+        return list
+            ? (<div className={"ms-side-list" + (this.props.className ? " " + this.props.className : "")}>
+                {items.map((item, i) => (
+                    <Card
+                        key={item.id || i}
+                        onClick={() => onItemClick(item)}
+                        size={size}
+                        {...item}
+                    />
+                ))}
+            </div>)
+            : (<div className={"msSideGrid" + (this.props.className ? " " + this.props.className : "")}>
+                <Row className="items-list">
+                    {items.map((item, i) =>
+                        (<Col key={item.id || i} {...colProps}>
+                            <Card
+                                onClick={() => onItemClick(item)}
+                                size={size}
+                                {...item}
+                            />
+                        </Col>)
+                    )}
+                </Row>
+            </div>);
     }
 }
 
-module.exports = SideGrid;
+export const CardList = (props) => <SideGrid {...props} list/>;
+export default SideGrid;
