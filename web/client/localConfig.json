@@ -442,7 +442,9 @@
             "Timeline",
             "Playback",
             "FeedbackMask",
-            "StyleEditor"
+            "StyleEditor",
+            "MapTemplates",
+            "Extensions"
         ],
         "embedded": [{
                 "name": "Map",

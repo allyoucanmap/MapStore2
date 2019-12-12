@@ -74,6 +74,8 @@ const updateMapLayoutEpic = (action$, store) =>
             ].filter(panel => panel)) || {left: 0};
 
             const rightPanels = head([
+                get(state, "controls.extensions.enabled") && {right: mapLayout.right.md} || null,
+                get(state, "controls.map-templates.enabled") && {right: mapLayout.right.md} || null,
                 get(state, "controls.details.enabled") && {right: mapLayout.right.md} || null,
                 get(state, "controls.annotations.enabled") && {right: mapLayout.right.md} || null,
                 get(state, "controls.metadataexplorer.enabled") && {right: mapLayout.right.md} || null,

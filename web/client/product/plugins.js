@@ -119,7 +119,11 @@ module.exports = {
         WidgetsTrayPlugin: require('../plugins/WidgetsTray'),
         ZoomAllPlugin: require('../plugins/ZoomAll'),
         ZoomInPlugin: require('../plugins/ZoomIn'),
-        ZoomOutPlugin: require('../plugins/ZoomOut')
+        ZoomOutPlugin: require('../plugins/ZoomOut'),
+
+
+        MapTemplatesPlugin: require('../plugins/MapTemplates').default,
+        ExtensionsPlugin: require('../plugins/Extensions').default
     },
     requires: {
         ReactSwipe: require('react-swipeable-views').default,
