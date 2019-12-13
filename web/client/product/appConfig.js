@@ -11,58 +11,6 @@ module.exports = {
         name: "home",
         path: "/",
         component: require('./pages/Maps')
-    }, {
-        name: "maps",
-        path: "/maps",
-        component: require('./pages/Maps')
-    }, {
-        name: "mapviewer",
-        path: "/viewer/:mapType/:mapId",
-        component: require('./pages/MapViewer')
-    }, {
-        name: "mapviewer",
-        path: "/viewer/:mapId",
-        component: require('./pages/MapViewer')
-    }, {
-        name: 'context',
-        path: "/context/:contextName",
-        component: require('./pages/Context').default
-    }, {
-        name: 'context',
-        path: "/context/:contextName/:mapId",
-        component: require('./pages/Context').default
-    }, {
-        name: 'context-creator',
-        path: "/context-creator/:contextId",
-        component: require('./pages/ContextCreator').default
-    }, {
-        name: "manager",
-        path: "/manager",
-        component: require('./pages/Manager')
-    }, {
-        name: "manager",
-        path: "/manager/:tool",
-        component: require('./pages/Manager')
-    }, {
-        name: "context-manager",
-        path: "/context-manager",
-        component: require('./pages/ContextManager').default
-    }, {
-        name: "dashboard",
-        path: "/dashboard",
-        component: require('./pages/Dashboard')
-    }, {
-        name: "dashboard",
-        path: "/dashboard/:did",
-        component: require('./pages/Dashboard')
-    }, {
-        name: "rulesmanager",
-        path: "/rules-manager",
-        component: require('./pages/RulesManager')
-    }, {
-        name: "geostory",
-        path: "/geostory/:gid",
-        component: require('./pages/GeoStory').default
     }],
     initialState: {
         defaultState: {

@@ -290,7 +290,7 @@
                 }
               }
             }
-          }, "AutoMapUpdate", "HelpLink", "Share", "DrawerMenu", "Version", "Notifications", "BackgroundSelector", "Annotations",
+          }, "AutoMapUpdate", "HelpLink", "Share", "DrawerMenu", "Version", "BackgroundSelector", "Annotations",
             {
                 "name": "Identify",
                 "cfg": {
@@ -565,7 +565,7 @@
             "cfg": {
                 "enableContextManager": true
             }
-        }, "Login","Language", "NavMenu", "Attribution", "ScrollTop", "Notifications"],
+        }, "Login","Language", "NavMenu", "Attribution", "ScrollTop"],
         "maps": ["HomeDescription", "Fork", "MapSearch", "CreateNewMap", "FeaturedMaps", "ContentTabs",
 
           {
@@ -640,7 +640,7 @@
             },
             "containerPosition": "columns"
           }
-        }, "BurgerMenu", "Dashboard", "Notifications", {
+        }, "BurgerMenu", "Dashboard", {
             "name": "Tutorial",
             "cfg": {
                 "allowClicksThruHole": false,
@@ -685,7 +685,6 @@
               "containerPosition": "header"
             }
           },
-          "Notifications",
           {
             "name": "FeedbackMask",
             "cfg": {
@@ -714,7 +713,6 @@
             }
           },
           "ContextCreator",
-          "Notifications",
           {
             "name": "FeedbackMask",
             "cfg": {

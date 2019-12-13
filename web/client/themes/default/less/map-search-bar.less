@@ -185,3 +185,39 @@ div.MapSearchBar .input-group-addon {
         }
     }
 }
+
+.ms-maps-search {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 90%;
+    margin: auto;
+    .ms-maps-search-input {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        .maps-search.MapSearchBar {
+            margin: 0;
+            flex: 1;
+            width: auto;
+        }
+        .maps-search.MapSearchBar + .btn-group {
+            margin-left: 8px;
+        }
+        .form-group {
+            margin-bottom: 0;
+        }
+    }
+    .ms-maps-search-filters {
+        margin-top: 15px;
+        border: 1px solid @ms2-color-shade-lighter;
+        width: 100%;
+        padding: 8px;
+    }
+}
+
+@media (min-width: 768px) {
+    .ms-maps-search {
+        width: 620px;
+    }
+}

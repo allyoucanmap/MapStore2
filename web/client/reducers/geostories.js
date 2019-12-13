@@ -18,7 +18,19 @@ function geostories(state = {
     start: 0,
     limit: 12,
     errors: [],
-    searchText: ""
+    searchText: "",
+    totalCount: 1,
+    results: [{
+        canDelete: false,
+        canEdit: false,
+        canCopy: true,
+        creation: "2018-04-26 16:36:43.667",
+        lastUpdate: "2019-09-13 10:25:55.214",
+        description: "Example of story",
+        id: 5593,
+        name: "Story",
+        featured: "true"
+    }]
 }, action) {
     switch (action.type) {
     case SET_GEOSTORIES_AVAILABLE: {

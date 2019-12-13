@@ -51,9 +51,9 @@ class PaginationToolbar extends React.Component {
         }
         return (
             <Row className="pagination-toolbar">
-                <Col xs={12} className="text-center">
+                {/* <Col xs={12} className="text-center">
                     {this.renderLoading()}
-                </Col>
+                </Col>*/}
                 <Col xs={12} className="text-center">
                     <Pagination
                         prev next first last ellipsis boundaryLinks

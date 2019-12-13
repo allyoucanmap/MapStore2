@@ -37,4 +37,6 @@ const updateMapsDashboardTabs = (action$, {getState = () => {}}) =>
         });
 
 
-module.exports = {updateMapsDashboardTabs};
+module.exports = {
+    // updateMapsDashboardTabs
+};

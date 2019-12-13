@@ -115,7 +115,8 @@ class SearchBar extends React.Component {
         onZoomToPoint: PropTypes.func,
         showAddressSearchOption: PropTypes.bool,
         showCoordinatesSearchOption: PropTypes.bool,
-        showOptions: PropTypes.bool
+        showOptions: PropTypes.bool,
+        buttons: PropTypes.array
     };
 
     static contextTypes = {
@@ -174,7 +175,8 @@ class SearchBar extends React.Component {
         showOptions: true,
         showCoordinatesSearchOption: true,
         showAddressSearchOption: true,
-        enabledSearchServicesConfig: false
+        enabledSearchServicesConfig: false,
+        buttons: []
     };
 
     componentDidUpdate(prevProps) {
@@ -358,7 +360,8 @@ class SearchBar extends React.Component {
                             ],
                             visible: this.props.showOptions,
                             Element: DropdownToolbarOptions
-                        }]}
+                        },
+                        ...this.props.buttons]}
                 />
                 {
                     this.props.showOptions && activeTool === "coordinatesSearch" ? <Toolbar
