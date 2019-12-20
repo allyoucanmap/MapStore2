@@ -5,11 +5,11 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
+const React = require('react');
 const {connect} = require('react-redux');
 const {createSelector} = require('reselect');
 const {compose, defaultProps} = require('recompose');
-const {hideSettings, updateSettings, updateNode, updateSettingsParams} = require('../actions/layers');
+const {hideSettings, showSettings, updateSettings, updateNode, updateSettingsParams} = require('../actions/layers');
 const {getLayerCapabilities} = require('../actions/layerCapabilities');
 const {updateSettingsLifecycle} = require("../components/TOC/enhancers/tocItemsSettings");
 const TOCItemsSettings = require('../components/TOC/TOCItemsSettings');
@@ -22,6 +22,7 @@ const {currentLocaleSelector} = require('../selectors/locale');
 const {isAdminUserSelector} = require('../selectors/security');
 const {setControlProperty} = require('../actions/controls');
 const {toggleStyleEditor} = require('../actions/styleeditor');
+const { Button, Glyphicon } = require('react-bootstrap');
 
 const tocItemsSettingsSelector = createSelector([
     layerSettingSelector,
@@ -69,7 +70,6 @@ const tocItemsSettingsSelector = createSelector([
  *    }
  * }
  */
-
 const TOCItemsSettingsPlugin = compose(
     connect(tocItemsSettingsSelector, {
         onHideSettings: hideSettings,
@@ -89,6 +89,48 @@ const TOCItemsSettingsPlugin = compose(
     })
 )(TOCItemsSettings);
 
+const assign = require('object-assign');
+const TOCButton = connect(createSelector([
+    layerSettingSelector
+], (settings) => ({
+    settings
+})), {
+    onToggle: showSettings
+})(({
+    status,
+    enabled,
+    onToggle,
+    settings = {},
+    selectedLayers = [],
+    selectedGroups = [],
+    ...props
+}) => {
+
+    const onToggleSettings = () => {
+        if (!settings.expanded) {
+            if (status === 'LAYER' || status === 'LAYER_LOAD_ERROR') {
+                onToggle( selectedLayers[0].id, 'layers', {opacity: parseFloat(selectedLayers[0].opacity !== undefined ? selectedLayers[0].opacity : 1)});
+            } else if (status === 'GROUP') {
+                onToggle(selectedGroups[selectedGroups.length - 1].id, 'groups', {});
+            }
+        } /* else {
+            this.props.onToolsActions.onHideSettings();
+        }*/
+    };
+    return !settings.expanded && (status === 'LAYER' || status === 'GROUP' || status === 'LAYER_LOAD_ERROR')
+        ? <Button {...props} onClick={() => onToggleSettings()}>
+            <Glyphicon glyph="wrench"/>
+        </Button>
+        : null;
+});
+
+
 module.exports = {
-    TOCItemsSettingsPlugin
+    TOCItemsSettingsPlugin: assign(TOCItemsSettingsPlugin, {
+        TOC: {
+            priority: 1,
+            tool: TOCButton,
+            panel: true
+        }
+    })
 };

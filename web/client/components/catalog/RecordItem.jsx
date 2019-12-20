@@ -259,7 +259,7 @@ class RecordItem extends React.Component {
             layer.type === background.type && layer.source === background.source && layer.name === background.name));
         // the preview and toolbar width depends on the values defined in the theme (variable.less)
         // IMPORTANT: if those values are changed then these defaults also have to change
-        return record ? (<div>
+        return record ? (<>
             {this.props.modalParams && this.props.modalParams.identifier === record.identifier && !this.props.modalParams.editing ?
                 this.renderBackgroundDialog() : null}
             <SideCard
@@ -306,7 +306,7 @@ class RecordItem extends React.Component {
                             }
                         ]}/>
                 }/>
-        </div>) : null;
+        </>) : null;
     }
 
     isLinkCopied = (key) => {

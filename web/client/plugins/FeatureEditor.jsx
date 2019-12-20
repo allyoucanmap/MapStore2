@@ -22,7 +22,10 @@ const EMPTY_ARR = [];
 const EMPTY_OBJ = {};
 const {gridTools, gridEvents, pageEvents, toolbarEvents} = require('./featuregrid/index');
 const { initPlugin, sizeChange, setUp} = require('../actions/featuregrid');
+const { browseData } = require('../actions/layers');
+const LayoutPanel = require('./layout/LayoutPanel').default;
 const ContainerDimensions = require('react-container-dimensions').default;
+const { Button, Glyphicon } = require('react-bootstrap');
 const {mapLayoutValuesSelector} = require('../selectors/maplayout');
 const Dock = connect(createSelector(
     getDockSize,
@@ -115,7 +118,7 @@ const FeatureDock = (props = {
     dialogs: EMPTY_OBJ,
     select: EMPTY_ARR
 }) => {
-    const dockProps = {
+    /* const dockProps = {
         dimMode: "none",
         defaultSize: 0.35,
         fluid: true,
@@ -125,10 +128,57 @@ const FeatureDock = (props = {
         position: "bottom",
         setDockSize: () => {},
         zIndex: 1030
-    };
+    };*/
     // columns={[<aside style={{backgroundColor: "red", flex: "0 0 12em"}}>column-selector</aside>]}
 
-    return (
+    return props.open
+        ? (
+            <LayoutPanel
+                resizeHandle="n"
+                axis="y"
+                defaultWidth="100%"
+                defaultHeight={400}>
+                <BorderLayout
+                    className="feature-grid-container"
+                    key={"feature-grid-container"}
+                    header={getHeader()}
+                    columns={getPanels(props.tools)}
+                    footer={getFooter(props)}>
+                    {getDialogs(props.tools)}
+                    <Grid
+                        editingAllowedRoles={props.editingAllowedRoles}
+                        initPlugin={props.initPlugin}
+                        customEditorsOptions={props.customEditorsOptions}
+                        autocompleteEnabled={props.autocompleteEnabled}
+                        url={props.url}
+                        typeName={props.typeName}
+                        filterRenderers={getFilterRenderers(props.describe)}
+                        enableColumnFilters={props.enableColumnFilters}
+                        emptyRowsView={getEmptyRowsView()}
+                        focusOnEdit={props.focusOnEdit}
+                        newFeatures={props.newFeatures}
+                        changes={props.changes}
+                        mode={props.mode}
+                        select={props.select}
+                        key={"feature-grid-container"}
+                        columnSettings={props.attributes}
+                        gridEvents={props.gridEvents}
+                        pageEvents={props.pageEvents}
+                        describeFeatureType={props.describe}
+                        features={props.features}
+                        minHeight={600}
+                        tools={props.gridTools}
+                        pagination={props.pagination}
+                        pages={props.pages}
+                        virtualScroll={props.virtualScroll}
+                        maxStoredPages={props.maxStoredPages}
+                        vsOverScan={props.vsOverScan}
+                        scrollDebounce={props.scrollDebounce}
+                        size={props.size}
+                    />
+                </BorderLayout>
+            </LayoutPanel>) : null;
+    /* return (
         <Dock {...dockProps} onSizeChange={size => { props.onSizeChange(size, dockProps); }}>
             {props.open &&
         <ContainerDimensions>
@@ -177,7 +227,7 @@ const FeatureDock = (props = {
 
         </ContainerDimensions>
             }
-        </Dock>);
+        </Dock>);*/
 };
 const selector = createSelector(
     state => get(state, "featuregrid.open"),
@@ -242,9 +292,43 @@ const EditorPlugin = compose(
     })
 )(FeatureDock);
 
+const assign = require('object-assign');
+
+const TOCButton = connect(createSelector([
+    state => get(state, "featuregrid.open")
+], (enabled) => ({
+    enabled
+})), {
+    onToggle: browseData
+})(({
+    status,
+    enabled,
+    onToggle,
+    selectedLayers,
+    ...props
+}) => {
+    return !enabled && status === 'LAYER' && selectedLayers[0].search
+        ? <Button {...props} onClick={() => onToggle({
+            url: selectedLayers[0].search.url || selectedLayers[0].url,
+            name: selectedLayers[0].name,
+            id: selectedLayers[0].id
+        })}>
+            <Glyphicon glyph="features-grid"/>
+        </Button>
+        : null;
+});
 
 module.exports = {
-    FeatureEditorPlugin: EditorPlugin,
+    FeatureEditorPlugin: assign(EditorPlugin, {
+        Layout: {
+            priority: 1,
+            container: 'bottom'
+        },
+        TOC: {
+            priority: 1,
+            tool: TOCButton
+        }
+    }),
     epics: require('../epics/featuregrid'),
     reducers: {
         featuregrid: require('../reducers/featuregrid')

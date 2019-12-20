@@ -7,7 +7,7 @@
  */
 
 const React = require('react');
-const { Col, Form, FormGroup, FormControl } = require('react-bootstrap');
+const { Form, FormGroup, FormControl } = require('react-bootstrap');
 const localizedProps = require('../../../../misc/enhancers/localizedProps');
 const TitleInput = localizedProps("placeholder")(FormControl);
 
@@ -16,15 +16,11 @@ const Editor = localizedProps("placeholder")(ReactQuill);
 
 module.exports = ({ data = {}, onChange = () => { }}) => (
     <div>
-        <Col key="form" xs={12}>
-            <Form>
-                <FormGroup controlId="title">
-                    <Col sm={12}>
-                        <TitleInput style={{ marginBottom: 10 }} placeholder="widgets.builder.wizard.titlePlaceholder" value={data.title} type="text" onChange={e => onChange("title", e.target.value)} />
-                    </Col>
-                </FormGroup>
-            </Form>
-        </Col>
+        <Form>
+            <FormGroup controlId="title">
+                <TitleInput style={{ marginBottom: 10 }} placeholder="widgets.builder.wizard.titlePlaceholder" value={data.title} type="text" onChange={e => onChange("title", e.target.value)} />
+            </FormGroup>
+        </Form>
         <Editor modules={{
             toolbar: [
                 [{'size': ['small', false, 'large', 'huge'] }, 'bold', 'italic', 'underline', 'blockquote'],

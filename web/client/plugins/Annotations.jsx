@@ -158,7 +158,7 @@ class AnnotationsPanel extends React.Component {
     };
 
     render() {
-        return this.props.active ? (
+        return <Annotations {...this.props} width={this.props.width}/>; /* this.props.active ? (
             <ContainerDimensions>
                 { ({ width }) =>
                     <span className="ms-annotations-panel react-dock-no-resize ms-absolute-dock ms-side-panel">
@@ -171,7 +171,7 @@ class AnnotationsPanel extends React.Component {
                     </span>
                 }
             </ContainerDimensions>
-        ) : null;
+        ) : null;*/
     }
 }
 
@@ -216,7 +216,7 @@ module.exports = {
     AnnotationsPlugin: assign(AnnotationsPlugin, {
         disablePluginIf: "{state('mapType') === 'cesium' || state('mapType') === 'leaflet' }"
     }, {
-        BurgerMenu: {
+        /* BurgerMenu: {
             name: 'annotations',
             position: 40,
             text: <Message msgId="annotationsbutton"/>,
@@ -224,6 +224,14 @@ module.exports = {
             action: conditionalToggle,
             priority: 2,
             doNotHide: true
+        }*/
+        Layout: {
+            priority: 1,
+            position: 5,
+            size: 400,
+            glyph: 'comment',
+            tooltipId: 'mps.pageTooltip',
+            container: 'right-menu'
         }
     }),
     reducers: {

@@ -14,6 +14,7 @@ const DockablePanel = require('../../misc/panels/DockablePanel');
 const GeocodeViewer = require('./GeocodeViewer');
 const ResizableModal = require('../../misc/ResizableModal');
 const Portal = require('../../misc/Portal');
+const BorderLayout = require('../../layout/BorderLayout');
 const Coordinate = require('./coordinates/Coordinate');
 /**
  * Component for rendering Identify Container inside a Dockable container
@@ -79,7 +80,79 @@ module.exports = props => {
     const toolButtons = getToolButtons({...props, lngCorrected, validResponses, latlng});
     const missingResponses = requests.length - responses.length;
     const revGeocodeDisplayName = reverseGeocodeData.error ? <Message msgId="identifyRevGeocodeError"/> : reverseGeocodeData.display_name;
-    return (
+
+    return enabled && requests.length !== 0 ? (
+        <div id="identify-container" className={enabled && requests.length !== 0 ? "identify-active" : ""}>
+            <BorderLayout
+                header={[
+                    <Coordinate
+                        key="coordinate-editor"
+                        formatCoord={formatCoord}
+                        enabledCoordEditorButton={enabledCoordEditorButton}
+                        onChange={onChangeClickPoint}
+                        onChangeFormat={onChangeFormat}
+                        edit={showCoordinateEditor}
+                        coordinate={{
+                            lat: latlng && latlng.lat,
+                            lon: lngCorrected
+                        }}
+                    />,
+                    <GeocodeViewer latlng={latlng} revGeocodeDisplayName={revGeocodeDisplayName} {...props}/>,
+                    <Row key="button-row" className="text-center" style={{position: 'relative'}}>
+                        <Col key="tools" xs={12}>
+                            <Toolbar
+                                btnDefaultProps={{ bsStyle: 'primary', className: 'square-button-md' }}
+                                buttons={toolButtons}
+                                transitionProps={null
+                                }/>
+                        </Col>
+                        <div key="navigation" style={{
+                            zIndex: 1,
+                            position: "absolute",
+                            right: 0,
+                            top: 0,
+                            margin: "0 10px"
+                        }}>
+                            <Toolbar
+                                btnDefaultProps={{ bsStyle: 'primary', className: 'square-button-md' }}
+                                buttons={getNavigationButtons(props)}
+                                transitionProps={null /* same here */ }
+                            />
+                        </div>
+                    </Row>
+                ].filter(headRow => headRow)}>
+                <Viewer
+                    index={index}
+                    setIndex={setIndex}
+                    format={format}
+                    missingResponses={missingResponses}
+                    responses={responses}
+                    showEmptyMessageGFI={showEmptyMessageGFI}
+                    {...viewerOptions}/>
+            </BorderLayout>
+            <Portal>
+                <ResizableModal
+                    fade
+                    title={<Message msgId="warning"/>}
+                    size="xs"
+                    show={warning}
+                    onClose={clearWarning}
+                    buttons={[{
+                        text: <Message msgId="close"/>,
+                        onClick: clearWarning,
+                        bsStyle: 'primary'
+                    }]}>
+                    <div className="ms-alert" style={{padding: 15}}>
+                        <div className="ms-alert-center text-center">
+                            <Message msgId="identifyNoQueryableLayers"/>
+                        </div>
+                    </div>
+                </ResizableModal>
+            </Portal>
+        </div>
+    ) : null;
+
+    /* return (
         <div id="identify-container" className={enabled && requests.length !== 0 ? "identify-active" : ""}>
             <DockablePanel
                 bsStyle="primary"
@@ -115,9 +188,9 @@ module.exports = props => {
                                 btnDefaultProps={{ bsStyle: 'primary', className: 'square-button-md' }}
                                 buttons={toolButtons}
                                 transitionProps={null
-                                    /* transitions was causing a bad rendering of toolbar present in the identify panel
-                                         * for this reason they ahve been disabled
-                                        */
+                                    // transitions was causing a bad rendering of toolbar present in the identify panel
+                                         // for this reason they ahve been disabled
+                                        //
                                 }/>
                         </Col>
                         <div key="navigation" style={{
@@ -130,7 +203,8 @@ module.exports = props => {
                             <Toolbar
                                 btnDefaultProps={{ bsStyle: 'primary', className: 'square-button-md' }}
                                 buttons={getNavigationButtons(props)}
-                                transitionProps={null /* same here */}
+                                transitionProps={null // same here
+                                }
                             />
                         </div>
                     </Row>
@@ -165,5 +239,5 @@ module.exports = props => {
                 </ResizableModal>
             </Portal>
         </div>
-    );
+    );*/
 };

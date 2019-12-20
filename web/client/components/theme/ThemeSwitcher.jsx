@@ -8,10 +8,11 @@ const PropTypes = require('prop-types');
  */
 
 const React = require('react');
-const {head} = require('lodash');
-const {FormGroup, Label, FormControl} = require('react-bootstrap');
-const Message = require('../I18N/Message');
+const { Button: ButtonRB, Glyphicon } = require('react-bootstrap');
+const tooltip = require('../misc/enhancers/tooltip');
+const Button = tooltip(ButtonRB);
 
+/*
 class ThemeSwitcher extends React.Component {
     static propTypes = {
         themes: PropTypes.array,
@@ -42,5 +43,40 @@ class ThemeSwitcher extends React.Component {
             </FormGroup>);
     }
 }
+*/
+function ThemeButton({
+    themes,
+    selectedTheme,
+    onThemeSelected = () => {}
+}) {
+    const selectedThemeId = selectedTheme && selectedTheme.id;
+    const filteredThemes = themes.filter((theme, idx) => idx < 2);
+    return (
+        <div>
+            <Button
+                className="square-button-md"
+                tooltip={selectedThemeId === 'dark'
+                    ? 'Switch to bright theme'
+                    : 'Switch to dark theme'}
+                bsStyle="primary"
+                onClick={() => {
+                    const currentTheme = filteredThemes.find(({ id }) => id !== selectedThemeId);
+                    onThemeSelected(currentTheme);
+                }}>
+                <Glyphicon glyph={selectedThemeId === 'dark' ? 'moon' : 'sun'}/>
+            </Button>
+        </div>
+    );
+}
 
-module.exports = ThemeSwitcher;
+ThemeButton.propTypes = {
+    themes: PropTypes.array,
+    selectedTheme: PropTypes.object,
+    onThemeSelected: PropTypes.func
+};
+
+ThemeButton.defaultProps = {
+    onThemeSelected: () => {}
+};
+
+module.exports = ThemeButton;

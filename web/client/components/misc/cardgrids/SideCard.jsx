@@ -36,6 +36,7 @@ module.exports = ({
     className = '',
     description,
     fullText,
+    headTools,
     onClick = () => {},
     onMouseEnter = () => {},
     onMouseLeave = () => {},
@@ -52,7 +53,7 @@ module.exports = ({
 } = {}) =>
     <div
         className={`mapstore-side-card${selected ? ' selected' : ''}${size ? ' ms-' + size : ''}${className ? ` ${className}` : ''}${fullText ? ' full-text' : ''}`}
-        onClick={() => onClick({title, preview, description, caption, tools, ...props})}
+        onClick={(event) => onClick({title, preview, description, caption, tools, ...props}, event)}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         style={style}>
@@ -62,6 +63,9 @@ module.exports = ({
                     <div style={{ width: 10, overflow: 'hidden' }} >{dragSymbol}</div>
                 </div>
             )}
+            {headTools && <div className="mapstore-side-card-tool text-center" style={styleTools}>
+                {headTools}
+            </div>}
             {preview && <div className="mapstore-side-preview" style={stylePreview}>
                 {preview}
             </div>}

@@ -9,16 +9,15 @@ const PropTypes = require('prop-types');
 const React = require('react');
 const {connect} = require('react-redux');
 
-const Sidebar = require('react-sidebar').default;
+// const Sidebar = require('react-sidebar').default;
 const {createSelector} = require('reselect');
 const {changeLayerProperties, changeGroupProperties, toggleNode,
     sortNode, showSettings, hideSettings, updateSettings, updateNode, removeNode} = require('../actions/layers');
 const Message = require('./locale/Message');
 
-
 const {getLayerCapabilities} = require('../actions/layerCapabilities');
 
-const {storeCurrentFilter, discardCurrentFilter, applyFilter} = require('../actions/layerFilter');
+const {openQueryBuilder, storeCurrentFilter, discardCurrentFilter, applyFilter} = require('../actions/layerFilter');
 
 
 const {zoomToExtent} = require('../actions/map');
@@ -36,7 +35,7 @@ const {
 
 const {isEqual} = require('lodash');
 const LayersUtils = require('../utils/LayersUtils');
-
+const { Button, Glyphicon } = require('react-bootstrap');
 // include application component
 const QueryBuilder = require('../components/data/query/QueryBuilder');
 const QueryPanelHeader = require('../components/data/query/QueryPanelHeader');
@@ -274,7 +273,8 @@ class QueryPanel extends React.Component {
     };
 
     renderSidebar = () => {
-        return (
+        return this.props.querypanelEnabled ? this.renderQueryPanel() : null;
+        /* return (
             <Sidebar
                 open={this.props.querypanelEnabled}
                 sidebar={this.renderQueryPanel()}
@@ -301,7 +301,7 @@ class QueryPanel extends React.Component {
             >
                 <div/>
             </Sidebar>
-        );
+        );*/
     };
     onToggle = () => {
         if (this.props.advancedToolbar && !isEqual(this.props.appliedFilter, this.props.storedFilter)) {
@@ -449,9 +449,64 @@ const QueryPanelPlugin = connect(tocSelector, {
     onRestoreFilter: discardCurrentFilter
 })(QueryPanel);
 
+const assign = require('object-assign');
+/*
+visible: this.props.activateTool.activateLayerFilterTool && (status === 'LAYER' || status === 'LAYER_LOAD_ERROR') && this.props.selectedLayers[0].search && !this.props.settings.expanded && !this.props.layerMetadata.expanded && !this.props.wfsdownload.expanded
+    ? true : false,
+tooltip: this.props.text.layerFilterTooltip,
+glyph: 'filter-layer',
+onClick: this.props.onToolsActions.onQueryBuilder*/
 
+
+const TOCButton = connect(createSelector([
+    (state) => state.controls && state.controls.queryPanel && state.controls.queryPanel.enabled || false
+], (enabled) => ({
+    enabled
+})), {
+    onToggle: openQueryBuilder
+})(({
+    status,
+    enabled,
+    onToggle,
+    ...props
+}) => {
+
+    return !enabled && (status === 'LAYER' || status === 'LAYER_LOAD_ERROR')
+        ? <Button {...props} onClick={() => onToggle()}>
+            <Glyphicon glyph="filter-layer"/>
+        </Button>
+        : null;
+});
 module.exports = {
-    QueryPanelPlugin,
+    QueryPanelPlugin: assign(QueryPanelPlugin, {
+        TOC: {
+            priority: 1,
+            tool: TOCButton,
+            panel: true,
+            nodeButton: ({
+                node,
+                onChange = () => {}
+            }) => {
+
+                function onClick(event) {
+                    const { layerFilter } = node || {};
+                    event.stopPropagation();
+                    onChange(
+                        node.id,
+                        { layerFilter: { ...layerFilter, disabled: !layerFilter.disabled }} );
+                }
+
+                const { layerFilter } = node || {};
+                const { disabled } = layerFilter || {};
+
+                return !!layerFilter && {
+                    glyph: 'filter-layer',
+                    tooltipId: !disabled ? 'toc.filterIconEnabled' : 'toc.filterIconDisabled',
+                    onClick
+                };
+            }
+        }
+    }),
     reducers: {
         queryform: require('../reducers/queryform'),
         query: require('../reducers/query'),

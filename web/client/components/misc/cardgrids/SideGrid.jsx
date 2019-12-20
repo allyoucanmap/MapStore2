@@ -41,20 +41,17 @@ class SideGrid extends React.Component {
     };
 
     render() {
-        const {cardComponent, items, colProps, onItemClick, size} = this.props;
+        const {cardComponent, items, onItemClick, size} = this.props;
         const Card = cardComponent || SideCard;
         return (<div className={"msSideGrid" + (this.props.className ? " " + this.props.className : "")}>
-            <Row className="items-list">
-                {items.map((item, i) =>
-                    (<Col key={item.id || i} {...colProps}>
-                        <Card
-                            onClick={() => onItemClick(item)}
-                            size={size}
-                            {...item}
-                        />
-                    </Col>)
-                )}
-            </Row>
+            {items.map((item, i) =>
+                <Card
+                    key={i}
+                    onClick={() => onItemClick(item)}
+                    size={size}
+                    {...item}
+                />
+            )}
         </div>);
     }
 }

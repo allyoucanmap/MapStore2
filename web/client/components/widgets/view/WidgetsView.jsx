@@ -22,7 +22,9 @@ const getWidgetGroups = (groups = [], w) => groups.filter(g => find(g.widgets, i
 require('react-grid-layout/css/styles.css');
 
 const WIDGET_MOBILE_RIGHT_SPACE = 34;
-const getResponsiveWidgetWidth = width => width < 480 ? width - WIDGET_MOBILE_RIGHT_SPACE : width;
+const getResponsiveWidgetWidth = (width) => {
+    return width;
+};
 
 module.exports = pure(({
     id,
@@ -54,9 +56,9 @@ module.exports = pure(({
 } = {}) =>
     (<ResponsiveReactGridLayout
         key={id || "widgets-view"}
-        useDefaultWidthProvider={useDefaultWidthProvider}
+        useDefaultWidthProvider={false}
         measureBeforeMount={measureBeforeMount}
-        width={!useDefaultWidthProvider ? getResponsiveWidgetWidth(width) : undefined}
+        width={getResponsiveWidgetWidth(width)}
         isResizable={canEdit}
         isDraggable={canEdit}
         draggableHandle={".draggableHandle"}
@@ -65,8 +67,9 @@ module.exports = pure(({
         style={style}
         className={`widget-container ${className} ${canEdit ? '' : 'no-drag'}`}
         rowHeight={rowHeight}
-        autoSize
-        verticalCompact={verticalCompact}
+        autoSize={false}
+        compactType="vertical"
+        verticalCompact={false}
         compactMode={compactMode}
         breakpoints={breakpoints}
         cols={cols}

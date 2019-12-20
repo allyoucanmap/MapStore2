@@ -421,11 +421,17 @@ const selector = createSelector(
         shouldLoadFont
     })
 );
+
 module.exports = {
-    MapPlugin: connect(selector, {
+    MapPlugin: assign(connect(selector, {
         onFontError: errorLoadingFont,
         onResolutionsChange: setMapResolutions
-    })(MapPlugin),
+    })(MapPlugin), {
+        Layout: {
+            priority: 1,
+            container: 'background'
+        }
+    }),
     reducers: {
         draw: require('../reducers/draw'),
         highlight: require('../reducers/highlight'),

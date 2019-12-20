@@ -13,7 +13,6 @@ const SideGrid = require('../../../../misc/cardgrids/SideGrid');
 const Message = require('../../../../I18N/Message');
 const sampleData = require('../../../enhancers/sampleChartData');
 const SimpleChart = sampleData(require('../../../../charts/SimpleChart'));
-const {Row} = require('react-bootstrap');
 const sampleProps = {
     legend: false,
     tooltip: false,
@@ -38,7 +37,7 @@ const ITEMS = [{
 }));
 module.exports = shouldUpdate(
     ({ types, type }, { types: nextTypes, type: nextType}) => type !== nextType && types !== nextTypes
-)(({ onSelect = () => { }, onNextPage = () => { }, types = ITEMS, type} = {}) => (<Row>
+)(({ onSelect = () => { }, onNextPage = () => { }, types = ITEMS, type} = {}) => (<>
     <StepHeader key="title" title={<Message msgId="widgets.selectChartType.title" />} />
     <SideGrid
         key="content"
@@ -58,5 +57,5 @@ module.exports = shouldUpdate(
                         } : undefined}
                     />)
                 }))} />
-</Row>
+</>
 ));

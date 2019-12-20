@@ -17,6 +17,7 @@ const ResizableModal = require('../misc/ResizableModal');
 const Portal = require('../misc/Portal');
 const {head, isObject, isString} = require('lodash');
 const Message = require('../I18N/Message');
+const BorderLayout = require('../layout/BorderLayout');
 
 /**
  * Component for rendering TOC Settings as tabs inside a Dockable contanier
@@ -70,7 +71,91 @@ const TOCItemSettings = (props, context) => {
         },
         ...(head(tabs.filter(tab => tab.id === activeTab && tab.toolbar).map(tab => tab.toolbar)) || [])];
 
-    return (
+    return settings.expanded ? (
+        <>
+        <BorderLayout
+            /*
+            onClose={() => {
+                if (onClose) {
+                    onClose(false, tabsCloseActions);
+                } else {
+                    tabsCloseActions.forEach(tabOnClose => { tabOnClose(); });
+                    onHideSettings();
+                }
+            }}
+            */
+            header={[
+                <Row key="ms-toc-settings-toolbar" className="text-center">
+                    <Col xs={12}>
+                        {ToolbarComponent ?
+                            <ToolbarComponent buttons={toolbarButtons}/>
+                            : <Toolbar
+                                btnDefaultProps={{ bsStyle: 'primary', className: 'square-button-md' }}
+                                buttons={toolbarButtons}/>}
+                    </Col>
+                </Row>,
+                ...(tabs.length > 1 ? [<Row key="ms-toc-settings-navbar" className="ms-row-tab">
+                    <Col xs={12}>
+                        <Nav bsStyle="tabs" activeKey={activeTab} justified>
+                            {tabs.map(tab =>
+                                <NavItemT
+                                    key={'ms-tab-settings-' + tab.id}
+                                    tooltip={<Message msgId={tab.tooltipId}/> }
+                                    eventKey={tab.id}
+                                    onClick={() => {
+                                        onSetTab(tab.id);
+                                        if (tab.onClick) { tab.onClick(); }
+                                    }}>
+                                    <Glyphicon glyph={tab.glyph}/>
+                                </NavItemT>
+                            )}
+                        </Nav>
+                    </Col>
+                </Row>] : [])
+            ]}>
+            {tabs.filter(tab => tab.id && tab.id === activeTab).filter(tab => tab.Component).map(tab => (
+                <tab.Component
+                    {...props}
+                    {...tabsConfig[tab.id]}
+                    key={'ms-tab-settings-body-' + tab.id}
+                    containerWidth={width}
+                    element={element}
+                    groups={groups}
+                    nodeType={settings.nodeType}
+                    settings={settings}
+                    retrieveLayerData={onRetrieveLayerData}
+                    onChange={(key, value) => isObject(key) ? onUpdateParams(key, realtimeUpdate) : onUpdateParams({[key]: value}, realtimeUpdate)}/>
+            ))}
+        </BorderLayout>
+        <Portal>
+            <ResizableModal
+                fade
+                show={alertModal}
+                title={<Message msgId="layerProperties.changedSettings"/>}
+                size="xs"
+                onClose={() => onShowAlertModal(false)}
+                buttons={[
+                    {
+                        bsStyle: 'primary',
+                        text: <Message msgId="close"/>,
+                        onClick: () => onClose(true, tabsCloseActions)
+                    },
+                    {
+                        bsStyle: 'primary',
+                        text: <Message msgId="save"/>,
+                        onClick: () => onSave(tabsCloseActions)
+                    }
+                ]}>
+                <div className="ms-alert">
+                    <div className="ms-alert-center">
+                        <Message msgId="layerProperties.changedSettingsAlert"/>
+                    </div>
+                </div>
+            </ResizableModal>
+        </Portal>
+        </>
+    ) : null;
+    /* return (
         <div>
             <DockablePanel
                 open={settings.expanded}
@@ -161,7 +246,7 @@ const TOCItemSettings = (props, context) => {
                 </ResizableModal>
             </Portal>
         </div>
-    );
+    );*/
 };
 TOCItemSettings.contextTypes = {
     plugins: PropTypes.object,

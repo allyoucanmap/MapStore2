@@ -94,11 +94,7 @@ const TimelinePlugin = compose(
             withResizeSpy({ querySelector: ".ms2", closest: true, debounceTime: 100 })
         ),
         defaultProps({
-            style: {
-                marginBottom: 35,
-                marginLeft: 100,
-                marginRight: 80
-            }
+            style: {}
         }),
         // get info about expand, collapse panel
         connect( createSelector(
@@ -118,11 +114,11 @@ const TimelinePlugin = compose(
                     const availableWidth = containerWidth - right - left - marginLeft - marginRight;
                     return {
                         hide: availableWidth < minWidth,
-                        compactToolbar: availableWidth < 880,
-                        style: {...style, ...mapLayoutStyle, minWidth}
+                        compactToolbar: availableWidth < 880/* ,
+                        style: {...style, ...mapLayoutStyle, minWidth}*/
                     };
                 }
-                return {style: {...style, ...mapLayoutStyle, minWidth}};
+                return { /* style: {...style, ...mapLayoutStyle, minWidth}*/ };
             }
         ),
         // effective hide
@@ -184,12 +180,10 @@ const TimelinePlugin = compose(
         };
         return (<div
             style={{
-                position: "absolute",
-                marginBottom: 35,
-                marginLeft: 100,
+                position: "relative",
                 background: "transparent",
-                ...style,
-                right: collapsed ? 'auto' : (style.right || 0)
+                ...(collapsed && { display: 'inline-block' }),
+                ...style
             }}
             className={`timeline-plugin${hideLayersName ? ' hide-layers-name' : ''}${offsetEnabled ? ' with-time-offset' : ''}`}>
 
@@ -204,10 +198,11 @@ const TimelinePlugin = compose(
                     onUpdate={start => (currentTimeRange && isValidOffset(start, currentTimeRange.end) || !currentTimeRange) && status !== "PLAY" && setCurrentTime(start)}
                     className="shadow-soft"
                     style={{
-                        position: 'absolute',
+                        position: 'relative',
                         top: -5,
-                        left: 2,
-                        transform: 'translateY(-100%)'
+                        left: 0,
+                        marginRight: 0,
+                        display: 'inline-block'
                     }} />}
 
             <div
@@ -297,8 +292,13 @@ module.exports = {
     TimelinePlugin: assign(TimelinePlugin, {
         disablePluginIf: "{state('mapType') === 'cesium'}",
         WidgetsTray: {
+            priority: 1,
             tool: <TimelineToggle />,
             position: 0
+        },
+        Layout: {
+            priority: 1,
+            container: 'bottom'
         }
     }),
     reducers: {

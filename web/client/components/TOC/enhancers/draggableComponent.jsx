@@ -65,7 +65,7 @@ const dropSpec = {
         // two thirds of a component
         if (monitor.isOver({shallow: true})) {
             const componentDomNode = ReactDOM.findDOMNode(component);
-            const headDomNode = componentDomNode.getElementsByClassName('toc-default-group-head')[0];
+            const headDomNode = componentDomNode.getElementsByClassName('ms-toc-group')[0];
             const domNode = headDomNode || componentDomNode;
             if (domNode) {
                 const boundingRect = domNode.getBoundingClientRect();

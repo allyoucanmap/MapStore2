@@ -225,7 +225,8 @@ const SearchPlugin = connect((state) => ({
     };
 
     componentDidMount() {
-        this.props.onUpdateResultsStyle({...defaultIconStyle, ...this.props.resultsStyle});
+        // CAUSE INFINITE LOOP ON LAYOUT !!!
+        // this.props.onUpdateResultsStyle({...defaultIconStyle, ...this.props.resultsStyle});
     }
 
     getServiceOverrides = (propSelector) => {

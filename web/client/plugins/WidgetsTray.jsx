@@ -9,7 +9,7 @@
 
 const WidgetsTray = require('./widgets/WidgetsTray');
 const autoDisableWidgets = require('./widgets/autoDisableWidgets');
-
+const assign = require('object-assign');
 /**
  * Plugin that allow to collapse widgets. Shows a small tray where to see the collapsed plugins list.
  * @name WidgetsTray
@@ -18,6 +18,11 @@ const autoDisableWidgets = require('./widgets/autoDisableWidgets');
  * @class
  */
 module.exports = {
-    WidgetsTrayPlugin: autoDisableWidgets(WidgetsTray),
+    WidgetsTrayPlugin: assign(autoDisableWidgets(WidgetsTray), {
+        Layout: {
+            priority: 1,
+            container: 'bottom'
+        }
+    }),
     epics: require('../epics/widgetsTray')
 };

@@ -84,22 +84,25 @@ class WidgetsTray extends React.Component {
     };
     render() {
         return this.props.enabled
-            ? (<div className="widgets-tray"
-                style={{
-                    marginBottom: 32,
-                    marginRight: 80,
-                    bottom: 0,
-                    right: 0,
-                    position: "absolute"
-                }}>
-                <BorderLayout
-                    columns={[
-                        <CollapseTrayButton key="collapse-tray" toolsOptions={this.props.toolsOptions} expanded={this.props.expanded} onClick={() => this.props.setExpanded(!this.props.expanded)} />,
-                        <CollapseAllButton key="collapse-all" toolsOptions={this.props.toolsOptions} />,
-                        ...(this.props.items.map( i => i.tool) || [])
-                    ]}
-                >{this.props.expanded ? <WidgetsBar toolsOptions={this.props.toolsOptions} /> : null}
-                </BorderLayout>
+            ? (<div style={{
+                position: 'relative',
+                display: 'flex'
+            }}>
+                <div className="widgets-tray"
+                    style={{
+                        display: 'inline-block',
+                        marginRight: 0,
+                        marginLeft: 'auto'
+                    }}>
+                    <BorderLayout
+                        columns={[
+                            <CollapseTrayButton key="collapse-tray" toolsOptions={this.props.toolsOptions} expanded={this.props.expanded} onClick={() => this.props.setExpanded(!this.props.expanded)} />,
+                            <CollapseAllButton key="collapse-all" toolsOptions={this.props.toolsOptions} />,
+                            ...(this.props.items.map( i => i.tool) || [])
+                        ]}
+                    >{this.props.expanded ? <WidgetsBar toolsOptions={this.props.toolsOptions} /> : null}
+                    </BorderLayout>
+                </div>
             </div>)
             : null;
     }

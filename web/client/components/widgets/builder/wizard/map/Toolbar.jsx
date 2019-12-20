@@ -19,7 +19,7 @@ const getSaveTooltipId = (step, { id } = {}) => {
 
 module.exports = ({ step = 0, buttons, tocButtons = [], stepButtons = [], editorData = {}, setPage = () => { }, onFinish = () => { }, toggleLayerSelector = () => { } } = {}) => (<Toolbar btnDefaultProps={{
     bsStyle: "primary",
-    bsSize: "sm"
+    className: "square-button-md"
 }}
 buttons={buttons || [...(step === 0 ? tocButtons : []), {
     onClick: () => setPage(Math.max(step - 1, 0)),

@@ -19,7 +19,7 @@ const getSaveTooltipId = (step, {id} = {}) => {
 
 module.exports = ({ step = 0, editorData = {}, stepButtons = [], onFinish = () => {}} = {}) => (<Toolbar btnDefaultProps={{
     bsStyle: "primary",
-    bsSize: "sm"
+    className: "square-button-md"
 }}
 buttons={[...stepButtons, {
     onClick: () => onFinish(Math.min(step + 1, 1)),

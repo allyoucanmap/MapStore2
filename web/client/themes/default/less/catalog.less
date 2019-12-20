@@ -1,70 +1,38 @@
-.catalog-panel {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    .panel-body {
-        padding: 0;
-        position: absolute;
+.ms-catalog {
+    form {
+        padding: 8px;
+    }
+    .ms2-border-layout-content {
         width: 100%;
         height: 100%;
-        > div > form, > form {
-            padding: 0 16px;
-        }
     }
-    .row {
-        margin: 0;
-        overflow-x: hidden;
-        padding-bottom: 16px;
+    .ms2-border-layout-body {
+        width: 100%;
+        height: 100%;
     }
     .catalog-pagination {
+        padding: 8px;
         text-align: center;
-        padding-bottom: 16px;
-    }
-    .catalog-metadata {
-        padding: 16px 0;
-    }
-    .metadata-template-editor {
-        .ql-editor {
-            height: 200px;
-        }
-    }
-    .mapstore-side-card:hover {
-        transform: scale(1.05);
-        cursor: auto;
-        webkit-box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-        -moz-box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-    }
-    .mapstore-switch-panel {
-        .shadow-soft;
-        padding: 0 16px;
-        margin: 16px;
-        .panel-body {
-            position: static;
-            padding-bottom: 16px;
-        }
     }
     .catalog-results {
-        > .record-grid > .row {
-            overflow: hidden;
-        }
-        .mapstore-side-card-desc, .mapstore-side-card-title{
-            text-align: justify;
-        }
-    }
-
-    .catalog-results.loading {
         position: absolute;
         width: 100%;
         height: 100%;
-        display: flex;
-        & > * {
-            margin: auto;
+        &.loading {
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     }
-    /* needed to avoid an error with Firefox where the width was not properly calculated #3824 */
-    .ms2-border-layout-body.catalog {
-        position: relative;
-        display: block !important;
+    .record-grid {
+        padding: 8px;
+    }
+    .catalog {
+        overflow-x: hidden;
+    }
+    .mapstore-switch-panel {
+        border: none;
+        .shadow-soft;
     }
 }

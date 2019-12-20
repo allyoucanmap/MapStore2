@@ -7,7 +7,7 @@
  */
 const React = require('react');
 const PropTypes = require('prop-types');
-const {Button, Row} = require('react-bootstrap');
+const {Button} = require('react-bootstrap');
 const Message = require('../../I18N/Message');
 
 /**
@@ -76,9 +76,9 @@ class WizardComponent extends React.Component {
                    }
                    return null;
                })}
-               <Row key="wizard-buttons" className="ms-wizard-buttons">
+               <div key="wizard-buttons" className="ms-wizard-buttons">
                    {this.renderButtons()}
-               </Row>
+               </div>
            </div>
        );
    }

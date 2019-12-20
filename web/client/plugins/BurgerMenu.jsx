@@ -108,7 +108,7 @@ module.exports = createPlugin(
         containers: {
             OmniBar: {
                 name: "burgermenu",
-                position: 2,
+                position: 4,
                 tool: true,
                 priority: 1
             }

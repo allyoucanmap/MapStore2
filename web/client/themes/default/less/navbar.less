@@ -1,4 +1,83 @@
+#mapstore-navbar {
+    display: block;
+    z-index: 20;
+}
+#mapstore-navbar-container > span:not(#mapstore-burger-menu) {
+    flex: 1;
+    display: block;
+    position: relative;
+}
+#map-search-bar {
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: 4px;
+    padding-right: 4px;
+    border-right: 1px solid @ms2-color-shade-lighter;
+    .form-group {
+        margin-bottom: 0;
+    }
+    .input-group {
+        display: flex;
+        align-items: center;
+        input {
+            padding-right: @square-btn-medium-size * 3;
+        }
+    }
+    .btn-group-menu-options {
+        display: flex;
+    }
+    .search-toolbar-options {
+        position: absolute;
+        display: flex;
+        z-index: 2;
+        padding-right: 2px;
+        right: 0;
+    }
+    .sk-spinner {
+        position: relative !important;
+        right: auto !important;
+        top: auto !important;
+    }
+}
+.search-result-list {
+    position: absolute;
+    right: 8px;
+    max-width: 500px !important;
+    background-color: @ms2-color-background;
+    transform: translateY(16px);
+    .shadow-far;
+    padding: 4px;
+    .search-result {
+        display: flex;
+        padding: 4px;
+        .text-result-title {
+            flex: 1;
+        }
+        & + .search-result {
+            padding-top: 4px;
+            margin-top: 4px;
+            border-top: 1px solid @ms2-color-shade-lighter;
+        }
+
+        &:hover {
+            cursor: pointer;
+            color: @ms2-color-text-primary;
+            background-color: @ms2-color-primary;
+        }
+    }
+}
+#mapstore-navbar-container {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+}
+
+.dropdown-menu > li > a,
+.dropdown-header {
+    padding-left: 8px;
+}
 /* navbar */
+/*
 .navbar-dx ul,
 ol {
 	margin-bottom: 0;
@@ -6,9 +85,7 @@ ol {
 
 .navbar-dx .MapSearchBar .input-group,
 .navbar-dx.shadow {
-	-webkit-box-shadow: -1px 1px 5px 1px rgba(94,94,94,1);
-	-moz-box-shadow: -1px 1px 5px 1px rgba(94,94,94,1);
-	box-shadow: -1px 1px 5px 1px rgba(94,94,94,1);
+	.shadow-far;
 }
 
 .navbar-dx ul,
@@ -45,3 +122,9 @@ ol {
 #mapstore-navbar-container {
 	height: @square-btn-size;
 }
+
+#mapstore-navbar-container {
+	top: 6px;
+	right: 6px;
+}
+*/

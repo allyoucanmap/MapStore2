@@ -6,7 +6,7 @@ module.exports = require('./buildConfig')(
     {
         "mapstore2": path.join(__dirname, "..", "web", "client", "product", "app")
     },
-    { ["themes/default"]: themeEntries["themes/" + (process.env.theme || "default")]},
+    themeEntries,
     {
         base: path.join(__dirname, ".."),
         dist: path.join(__dirname, "..", "web", "client", "dist"),

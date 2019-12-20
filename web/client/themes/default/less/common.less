@@ -40,7 +40,7 @@
 	box-shadow: none;
 	-webkit-box-shadow: none;
 	-moz-box-shadow: none;
-	outline: none;
+	// outline: none;
 }
 
 .option-icon {
@@ -67,7 +67,7 @@
 }
 
 .btn {
-    outline: none !important;
+    // outline: none !important;
 }
 
 .viewer {
@@ -78,7 +78,7 @@ textarea {
     background-color: darken(@ms2-color-background, 5%);
     color: @ms2-color-text;
     border-color: @ms2-color-shade-lighter;
-    outline: none !important;
+    // outline: none !important;
 }
 
 .portal-dialog {
@@ -197,7 +197,7 @@ textarea {
 
 
 div#sync-popover.popover {
-     top: auto !important;
+     // top: auto !important;
      padding: 0;
      h3 {
          background-color: @ms2-color-primary;
@@ -265,4 +265,19 @@ div#sync-popover.popover {
         color: @ms-tray-color;
         border-bottom: 3px solid @ms-tray-border;
     }
+}
+
+mark {
+    background-color: fade(lighten(@ms2-color-mark, 20%), 80%);
+    color: contrast(fade(lighten(@ms2-color-mark, 20%), 80%));
+    padding: 2px;
+}
+
+div.noUi-target {
+    .box-shadow(none);
+    border-top: 1px solid darken(@ms2-color-background, 5%) !important;
+}
+
+* {
+    outline-color: lighten(@ms2-color-primary, 10%) !important;
 }

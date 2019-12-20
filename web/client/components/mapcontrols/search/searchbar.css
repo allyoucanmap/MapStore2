@@ -1,3 +1,4 @@
+/*
 .MapSearchBar {
     left: 65px;
     position: absolute;
@@ -14,20 +15,20 @@
     border-radius: 4px;
 }
 
-/* hide the clearing x in IE 11 and Edge */
+// hide the clearing x in IE 11 and Edge
 .MapSearchBar input::-ms-clear,
 .MapSearchBar input::-ms-reveal {
     display: none;
 }
 
-/*.searchclear {
+.searchclear {
     top:0;
     bottom:0;
     height:14px;
     margin:auto;
     font-size:14px;
     cursor:pointer;
-}*/
+}
 .search-result-list{
     position: absolute;
     top: 50px;
@@ -95,7 +96,7 @@
     }
 }
 
-/* Small devices (tablets, 768px and up) */
+// Small devices (tablets, 768px and up)
 @media (min-width: 768px ) {
     .MapSearchBar {
         width: 500px;
@@ -107,7 +108,7 @@
     }
 }
 
-/* Medium devices (desktops, 992px and up) */
+// Medium devices (desktops, 992px and up)
 @media (min-width: 992px) {
     .MapSearchBar {
         width: 500px;
@@ -119,7 +120,7 @@
     }
 }
 
-/* Large devices (large desktops, 1200px and up) */
+// Large devices (large desktops, 1200px and up)
 @media (min-width: 1200px) {
     .MapSearchBar {
         width: 500px;
@@ -131,7 +132,7 @@
     }
 }
 
-/* Maps Search */
+// Maps Search
 .maps-search.MapSearchBar{
     width: 90%;
     left: 0px;
@@ -151,7 +152,7 @@
     }
 }
 
-/* User Search */
+// User Search
 .user-search.MapSearchBar{
     width: 90%;
     left: 0px;
@@ -180,3 +181,4 @@
     max-width: 400px;
     text-overflow: ellipsis;
 }
+*/

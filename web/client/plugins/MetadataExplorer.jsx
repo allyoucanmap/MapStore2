@@ -34,6 +34,7 @@ const {mapLayoutValuesSelector} = require('../selectors/maplayout');
 const {metadataSourceSelector, modalParamsSelector} = require('../selectors/backgroundselector');
 const Message = require("../components/I18N/Message");
 const DockPanel = require("../components/misc/panels/DockPanel");
+const LayoutPanel = require('./layout/LayoutPanel').default;
 require('./metadataexplorer/css/style.css');
 const CatalogUtils = require('../utils/CatalogUtils');
 
@@ -143,7 +144,7 @@ class MetadataExplorerComponent extends React.Component {
         const layerBaseConfig = {
             group: this.props.group || undefined
         };
-        const panel = (
+        /* const panel = (
             <Catalog
                 layerBaseConfig={layerBaseConfig}
                 zoomToLayer={this.props.zoomToLayer}
@@ -153,7 +154,25 @@ class MetadataExplorerComponent extends React.Component {
                 services={this.props.source === 'backgroundSelector' ? this.props.servicesWithBackgrounds : this.props.services}
                 servicesWithBackgrounds={undefined}
             />
+        );*/
+        return (
+            <LayoutPanel
+                resizeHandle="w"
+                axis="x"
+                defaultWidth={400}
+                defaultHeight="100%">
+                <Catalog
+                    layerBaseConfig={layerBaseConfig}
+                    zoomToLayer={this.props.zoomToLayer}
+                    searchOnStartup={this.props.searchOnStartup}
+                    active={this.props.active}
+                    {...this.props}
+                    services={this.props.source === 'backgroundSelector' ? this.props.servicesWithBackgrounds : this.props.services}
+                    servicesWithBackgrounds={undefined}
+                />
+            </LayoutPanel>
         );
+        /*
         return (
             <div id="catalog-root" className={this.props.active ? 'catalog-active' : ''} style={{width: '100%', height: '100%', pointerEvents: 'none'}}>
                 <ContainerDimensions>
@@ -173,7 +192,7 @@ class MetadataExplorerComponent extends React.Component {
                     </DockPanel>)}
                 </ContainerDimensions>
             </div>
-        );
+        );*/
     }
 }
 
@@ -252,7 +271,15 @@ const API = {
  */
 module.exports = {
     MetadataExplorerPlugin: assign(MetadataExplorerPlugin, {
-        Toolbar: {
+        Layout: {
+            priority: 1,
+            position: 4,
+            size: 'auto',
+            glyph: 'folder-open',
+            tooltipId: 'mps.pageTooltip',
+            container: 'right-menu'
+        }
+        /* Toolbar: {
             name: 'metadataexplorer',
             position: 10,
             exclusive: true,
@@ -272,7 +299,7 @@ module.exports = {
             action: setControlProperty.bind(null, "metadataexplorer", "enabled", true, true),
             priority: 2,
             doNotHide: true
-        }
+        }*/
     }),
     reducers: {catalog: require('../reducers/catalog')},
     epics: require("../epics/catalog").default(API)

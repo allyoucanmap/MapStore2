@@ -15,7 +15,7 @@ const { getVisibleFloatingWidgets, dependenciesSelector, getFloatingWidgetsLayou
 const { editWidget, updateWidgetProperty, deleteWidget, changeLayout, exportCSV, exportImage, toggleCollapse} = require('../actions/widgets');
 const editOptions = require('./widgets/editOptions');
 const autoDisableWidgets = require('./widgets/autoDisableWidgets');
-
+const { withResizeDetector } = require('react-resize-detector');
 const RIGHT_MARGIN = 70;
 const {heightProvider} = require('../components/layout/enhancers/gridLayout');
 const ContainerDimensions = require('react-container-dimensions').default;
@@ -47,10 +47,10 @@ compose(
     ),
     // functionalities concerning auto-resize, layout and style.
     compose(
-        heightProvider({ debounceTime: 20, closest: true, querySelector: '.fill' }),
+        heightProvider({ debounceTime: 20, closest: true, querySelector: '.ms-layout-center' }),
         C => props => <ContainerDimensions>{({ width } = {}) => <C width={width} {...props} />}</ContainerDimensions>,
         withProps(({width, height} = {}) => {
-            const divHeight = height - 120;
+            const divHeight = height;
             const nRows = 4;
             const rowHeight = Math.floor(divHeight / nRows - 20);
             return ({
@@ -59,13 +59,13 @@ compose(
                 breakpoints: { md: 480, xxs: 0 },
                 cols: { md: 6, xxs: 1 },
                 style: {
-                    left: (width && width > 800) ? "500px" : "0",
+                    /* left: (width && width > 800) ? "500px" : "0",
                     marginTop: 52,
-                    bottom: 65,
+                    bottom: 65,*/
+                    position: 'relative',
+                    zIndex: 50,
                     height: Math.floor((height - 100) / (rowHeight + 10)) * (rowHeight + 10),
-                    width: width && width > 800 ? `calc(100% - ${500 + RIGHT_MARGIN}px)` : `calc(100% - ${RIGHT_MARGIN}px)`,
-                    position: 'absolute',
-                    zIndex: 50
+                    width
                 }
             });
         })
@@ -138,9 +138,15 @@ class Widgets extends React.Component {
  *
  */
 const WidgetsPlugin = autoDisableWidgets(Widgets);
+const assign = require('object-assign');
 
 module.exports = {
-    WidgetsPlugin,
+    WidgetsPlugin: assign(WidgetsPlugin, {
+        Layout: {
+            priority: 1,
+            container: 'center'
+        }
+    }),
     reducers: {
         widgets: require('../reducers/widgets')
     },

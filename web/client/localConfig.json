@@ -63,24 +63,18 @@
                 "isNew": true,
                 "autoload": false
             },
-            "selectedService": "gs_stable_csw",
+            "selectedService": "gs_stable_wms",
             "services": {
-              "gs_stable_csw": {
-                "url": "https://gs-stable.geo-solutions.it/geoserver/csw",
-                "type": "csw",
-                "title": "GeoSolutions GeoServer CSW",
-                "autoload": true
+              "ows": {
+                "url": "http://ows.geo-solutions.it/geoserver/wms",
+                "type": "wms",
+                "title": "OWS GeoServer WMS",
+                "autoload": false
               },
               "gs_stable_wms": {
                 "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
                 "type": "wms",
                 "title": "GeoSolutions GeoServer WMS",
-                "autoload": false
-              },
-              "gs_stable_wmts": {
-                "url": "https://gs-stable.geo-solutions.it/geoserver/gwc/service/wmts",
-                "type": "wmts",
-                "title": "GeoSolutions GeoServer WMTS",
                 "autoload": false
               }
             },
@@ -290,7 +284,13 @@
                 }
               }
             }
-          }, "AutoMapUpdate", "HelpLink", "Share", "DrawerMenu", "Version", "Notifications", "BackgroundSelector", "Annotations",
+          }, "AutoMapUpdate", "HelpLink", "Share", "Version", "Notifications",
+          {"name": "BackgroundSelector", "override": {
+            "Layout": {
+                "container": "body",
+                "priority": 1
+            }
+        }}, "Annotations",
             {
                 "name": "Identify",
                 "cfg": {
@@ -398,6 +398,12 @@
             }, {
                 "name": "Toolbar",
                 "id": "NavigationBar",
+                "override": {
+                  "Layout": {
+                      "container": "body",
+                      "priority": 1
+                  }
+              },
                 "cfg": {
                     "id": "navigationBar"
                 }
@@ -409,14 +415,7 @@
                   "alwaysVisible": true
                 }
               }
-            }, {
-                "name": "MapLoading",
-                "override": {
-                    "Toolbar": {
-                        "alwaysVisible": true
-                    }
-                }
-            }, {
+            }, "MapLoading", {
                 "name": "ZoomIn",
                 "override": {
                     "Toolbar": {
@@ -442,7 +441,9 @@
             "Timeline",
             "Playback",
             "FeedbackMask",
-            "StyleEditor"
+            "StyleEditor",
+            "Layout",
+            "ThemeSwitcher"
         ],
         "embedded": [{
                 "name": "Map",
@@ -537,14 +538,7 @@
                 "cfg": {
                     "id": "navigationBar"
                 }
-            }, {
-                "name": "MapLoading",
-                "override": {
-                    "Toolbar": {
-                        "alwaysVisible": true
-                    }
-                }
-            }, "Cookie",
+            }, "MapLoading", "Cookie",
             "OmniBar", {
                 "name": "GoFull",
                 "override": {

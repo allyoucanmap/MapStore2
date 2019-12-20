@@ -9,7 +9,7 @@ const {isNil, has, omit} = require("lodash");
 const assign = require("object-assign");
 const PropTypes = require("prop-types");
 const React = require("react");
-const {FormControl, FormGroup, Alert, Pagination, Checkbox, Button, Panel, Form, Col, InputGroup, ControlLabel, Glyphicon, Tooltip} = require("react-bootstrap");
+const {FormControl, FormGroup, Alert, Pagination, Checkbox, Button, Panel, Form, InputGroup, ControlLabel, Glyphicon, Tooltip} = require("react-bootstrap");
 const ReactQuill = require("react-quill");
 const Select = require("react-select");
 const Spinner = require("react-spinkit");
@@ -22,7 +22,6 @@ const RecordGrid = require("./RecordGrid");
 const SwitchPanel = require("../misc/switch/SwitchPanel");
 const Loader = require('../misc/Loader');
 
-require('react-select/dist/react-select.css');
 require('react-quill/dist/quill.snow.css');
 
 class Catalog extends React.Component {
@@ -376,6 +375,7 @@ class Catalog extends React.Component {
             this.isViewMode(this.props.mode) ? (
                 <BorderLayout
                     key="catalog-BorderLayout"
+                    className="ms-catalog"
                     bodyClassName="ms2-border-layout-body catalog"
                     header={(<Form>
                         <FormGroup controlId="labelService" key="labelService">
@@ -413,44 +413,39 @@ class Catalog extends React.Component {
                 </BorderLayout>
             ) : (
                 <BorderLayout
+                    className="ms-catalog"
                     bodyClassName="ms2-border-layout-body catalog"
-                    header={<Form horizontal >
+                    header={<Form >
                         <FormGroup>
-                            <Col xs={12}>
-                                <ControlLabel><Message msgId="catalog.url"/></ControlLabel>
-                                <FormControl
-                                    ref="url"
-                                    type="text"
-                                    style={{
-                                        textOverflow: "ellipsis"
-                                    }}
-                                    placeholder={LocaleUtils.getMessageById(this.context.messages, "catalog.urlPlaceholder")}
-                                    value={this.props.newService && this.props.newService.url}
-                                    onChange={(e) => this.props.onChangeUrl(e.target.value)}/>
-                            </Col>
+                            <ControlLabel><Message msgId="catalog.url"/></ControlLabel>
+                            <FormControl
+                                ref="url"
+                                type="text"
+                                style={{
+                                    textOverflow: "ellipsis"
+                                }}
+                                placeholder={LocaleUtils.getMessageById(this.context.messages, "catalog.urlPlaceholder")}
+                                value={this.props.newService && this.props.newService.url}
+                                onChange={(e) => this.props.onChangeUrl(e.target.value)}/>
                         </FormGroup>
                         <FormGroup controlId="title" key="title">
-                            <Col xs={12} sm={3} md={3}>
-                                <ControlLabel><Message msgId="catalog.type"/></ControlLabel>
-                                <FormControl
-                                    onChange={(e) => this.props.onChangeType(e.target.value)}
-                                    value={this.props.newService && this.props.newService.type}
-                                    componentClass="select">
-                                    {this.renderFormats()}
-                                </FormControl>
-                            </Col>
-                            <Col xs={12} sm={9} md={9}>
-                                <ControlLabel><Message msgId="catalog.serviceTitle"/></ControlLabel>
-                                <FormControl
-                                    ref="title"
-                                    type="text"
-                                    style={{
-                                        textOverflow: "ellipsis"
-                                    }}
-                                    placeholder={LocaleUtils.getMessageById(this.context.messages, "catalog.serviceTitlePlaceholder")}
-                                    value={this.props.newService && this.props.newService.title}
-                                    onChange={(e) => this.props.onChangeTitle(e.target.value)}/>
-                            </Col>
+                            <ControlLabel><Message msgId="catalog.type"/></ControlLabel>
+                            <FormControl
+                                onChange={(e) => this.props.onChangeType(e.target.value)}
+                                value={this.props.newService && this.props.newService.type}
+                                componentClass="select">
+                                {this.renderFormats()}
+                            </FormControl>
+                            <ControlLabel><Message msgId="catalog.serviceTitle"/></ControlLabel>
+                            <FormControl
+                                ref="title"
+                                type="text"
+                                style={{
+                                    textOverflow: "ellipsis"
+                                }}
+                                placeholder={LocaleUtils.getMessageById(this.context.messages, "catalog.serviceTitlePlaceholder")}
+                                value={this.props.newService && this.props.newService.title}
+                                onChange={(e) => this.props.onChangeTitle(e.target.value)}/>
                         </FormGroup>
                     </Form>}>
                     <Form >
@@ -461,34 +456,28 @@ class Catalog extends React.Component {
                             onSwitch={this.props.onToggleAdvancedSettings}>
                             <div>
                                 <FormGroup controlId="autoload" key="autoload">
-                                    <Col xs={12}>
-                                        <Checkbox value="autoload" onChange={(e) => this.props.onChangeAutoload(e.target.checked)}
-                                            checked={!isNil(this.props.newService.autoload) ? this.props.newService.autoload : false}>
-                                            <Message msgId="catalog.autoload"/>
-                                        </Checkbox>
-                                    </Col>
+                                    <Checkbox value="autoload" onChange={(e) => this.props.onChangeAutoload(e.target.checked)}
+                                        checked={!isNil(this.props.newService.autoload) ? this.props.newService.autoload : false}>
+                                        <Message msgId="catalog.autoload"/>
+                                    </Checkbox>
                                 </FormGroup>
                                 <FormGroup controlId="thumbnail" key="thumbnail">
-                                    <Col xs={12}>
-                                        <Checkbox
-                                            onChange={() => this.props.onToggleThumbnail()}
-                                            checked={!isNil(this.props.newService.hideThumbnail) ? !this.props.newService.hideThumbnail : true}>
-                                            <Message msgId="catalog.showPreview"/>
-                                        </Checkbox>
-                                    </Col>
+                                    <Checkbox
+                                        onChange={() => this.props.onToggleThumbnail()}
+                                        checked={!isNil(this.props.newService.hideThumbnail) ? !this.props.newService.hideThumbnail : true}>
+                                        <Message msgId="catalog.showPreview"/>
+                                    </Checkbox>
                                 </FormGroup>
                                 {(!isNil(this.props.newService.type) ? this.props.newService.type === "csw" : false) && (<FormGroup controlId="metadata-template" key="metadata-template" className="metadata-template-editor">
-                                    <Col xs={12}>
-                                        <Checkbox
-                                            onChange={() => this.props.onToggleTemplate()}
-                                            checked={showTemplate}>
-                                            <Message msgId="catalog.showTemplate"/>
-                                        </Checkbox>
-                                        <br/>
-                                    </Col>
+                                    <Checkbox
+                                        onChange={() => this.props.onToggleTemplate()}
+                                        checked={showTemplate}>
+                                        <Message msgId="catalog.showTemplate"/>
+                                    </Checkbox>
+                                    <br/>
                                     {showTemplate &&
-                                        (<Col xs={12}>
-                                            <span>
+                                        (
+                                            <>
                                                 <p>
                                                     <Message msgId="layerProperties.templateFormatInfoAlert2" msgParams={{ attribute: "{ }"}}/>
                                                     &nbsp;&nbsp;
@@ -504,47 +493,39 @@ class Catalog extends React.Component {
                                                 <pre>
                                                     <Message msgId="catalog.templateFormatDescriptionExample"/>{ " ${ description }"}
                                                 </pre>
-                                            </span>
-                                        </Col>)}
-                                    <Col xs={12}>
-                                        {showTemplate && <ReactQuill
-                                            modules={{
-                                                toolbar: [
-                                                    [{ "size": ["small", false, "large", "huge"] }, "bold", "italic", "underline", "blockquote"],
-                                                    [{ "list": "bullet" }, { "align": [] }],
-                                                    [{ "color": [] }, { "background": [] }, "clean"], ["link"]
-                                                ]
-                                            }}
-                                            value={this.props.newService.metadataTemplate || ""}
-                                            onChange={(metadataTemplate) => {
-                                                if (metadataTemplate && metadataTemplate !== "<p><br></p>") {
-                                                    this.props.onChangeMetadataTemplate(metadataTemplate);
-                                                } else {
-                                                    // TODO think about this
-                                                    this.props.onChangeMetadataTemplate("");
-                                                }
-                                            }}/>
-                                        }
-                                    </Col>
+                                            </>
+                                        )}
+                                    {showTemplate && <ReactQuill
+                                        modules={{
+                                            toolbar: [
+                                                [{ "size": ["small", false, "large", "huge"] }, "bold", "italic", "underline", "blockquote"],
+                                                [{ "list": "bullet" }, { "align": [] }],
+                                                [{ "color": [] }, { "background": [] }, "clean"], ["link"]
+                                            ]
+                                        }}
+                                        value={this.props.newService.metadataTemplate || ""}
+                                        onChange={(metadataTemplate) => {
+                                            if (metadataTemplate && metadataTemplate !== "<p><br></p>") {
+                                                this.props.onChangeMetadataTemplate(metadataTemplate);
+                                            } else {
+                                                // TODO think about this
+                                                this.props.onChangeMetadataTemplate("");
+                                            }
+                                        }}/>
+                                    }
                                 </FormGroup>)}
-                                <FormGroup style={{display: 'flex', alignItems: 'center', paddingTop: 15, borderTop: '1px solid #ddd'}}>
-                                    <Col xs={6}>
-                                        <ControlLabel>Format</ControlLabel>
-                                    </Col >
-                                    <Col xs={6}>
-                                        <Select
-                                            value={this.props.newService && this.props.newService.format}
-                                            clearable
-                                            options={this.props.formatOptions}
-                                            onChange={event => this.props.onChangeServiceFormat(event && event.value)}/>
-                                    </Col >
+                                <FormGroup style={{ borderTop: '1px solid #ddd' }}>
+                                    <ControlLabel>Format</ControlLabel>
+                                    <Select
+                                        value={this.props.newService && this.props.newService.format}
+                                        clearable
+                                        options={this.props.formatOptions}
+                                        onChange={event => this.props.onChangeServiceFormat(event && event.value)}/>
                                 </FormGroup>
                             </div>
                         </SwitchPanel>
                         <FormGroup controlId="buttons" key="butStons">
-                            <Col xs={12}>
-                                {this.renderButtons()}
-                            </Col>
+                            {this.renderButtons()}
                         </FormGroup>
                     </Form>
                 </BorderLayout>

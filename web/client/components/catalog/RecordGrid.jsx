@@ -7,8 +7,6 @@
  */
 const React = require('react');
 const PropTypes = require('prop-types');
-const {Grid, Row, Col} = require('react-bootstrap');
-
 const RecordItem = require('./RecordItem').default;
 
 class RecordGrid extends React.Component {
@@ -58,37 +56,36 @@ class RecordGrid extends React.Component {
     renderRecordItem = (record) => {
         let Item = this.props.recordItem || RecordItem;
         return (
-            <Col {...this.props.column} key={record.identifier}>
-                <Item
-                    clearModal={this.props.clearModal}
-                    layers={this.props.layers}
-                    modalParams={this.props.modalParams}
-                    onUpdateThumbnail={this.props.onUpdateThumbnail}
-                    onAddBackgroundProperties={this.props.onAddBackgroundProperties}
-                    onAddBackground={this.props.onAddBackground}
-                    source={this.props.source}
-                    onLayerAdd={this.props.onLayerAdd}
-                    onPropertiesChange={this.props.onPropertiesChange}
-                    onZoomToExtent={this.props.onZoomToExtent}
-                    zoomToLayer={this.props.zoomToLayer}
-                    hideThumbnail={this.props.hideThumbnail}
-                    hideIdentifier={this.props.hideIdentifier}
-                    hideExpand={this.props.hideExpand}
-                    onError={this.props.onError}
-                    catalogURL={this.props.catalogURL}
-                    catalogType={this.props.catalogType}
-                    showTemplate={this.props.showTemplate}
-                    record={record}
-                    authkeyParamNames={this.props.authkeyParamNames}
-                    style={{height: "215px", maxHeight: "215px"}}
-                    showGetCapLinks={this.props.showGetCapLinks}
-                    addAuthentication={this.props.addAuthentication}
-                    currentLocale={this.props.currentLocale}
-                    defaultFormat={this.props.defaultFormat}
-                    formatOptions={this.props.formatOptions}
-                    layerBaseConfig={this.props.layerBaseConfig}
-                />
-            </Col>
+            <Item
+                key={record.identifier}
+                clearModal={this.props.clearModal}
+                layers={this.props.layers}
+                modalParams={this.props.modalParams}
+                onUpdateThumbnail={this.props.onUpdateThumbnail}
+                onAddBackgroundProperties={this.props.onAddBackgroundProperties}
+                onAddBackground={this.props.onAddBackground}
+                source={this.props.source}
+                onLayerAdd={this.props.onLayerAdd}
+                onPropertiesChange={this.props.onPropertiesChange}
+                onZoomToExtent={this.props.onZoomToExtent}
+                zoomToLayer={this.props.zoomToLayer}
+                hideThumbnail={this.props.hideThumbnail}
+                hideIdentifier={this.props.hideIdentifier}
+                hideExpand={this.props.hideExpand}
+                onError={this.props.onError}
+                catalogURL={this.props.catalogURL}
+                catalogType={this.props.catalogType}
+                showTemplate={this.props.showTemplate}
+                record={record}
+                authkeyParamNames={this.props.authkeyParamNames}
+                style={{height: "215px", maxHeight: "215px"}}
+                showGetCapLinks={this.props.showGetCapLinks}
+                addAuthentication={this.props.addAuthentication}
+                currentLocale={this.props.currentLocale}
+                defaultFormat={this.props.defaultFormat}
+                formatOptions={this.props.formatOptions}
+                layerBaseConfig={this.props.layerBaseConfig}
+            />
         );
     };
 
@@ -96,11 +93,9 @@ class RecordGrid extends React.Component {
         if (this.props.records) {
             let mapsList = this.props.records instanceof Array ? this.props.records : [this.props.records];
             return (
-                <Grid className="record-grid" fluid style={this.props.style}>
-                    <Row>
-                        {mapsList.map(this.renderRecordItem)}
-                    </Row>
-                </Grid>
+                <div className="record-grid" style={this.props.style}>
+                    {mapsList.map(this.renderRecordItem)}
+                </div>
             );
         }
 

@@ -3,18 +3,22 @@
 @ms2-color-background: #ffffff;
 @ms2-color-code: #c7254e;
 
-@ms2-color-text-primary: #ffffff;
+
 @ms2-color-text-placeholder: #999999;
 @ms2-color-text: #333333;
 
-@ms2-color-disabled: #5C9FB4;
-@ms2-color-text-disabled: #ffffff;
+@ms2-color-primary: #4581cf; // #8145cf; // #078aa3;
+@ms2-color-info: #667abb;
+@ms2-color-success: #84dda6;
+@ms2-color-warning: #ffb700;
+@ms2-color-danger: #ff3355;
+@ms2-color-mark: #eeff00;
 
-@ms2-color-primary: #078aa3;
-@ms2-color-info: #5a9aab;
-@ms2-color-success: #398439;
-@ms2-color-warning: #ebbc35;
-@ms2-color-danger: #bb4940;
+@ms2-color-text-primary: #fff;
+@ms-toc-selected-color: #fff;
+
+@ms2-color-disabled: fade(desaturate(@ms2-color-primary, 60%), 80%);
+@ms2-color-text-disabled: contrast(@ms2-color-disabled);
 
 @ms2-color-primary-hover: @ms2-color-primary;
 @ms2-color-info-hover: @ms2-color-info;
@@ -45,9 +49,9 @@
 @icon-margin-ratio: 2;
 @icon-resize-ratio: 1.6;
 
-@icon-size: 26px;
+@icon-size: 24px;
 @small-icon-size: 14px;
-@padding-left-square: floor(@icon-size/@icon-margin-ratio);
+@padding-left-square: 8px;
 @square-btn-size: @padding-left-square * 2 + @icon-size;
 
 @icon-size-md: floor(@icon-size / @icon-resize-ratio);

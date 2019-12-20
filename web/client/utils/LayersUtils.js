@@ -333,13 +333,7 @@ const LayersUtils = {
     },
     denormalizeGroups: (allLayers, groups) => {
         let getGroupVisibility = (nodes) => {
-            let visibility = true;
-            nodes.forEach((node) => {
-                if (!node.visibility) {
-                    visibility = false;
-                }
-            });
-            return visibility;
+            return !(nodes.filter(node => node.visibility).length === 0);
         };
         let getNormalizedGroup = (group, layers) => {
             const nodes = group.nodes.map((node) => {

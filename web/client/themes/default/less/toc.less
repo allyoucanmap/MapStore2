@@ -1,3 +1,265 @@
+@ms-toc-color: @ms2-color-text;
+@ms-toc-background: @ms2-color-background;
+@ms-toc-border: @ms2-color-shade-lighter;
+
+
+@ms-toc-selected-background: @ms2-color-primary;
+@ms-toc-selected-color: contrast(@ms-toc-selected-background);
+
+@ms-toc-group-background: lighten(@ms2-color-primary, 40%);
+@ms-toc-group-color: contrast(@ms-toc-group-background);
+
+@ms-toc-indicator-background: @ms2-color-primary;
+@ms-toc-indicator-color: contrast(@ms-toc-indicator-background);
+
+.ms-toc {
+    .ms2-border-layout-content {
+        height: 100%;
+    }
+}
+
+.ms-toc-node-indicators {
+    position: absolute;
+    display: flex;
+    top: 0;
+    right: -7px;
+    transform: translateY(-70%);
+    .ms-danger-indicator {
+        background-color: @ms2-color-danger;
+        color: #fff;
+    }
+    .ms-warning-indicator {
+        background-color: @ms2-color-warning;
+        color: #fff;
+    }
+}
+
+.ms-toc-node-indicator {
+    cursor: pointer;
+    display: flex;
+    color: @ms-toc-indicator-color;
+    background: @ms-toc-indicator-background;
+    border-bottom: 1px solid @ms-toc-indicator-color;
+    box-sizing: content-box;
+    margin: 1px;
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    .shadow-soft;
+}
+
+.ms-toc-container {
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .toc-filter-no-results {
+        font-size: @font-size-small;
+        text-align: center;
+        font-style: italic;
+    }
+
+    .ms-toc-head {
+        padding: 8px;
+        background-color: @ms-toc-background;
+        text-align: center;
+        & > * + * {
+            margin-top: 8px;
+        }
+    }
+
+    .ms-toc-body {
+        flex: 1;
+        position: relative;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 8px;
+        border-top: 1px solid @ms-toc-border;
+
+        .noUi-target {
+            margin: 0;
+            background-color: @ms-toc-selected-background;
+        }
+
+        .noUi-handle {
+            transform: scale(0.8);
+        }
+
+        .with-tooltip .noUi-target.noUi-horizontal .noUi-base .noUi-origin .noUi-handle .noUi-tooltip {
+            color: @ms-toc-selected-color;
+            background-color: @ms-toc-selected-background;
+        }
+    }
+
+    .mapstore-side-card {
+        margin-top: 8px;
+        cursor: default;
+        &:hover {
+            .shadow-soft;
+        }
+        .mapstore-side-card-tool > * {
+            margin: 0;
+        }
+        .mapstore-side-preview {
+            width: 20px;
+            height: 20px;
+            margin-left: 2px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            .glyphicon {
+                font-size: 15px;
+            }
+            .ms-toc-loader {
+                margin: 2px;
+                width: 16px;
+                height: 16px;
+            }
+        }
+        
+        &.ms-draggable {
+            cursor: move;
+            cursor: grab;
+            cursor: -moz-grab;
+            cursor: -webkit-grab;
+            &:active {
+                cursor: grabbing;
+                cursor: -moz-grabbing;
+                cursor: -webkit-grabbing;
+            }
+        }
+
+        &.ms-over,
+        &.ms-dragging {
+            transition: none;
+            border: 1px dashed @ms-toc-color;
+            .ms-head > * {
+                display: flex;
+            }
+            .ms-body {
+                display: block;
+            }
+        }
+        
+        & > .ms-head {
+            padding: 0;
+            height: auto;
+            align-items: center;
+            .btn {
+                background-color: transparent;
+                border-color: transparent;
+            }
+            .mapstore-side-card-info {
+                padding: 4px;
+                .mapstore-side-card-title {
+                    font-size: @font-size-small;
+                }
+                .mapstore-side-card-desc {
+                    font-size: @font-size-small * 0.85;
+                }
+            }
+        }
+
+        &.ms-node-error {
+            & > .ms-head {
+                background: repeating-linear-gradient(
+                    45deg,
+                    fade(@ms2-color-danger, 20%),
+                    fade(@ms2-color-danger, 20%) 2px,
+                    transparent 2px,
+                    transparent 8px
+                );
+            }
+            
+        }
+        &.ms-node-warning {
+            & > .ms-head {
+                background: repeating-linear-gradient(
+                    45deg,
+                    fade(@ms2-color-warning, 20%),
+                    fade(@ms2-color-warning, 20%) 2px,
+                    transparent 2px,
+                    transparent 8px
+                );
+            }
+        }
+
+        &.ms-toc-node-selected {
+            & > .ms-head {
+                color: @ms-toc-selected-color;
+                background-color: @ms-toc-selected-background;
+                .shadow-soft;
+                .btn {
+                    color: @ms-toc-selected-color;
+                }
+            }
+            .mapstore-small-size-loader {
+                border-color: fade(@ms-toc-selected-color, 20%);
+                border-left-color: @ms-toc-selected-color;
+            }
+        }
+    }
+
+    .ms-toc-layer {
+        & > .ms-head {
+            color: @ms-toc-color;
+            background-color: @ms-toc-background;
+            .btn {
+                color: @ms-toc-color;
+            }
+        }
+        &.ms-toc-node-selected {
+            & > .ms-head {
+                color: @ms-toc-selected-color;
+                background-color: @ms-toc-selected-background;
+                .btn {
+                    color: @ms-toc-selected-color;
+                }
+            }
+        }
+        .ms-layer-node-body {
+            padding: 8px;
+            font-style: italic;
+            font-size: @font-size-small * 0.85;
+            min-height: 30px;
+            border-top: 1px solid @ms-toc-border;
+            background-color: #fff;
+            img {
+                display: block;
+            }
+        }
+    }
+
+    .ms-toc-group {
+        .box-shadow(none);
+        & > .ms-head {
+            padding: 0;
+            border: 1px solid @ms-toc-border;
+            color: @ms-toc-group-color;
+            background-color: @ms-toc-group-background;
+            .btn {
+                color: @ms-toc-group-color;
+            }
+        }
+        &:hover {
+            .box-shadow(none);
+        }
+    }
+
+    .ms-toc-children-container {
+        padding-left: @square-btn-medium-size;
+    }
+}
+
+/*
 #mapstore-layer-settings {
     z-index: 1022 !important;
 }
@@ -27,7 +289,7 @@
 
     .toc-inline-loader {
         margin: @padding-left-square-md;
-        .mapstore-circle-loader(@icon-size-md/10, @icon-size-md, @ms2-color-primary);
+        .mapstore-circle-loader(@icon-size-md/10, @icon-size-md, @ms-color-primary);
     }
     .mapstore-toc-head-title-container {
         overflow: hidden;
@@ -36,7 +298,7 @@
             vertical-align: middle;
             width: 270px;
             height: @square-btn-size;
-            color: @ms2-color-primary;
+            color: @ms-color-primary;
             font-weight: bold;
             .glyphicon {
                 font-size: @icon-size-md;
@@ -46,7 +308,7 @@
 
     .col-xs-12 {
         height: @square-btn-size;
-        border-top: 1px solid @ms2-color-shade-lighter;
+        border-top: 1px solid @ms-color-shade-lighter;
 
         .btn-sm {
             height: @square-btn-medium-size;
@@ -137,7 +399,7 @@
 .layer-expanded {
     &.toc-default-layer {
         .toc-default-layer-head {
-            border-bottom: 1px solid darken(@ms2-color-background, 10%);
+            border-bottom: 1px solid darken(@ms-color-background, 10%);
         }
         padding: 0 0 10px 0;
         .toc-legend {
@@ -154,7 +416,7 @@
 
         overflow-y: auto;
         overflow-x: hidden;
-        border-top: 1px solid @ms2-color-shade-light;
+        border-top: 1px solid @ms-color-shade-light;
     }
 
     &.toc-body-sections .mapstore-layers-container {
@@ -188,8 +450,8 @@
 
 .toc-default-group {
 
-    background-color: @ms2-color-background;
-    border-bottom: 1px solid @ms2-color-shade-light;
+    background-color: @ms-color-background;
+    border-bottom: 1px solid @ms-color-shade-light;
 
     .toc-default-group {
         border-bottom: none;
@@ -197,7 +459,7 @@
 
         .toc-default-group-head {
             margin-top: 10px;
-            border-top: 1px solid @ms2-color-shade-lighter;
+            border-top: 1px solid @ms-color-shade-lighter;
         }
     }
 
@@ -223,9 +485,9 @@
     }
 
     .glyphicon {
-        color: @ms2-color-primary;
+        color: @ms-color-primary;
         &:hover {
-            color: darken(@ms2-color-primary, 10%);
+            color: darken(@ms-color-primary, 10%);
         }
     }
 
@@ -257,7 +519,7 @@
     }
 
     .toc-default-group-head {
-        background-color: @ms2-color-background;
+        background-color: @ms-color-background;
         height: @square-btn-size;
         width: 100%;
         padding: floor((@square-btn-size - @icon-size-md) / 2) 0;
@@ -273,7 +535,7 @@
             cursor: pointer;
             &:hover {
                 font-weight: bold;
-                color: @ms2-color-primary;
+                color: @ms-color-primary;
             }
         }
 
@@ -291,21 +553,21 @@
     &.selected {
 
         .toc-default-group-head {
-            background-color: desaturate(@ms2-color-primary, 30%);
-            color:  @ms2-color-text-primary;
+            background-color: desaturate(@ms-color-primary, 30%);
+            color:  @ms-color-text-primary;
             .glyphicon {
-                color: @ms2-color-text-primary;
+                color: @ms-color-text-primary;
             }
             .toc-grab:hover,
             .visibility-check:hover,
             .toc-group-title:hover,
             .toc-status-icon:hover, {
                 font-weight: bold;
-                .text-border(fade(@ms2-color-text, 20%));
+                .text-border(fade(@ms-color-text, 20%));
             }
 
             .toc-group-title:hover {
-                color: @ms2-color-text-primary;
+                color: @ms-color-text-primary;
             }
         }
     }
@@ -314,14 +576,14 @@
         opacity: 1.0;
         .toc-default-group-head {
             .toc-error {
-                color: @ms2-color-danger;
+                color: @ms-color-danger;
             }
 
         }
 
         &.selected {
             .toc-error {
-                color: @ms2-color-danger;
+                color: @ms-color-danger;
             }
         }
     }
@@ -337,7 +599,7 @@
         box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.12), 2px -2px 6px rgba(0, 0, 0, 0.06);
 
         .noUi-target {
-            background-color: @ms2-color-primary;
+            background-color: @ms-color-primary;
             &.noUi-horizontal {
                 margin: 0;
             }
@@ -346,8 +608,8 @@
         .toc-default-layer-head {
             height: @square-btn-size;
             width: 100%;
-            color: @ms2-color-text;
-            background-color: @ms2-color-background;
+            color: @ms-color-text;
+            background-color: @ms-color-background;
             margin-bottom: 0;
             padding: floor((@square-btn-size - @icon-size-md) / 2) 0;
 
@@ -360,14 +622,14 @@
                 cursor: pointer;
                 &:hover {
                     font-weight: bold;
-                    color: @ms2-color-primary;
+                    color: @ms-color-primary;
                 }
             }
 
             .toc-inline-loader {
                 float: right;
                 margin: 0 10px;
-                .mapstore-circle-loader(@icon-size-md/10, @icon-size-md, @ms2-color-primary);
+                .mapstore-circle-loader(@icon-size-md/10, @icon-size-md, @ms-color-primary);
             }
         }
 
@@ -378,7 +640,7 @@
                 position: absolute;
 
                 font-size: @icon-size-md * (2/3);
-                color: @ms2-color-danger;
+                color: @ms-color-danger;
             }
         }
 
@@ -411,10 +673,10 @@
             .shadow-far;
 
             .toc-default-layer-head {
-                background-color: @ms2-color-primary;
-                color:  @ms2-color-text-primary;
+                background-color: @ms-color-primary;
+                color:  @ms-color-text-primary;
                 .glyphicon {
-                    color: @ms2-color-text-primary;
+                    color: @ms-color-text-primary;
                 }
 
                 .toc-grab:hover,
@@ -422,54 +684,54 @@
                 .toc-title:hover,
                 .toc-legend:hover, {
                     font-weight: bold;
-                    .text-border(fade(@ms2-color-text, 20%));
+                    .text-border(fade(@ms-color-text, 20%));
                 }
 
                 .toc-title:hover {
-                    color: @ms2-color-text-primary;
+                    color: @ms-color-text-primary;
                 }
 
                 .toc-inline-loader {
-                    .mapstore-circle-loader(@icon-size-md/10, @icon-size-md, @ms2-color-text-primary);
+                    .mapstore-circle-loader(@icon-size-md/10, @icon-size-md, @ms-color-text-primary);
                 }
             }
         }
 
         &.layer-error {
             opacity: 1.0;
-            background-color: darken(@ms2-color-background, 2%);
+            background-color: darken(@ms-color-background, 2%);
             .toc-default-layer-head {
-                background-color: darken(@ms2-color-background, 2%);
+                background-color: darken(@ms-color-background, 2%);
             }
             .glyphicon {
-                color: @ms2-color-text;
+                color: @ms-color-text;
                 &:hover {
                     text-shadow: none;
                 }
             }
             .toc-error {
-                color: @ms2-color-danger;
+                color: @ms-color-danger;
             }
             &.selected {
-                color: @ms2-color-primary;
+                color: @ms-color-primary;
                 .glyphicon {
-                    color: @ms2-color-primary;
+                    color: @ms-color-primary;
                 }
                 .toc-error {
-                    color: @ms2-color-danger;
+                    color: @ms-color-danger;
                 }
                 .toc-title {
-                    color: @ms2-color-primary;
+                    color: @ms-color-primary;
                 }
                 .toc-default-layer-head {
                     box-sizing: border-box;
                     -moz-box-sizing: border-box;
                     -webkit-box-sizing: border-box;
-                    border: 1px solid @ms2-color-danger;
-                    background-color: darken(@ms2-color-background, 2%);
+                    border: 1px solid @ms-color-danger;
+                    background-color: darken(@ms-color-background, 2%);
 
                     .toc-inline-loader {
-                        .mapstore-circle-loader(@icon-size-md/10, @icon-size-md, @ms2-color-danger);
+                        .mapstore-circle-loader(@icon-size-md/10, @icon-size-md, @ms-color-danger);
                     }
                 }
 
@@ -484,22 +746,22 @@
 
 .is-dragging.toc-default-layer,
 .is-dragging.toc-default-layer.selected {
-    background-color: @ms2-color-background !important;
-    border: 1px dashed @ms2-color-primary !important;
+    background-color: @ms-color-background !important;
+    border: 1px dashed @ms-color-primary !important;
     height: @square-btn-size !important;
     overflow: hidden;
     border-radius: @border-radius-base !important;
     opacity: 0.8;
     .toc-default-layer-head {
-        background-color: @ms2-color-background;
-        color: @ms2-color-primary;
+        background-color: @ms-color-background;
+        color: @ms-color-primary;
 
         .glyphicon {
-            color: @ms2-color-primary;
+            color: @ms-color-primary;
         }
 
         .toc-title {
-            color: @ms2-color-text;
+            color: @ms-color-text;
         }
     }
 
@@ -511,7 +773,7 @@
 .is-placeholder.toc-default-layer,
 .is-placeholder.toc-default-layer.selected {
     background-color: transparent !important;
-    border: 1px dashed @ms2-color-primary !important;
+    border: 1px dashed @ms-color-primary !important;
     height: @square-btn-size !important;
     overflow: hidden;
     border-radius: @border-radius-base !important;
@@ -529,22 +791,22 @@
 
 .is-dragging.toc-default-group,
 .is-dragging.toc-default-group.selected {
-    background-color: @ms2-color-background !important;
-    border: 1px dashed @ms2-color-primary !important;
+    background-color: @ms-color-background !important;
+    border: 1px dashed @ms-color-primary !important;
     height: @square-btn-size !important;
     overflow: hidden;
     border-radius: @border-radius-base !important;
     opacity: 0.8;
     .toc-default-group-head {
-        background-color: @ms2-color-background;
-        color: @ms2-color-primary;
+        background-color: @ms-color-background;
+        color: @ms-color-primary;
         margin-top: 0;
         .glyphicon {
-            color: @ms2-color-primary;
+            color: @ms-color-primary;
         }
 
         .toc-group-title {
-            color: @ms2-color-text;
+            color: @ms-color-text;
         }
     }
 
@@ -555,14 +817,14 @@
 
 .is-placeholder.toc-default-group,
 .is-placeholder.toc-default-group.selected {
-    background-color: @ms2-color-background !important;
+    background-color: @ms-color-background !important;
     border: none !important;
-    border-bottom:  1px solid @ms2-color-primary !important;
+    border-bottom:  1px solid @ms-color-primary !important;
     height: @square-btn-size + 5 !important;
     overflow: hidden;
     border-radius: @border-radius-base !important;
     .toc-default-group-head {
-        border: 1px dashed @ms2-color-primary !important;
+        border: 1px dashed @ms-color-primary !important;
         margin: 2px 0;
 
         & * {
@@ -581,7 +843,7 @@
 
 .compact-legend-grid {
     margin: 15px;
-    background-color: @ms2-color-background;
+    background-color: @ms-color-background;
     width: ~"calc(100% - 30px)";
     position: relative;
     .mapstore-side-card {
@@ -625,7 +887,7 @@
 
     }
     .noUi-target {
-        background-color: @ms2-color-primary;
+        background-color: @ms-color-primary;
         &.noUi-horizontal {
             margin: 0;
         }
@@ -634,7 +896,7 @@
 .ms-legend-action {
     .shadow-far;
     position: absolute;
-    background-color: @ms2-color-background;
+    background-color: @ms-color-background;
     overflow: hidden;
     display: flex;
     left: 4px;
@@ -666,7 +928,7 @@
                     display: flex;
                     align-items: center;
                     > .glyphicon {
-                        color: @ms2-color-primary;
+                        color: @ms-color-primary;
                     }
                     > div {
                         flex: 1;
@@ -692,7 +954,7 @@
         flex: 1;
         transition: unset;
         overflow: auto;
-        border-top: 1px solid @ms2-color-shade-lighter;
+        border-top: 1px solid @ms-color-shade-lighter;
         .panel-body {
             padding: 0;
             .msSideGrid {
@@ -725,7 +987,7 @@
     .cm-s-midnight span.CodeMirror-matchhighlight { background: #494949; }
     .cm-s-midnight.CodeMirror-focused span.CodeMirror-matchhighlight { background: #314D67 !important; }
 
-    /*<!--activeline-->*/
+    // <!--activeline-->
     .cm-s-midnight .CodeMirror-activeline-background { background: #253540; }
 
     .cm-s-midnight.CodeMirror {
@@ -804,4 +1066,4 @@
 
 #mapstore-add-toc-group {
     padding: 15px;
-}
+}*/

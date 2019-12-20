@@ -245,7 +245,7 @@ class Annotations extends React.Component {
     renderHeader() {
         return (
             <Grid fluid className="ms-header" style={this.props.styling || this.props.mode !== "list" ? { width: '100%', boxShadow: 'none'} : { width: '100%' }}>
-                <Row>
+                {/* <Row>
                     <Col xs={2}>
                         <Button className="square-button no-events">
                             <Glyphicon glyph="comment"/>
@@ -259,7 +259,7 @@ class Annotations extends React.Component {
                             <Glyphicon glyph="1-close"/>
                         </Button>
                     </Col>
-                </Row>
+                </Row> */}
                 {this.props.mode === "list" && <span><Row style={{margin: "auto"}}>
                     <Col xs={12} style={{margin: "auto"}} className="text-center">
                         <Toolbar

@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 const React = require('react');
-const { Button, Row, Col, Glyphicon } = require('react-bootstrap');
-const Message = require('../../I18N/Message');
+const { Button, Glyphicon } = require('react-bootstrap');
+
 
 /**
  * Common header component for builder content. With close button and icon
@@ -16,6 +16,31 @@ const Message = require('../../I18N/Message');
  * @prop {function} onClose
  */
 module.exports = ({onClose = () => {}, children} = {}) =>
+    (
+        <div
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: 8
+            }}>
+            <Glyphicon glyph="stats" className="text-primary"/>
+            <div
+                style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    padding: '0 4px'
+                }}>
+                {children}
+            </div>
+            <Button
+                className="square-button-md no-border"
+                onClick={() => onClose()}>
+                <Glyphicon glyph="1-close"/>
+            </Button>
+        </div>
+    );
+
+/* module.exports = ({onClose = () => {}, children} = {}) =>
     (<div className="mapstore-flex-container">
         <div className="m-header bg-body widgets-builder-header">
             <Row>
@@ -36,4 +61,4 @@ module.exports = ({onClose = () => {}, children} = {}) =>
             </Row>
         </div>
     </div>
-    );
+    );*/

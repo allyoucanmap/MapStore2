@@ -8,7 +8,7 @@
 
 const React = require('react');
 const PropTypes = require('prop-types');
-const {Grid, Row, Col, Glyphicon} = require('react-bootstrap');
+const {Glyphicon} = require('react-bootstrap');
 const Filter = require('../misc/Filter');
 class Header extends React.Component {
 
@@ -39,52 +39,40 @@ class Header extends React.Component {
     };
 
     renderTitle = () => {
-        return (
-            <Row>
-                <Col xs={12} className="mapstore-toc-head-title-container text-center no-border">
-                    <div className="mapstore-toc-head-title" title={this.props.title}><Glyphicon glyph="1-map"/>&nbsp;&nbsp;{this.props.title}</div>
-                </Col>
-            </Row>
-        );
+        return this.props.title
+            ? (
+                <div className="mapstore-toc-head-title" title={this.props.title}>
+                    <Glyphicon glyph="1-map"/>&nbsp;&nbsp;{this.props.title}
+                </div>
+            )
+            : null;
     }
 
     renderFilter = () => {
         return (
-            <Row>
-                <Col xs={12} className="text-center">
-                    <Filter
-                        onFocus={this.props.onClear}
-                        filterPlaceholder={this.props.filterPlaceholder}
-                        tooltipClear={this.props.filterTooltipClear}
-                        filterText={this.props.filterText}
-                        onFilter={this.props.onFilter}/>
-                </Col>
-            </Row>
+            <Filter
+                onFocus={this.props.onClear}
+                filterPlaceholder={this.props.filterPlaceholder}
+                tooltipClear={this.props.filterTooltipClear}
+                filterText={this.props.filterText}
+                onFilter={this.props.onFilter}/>
         );
     }
 
     renderTools = () => {
         return (
-            <Row>
-                <Col xs={12} className="text-center">
-                    {this.props.toolbar}
-                </Col>
-            </Row>
+            <div>
+                {this.props.toolbar}
+            </div>
         );
     }
 
     render() {
-
-        const sections = [this.props.showTools, this.props.showFilter, this.props.showTitle].filter(s => s);
-        const headClass = sections.length > 0 ? ' toc-head-sections-' + sections.length : ' toc-head-sections';
-
         return (
-            <div className={'mapstore-toc-head' + headClass}>
-                <Grid fluid>
-                    {this.props.showTitle ? this.renderTitle() : null}
-                    {this.props.showFilter ? this.renderFilter() : null}
-                    {this.props.showTools ? this.renderTools() : null}
-                </Grid>
+            <div className="ms-toc-head">
+                {this.props.showTitle ? this.renderTitle() : null}
+                {this.props.showFilter ? this.renderFilter() : null}
+                {this.props.showTools ? this.renderTools() : null}
             </div>
         );
     }

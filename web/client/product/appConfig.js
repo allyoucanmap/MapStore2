@@ -10,8 +10,10 @@ module.exports = {
     pages: [{
         name: "home",
         path: "/",
-        component: require('./pages/Maps')
-    }, {
+        component: require('./pages/MapViewer')
+    }/*
+    // COMMENTED TO WORK ONLY ON MAP LAYOUT
+    , {
         name: "maps",
         path: "/maps",
         component: require('./pages/Maps')
@@ -63,7 +65,7 @@ module.exports = {
         name: "geostory",
         path: "/geostory/:gid",
         component: require('./pages/GeoStory').default
-    }],
+    }*/],
     initialState: {
         defaultState: {
             mousePosition: {enabled: false},

@@ -1,22 +1,63 @@
 {
-	"map": {
-		"projection": "EPSG:900913",
-		"units": "m",
-		"center": {"x": 1250000.000000, "y": 5370000.000000, "crs": "EPSG:900913"},
-    "zoom":5,
-		"maxExtent": [
-			-20037508.34, -20037508.34,
-			20037508.34, 20037508.34
-		],
-		"layers": [
-			{
-				"type": "osm",
-				"title": "Open Street Map",
-				"name": "mapnik",
-        "source": "osm",
-				"group": "background",
-        "visibility": true
-			}
-		]
-	}
+    "version": 2,
+    "map": {
+        "center": {
+            "x": 36.08159237157817,
+            "y": 32.62548576132692,
+            "crs": "EPSG:4326"
+        },
+        "maxExtent": [
+            -20037508.34,
+            -20037508.34,
+            20037508.34,
+            20037508.34
+        ],
+        "projection": "EPSG:900913",
+        "units": "m",
+        "zoom": 12,
+        "mapOptions": {},
+        "layers": [
+            {
+                "id": "s2cloudless",
+                "format": "image/png8",
+                "group": "background",
+                "name": "s2cloudless:s2cloudless",
+                "title": "Cloudless",
+                "type": "wms",
+                "url": "https://maps.geo-solutions.it/geoserver/wms",
+                "visibility": true,
+                "singleTile": false,
+                "thumbURL": "https://vtp2018.s3-eu-west-1.amazonaws.com/static/mapstorestyle/img/s2cloudless-s2cloudless.png",
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            }
+        ]
+    },
+    "catalogServices": {
+        "services": {
+            "ows": {
+                "url": "http://ows.geo-solutions.it/geoserver/wms",
+                "type": "wms",
+                "title": "OWS GeoServer WMS",
+                "autoload": false
+            },
+            "gs_stable_wms": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+                "type": "wms",
+                "title": "GeoSolutions GeoServer WMS",
+                "autoload": false
+            }
+        },
+        "selectedService": "ows"
+    },
+    "widgetsConfig": {
+        "layouts": {
+            "md": [],
+            "xxs": []
+        }
+    },
+    "mapInfoConfiguration": {}
 }

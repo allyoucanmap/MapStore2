@@ -9,7 +9,7 @@
 const React = require('react');
 const Message = require('../../I18N/Message');
 const SideGrid = require('../../misc/cardgrids/SideGrid');
-const FitIcon = require('../../misc/FitIcon');
+const { Glyphicon } = require('react-bootstrap');
 
 const DEFAULT_TYPES = [{
     title: <Message msgId={"widgets.types.chart.title"} />,
@@ -53,10 +53,11 @@ module.exports = ({widgetTypes = DEFAULT_TYPES, typeFilter = () => true, onSelec
     (
         <SideGrid
             key="content"
+            size="sm"
             onItemClick={item => {onSelect(item.type); }}
             items={widgetTypes &&
         widgetTypes.filter(typeFilter).map( item =>
             ({
                 ...item,
-                preview: <FitIcon glyph={item.glyph} padding={20} />
+                preview: <Glyphicon glyph={item.glyph} />
             }))} />);

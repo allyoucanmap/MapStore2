@@ -8,6 +8,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const ToolsContainer = require('./containers/ToolsContainer');
+const assign = require('object-assign');
 
 class MapFooter extends React.Component {
     static propTypes = {
@@ -65,6 +66,11 @@ class MapFooter extends React.Component {
 }
 
 module.exports = {
-    MapFooterPlugin: MapFooter,
+    MapFooterPlugin: assign(MapFooter, {
+        Layout: {
+            priority: 1,
+            container: 'footer'
+        }
+    }),
     reducers: {}
 };

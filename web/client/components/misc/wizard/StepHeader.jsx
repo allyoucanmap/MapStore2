@@ -7,9 +7,8 @@
   */
 
 const React = require('react');
-const {Row, Col} = require('react-bootstrap');
-module.exports = ({title, description}) => (<Row><Col xs={12} className="text-center">
-    <div className="mapstore-step-title">{title}</div>
-    <div className="mapstore-step-description">{description}</div>
-</Col>
-</Row>);
+
+module.exports = ({title, description}) => (<div className="text-center">
+    <div className="ms-step-title">{title}</div>
+    <div className="ms-step-description">{description}</div>
+</div>);

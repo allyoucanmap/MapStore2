@@ -9,8 +9,6 @@ const PropTypes = require('prop-types');
 const React = require('react');
 const {connect} = require('react-redux');
 const {createSelector} = require('reselect');
-const {Glyphicon} = require('react-bootstrap');
-
 const {changeLayerProperties, changeGroupProperties, toggleNode, contextNode,
     moveNode, showSettings, hideSettings, updateSettings, updateNode, removeNode,
     browseData, selectNode, filterLayers, refreshLayerVersion, hideLayerMetadata,
@@ -33,8 +31,6 @@ const LocaleUtils = require('../utils/LocaleUtils');
 const Message = require('../components/I18N/Message');
 const assign = require('object-assign');
 
-const layersIcon = require('./toolbar/assets/img/layers.png');
-
 const {isObject, head} = require('lodash');
 
 const { setControlProperties} = require('../actions/controls');
@@ -44,6 +40,9 @@ const {getMetadataRecordById} = require("../actions/catalog");
 
 const {activeSelector} = require("../selectors/catalog");
 const {isCesium} = require('../selectors/maptype');
+const {getConfiguredPlugin} = require('../utils/PluginsUtils');
+const BorderLayout = require('../components/layout/BorderLayout');
+const LayoutPanel = require('./layout/LayoutPanel').default;
 
 const addFilteredAttributesGroups = (nodes, filters) => {
     return nodes.reduce((newNodes, currentNode) => {
@@ -136,14 +135,15 @@ const tocSelector = createSelector(
 
 const TOC = require('../components/TOC/TOC');
 const Header = require('../components/TOC/Header');
-const Toolbar = require('../components/TOC/Toolbar');
-const DefaultGroup = require('../components/TOC/DefaultGroup');
-const DefaultLayer = require('../components/TOC/DefaultLayer');
+const TOCToolbar = require('../components/TOC/Toolbar');
+const DefaultGroup = require('../components/TOC/DefaultGroup').default;
+const DefaultLayer = require('../components/TOC/DefaultLayer').default;
 const DefaultLayerOrGroup = require('../components/TOC/DefaultLayerOrGroup');
 
 class LayerTree extends React.Component {
     static propTypes = {
         id: PropTypes.number,
+        buttons: PropTypes.array,
         buttonContent: PropTypes.node,
         groups: PropTypes.array,
         settings: PropTypes.object,
@@ -219,7 +219,8 @@ class LayerTree extends React.Component {
         refreshLayerVersion: PropTypes.func,
         hideOpacityTooltip: PropTypes.bool,
         layerNodeComponent: PropTypes.func,
-        groupNodeComponent: PropTypes.func
+        groupNodeComponent: PropTypes.func,
+        nodeButtons: PropTypes.array
     };
 
     static contextTypes = {
@@ -227,6 +228,8 @@ class LayerTree extends React.Component {
     };
 
     static defaultProps = {
+        buttons: [],
+        nodeButtons: [],
         groupPropertiesChangeHandler: () => {},
         layerPropertiesChangeHandler: () => {},
         retrieveLayerData: () => {},
@@ -318,6 +321,7 @@ class LayerTree extends React.Component {
                 visibilityCheckType={this.props.visibilityCheckType}
                 currentLocale={this.props.currentLocale}
                 selectedNodes={this.props.selectedNodes}
+                filterText={this.props.filterText}
                 onSelect={this.props.activateToolsContainer ? this.props.onSelectNode : null}/>);
     }
 
@@ -342,16 +346,15 @@ class LayerTree extends React.Component {
                 filterText={this.props.filterText}
                 onUpdateNode={this.props.updateNode}
                 hideOpacityTooltip={this.props.hideOpacityTooltip}
+                buttons={this.props.nodeButtons}
             />);
     }
 
     renderTOC = () => {
         const Group = this.getDefaultGroup();
         const Layer = this.getDefaultLayer();
-        const sections = [this.props.activateToolsContainer, this.props.activateFilterLayer, this.props.activateMapTitle].filter(s => s);
-        const bodyClass = sections.length > 0 ? ' toc-body-sections-' + sections.length : ' toc-body-sections';
         return (
-            <div>
+            <div className="ms-toc-container">
                 <Header
                     title={this.props.mapName}
                     showTitle={this.props.activateMapTitle}
@@ -363,8 +366,9 @@ class LayerTree extends React.Component {
                     filterPlaceholder={LocaleUtils.getMessageById(this.context.messages, "toc.filterPlaceholder")}
                     filterText={this.props.filterText}
                     toolbar={
-                        <Toolbar
+                        <TOCToolbar
                             groups={this.props.groups}
+                            buttons={this.props.buttons}
                             selectedLayers={this.props.selectedLayers}
                             selectedGroups={this.props.selectedGroups}
                             generalInfoFormat={this.props.generalInfoFormat}
@@ -456,7 +460,7 @@ class LayerTree extends React.Component {
                                 onHideLayerMetadata: this.props.hideLayerMetadata,
                                 onShow: this.props.layerPropertiesChangeHandler}}/>
                     }/>
-                <div className={'mapstore-toc' + bodyClass}>
+                <div className="ms-toc-body">
                     {this.props.noFilterResults && this.props.filterText ?
                         <div>
                             <div className="toc-filter-no-results"><Message msgId="toc.noFilteredResults" /></div>
@@ -646,6 +650,63 @@ const TOCPlugin = connect(tocSelector, {
     refreshLayerVersion
 })(securityEnhancer(LayerTree));
 
+class TOCContainer extends React.Component {
+
+    static propTypes = {
+        items: PropTypes.array
+    }
+
+    static contextTypes = {
+        loadedPlugins: PropTypes.object
+    };
+
+    state = {
+        panels: [],
+        buttons: [],
+        nodeButtons: []
+    };
+
+    componentWillMount() {
+        const { items = [] } = this.props;
+        const buttons = items.map(({ tool }) => tool).filter(val => val);
+        const nodeButtons = items.map(({ nodeButton }) => nodeButton).filter(val => val);
+        const panels = items
+            .map(({ panel, ...impl }) => {
+                if (!panel) {
+                    return null;
+                }
+                if (panel && panel.Component) {
+                    return panel.Component;
+                }
+                return getConfiguredPlugin({ ...impl }, this.context.loadedPlugins, <div />);
+            })
+            .filter(val => val);
+        this.setState({
+            panels,
+            buttons,
+            nodeButtons
+        });
+    }
+
+    render() {
+        const { panels = [], buttons = [], nodeButtons = [] } = this.state;
+        const { items, ...props } = this.props;
+        return (
+            <BorderLayout
+                columns={panels.map( (Panel, idx) => <Panel key={idx}/>)}
+                className="ms-toc">
+                <LayoutPanel
+                    resizeHandle="e"
+                    axis="x"
+                    defaultWidth={300}
+                    defaultHeight="100%">
+                    <TOCPlugin { ...props } buttons={buttons} nodeButtons={nodeButtons}/>
+                </LayoutPanel>
+            </BorderLayout>
+        );
+    }
+}
+
 const API = {
     csw: require('../api/CSW'),
     wms: require('../api/WMS'),
@@ -654,29 +715,14 @@ const API = {
 };
 
 module.exports = {
-    TOCPlugin: assign(TOCPlugin, {
-        Toolbar: {
-            name: 'toc',
-            position: 7,
-            exclusive: true,
-            panel: true,
-            help: <Message msgId="helptexts.layerSwitcher"/>,
-            tooltip: "layers",
-            wrap: true,
-            title: 'layers',
-            icon: <Glyphicon glyph="1-layer"/>,
-            priority: 1
-        },
-        DrawerMenu: {
-            name: 'toc',
+    TOCPlugin: assign(TOCContainer, {
+        Layout: {
+            priority: 1,
             position: 1,
-            glyph: "1-layer",
-            icon: <img src={layersIcon}/>,
-            buttonConfig: {
-                buttonClassName: "square-button no-border",
-                tooltip: "toc.layers"
-            },
-            priority: 2
+            size: 'auto',
+            glyph: '1-layer',
+            tooltipId: 'mps.pageTooltip',
+            container: 'left-menu'
         }
     }),
     reducers: {

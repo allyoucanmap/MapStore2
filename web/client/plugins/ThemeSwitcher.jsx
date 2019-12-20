@@ -20,11 +20,10 @@ const ThemeSwitcherPlugin = connect((s) => ({
 
 module.exports = {
     ThemeSwitcherPlugin: assign(ThemeSwitcherPlugin, {
-        GridContainer: {
-            id: 'themeSwitcher',
-            name: 'themeSwitcher',
+        MapFooter: {
+            name: 'theme',
+            position: 16,
             tool: true,
-            position: 1,
             priority: 1
         }
     }),

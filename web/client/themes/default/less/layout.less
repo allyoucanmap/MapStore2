@@ -1,0 +1,331 @@
+@ms-layout-btn-size: 40px; // @square-btn-size;
+@ms-layout-icon-size: 16px;
+@ms-layout-bright-text: @ms2-color-text;
+@ms-layout-bright-bg: @ms2-color-background;
+@ms-layout-bright-active: @ms2-color-primary;
+@ms-layout-dark-text: @ms2-color-background;
+@ms-layout-dark-bg: @ms2-color-text;
+@ms-layout-dark-active: @ms2-color-success;
+
+@ms-layout-overlay-margin: 6px;
+@ms-layout-overlay-margin-bottom: @ms-layout-overlay-margin;
+
+.ms-layout {
+    & > .ms2-border-layout-body {
+        overflow: hidden;
+        & > .ms2-border-layout-content {
+            background-color: transparent;
+            pointer-events: none;
+        }
+        & > * {
+            overflow: visible;
+        }
+    }
+    .ms2-border-layout-content {
+        position: relative;
+    }
+    .ms2-border-layout-body {
+        position: relative;
+    }
+    .ms-layout-body {
+        & > *  {
+            pointer-events: auto;
+        }
+    }
+    .ms-layout-bottom {
+        margin-left: @ms-layout-overlay-margin;
+        margin-right: @ms-layout-overlay-margin;
+        & > * + * {
+            margin-top: @ms-layout-overlay-margin;
+        }
+        & > *:last-child {
+            margin-bottom: @ms-layout-overlay-margin;
+        }
+    }
+    .ms-layout-center {
+        position: absolute;
+        pointer-events: none;
+        top: 80px;
+        left: 80px;
+        right: 80px;
+        bottom: 80px;
+        & > *  {
+            pointer-events: auto;
+        }
+    }
+}
+
+.ms-icon {
+    display: flex;
+    padding: 2px;
+    align-items: center;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    > * {
+        margin: auto;
+        .shadow-soft;
+    }
+    & > img, & > svg {
+        width: 100%;
+        height: auto;
+    }
+}
+
+.menu-btn(@color; @background; @border) {
+    .button-variant(lighten(@color, 40%); darken(@background, 15%); darken(@border, 15%));
+    &.active:focus,
+    &.active.focus,
+    &:focus,
+    &.focus,
+    &:active,
+    &.active,
+    &.active:hover {
+        background-color: darken(@background, 15%);
+        border-color: darken(@border, 15%);
+        color: darken(@color, 20%);
+        .box-shadow(none);
+    }
+
+    &:active:hover {
+        background-color: darken(@background, 16%);
+        border-color: darken(@border, 16%);
+        color: darken(@color, 20%);
+        .shadow-soft-inset;
+    }
+    &:hover {
+        color: darken(@color, 10%);
+        background-color: darken(@background, 15%);
+        border-color: darken(@border, 15%);
+        .box-shadow(none);
+    }
+}
+
+.ms-menu {
+    display: flex;
+    height: 100%;
+    .ms-menu-tabs {
+        padding-top: @ms-layout-btn-size / 2;
+        width: @ms-layout-btn-size;
+        background-color: darken(@ms-layout-bright-bg, 15%);
+        &.ms-empty {
+            width: 0;
+        }
+        .ms-menu-tab {
+            display: flex;
+            align-items: center;
+            position: relative;
+            .ms-tab-arrow {
+                position: relative;
+                width: @ms-layout-btn-size / 4;
+                height: @ms-layout-btn-size;
+                display: flex;
+                align-items: center;
+                z-index: 1;
+                margin-left: auto;
+                & > .ms-arrow {
+                    position: absolute;
+                    border: none;
+                    right: -@ms-layout-overlay-margin;
+                    border-top: @ms-layout-btn-size / 3 solid transparent;
+                    border-bottom: @ms-layout-btn-size / 3 solid transparent; 
+                    border-right: @ms-layout-btn-size / 3 solid @ms-layout-bright-bg;
+                    -webkit-filter: drop-shadow(-4px 2px 4px rgba(0, 0, 0, 0.2));
+                    filter: drop-shadow(-4px 2px 4px rgba(0, 0, 0, 0.2));
+                }
+            }
+            .btn {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                .glyphicon {
+                    font-size: @ms-layout-icon-size;
+                }
+            }
+            .btn-default {
+                .menu-btn(@ms-layout-bright-text; @ms-layout-bright-bg; @ms-layout-bright-bg);
+                &.active {
+                    color: @ms-layout-bright-active;
+                }
+            }
+            .btn-primary {
+                .menu-btn(@ms-layout-dark-text; @ms-layout-dark-bg; @ms-layout-dark-bg);
+                &.active {
+                    color: @ms-layout-dark-active;
+                }
+            }
+            .ms-menu-alert-icon {
+                position: absolute;
+                width: 18px;
+                height: 18px;
+                transform: translate(-40%, -30%);
+                top: 0;
+            }
+        }
+        &.ms-overlay {
+            .shadow-far;
+            pointer-events: auto;
+        }
+    }
+    &.ms-primary {
+        .ms-menu-tabs {
+            background-color: lighten(@ms-layout-dark-bg, 5%);
+        }
+    }
+    &.ms-default {
+        .ms-menu-tabs {
+            background-color: darken(@ms-layout-bright-bg, 15%);
+        }
+    }
+
+    &.ms-mirror {
+        flex-direction: row-reverse;
+        .ms-menu-tabs .ms-menu-tab .ms-tab-arrow {
+            margin-left: 0;
+            .ms-arrow-mirror {
+                position: absolute;
+                left: -@ms-layout-overlay-margin;
+                border-top: @ms-layout-btn-size / 3 solid transparent;
+                border-bottom: @ms-layout-btn-size / 3 solid transparent; 
+                border-left: @ms-layout-btn-size / 3 solid @ms-layout-bright-bg;
+            }
+        }
+    }
+    .ms-menu-content {
+        .shadow-soft;
+        background-color: @ms-layout-bright-bg;
+        position: relative;
+        width: 100%;
+        transition: 0.3s width;
+        overflow: hidden;
+        &.ms-overlay {
+            pointer-events: auto;
+            margin: @ms-layout-overlay-margin;
+            margin-bottom: @ms-layout-overlay-margin-bottom;
+            margin-right: 0;
+            box-shadow: none;
+            background-color: transparent;
+            overflow: visible;
+            z-index: 2;
+            & > div {
+                .shadow-far;
+                background-color:  @ms-layout-bright-bg;
+            }
+        }
+    }
+    &.ms-mirror {
+        .ms-menu-content {
+            &.ms-overlay {
+                margin: @ms-layout-overlay-margin;
+                margin-bottom: @ms-layout-overlay-margin-bottom;
+                margin-left: 0;
+            }
+        }
+    }
+    &.ms-closed,  &.ms-mirror.ms-closed {
+        .ms-menu-content {
+            &.ms-overlay {
+                margin: 0;
+            }
+        }
+    }
+}
+
+.ms-menu-layout {
+    overflow: visible !important;
+    & > .ms2-border-layout-body {
+        overflow: visible !important;
+        & > .ms2-border-layout-content {
+            overflow: visible;
+            background-color: transparent;
+        }
+    }
+}
+
+@ms-layout-handle-size: 10px;
+
+.ms-layout-panel {
+    position: relative;
+    width: 100%;
+    height: inherit;
+    .ms-layout-panel-body {
+        position: relative;
+        width: 100%;
+        height: 100%;   
+        & > *:not(.ms-layout-panel-handle) {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    .ms-layout-panel-handle {
+        position: absolute;
+        background-color: darken(@ms-layout-bright-bg, 10%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .glyphicon {
+            font-size: @ms-layout-handle-size;
+        }
+        &:hover {
+            .glyphicon {
+                color: @ms-layout-bright-active;
+            }
+        }
+    }
+    .ms-layout-panel-handle-placeholder {
+        position: fixed;
+        border: 1px dashed @ms-layout-bright-text;
+        z-index: 100;
+    }
+
+    &.axis-w .ms-layout-panel-handle-placeholder,
+    &.axis-e .ms-layout-panel-handle-placeholder {
+        width: 0px;
+        height: 100%;
+    }
+
+    &.axis-n .ms-layout-panel-handle-placeholder,
+    &.axis-s .ms-layout-panel-handle-placeholder {
+        width: 100%;
+        height: 1px;
+    }
+
+    &.axis-w {
+        .ms-layout-panel-body {
+            padding-left: @ms-layout-handle-size;
+        }
+        .ms-layout-panel-handle {
+            top: 0;
+            left: 0;
+            width: @ms-layout-handle-size;
+            height: 100%;
+            cursor: w-resize;
+        }
+    }
+    &.axis-n {
+        .ms-layout-panel-body {
+            padding-top: @ms-layout-handle-size;
+        }
+        .ms-layout-panel-handle {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: @ms-layout-handle-size;
+            cursor: n-resize;
+        }
+    }
+    &.axis-e {
+        .ms-layout-panel-body {
+            padding-right: @ms-layout-handle-size;
+        }
+        .ms-layout-panel-handle {
+            top: 0;
+            right: 0;
+            width: @ms-layout-handle-size;
+            height: 100%;
+            cursor: w-resize;
+        }
+    }
+}

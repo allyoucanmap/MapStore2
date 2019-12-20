@@ -34,7 +34,7 @@ const getSaveTooltipId = (step, {id} = {}) => {
 
 module.exports = ({ step = 0, editorData = {}, valid, stepButtons = [], onFinish = () => { }, setPage = () => { }} = {}) => (<Toolbar btnDefaultProps={{
     bsStyle: "primary",
-    bsSize: "sm"
+    className: "square-button-md"
 }}
 buttons={[{
     onClick: () => setPage(Math.max(0, step - 1)),

@@ -219,9 +219,19 @@ const FeatureInfoFormatSelector = connect((state) => ({
     onInfoFormatChange: changeMapInfoFormat
 })(require("../components/misc/FeatureInfoFormatSelector"));
 
+const IdentifyAlertIcon = connect(
+    selector
+)(({ enabled, requests }) => {
+    if (enabled && requests.length > 0) {
+        return (
+            <div className="ms-menu-alert-icon" style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: 'red' }}/>);
+    }
+    return null;
+});
+
 module.exports = {
     IdentifyPlugin: assign(IdentifyPlugin, {
-        Toolbar: {
+        /* Toolbar: {
             name: 'info',
             position: 6,
             tooltip: "info.tooltip",
@@ -232,8 +242,18 @@ module.exports = {
                 bsStyle: state.mapInfo && state.mapInfo.enabled ? "success" : "primary",
                 active: !!(state.mapInfo && state.mapInfo.enabled)
             })
+        },*/
+        Layout: {
+            priority: 1,
+            position: 6,
+            size: 400,
+            glyph: 'map-marker',
+            tooltipId: 'mps.pageTooltip',
+            container: 'right-menu'/* ,
+            alertIconComponent: IdentifyAlertIcon*/
         },
         Settings: {
+            priority: 1,
             tool: <FeatureInfoFormatSelector
                 key="featureinfoformat"
                 label={<Message msgId="infoFormatLbl" />

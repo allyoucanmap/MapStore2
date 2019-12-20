@@ -87,7 +87,15 @@ class AddGroup extends Component {
         return name !== '';
     };
 }
-
+/*
+{
+    visible: this.props.activateTool.activateAddGroup && (status === 'DESELECT' || status === 'GROUP') && this.getSelectedNodeDepth() <= this.props.maxDepth
+        ? true : false,
+    tooltip: status === 'GROUP' ? this.props.text.addSubGroupTooltip : this.props.text.addGroupTooltip,
+    glyph: 'add-folder',
+    onClick: this.addGroup
+},*/
+const { Button, Glyphicon } = require('react-bootstrap');
 const AddGroupPlugin = connect((state) => ({
     enabled: get(state, "controls.addgroup.enabled", false),
     parent: get(state, "controls.addgroup.parent", null)
@@ -96,6 +104,32 @@ const AddGroupPlugin = connect((state) => ({
     onAdd: addGroup
 })(AddGroup);
 
+const TOCButton = connect((state) => ({
+    enabled: get(state, "controls.addgroup.enabled", false)
+}), {
+    onToggle: setControlProperties.bind(null, "addgroup", "enabled", true, "parent")
+})(({
+    status,
+    enabled,
+    onToggle,
+    selectedGroups,
+    ...props
+}) => {
+    const group = selectedGroups.length > 0 && selectedGroups[selectedGroups.length - 1];
+    return !enabled && (status === 'DESELECT' || status === 'GROUP')
+        ? <Button {...props} onClick={() => onToggle(group && group.id)}>
+            <Glyphicon glyph="add-folder"/>
+        </Button>
+        : null;
+});
+
 export default createPlugin('AddGroup', {
-    component: AddGroupPlugin
+    component: AddGroupPlugin,
+    containers: {
+        TOC: {
+            priority: 1,
+            tool: TOCButton,
+            doNotHide: true
+        }
+    }
 });

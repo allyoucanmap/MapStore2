@@ -45,7 +45,7 @@ module.exports = ({
     openFilterEditor = () => {}
 } = {}) => (<Toolbar btnDefaultProps={{
     bsStyle: "primary",
-    bsSize: "sm"
+    className: 'square-button-md'
 }}
 buttons={[{
     onClick: () => setPage(Math.max(0, step - 1)),
