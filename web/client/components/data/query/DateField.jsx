@@ -26,8 +26,6 @@ const UTCDateTimePicker = utcDateWrapper({
     setDateProp: "onChange"
 })(DateTimePicker);
 
-require('react-widgets/lib/less/react-widgets.less');
-
 /**
  * This enhanced Component is used for supporting "date", "time" or "date-time" attribute types
 */

@@ -12,7 +12,15 @@ const ConfigUtils = require('../utils/ConfigUtils');
 const SearchBarControl = require("../components/mapcontrols/search/SearchBar");
 const { Form, FormGroup, ControlLabel } = require('react-bootstrap');
 const Select = require('react-select');
-const Loader = require('../components/misc/Loader');
+const Toolbar = require('../components/misc/toolbar/Toolbar');
+const tooltip = require('../components/misc/enhancers/tooltip');
+const moment = require('moment');
+const { DateTimePicker } = require('react-widgets');
+const momentLocalizer = require('react-widgets/lib/localizers/moment');
+const SwitchButtonMS = require("../components/misc/switch/SwitchButton");
+momentLocalizer(moment);
+
+const SwitchButton = tooltip(SwitchButtonMS);
 
 const options = [
     {
@@ -38,6 +46,11 @@ const Search = (props) => {
     const [selected, setSelected] = React.useState([]);
     const [loading, setLoading] = React.useState(false);
 
+    const [enableCreationDate, setEnableCreationDate] = React.useState(false);
+    const [enableUpdateDate, setEnableUpdateDate] = React.useState(false);
+
+    const [creationDate, setCreationDate] = React.useState(null);
+    const [updateDate, setUpdateDate] = React.useState(null);
     // simulate loading
     React.useEffect(() => {
         if (loading) {
@@ -46,6 +59,8 @@ const Search = (props) => {
             }, 750);
         }
     }, [ loading ]);
+
+    const isFiltered = selected && selected.length > 0 || enableCreationDate && creationDate || enableUpdateDate && updateDate;
 
     return (
         <div className="ms-maps-search">
@@ -56,9 +71,11 @@ const Search = (props) => {
                         {
                             glyph: 'filter',
                             className: 'square-button-md no-border',
-                            active: filterVisible,
-                            bsStyle: 'default',
-                            tooltip: filterVisible ? 'Hide advanced filters' : 'Show advanced filters',
+                            active: !!(filterVisible || isFiltered),
+                            bsStyle: isFiltered ? 'success' : 'default',
+                            tooltip: isFiltered
+                                ? filterVisible ? 'Hide advanced filters (active)' : 'Show advanced filters (active)'
+                                : filterVisible ? 'Hide advanced filters' : 'Show advanced filters',
                             onClick: () => setFilterVisibility(!filterVisible)
                         }
                     ]}/>
@@ -67,12 +84,29 @@ const Search = (props) => {
             <div className="ms-maps-search-filters">
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     <h5 style={{ flex: 1 }}>Advanced search filters</h5>
-                    {loading && <Loader size={16}/>}
+                    <Toolbar
+                        btnDefaultProps={{
+                            className: 'square-button-md no-border'
+                        }}
+                        buttons={[
+                            {
+                                glyph: 'clear-filter',
+                                tooltip: 'Clear all filter',
+                                loading,
+                                onClick: () => {
+                                    setEnableCreationDate(false);
+                                    setEnableUpdateDate(false);
+                                    setSelected([]);
+                                    setUpdateDate(null);
+                                    setCreationDate(null);
+                                }
+                            }
+                        ]}/>
                 </div>
                 <Form>
 
                     <FormGroup>
-                        <ControlLabel>Filter by context application</ControlLabel>
+                        <ControlLabel>Context</ControlLabel>
                         <Select
                             value={selected}
                             options={options}
@@ -81,6 +115,53 @@ const Search = (props) => {
                                 setSelected(values);
                                 setLoading(true);
                             }}/>
+                    </FormGroup>
+
+                    <FormGroup
+                        style={!enableCreationDate ? { opacity: 0.5 } : {}}>
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '4px 0' }}>
+                            <ControlLabel style={{ flex: 1 }}>Creation date</ControlLabel>
+                            <SwitchButton
+                                tooltip={enableCreationDate
+                                    ? 'Disable creation date filter'
+                                    : 'Enable creation date filter'}
+                                checked={enableCreationDate}
+                                onChange={() => {
+                                    setEnableCreationDate(!enableCreationDate);
+                                    if (!enableCreationDate) {
+                                        setEnableUpdateDate(false);
+                                    }
+                                }}/>
+                        </div>
+                        <DateTimePicker
+                            disabled={!enableCreationDate}
+                            value={creationDate}
+                            onChange={(date) => setCreationDate(date)}
+                            format="MMMM Do YYYY"
+                            time={false}
+                            footer={false}/>
+                    </FormGroup>
+
+                    <FormGroup
+                        style={!enableUpdateDate ? { opacity: 0.5 } : {}}>
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '4px 0' }}>
+                            <ControlLabel style={{ flex: 1 }}>Update date</ControlLabel>
+                            <SwitchButton
+                                checked={enableUpdateDate}
+                                onChange={() => {
+                                    setEnableUpdateDate(!enableUpdateDate);
+                                    if (!enableUpdateDate) {
+                                        setEnableCreationDate(false);
+                                    }
+                                }}/>
+                        </div>
+                        <DateTimePicker
+                            value={updateDate}
+                            onChange={(date) => setUpdateDate(date)}
+                            disabled={!enableUpdateDate}
+                            format="MMMM Do YYYY"
+                            time={false}
+                            footer={false}/>
                     </FormGroup>
 
                 </Form>

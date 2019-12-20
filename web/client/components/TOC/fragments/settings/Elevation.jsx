@@ -13,7 +13,6 @@ const ElevationChart = require('./ElevationChart');
 const {Grid} = require('react-bootstrap');
 const Message = require('../../../I18N/Message');
 const LayersUtils = require('../../../../utils/LayersUtils');
-require('react-widgets/lib/less/react-widgets.less');
 require("./css/elevation.css");
 
 module.exports = class extends React.Component {

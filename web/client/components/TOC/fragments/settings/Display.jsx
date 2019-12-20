@@ -13,8 +13,6 @@ const Message = require('../../../I18N/Message');
 const {Grid, Row, Col, FormGroup, ControlLabel, FormControl, Checkbox} = require('react-bootstrap');
 const {clamp, isNil} = require('lodash');
 
-require('react-widgets/lib/less/react-widgets.less');
-
 module.exports = class extends React.Component {
     static propTypes = {
         opacityText: PropTypes.node,

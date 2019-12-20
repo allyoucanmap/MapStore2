@@ -16,7 +16,6 @@ const MarkNameSelector = require('./MarkNameSelector');
 const numberLocalizer = require('react-widgets/lib/localizers/simple-number');
 numberLocalizer();
 const {NumberPicker} = require('react-widgets');
-require('react-widgets/lib/less/react-widgets.less');
 
 class StylePoint extends React.Component {
     static propTypes = {

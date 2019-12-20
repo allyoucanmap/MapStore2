@@ -14,7 +14,6 @@ const StyleCanvas = require('./StyleCanvas');
 const numberLocalizer = require('react-widgets/lib/localizers/simple-number');
 numberLocalizer();
 const {NumberPicker} = require('react-widgets');
-require('react-widgets/lib/less/react-widgets.less');
 
 class StylePolygon extends React.Component {
     static propTypes = {

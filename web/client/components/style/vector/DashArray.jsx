@@ -10,7 +10,6 @@ const PropTypes = require('prop-types');
 const React = require('react');
 const Select = require('react-select');
 const { join} = require('lodash');
-require('react-widgets/lib/less/react-widgets.less');
 
 /**
  * Component used to manage dashArray property for a stroke style

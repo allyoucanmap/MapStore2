@@ -15,7 +15,6 @@ const ColorSelector = require('./ColorSelector');
 const StyleCanvas = require('./StyleCanvas');
 const numberLocalizer = require('react-widgets/lib/localizers/simple-number');
 numberLocalizer();
-require('react-widgets/lib/less/react-widgets.less');
 const LocaleUtils = require('../../utils/LocaleUtils');
 const {createFont} = require('../../utils/AnnotationsUtils');
 const Message = require('../I18N/Message');

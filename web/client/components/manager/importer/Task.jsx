@@ -10,7 +10,6 @@ const React = require('react');
 const {Grid, Col, Row, Panel, Label, Button, Alert} = require('react-bootstrap');
 const Spinner = require('react-spinkit');
 const {DropdownList} = require('react-widgets');
-require('react-widgets/lib/less/react-widgets.less');
 const {Message} = require('../../I18N/I18N');
 const ImporterUtils = require('../../../utils/ImporterUtils');
 const Layer = require('./Layer');

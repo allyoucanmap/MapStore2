@@ -192,6 +192,8 @@ div.MapSearchBar .input-group-addon {
     flex-direction: column;
     width: 90%;
     margin: auto;
+    position: relative;
+    z-index: 10;
     .ms-maps-search-input {
         display: flex;
         width: 100%;
@@ -209,10 +211,18 @@ div.MapSearchBar .input-group-addon {
         }
     }
     .ms-maps-search-filters {
-        margin-top: 15px;
-        border: 1px solid @ms2-color-shade-lighter;
+        position: absolute;
+        background-color: @ms2-color-background;
         width: 100%;
         padding: 8px;
+        transform: translateY(100%);
+        bottom: -8px;
+        .shadow-soft;
+        z-index: 10;
+        .square-button-md .ms-loader > div {
+            border-color: fade(@ms2-color-primary, 20%);
+            border-left-color: @ms2-color-primary;
+        }
     }
 }
 

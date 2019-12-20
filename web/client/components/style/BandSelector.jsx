@@ -15,7 +15,6 @@ const Combobox = require('react-widgets').Combobox;
 const numberLocalizer = require('react-widgets/lib/localizers/simple-number');
 numberLocalizer();
 const {NumberPicker} = require('react-widgets');
-require('react-widgets/lib/less/react-widgets.less');
 
 const Message = require('../I18N/Message');
 const LocaleUtils = require('../../utils/LocaleUtils');
