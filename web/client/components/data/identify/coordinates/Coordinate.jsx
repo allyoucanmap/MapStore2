@@ -33,7 +33,7 @@ module.exports = ({
             onChangeFormat={onChangeFormat}
         />)
         : (<Viewer
-            className="text-center"
+            className=""
             formatCoord={formatCoord}
             coordinate={coordinate || { lat: "", lon: "" }}
         />);

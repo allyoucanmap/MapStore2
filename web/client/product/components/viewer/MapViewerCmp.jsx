@@ -71,16 +71,17 @@ class MapViewerComponent extends React.Component {
             // if 0 it loads config.json
             // if mapId is a string it loads mapId.json
             // if it is a number it loads the config from geostore
-            let mapId = id === '0' ? null : id;
+            let mapId = 'config';
             let config = urlQuery && urlQuery.config || null;
             const { configUrl } = ConfigUtils.getConfigUrl({ mapId, config });
             this.props.onInit();
 
-            if (mapId === 'new') {
+            /* if (mapId === 'new') {
                 this.props.loadNewMap(configUrl, contextId && parseInt(contextId, 10));
             } else {
                 this.props.loadMapConfig(configUrl, mapId);
-            }
+            }*/
+            this.props.loadMapConfig(configUrl, mapId);
         }
     }
 }

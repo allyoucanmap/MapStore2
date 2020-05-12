@@ -1,22 +1,148 @@
 {
-	"map": {
-		"projection": "EPSG:900913",
-		"units": "m",
-		"center": {"x": 1250000.000000, "y": 5370000.000000, "crs": "EPSG:900913"},
-    "zoom":5,
-		"maxExtent": [
-			-20037508.34, -20037508.34,
-			20037508.34, 20037508.34
-		],
-		"layers": [
-			{
-				"type": "osm",
-				"title": "Open Street Map",
-				"name": "mapnik",
+  "version": 2,
+  "map": {
+    "projection": "EPSG:900913",
+    "units": "m",
+    "center": {
+      "crs": "EPSG:4326",
+      "x": -99.73453512503964,
+      "y": 37.08399614582526
+    },
+    "zoom": 5,
+    "maxExtent": [
+      -20037508.34,
+      -20037508.34,
+      20037508.34,
+      20037508.34
+    ],
+    "layers": [
+      {
+        "type": "osm",
+        "title": "Open Street Map",
+        "name": "mapnik",
         "source": "osm",
-				"group": "background",
+        "group": "background",
         "visibility": true
-			}
-		]
-	}
+      },
+      {
+        "type": "tileprovider",
+        "title": "NASAGIBS Night 2012",
+        "provider": "NASAGIBS.ViirsEarthAtNight2012",
+        "name": "Night2012",
+        "source": "nasagibs",
+        "group": "background",
+        "visibility": false
+      },
+      {
+        "type": "tileprovider",
+        "title": "OpenTopoMap",
+        "provider": "OpenTopoMap",
+        "name": "OpenTopoMap",
+        "source": "OpenTopoMap",
+        "group": "background",
+        "visibility": false
+      },
+      {
+        "format": "image/jpeg",
+        "group": "background",
+        "name": "s2cloudless:s2cloudless",
+        "opacity": 1,
+        "title": "Sentinel 2 Cloudless",
+        "type": "wms",
+        "url": [
+          "https://1maps.geo-solutions.it/geoserver/wms",
+          "https://2maps.geo-solutions.it/geoserver/wms",
+          "https://3maps.geo-solutions.it/geoserver/wms",
+          "https://4maps.geo-solutions.it/geoserver/wms",
+          "https://5maps.geo-solutions.it/geoserver/wms",
+          "https://6maps.geo-solutions.it/geoserver/wms"
+        ],
+        "source": "s2cloudless",
+        "visibility": false,
+        "singleTile": false
+      },
+      {
+        "source": "ol",
+        "group": "background",
+        "title": "Empty Background",
+        "fixed": true,
+        "type": "empty",
+        "visibility": false,
+        "args": [
+          "Empty Background",
+          {
+            "visibility": false
+          }
+        ]
+      },
+      {
+        "type": "wms",
+        "format": "image/png",
+        "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+        "visibility": true,
+        "dimensions": [],
+        "name": "gs:us_states",
+        "title": "States of US",
+        "description": "States of US",
+        "bbox": {
+          "crs": "EPSG:4326",
+          "bounds": {
+            "minx": "-124.73142200000001",
+            "miny": "24.955967",
+            "maxx": "-66.969849",
+            "maxy": "49.371735"
+          }
+        },
+        "links": [],
+        "params": {},
+        "allowedSRS": {
+          "EPSG:3857": true,
+          "EPSG:900913": true
+        },
+        "catalogURL": null,
+        "id": "gs:us_states__5",
+        "loading": false,
+        "search": {
+          "url": "https://gs-stable.geo-solutions.it/geoserver/wfs",
+          "type": "wfs"
+        },
+        "previousLoadingError": false,
+        "loadingError": false
+      },
+      {
+        "type": "wms",
+        "format": "image/png",
+        "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+        "visibility": true,
+        "dimensions": [],
+        "name": "gs:observatories",
+        "title": "observatories",
+        "description": "observatories",
+        "bbox": {
+          "crs": "EPSG:4326",
+          "bounds": {
+            "minx": "-156.2575",
+            "miny": "-90.0",
+            "maxx": "123.33333333333333",
+            "maxy": "46.5475"
+          }
+        },
+        "links": [],
+        "params": {},
+        "allowedSRS": {
+          "EPSG:3857": true,
+          "EPSG:900913": true
+        },
+        "catalogURL": null,
+        "id": "gs:observatories__6",
+        "loading": false,
+        "search": {
+          "url": "https://gs-stable.geo-solutions.it/geoserver/wfs",
+          "type": "wfs"
+        },
+        "previousLoadingError": false,
+        "loadingError": false
+      }
+    ]
+  }
 }

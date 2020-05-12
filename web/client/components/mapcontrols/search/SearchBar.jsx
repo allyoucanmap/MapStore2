@@ -7,13 +7,12 @@
 */
 
 import React from 'react';
-import { FormGroup, Glyphicon, Row, Col } from 'react-bootstrap';
+import { InputGroup, FormGroup, Glyphicon } from 'react-bootstrap';
 import { isNumber } from 'lodash';
 
 import CoordinateEntry from '../../misc/coordinateeditors/CoordinateEntry';
 import Message from '../../I18N/Message';
 import DropdownToolbarOptions from '../../misc/toolbar/DropdownToolbarOptions';
-import Toolbar from '../../misc/toolbar/Toolbar';
 
 import SearchBarBase from '../../search/SearchBarBase';
 import SearchBarInput from '../../search/SearchBarInput';
@@ -58,8 +57,8 @@ export default ({
     enabledSearchServicesConfig = false,
     error,
     format = 'decimal',
-    placeholder,
-    placeholderMsgId = "search.addressSearch",
+    placeholder = 'Search by location name', // missing context message with mockup update so temp placeholder
+    placeholderMsgId = "",
     showOptions = true,
     showAddressSearchOption = true,
     showCoordinatesSearchOption = true,
@@ -73,7 +72,9 @@ export default ({
     onChangeFormat = () => {},
     onToggleControl = () => {},
     onZoomToPoint = () => {},
-    onPurgeResults
+    onPurgeResults,
+    menuItems,
+    searchInputs
 }) => {
     const search = defaultSearchWrapper({searchText, selectedItems, searchOptions, maxResults, onSearch, onSearchReset});
 
@@ -96,6 +97,9 @@ export default ({
 
     const getActiveTool = () => {
         let activeTool = activeSearchTool;
+        if (activeTool !== 'addressSearch' && activeTool !== 'coordinatesSearch') { // for mockup
+            return activeTool;
+        }
         if (showAddressSearchOption && !showCoordinatesSearchOption) {
             activeTool = "addressSearch";
         }
@@ -154,6 +158,7 @@ export default ({
                 {selectedItems && selectedItems.map((item, index) =>
                     <span key={"selected-item" + index} className="input-group-addon"><div className="selectedItem-text">{item.text}</div></span>
                 )}
+                {searchInputs}
                 <SearchBarInput
                     show={activeTool === 'addressSearch'}
                     delay={delay}
@@ -167,60 +172,107 @@ export default ({
                     onSearchTextChange={onSearchTextChange}
                     onCancelSelectedItem={onCancelSelectedItem}
                     onPurgeResults={onPurgeResults}/>
-                {activeTool !== "addressSearch" && showCoordinatesSearchOption &&
-                    <div className="coordinateEditor">
-                        <Row className="entryRow">
-                            <Col xs={3} className="coordinateLabel">
-                                <Message msgId="latitude"/>
-                            </Col>
-                            <Col xs={9}>
-                                <CoordinateEntry
-                                    format={format}
-                                    aeronauticalOptions={aeronauticalOptions}
-                                    coordinate="lat"
-                                    idx={1}
-                                    value={coordinate.lat}
-                                    constraints={constraintsCoordEditor}
-                                    onChange={(dd) => changeCoord("lat", dd)}
-                                    onKeyDown={(e) => {
-                                        if (areValidCoordinates() && e.keyCode === 13) {
-                                            zoomToPoint();
-                                        }
-                                    }}
-                                />
-                            </Col>
-                        </Row>
-                        <Row className="entryRow">
-                            <Col xs={3} className="coordinateLabel">
-                                <Message msgId="longitude"/>
-                            </Col>
-                            <Col xs={9}>
-                                <CoordinateEntry
-                                    format={format}
-                                    aeronauticalOptions={aeronauticalOptions}
-                                    coordinate="lon"
-                                    idx={2}
-                                    value={coordinate.lon}
-                                    constraints={constraintsCoordEditor}
-                                    onChange={(dd) => changeCoord("lon", dd)}
-                                    onKeyDown={(e) => {
-                                        if (areValidCoordinates() && e.keyCode === 13) {
-                                            zoomToPoint();
-                                        }
-                                    }}
-                                />
-                            </Col>
-                        </Row>
+                {activeTool === "coordinatesSearch" && showCoordinatesSearchOption &&
+                    <div
+                        style={{
+                            display: 'flex',
+                            flex: 1,
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            padding: '0 8px'
+                        }}>
+                        <InputGroup
+                            style={{
+                                flex: 1,
+                                padding: '4px 0',
+                                marginRight: 8
+                            }}>
+                            <InputGroup.Addon style={{ minWidth: 45 }}>
+                                Lat
+                            </InputGroup.Addon>
+                            <CoordinateEntry
+                                format={format}
+                                aeronauticalOptions={aeronauticalOptions}
+                                coordinate="lat"
+                                idx={1}
+                                value={coordinate.lat}
+                                constraints={constraintsCoordEditor}
+                                onChange={(dd) => changeCoord("lat", dd)}
+                                onKeyDown={(e) => {
+                                    if (areValidCoordinates() && e.keyCode === 13) {
+                                        zoomToPoint();
+                                    }
+                                }}
+                            />
+                        </InputGroup>
+                        <InputGroup
+                            style={{
+                                flex: 1,
+                                padding: '4px 0',
+                                marginRight: 8
+                            }}>
+                            <InputGroup.Addon style={{ minWidth: 45 }}>
+                                Lon
+                            </InputGroup.Addon>
+                            <CoordinateEntry
+                                format={format}
+                                aeronauticalOptions={aeronauticalOptions}
+                                coordinate="lon"
+                                idx={2}
+                                value={coordinate.lon}
+                                constraints={constraintsCoordEditor}
+                                onChange={(dd) => changeCoord("lon", dd)}
+                                onKeyDown={(e) => {
+                                    if (areValidCoordinates() && e.keyCode === 13) {
+                                        zoomToPoint();
+                                    }
+                                }}
+                            />
+                        </InputGroup>
                     </div>
                 }
                 <SearchBarToolbar
                     splitTools={false}
-                    loading={loading}
+                    // loading={loading}
                     toolbarButtons={[{
+                        buttonConfig: {
+                            title: <Glyphicon glyph="cog"/>,
+                            tooltipId: "search.changeSearchInputField",
+                            tooltipPosition: "bottom",
+                            className: "square-button-md no-border",
+                            pullRight: true
+                        },
+                        menuOptions: [
+                            {
+                                active: format === "decimal",
+                                onClick: () => onChangeFormat("decimal"),
+                                text: <Message msgId="search.decimal"/>
+                            }, {
+                                active: format === "aeronautical",
+                                onClick: () => onChangeFormat("aeronautical"),
+                                text: <Message msgId="search.aeronautical"/>
+                            }
+                        ],
+                        visible: showOptions && activeTool === "coordinatesSearch",
+                        Element: DropdownToolbarOptions
+                    }, {
+                        onClick: () => {
+                            if (!enabledSearchServicesConfig) {
+                                onToggleControl("searchservicesconfig");
+                            }
+                        },
+                        className: "square-button-md no-border",
+                        bsStyle: "default",
+                        glyph: "cog",
+                        visible: activeTool === "addressSearch",
+                        tooltipId: "search.searchservicesbutton",
+                        tooltipPosition: 'bottom'
+                    }, {
                         glyph: removeIcon,
                         className: "square-button-md no-border",
                         bsStyle: "default",
                         pullRight: true,
+                        loading,
                         visible: activeTool === "addressSearch" &&
                             (searchText !== "" || selectedItems && selectedItems.length > 0) ||
                             activeTool === "coordinatesSearch" && (isNumber(coordinate.lon) || isNumber(coordinate.lat)),
@@ -237,6 +289,7 @@ export default ({
                             (isSearchClickable || activeTool !== "addressSearch" ? "magnifying-glass clickable" : "magnifying-glass"),
                         bsStyle: "default",
                         pullRight: true,
+                        loading,
                         visible: activeTool === "addressSearch" &&
                             (!(searchText !== "" || selectedItems && selectedItems.length > 0) || !splitTools) ||
                             activeTool === "coordinatesSearch",
@@ -253,8 +306,8 @@ export default ({
                         tooltipPosition: "bottom",
                         className: "square-button-md no-border",
                         glyph: "warning-sign",
-                        bsStyle: "danger",
-                        glyphClassName: "searcherror",
+                        bsStyle: "default",
+                        glyphClassName: "text-danger",
                         visible: !!error,
                         onClick: clearSearch
                     }, {
@@ -266,52 +319,13 @@ export default ({
                             pullRight: true
                         },
                         menuOptions: [
-                            ...searchMenuOptions, {
-                                onClick: () => {
-                                    if (!enabledSearchServicesConfig) {
-                                        onToggleControl("searchservicesconfig");
-                                    }
-                                },
-                                glyph: "cog",
-                                text: <Message msgId="search.searchservicesbutton"/>
-                            }
+                            ...searchMenuOptions,
+                            ...menuItems
                         ],
                         visible: showOptions,
                         Element: DropdownToolbarOptions
                     }]}
-                >
-                    {
-                        showOptions && activeTool === "coordinatesSearch" ? <Toolbar
-                            btnGroupProps = {{ className: 'btn-group-menu-options-format'}}
-                            transitionProps = {null}
-                            btnDefaultProps = {{ className: 'square-button-md', bsStyle: 'primary' }}
-                            buttons={[
-                                {
-                                    buttonConfig: {
-                                        title: <Glyphicon glyph="cog"/>,
-                                        tooltipId: "search.changeSearchInputField",
-                                        tooltipPosition: "bottom",
-                                        className: "square-button-md no-border",
-                                        pullRight: true
-                                    },
-                                    menuOptions: [
-                                        {
-                                            active: format === "decimal",
-                                            onClick: () => onChangeFormat("decimal"),
-                                            text: <Message msgId="search.decimal"/>
-                                        }, {
-                                            active: format === "aeronautical",
-                                            onClick: () => onChangeFormat("aeronautical"),
-                                            text: <Message msgId="search.aeronautical"/>
-                                        }
-                                    ],
-                                    visible: showOptions && activeTool === "coordinatesSearch",
-                                    Element: DropdownToolbarOptions
-                                }
-                            ]}
-                        /> : null
-                    }
-                </SearchBarToolbar>
+                />
             </div>
         </FormGroup>
     </SearchBarBase>);

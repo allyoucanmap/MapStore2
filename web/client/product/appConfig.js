@@ -10,6 +10,10 @@ module.exports = {
     pages: [{
         name: "home",
         path: "/",
+        component: require('./pages/MapViewer')
+    }/* , {
+        name: "home",
+        path: "/",
         component: require('./pages/Maps')
     }, {
         name: "maps",
@@ -71,7 +75,7 @@ module.exports = {
         name: "geostory",
         path: "/geostory/shared/:gid",
         component: require('./pages/GeoStory').default
-    }],
+    }*/ ],
     initialState: {
         defaultState: {
             mousePosition: {enabled: false},

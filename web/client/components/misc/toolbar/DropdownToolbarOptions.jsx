@@ -12,6 +12,7 @@ const uuidv1 = require('uuid/v1');
 
 const DropdownButtonT = tooltip(DropdownButton);
 
+
 /**
  * options for buttonConfig = {
  *        disabled: false,
@@ -35,12 +36,23 @@ const defaultButtonConfig = {
 const DropdownFeatureType = ({
     menuOptions = [],
     buttonConfig = {}
-} = {}) => (
-    <DropdownButtonT {...defaultButtonConfig} {...buttonConfig}>
-        {menuOptions.length ? menuOptions.map(({glyph, text, onClick, active = false}, i) => (
-            <MenuItem active={active} eventKey={i} onClick={onClick} key={i}>
-                {glyph && <Glyphicon glyph={glyph}/>} {text}
-            </MenuItem>)) : null}
-    </DropdownButtonT>
-);
+} = {}) => {
+    const [open, setOpen] = React.useState();
+    return (
+        <DropdownButtonT
+            {...defaultButtonConfig}
+            {...buttonConfig}
+            open={open}
+            onToggle={(isOpen) => setOpen(isOpen)}
+        >
+            {menuOptions.length ? menuOptions.map(({Component, glyph, text, onClick, active = false}, i) =>
+                Component
+                    ? <Component active={active} eventKey={i} onClick={onClick} key={i} glyph={glyph} text={text} setOpen={setOpen}/>
+                    : (
+                        <MenuItem active={active} eventKey={i} onClick={onClick} key={i}>
+                            {glyph && <Glyphicon glyph={glyph}/>} {text}
+                        </MenuItem>)) : null}
+        </DropdownButtonT>
+    );
+};
 module.exports = DropdownFeatureType;

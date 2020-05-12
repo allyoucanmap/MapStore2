@@ -108,7 +108,6 @@ const SearchBarInput = ({
     } else {
         actualPlaceholder = placeholder;
     }
-
     return show && <FormControl
         className={`searchInput${className ? ` ${className}` : ''}`}
         key="search-input"

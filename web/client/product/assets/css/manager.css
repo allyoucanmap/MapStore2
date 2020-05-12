@@ -10,7 +10,7 @@
     position: relative;
     top: -20px;
 }
-
+/*
 .manager .MapSearchBar.user-search {
     top: -100px;
     height: 0;
@@ -19,6 +19,7 @@
 .manager .MapSearchBar.user-search .input-group {
     box-shadow: -1px 1px 5px 1px rgba(94,94,94,1);
 }
+*/
 .manager .Manager-Container {
     margin: 0;
 }

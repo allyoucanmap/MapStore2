@@ -8,7 +8,7 @@
 
 const React = require('react');
 const PropTypes = require('prop-types');
-const {Row, Col, Glyphicon, Button} = require('react-bootstrap');
+const { InputGroup, Glyphicon, Button } = require('react-bootstrap');
 const Toolbar = require('../toolbar/Toolbar');
 const draggableComponent = require('../enhancers/draggableComponent');
 const CoordinateEntry = require('./CoordinateEntry');
@@ -127,7 +127,7 @@ class CoordinatesRow extends React.Component {
             </Button></div>);
 
         return (
-            <Row className={`coordinateRow ${this.props.format || ""} ${this.props.customClassName || ""}`} style={!this.props.customClassName ? rowStyle : {}} onMouseEnter={() => {
+            <div className={`coordinateRow ${this.props.format || ""} ${this.props.customClassName || ""}`} style={!this.props.customClassName ? rowStyle : {}} onMouseEnter={() => {
                 if (this.props.onMouseEnter && this.props.component.lat && this.props.component.lon) {
                     this.props.onMouseEnter(this.props.component);
                 }
@@ -136,12 +136,26 @@ class CoordinatesRow extends React.Component {
                     this.props.onMouseLeave();
                 }
             }}>
-                <Col xs md={1}>
+                <div>
                     {this.props.showDraggable ? this.props.isDraggable ? this.props.connectDragSource(dragButton) : dragButton : null}
-                </Col>
-                <div className="coordinate lat" style={{width: "100%"}}>
-                    <Col xs md={4}>
-                        {this.props.showLabels && <div><Message msgId="latitude"/></div>}
+                </div>
+                <div
+                    className="coordinate lat"
+                    style={{
+                        display: 'flex',
+                        flex: 1,
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap'
+                    }}>
+                    <InputGroup
+                        style={{
+                            flex: 1,
+                            padding: '4px 0',
+                            marginRight: 8
+                        }}>
+                        {this.props.showLabels && <InputGroup.Addon>
+                            Lat
+                        </InputGroup.Addon>}
                         <CoordinateEntry
                             format={this.props.format}
                             aeronauticalOptions={this.props.aeronauticalOptions}
@@ -163,11 +177,16 @@ class CoordinatesRow extends React.Component {
                             }}
                             onKeyDown={this.onSubmit}
                         />
-                    </Col>
-                </div>
-                <div className="coordinate lon" style={{width: "100%"}}>
-                    <Col xs md={4}>
-                        {this.props.showLabels && <div><Message msgId="longitude"/></div>}
+                    </InputGroup>
+                    <InputGroup
+                        style={{
+                            flex: 1,
+                            padding: '4px 0',
+                            marginRight: 8
+                        }}>
+                        {this.props.showLabels && <InputGroup.Addon>
+                            Lon
+                        </InputGroup.Addon>}
                         <CoordinateEntry
                             format={this.props.format}
                             aeronauticalOptions={this.props.aeronauticalOptions}
@@ -189,15 +208,15 @@ class CoordinatesRow extends React.Component {
                             }}
                             onKeyDown={this.onSubmit}
                         />
-                    </Col>
+                    </InputGroup>
                 </div>
-                <Col key="tools" xs md={3}>
+                <div>
                     <Toolbar
                         btnGroupProps={{ className: 'tools' }}
                         btnDefaultProps={{ className: 'square-button-md no-border'}}
                         buttons={toolButtons}/>
-                </Col>
-            </Row>
+                </div>
+            </div>
         );
     }
 }

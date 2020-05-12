@@ -12,6 +12,6 @@ export default ({
     className,
     style,
     children
-}) => <div id="map-search-bar" style={style} className={"MapSearchBar" + (className ? " " + className : "")}>
+}) => <div id="ms-search-bar" style={style} className={"ms-search-bar" + (className ? " " + className : "")}>
     {children}
 </div>;

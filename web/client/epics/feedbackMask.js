@@ -206,6 +206,6 @@ module.exports = {
     updateContextCreatorFeedbackMaskVisibility,
     updateDashboardVisibility,
     updateGeoStoryFeedbackMaskVisibility,
-    detectNewPage,
-    feedbackMaskPromptLogin
+    detectNewPage
+    // feedbackMaskPromptLogin
 };

@@ -182,15 +182,8 @@ const ToggleButton = require('./searchbar/ToggleButton');
  * - "single_layer", it performs the GFI request for one layer only with only that record as a result, info_format is forced to be application/json
  * - "all_layers", it performs the GFI for all layers, as a normal GFI triggered by clicking on the map
  */
-const SearchPlugin = connect((state) => ({
-    enabled: state.controls && state.controls.search && state.controls.search.enabled || false,
-    selectedServices: state && state.search && state.search.selectedServices,
-    selectedItems: state && state.search && state.search.selectedItems,
-    textSearchConfig: state && state.searchconfig && state.searchconfig.textSearchConfig
-}), {
-    onUpdateResultsStyle: updateResultsStyle
-})(
-    class extends React.Component {
+
+class Search extends React.Component {
     static propTypes = {
         splitTools: PropTypes.bool,
         showOptions: PropTypes.bool,
@@ -203,7 +196,8 @@ const SearchPlugin = connect((state) => ({
         userServices: PropTypes.array,
         withToggle: PropTypes.oneOfType([PropTypes.bool, PropTypes.array]),
         enabled: PropTypes.bool,
-        textSearchConfig: PropTypes.object
+        textSearchConfig: PropTypes.object,
+        plugins: PropTypes.array
     };
 
     static defaultProps = {
@@ -221,7 +215,8 @@ const SearchPlugin = connect((state) => ({
         },
         fitResultsToMapSize: true,
         withToggle: false,
-        enabled: true
+        enabled: true,
+        plugins: []
     };
 
     componentDidMount() {
@@ -247,9 +242,13 @@ const SearchPlugin = connect((state) => ({
     };
 
     getSearchAndToggleButton = () => {
+        const menuItems = this.props.plugins.map(({ menuItem }) => ({ Component: menuItem }));
+        const searchInputs = this.props.plugins.map(({ Component }) => <Component />);
         const search = (<SearchBar
             key="searchBar"
             {...this.props}
+            menuItems={menuItems}
+            searchInputs={searchInputs}
             searchOptions={this.getCurrentServices()}
             placeholder={this.getServiceOverrides("placeholder")}
             placeholderMsgId={this.getServiceOverrides("placeholderMsgId")}
@@ -259,39 +258,54 @@ const SearchPlugin = connect((state) => ({
         }
         if (isArray(this.props.withToggle)) {
             return (
-                <span><MediaQuery query={"(" + this.props.withToggle[0] + ")"}>
+                <>
+                <MediaQuery query={"(" + this.props.withToggle[0] + ")"}>
                     <ToggleButton/>
                     {this.props.enabled ? search : null}
                 </MediaQuery>
                 <MediaQuery query={"(" + this.props.withToggle[1] + ")"}>
                     {search}
                 </MediaQuery>
-                </span>
+                </>
             );
         }
         return search;
     };
 
     render() {
-        return (<span>
-            <HelpWrapper
-                id="search-help"
-                key="seachBar-help"
-                helpText={<Message msgId="helptexts.searchBar"/>}>
+        return (
+            <div className="map-search-bar-container">
                 {this.getSearchAndToggleButton()}
-            </HelpWrapper>
-            <SearchResultList
-                fitToMapSize={this.props.fitResultsToMapSize}
-                searchOptions={this.props.searchOptions}
-                onUpdateResultsStyle={this.props.onUpdateResultsStyle}
-                key="nominatimresults"/>
-        </span>)
-        ;
+                <SearchResultList
+                    fitToMapSize={this.props.fitResultsToMapSize}
+                    searchOptions={this.props.searchOptions}
+                    onUpdateResultsStyle={this.props.onUpdateResultsStyle}
+                    key="nominatimresults"/>
+            </div>
+        );
     }
-    });
+};
+
+const usePlugins = require('../hooks/usePlugins').default;
+
+const SearchPlugin = (props, context) => {
+    const plugins = usePlugins(props, context);
+    return <Search { ...props } plugins={plugins} />;
+};
+
+SearchPlugin.contextTypes = {
+    loadedPlugins: PropTypes.object
+};
 
 module.exports = {
-    SearchPlugin: assign(SearchPlugin, {
+    SearchPlugin: assign(connect((state) => ({
+        enabled: state.controls && state.controls.search && state.controls.search.enabled || false,
+        selectedServices: state && state.search && state.search.selectedServices,
+        selectedItems: state && state.search && state.search.selectedItems,
+        textSearchConfig: state && state.searchconfig && state.searchconfig.textSearchConfig
+    }), {
+        onUpdateResultsStyle: updateResultsStyle
+    })(SearchPlugin), {
         OmniBar: {
             name: 'search',
             position: 1,

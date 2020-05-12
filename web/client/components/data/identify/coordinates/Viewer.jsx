@@ -41,19 +41,17 @@ module.exports = ({
     formatCoord = "decimal",
     className
 }) =>
-    (<Row className={className}>
-        {
-            (<Col xs={12}>
-                {(isNil(coordinate.lat) || isNil(coordinate.lon))
-                    ? null
-                    : formatCoord === "decimal"
-                        ? <div className="ms-coordinates-decimal">Lat: <NumberFormat value={(Math.round(coordinate.lat * 100000) / 100000)} /> - Long: <NumberFormat value={coordinate.lon} /></div>
-                        : <div className="ms-coordinates-aeronautical">
-                            <span>Lat: <AeronauticalCoordinate integerFormat={integerFormat} decimalFormat={decimalFormat} value={coordinate.lat} /></span>
-                            <span> - </span>
-                            <span> Long: <AeronauticalCoordinate coordinate="lon" integerFormat={integerFormat} decimalFormat={decimalFormat} value={coordinate.lon} /></span>
-                        </div>
-                }
-            </Col>)}
-    </Row>);
+
+    (<div>
+        {(isNil(coordinate.lat) || isNil(coordinate.lon))
+            ? null
+            : formatCoord === "decimal"
+                ? <div className="ms-coordinates-decimal">Lat: <NumberFormat value={(Math.round(coordinate.lat * 100000) / 100000)} /> - Long: <NumberFormat value={coordinate.lon} /></div>
+                : <div className="ms-coordinates-aeronautical">
+                    <span>Lat: <AeronauticalCoordinate integerFormat={integerFormat} decimalFormat={decimalFormat} value={coordinate.lat} /></span>
+                    <span> - </span>
+                    <span> Long: <AeronauticalCoordinate coordinate="lon" integerFormat={integerFormat} decimalFormat={decimalFormat} value={coordinate.lon} /></span>
+                </div>
+        }
+    </div>);
 

@@ -36,7 +36,7 @@ const selector = (state) => {
         bearingMeasureEnabled: state.measurement && state.measurement.bearingMeasureEnabled,
         bearingMeasureValueEnabled: !isOpenlayers(state),
         isCoordinateEditorEnabled: isCoordinateEditorEnabledSelector(state),
-        showCoordinateEditor: showCoordinateEditorSelector(state),
+        // showCoordinateEditor: showCoordinateEditorSelector(state),
         showFeatureSelector: isOpenlayers(state),
         useSingleFeature: !isOpenlayers(state),
         withReset: isOpenlayers(state),

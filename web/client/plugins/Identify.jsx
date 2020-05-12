@@ -136,6 +136,7 @@ const identifyDefaultProps = defaultProps({
     zIndex: 1050
 });
 
+
 /**
  * This plugin allows get informations about clicked point. It can be configured to have a mobile or a desktop flavor.
  *
@@ -221,7 +222,7 @@ const IdentifyPlugin = compose(
     identifyIndex,
     defaultViewerHandlers,
     identifyLifecycle
-)(require('../components/data/identify/IdentifyContainer'));
+)(require('../components/data/identify/IdentifyContainer').default);
 
 // configuration UI
 const FeatureInfoFormatSelector = connect((state) => ({

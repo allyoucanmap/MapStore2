@@ -275,9 +275,11 @@
                 "declineUrl" : "http://www.google.com"
               }
             },
-            "FeedbackMask"
+            "FeedbackMask",
+            "SearchByBookmark"
         ],
         "desktop": [ "Details",
+          "SearchByBookmark",
           {
             "name": "Map",
             "cfg": {
@@ -372,6 +374,7 @@
             "Tutorial", "MapFooter", {
                 "name": "Measure",
                 "cfg": {
+                  "showCoordinateEditor": true,
                   "defaultOptions": {
                     "showAddAsAnnotation": true
                   }
