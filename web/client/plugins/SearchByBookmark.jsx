@@ -15,10 +15,10 @@ import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
 import { changeActiveSearchTool } from "../actions/search";
 import Portal from "../components/misc/Portal";
-import ResizableModal from "../components/misc/ResizableModal";
 import SideCard from "../components/misc/cardgrids/SideCard";
 import Filter from "../components/misc/Filter";
 import uuidv1 from 'uuid/v1';
+import Dialog from '../components/misc/Dialog';
 
 function SearchByBookmarkPlugin({
     active
@@ -104,215 +104,220 @@ function SearchByBookmarkPlugin({
                     ]}
                 />
             </div>
-            <Portal>
-                <ResizableModal
-                    title={status?.title || 'Views bookmarks'}
-                    size="sm"
-                    show={showSettings}
-                    clickOutEnabled={false}
-                    onClose={status?.type === undefined ? () => setShowSettings(false) : null}
-                    buttons={[{
-                        text: 'Back',
-                        visible: status?.type === 'add',
-                        onClick: () => {
-                            setStatus({});
-                        }
-                    }, {
-                        text: 'Add',
-                        bsStyle: 'primary',
-                        visible: status?.type === undefined,
-                        onClick: () => setStatus({
-                            type: 'add',
-                            title: 'Add new bookmark',
-                            option: {}
-                        })
-                    }, {
-                        text: 'Save',
-                        bsStyle: 'primary',
-                        visible: status?.type === 'add',
-                        disabled: !!(!status?.option?.title
-                            || status?.option?.north === undefined
-                            || status?.option?.south === undefined
-                            || status?.option?.east === undefined
-                            || status?.option?.west === undefined),
-                        onClick: () => {
-                            const option = status?.option || {};
-                            setOptions([
-                                ...options,
-                                {
-                                    value: uuidv1(),
-                                    label: option.title,
-                                    bbox: [
-                                        option.west,
-                                        option.south,
-                                        option.east,
-                                        option.north
-                                    ]
-                                }
-                            ]);
-                            setStatus({});
-                        }
-                    }]}>
-                    {status?.type === undefined &&
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', position: 'relative'}}>
-                        <div style={{ padding: 8 }}><Filter filterPlaceholder="Filter bookmarks"/></div>
-                        <div style={{ position: 'relative', flex: 1, overflow: 'auto' }}>
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    padding: 8,
-                                    width: '100%'
-                                }}
-                            >
-                                {options.map(({ value, label }) =>
-                                    <SideCard
-                                        preview={<Glyphicon glyph="bookmark"/>}
-                                        key={value}
-                                        size="sm"
-                                        title={label}
-                                        tools={
+            {showSettings && <Portal>
+                {/* NOTE THIS IS A MOCKUP!! DIALOG NEEDS FIXES ON STYLE */}
+                <Dialog id="search-by-bookmark-dialog">
+                    <div key="header" role="header" style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}>{status?.title || 'Views bookmarks'}</div>
+                        {status?.type === undefined && <button key="close" onClick={() => setShowSettings(false)} className="close"><Glyphicon glyph="1-close"/></button>}
+                    </div>
+                    <div key="body" role="body">
+                        {status?.type === undefined &&
+                        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', position: 'relative'}}>
+                            <div style={{ padding: 8 }}><Filter filterPlaceholder="Filter bookmarks"/></div>
+                            <div style={{ position: 'relative', flex: 1, overflow: 'auto', maxHeight: 400 }}>
+                                <div
+                                    style={{
+                                        position: 'relative',
+                                        padding: 8,
+                                        width: '100%'
+                                    }}
+                                >
+                                    {options.map(({ value, label }) =>
+                                        <SideCard
+                                            preview={<Glyphicon glyph="bookmark"/>}
+                                            key={value}
+                                            size="sm"
+                                            title={label}
+                                            tools={
+                                                <Toolbar
+                                                    btnDefaultProps={{
+                                                        className: 'square-button-md no-border'
+                                                    }}
+                                                    buttons={[
+                                                        {
+                                                            glyph: 'trash',
+                                                            tooltip: 'Remove bookmark',
+                                                            onClick: () => {
+                                                                /* const newOptions = options.filter((option, optionIdx) => optionIdx !== idx); // maybe better uuid
+                                                                setOptions(newOptions);*/
+                                                            }
+                                                        },
+                                                        {
+                                                            glyph: 'pencil',
+                                                            tooltip: 'Edit bookmark'
+                                                        }
+                                                    ]}
+                                                />
+                                            }
+                                        />)}
+                                </div>
+                            </div>
+                        </div>}
+
+                        {status?.type === 'add' &&
+                                <Form style={{ padding: 8, position: 'relative', width: '100%' }}>
+                                    <FormGroup
+                                        key="title">
+                                        <ControlLabel>
+                                            Title
+                                        </ControlLabel>
+                                        <FormControl
+                                            type="text"
+                                            placeholder="Enter title"
+                                            value={status?.option?.title}
+                                            onChange={(event) => {
+                                                setStatus({
+                                                    ...status,
+                                                    option: {
+                                                        ...status?.option,
+                                                        title: event.target.value
+                                                    }
+                                                });
+                                            }} />
+                                    </FormGroup>
+
+                                    <FormGroup
+                                        key="bbox">
+                                        <div style={{ display: 'flex' }}>
+                                            <ControlLabel style={{ flex: 1, alignItems: 'center' }}>
+                                                Bounding Box
+                                            </ControlLabel>
                                             <Toolbar
                                                 btnDefaultProps={{
                                                     className: 'square-button-md no-border'
                                                 }}
                                                 buttons={[
                                                     {
-                                                        glyph: 'trash',
-                                                        tooltip: 'Remove bookmark',
-                                                        onClick: () => {
-                                                            /* const newOptions = options.filter((option, optionIdx) => optionIdx !== idx); // maybe better uuid
-                                                            setOptions(newOptions);*/
-                                                        }
-                                                    },
-                                                    {
-                                                        glyph: 'pencil',
-                                                        tooltip: 'Edit bookmark'
+                                                        glyph: 'fit-cover',
+                                                        tooltip: 'Use current view as bounding box'
                                                     }
                                                 ]}
                                             />
-                                        }
-                                    />)}
-                            </div>
-                        </div>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                                            <div style={{ width: '100%', padding: 4, maxWidth: 200 }}>
+                                                <div>north</div>
+                                                <FormControl
+                                                    type="number"
+                                                    placeholder="Enter north"
+                                                    value={status?.option?.north}
+                                                    onChange={(event) => {
+                                                        setStatus({
+                                                            ...status,
+                                                            option: {
+                                                                ...status?.option,
+                                                                north: event.target.value
+                                                            }
+                                                        });
+                                                    }} />
+                                            </div>
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                width: '100%', flexWrap: 'wrap'
+                                            }}>
+                                                <div style={{ flex: 1, padding: 4, maxWidth: 200, minWidth: 200 }}>
+                                                    <div>west</div>
+                                                    <FormControl
+                                                        type="number"
+                                                        placeholder="Enter west"
+                                                        value={status?.option?.west}
+                                                        onChange={(event) => {
+                                                            setStatus({
+                                                                ...status,
+                                                                option: {
+                                                                    ...status?.option,
+                                                                    west: event.target.value
+                                                                }
+                                                            });
+                                                        }} />
+                                                </div>
+                                                <div style={{ flex: 1, padding: 4, maxWidth: 200, minWidth: 200 }}>
+                                                    <div>east</div>
+                                                    <FormControl
+                                                        type="number"
+                                                        placeholder="Enter east"
+                                                        value={status?.option?.east}
+                                                        onChange={(event) => {
+                                                            setStatus({
+                                                                ...status,
+                                                                option: {
+                                                                    ...status?.option,
+                                                                    east: event.target.value
+                                                                }
+                                                            });
+                                                        }} />
+                                                </div>
+                                            </div>
+                                            <div style={{ width: '100%', padding: 4, maxWidth: 200 }}>
+                                                <div>south</div>
+                                                <FormControl
+                                                    type="number"
+                                                    placeholder="Enter south"
+                                                    value={status?.option?.south}
+                                                    onChange={(event) => {
+                                                        setStatus({
+                                                            ...status,
+                                                            option: {
+                                                                ...status?.option,
+                                                                south: event.target.value
+                                                            }
+                                                        });
+                                                    }} />
+                                            </div>
+                                        </div>
+                                    </FormGroup>
+                                </Form>}
                     </div>
-                   }
-
-                    {status?.type === 'add' &&
-                            <Form style={{ padding: 8, position: 'absolute', width: '100%' }}>
-                                <FormGroup
-                                    key="title">
-                                    <ControlLabel>
-                                        Title
-                                    </ControlLabel>
-                                    <FormControl
-                                        type="text"
-                                        placeholder="Enter title"
-                                        value={status?.option?.title}
-                                        onChange={(event) => {
-                                            setStatus({
-                                                ...status,
-                                                option: {
-                                                    ...status?.option,
-                                                    title: event.target.value
-                                                }
-                                            });
-                                        }} />
-                                </FormGroup>
-
-                                <FormGroup
-                                    key="bbox">
-                                    <div style={{ display: 'flex' }}>
-                                        <ControlLabel style={{ flex: 1, alignItems: 'center' }}>
-                                            Bounding Box
-                                        </ControlLabel>
-                                        <Toolbar
-                                            btnDefaultProps={{
-                                                className: 'square-button-md no-border'
-                                            }}
-                                            buttons={[
-                                                {
-                                                    glyph: 'fit-cover',
-                                                    tooltip: 'Use current view as bounding box'
-                                                }
-                                            ]}
-                                        />
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                                        <div style={{ width: '100%', padding: 4, maxWidth: 200 }}>
-                                            <div>north</div>
-                                            <FormControl
-                                                type="number"
-                                                placeholder="Enter north"
-                                                value={status?.option?.north}
-                                                onChange={(event) => {
-                                                    setStatus({
-                                                        ...status,
-                                                        option: {
-                                                            ...status?.option,
-                                                            north: event.target.value
-                                                        }
-                                                    });
-                                                }} />
-                                        </div>
-                                        <div style={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            width: '100%', flexWrap: 'wrap'
-                                        }}>
-                                            <div style={{ flex: 1, padding: 4, maxWidth: 200, minWidth: 200 }}>
-                                                <div>west</div>
-                                                <FormControl
-                                                    type="number"
-                                                    placeholder="Enter west"
-                                                    value={status?.option?.west}
-                                                    onChange={(event) => {
-                                                        setStatus({
-                                                            ...status,
-                                                            option: {
-                                                                ...status?.option,
-                                                                west: event.target.value
-                                                            }
-                                                        });
-                                                    }} />
-                                            </div>
-                                            <div style={{ flex: 1, padding: 4, maxWidth: 200, minWidth: 200 }}>
-                                                <div>east</div>
-                                                <FormControl
-                                                    type="number"
-                                                    placeholder="Enter east"
-                                                    value={status?.option?.east}
-                                                    onChange={(event) => {
-                                                        setStatus({
-                                                            ...status,
-                                                            option: {
-                                                                ...status?.option,
-                                                                east: event.target.value
-                                                            }
-                                                        });
-                                                    }} />
-                                            </div>
-                                        </div>
-                                        <div style={{ width: '100%', padding: 4, maxWidth: 200 }}>
-                                            <div>south</div>
-                                            <FormControl
-                                                type="number"
-                                                placeholder="Enter south"
-                                                value={status?.option?.south}
-                                                onChange={(event) => {
-                                                    setStatus({
-                                                        ...status,
-                                                        option: {
-                                                            ...status?.option,
-                                                            south: event.target.value
-                                                        }
-                                                    });
-                                                }} />
-                                        </div>
-                                    </div>
-                                </FormGroup>
-                            </Form>}
-                </ResizableModal>
-            </Portal>
+                    <div key="footer" role="footer">
+                        <Toolbar
+                            buttons={[{
+                                text: 'Back',
+                                visible: status?.type === 'add',
+                                onClick: () => {
+                                    setStatus({});
+                                }
+                            }, {
+                                text: 'Add',
+                                bsStyle: 'primary',
+                                visible: status?.type === undefined,
+                                onClick: () => setStatus({
+                                    type: 'add',
+                                    title: 'Add new bookmark',
+                                    option: {}
+                                })
+                            }, {
+                                text: 'Save',
+                                bsStyle: 'primary',
+                                visible: status?.type === 'add',
+                                disabled: !!(!status?.option?.title
+                                    || status?.option?.north === undefined
+                                    || status?.option?.south === undefined
+                                    || status?.option?.east === undefined
+                                    || status?.option?.west === undefined),
+                                onClick: () => {
+                                    const option = status?.option || {};
+                                    setOptions([
+                                        ...options,
+                                        {
+                                            value: uuidv1(),
+                                            label: option.title,
+                                            bbox: [
+                                                option.west,
+                                                option.south,
+                                                option.east,
+                                                option.north
+                                            ]
+                                        }
+                                    ]);
+                                    setStatus({});
+                                }
+                            }]}
+                        />
+                    </div>
+                </Dialog>
+            </Portal>}
             </>
         )
         : null;
