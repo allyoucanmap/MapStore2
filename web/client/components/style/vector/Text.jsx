@@ -10,14 +10,16 @@ const PropTypes = require('prop-types');
 const React = require('react');
 const {Row, Col, FormControl} = require('react-bootstrap');
 const Combobox = require('react-widgets').Combobox;
-
 const numberLocalizer = require('react-widgets/lib/localizers/simple-number');
 // not sure this is needed, TODO check!
 numberLocalizer();
 
+const Select = require('react-select').default;
+
 const Message = require('../../I18N/Message');
 const LocaleUtils = require('../../../utils/LocaleUtils');
 const {createFont} = require('../../../utils/AnnotationsUtils');
+const StyleField = require('./StyleField').default;
 
 /**
  * Styler for the stroke properties of a vector style
@@ -63,39 +65,47 @@ class Text extends React.Component {
         };
         const {style} = this.props;
         return (<div>
-            <Row>
-                <Col xs={12}>
-                    <strong><Message msgId="draw.fontTitle"/></strong>
-                </Col>
-            </Row>
-            <Row>
-                <Col xs={6}>
-                    <Message msgId="draw.font.family"/>
-                </Col>
-                <Col xs={6} style={{position: 'static'}}>
-                    <Combobox
-                        value={this.state.fontFamily || "Arial"}
-                        textField="value"
-                        valueField="value"
-                        messages={messages}
-                        data={this.props.fontFamilyValues}
-                        onChange={(e) => {
-                            let fontFamily = e.value ? e.value : e;
-                            if (fontFamily === "") {
-                                fontFamily = "Arial";
-                            }
-                            this.setState({fontFamily});
-                            const font = createFont({...style, fontFamily});
-                            this.props.onChange(style.id, {fontFamily, font});
-                        }}
-                    />
-                </Col>
-            </Row>
-            <Row>
-                <Col xs={6}>
-                    <Message msgId="draw.font.size"/>
-                </Col>
-                <Col xs={4} style={{position: 'static'}}>
+            <div>
+                <strong><Message msgId="draw.text"/></strong>
+            </div>
+            <StyleField
+                label={<Message msgId="draw.font.textAlign"/>}>
+                <Select
+                    value={style.textAlign || "center"}
+                    clearable={false}
+                    options={this.props.alignValues.map(({ value }) => ({ value, label: value }))}
+                    onChange={(e) => {
+                        let textAlign = e.value ? e.value : e;
+                        if (this.props.alignValues.map(f => f.value).indexOf(textAlign) === -1) {
+                            textAlign = "center";
+                        }
+                        this.props.onChange(style.id, {textAlign});
+                    }}
+                />
+            </StyleField>
+            <div>
+                <strong><Message msgId="draw.fontTitle"/></strong>
+            </div>
+            <StyleField
+                label={<Message msgId="draw.font.family"/>}>
+                <Select
+                    value={this.state.fontFamily || "Arial"}
+                    options={this.props.fontFamilyValues.map(({ value }) => ({ value, label: value }))}
+                    clearable={false}
+                    onChange={(e) => {
+                        let fontFamily = e.value ? e.value : e;
+                        if (fontFamily === "") {
+                            fontFamily = "Arial";
+                        }
+                        this.setState({fontFamily});
+                        const font = createFont({...style, fontFamily});
+                        this.props.onChange(style.id, {fontFamily, font});
+                    }}
+                />
+            </StyleField>
+            <StyleField
+                label={<Message msgId="draw.font.size"/>}>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
                     <FormControl
                         value={style.fontSize || 14}
                         placeholder=""
@@ -104,15 +114,15 @@ class Text extends React.Component {
                             const font = createFont({...style, fontSize});
                             this.props.onChange(style.id, {fontSize, font});
                         }}
-                        type="number"/>
-                </Col>
-                <Col xs={2}>
-                    <Combobox
+                        type="number"
+                        style={{ flex: 1, minWidth: 60, height: 34, marginRight: 4 }}/>
+                    <Select
                         value={style.fontSizeUom || "px"}
-                        textField="value"
-                        valueField="value"
-                        messages={messages}
-                        data={this.props.uomValues}
+                        clearable={false}
+                        options={this.props.uomValues.map(({ value }) => ({ value, label: value }))}
+                        style={{
+                            width: 60
+                        }}
                         onChange={(e) => {
                             let fontSizeUom = e.value ? e.value : e;
                             if (this.props.uomValues.map(f => f.value).indexOf(fontSizeUom) === -1) {
@@ -122,78 +132,42 @@ class Text extends React.Component {
                             this.props.onChange(style.id, {fontSizeUom, font});
                         }}
                     />
-                </Col>
-            </Row>
-            <Row>
-                <Col xs={6}>
-                    <Message msgId="draw.font.style"/>
-                </Col>
-                <Col xs={6} style={{position: 'static'}}>
-                    <Combobox
-                        value={style.fontStyle || "normal"}
-                        textField="value"
-                        valueField="value"
-                        messages={messages}
-                        data={this.props.fontStyleValues}
-                        onChange={(e) => {
-                            let fontStyle = e.value ? e.value : e;
-                            if (this.props.fontStyleValues.map(f => f.value).indexOf(fontStyle) === -1) {
-                                fontStyle = style.fontStyle;
-                            }
-                            const font = createFont({...style, fontStyle});
-                            this.props.onChange(style.id, {fontStyle, font});
-                        }}
-                    />
-                </Col>
-            </Row>
-            <Row>
-                <Col xs={6}>
-                    <Message msgId="draw.font.weight"/>
-                </Col>
-                <Col xs={6} style={{position: 'static'}}>
-                    <Combobox
-                        value={style.fontWeight || "normal"}
-                        textField="value"
-                        valueField="value"
-                        messages={messages}
-                        data={this.props.fontWeightValues}
-                        onChange={(e) => {
-                            let fontWeight = e.value ? e.value : e;
-                            if (this.props.fontWeightValues.map(f => f.value).indexOf(fontWeight) === -1) {
-                                fontWeight = style.fontWeight;
-                            }
-                            const font = createFont({...style, fontWeight});
-                            this.props.onChange(style.id, {fontWeight, font});
-                        }}
-                    />
-                </Col>
-            </Row>
-            <Row>
-                <Col xs={12}>
-                    <strong><Message msgId="draw.text"/></strong>
-                </Col>
-            </Row>
-            <Row>
-                <Col xs={6}>
-                    <Message msgId="draw.font.textAlign"/>
-                </Col>
-                <Col xs={6} style={{position: 'static'}}>
-                    <Combobox
-                        value={style.textAlign || "center"}
-                        textField="label"
-                        valueField="value"
-                        messages={messages}
-                        data={this.props.alignValues}
-                        onChange={(e) => {
-                            let textAlign = e.value ? e.value : e;
-                            if (this.props.alignValues.map(f => f.value).indexOf(textAlign) === -1) {
-                                textAlign = "center";
-                            }
-                            this.props.onChange(style.id, {textAlign});
-                        }}
-                    />
-                </Col>
-            </Row>
+                </div>
+                
+            </StyleField>
+            <StyleField
+                label={<Message msgId="draw.font.style"/>}>
+                <Select
+                    value={style.fontStyle || "normal"}
+                    clearable={false}
+                    options={this.props.fontStyleValues.map(({ value }) => ({ value, label: value }))}
+                    onChange={(e) => {
+                        let fontStyle = e.value ? e.value : e;
+                        if (this.props.fontStyleValues.map(f => f.value).indexOf(fontStyle) === -1) {
+                            fontStyle = style.fontStyle;
+                        }
+                        const font = createFont({...style, fontStyle});
+                        this.props.onChange(style.id, {fontStyle, font});
+                    }}
+                />
+            </StyleField>
+            <StyleField
+                label={<Message msgId="draw.font.weight"/>}>
+                <Select
+                    value={style.fontWeight || "normal"}
+                    clearable={false}
+                    options={this.props.fontWeightValues.map(({ value }) => ({ value, label: value }))}
+                    onChange={(e) => {
+                        let fontWeight = e.value ? e.value : e;
+                        if (this.props.fontWeightValues.map(f => f.value).indexOf(fontWeight) === -1) {
+                            fontWeight = style.fontWeight;
+                        }
+                        const font = createFont({...style, fontWeight});
+                        this.props.onChange(style.id, {fontWeight, font});
+                    }}
+                />
+            </StyleField>
+            
         </div>);
     }
 }

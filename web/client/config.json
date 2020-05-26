@@ -1,148 +1,1571 @@
 {
-  "version": 2,
-  "map": {
-    "projection": "EPSG:900913",
-    "units": "m",
-    "center": {
-      "crs": "EPSG:4326",
-      "x": -99.73453512503964,
-      "y": 37.08399614582526
-    },
-    "zoom": 5,
-    "maxExtent": [
-      -20037508.34,
-      -20037508.34,
-      20037508.34,
-      20037508.34
-    ],
-    "layers": [
-      {
-        "type": "osm",
-        "title": "Open Street Map",
-        "name": "mapnik",
-        "source": "osm",
-        "group": "background",
-        "visibility": true
-      },
-      {
-        "type": "tileprovider",
-        "title": "NASAGIBS Night 2012",
-        "provider": "NASAGIBS.ViirsEarthAtNight2012",
-        "name": "Night2012",
-        "source": "nasagibs",
-        "group": "background",
-        "visibility": false
-      },
-      {
-        "type": "tileprovider",
-        "title": "OpenTopoMap",
-        "provider": "OpenTopoMap",
-        "name": "OpenTopoMap",
-        "source": "OpenTopoMap",
-        "group": "background",
-        "visibility": false
-      },
-      {
-        "format": "image/jpeg",
-        "group": "background",
-        "name": "s2cloudless:s2cloudless",
-        "opacity": 1,
-        "title": "Sentinel 2 Cloudless",
-        "type": "wms",
-        "url": [
-          "https://1maps.geo-solutions.it/geoserver/wms",
-          "https://2maps.geo-solutions.it/geoserver/wms",
-          "https://3maps.geo-solutions.it/geoserver/wms",
-          "https://4maps.geo-solutions.it/geoserver/wms",
-          "https://5maps.geo-solutions.it/geoserver/wms",
-          "https://6maps.geo-solutions.it/geoserver/wms"
+    "version": 2,
+    "map": {
+        "center": {
+            "x": -113.57730856253961,
+            "y": 35.09553039573842,
+            "crs": "EPSG:4326"
+        },
+        "maxExtent": [
+            -20037508.34,
+            -20037508.34,
+            20037508.34,
+            20037508.34
         ],
-        "source": "s2cloudless",
-        "visibility": false,
-        "singleTile": false
-      },
-      {
-        "source": "ol",
-        "group": "background",
-        "title": "Empty Background",
-        "fixed": true,
-        "type": "empty",
-        "visibility": false,
-        "args": [
-          "Empty Background",
-          {
-            "visibility": false
-          }
-        ]
-      },
-      {
-        "type": "wms",
-        "format": "image/png",
-        "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
-        "visibility": true,
-        "dimensions": [],
-        "name": "gs:us_states",
-        "title": "States of US",
-        "description": "States of US",
-        "bbox": {
-          "crs": "EPSG:4326",
-          "bounds": {
-            "minx": "-124.73142200000001",
-            "miny": "24.955967",
-            "maxx": "-66.969849",
-            "maxy": "49.371735"
-          }
+        "projection": "EPSG:900913",
+        "units": "m",
+        "zoom": 5,
+        "mapOptions": {},
+        "layers": [
+            {
+                "id": "mapnik__0",
+                "group": "background",
+                "source": "osm",
+                "name": "mapnik",
+                "title": "Open Street Map",
+                "type": "osm",
+                "visibility": true,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "Night2012__1",
+                "group": "background",
+                "source": "nasagibs",
+                "name": "Night2012",
+                "provider": "NASAGIBS.ViirsEarthAtNight2012",
+                "title": "NASAGIBS Night 2012",
+                "type": "tileprovider",
+                "visibility": false,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "OpenTopoMap__2",
+                "group": "background",
+                "source": "OpenTopoMap",
+                "name": "OpenTopoMap",
+                "provider": "OpenTopoMap",
+                "title": "OpenTopoMap",
+                "type": "tileprovider",
+                "visibility": false,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "s2cloudless:s2cloudless__3",
+                "format": "image/jpeg",
+                "group": "background",
+                "source": "s2cloudless",
+                "name": "s2cloudless:s2cloudless",
+                "opacity": 1,
+                "title": "Sentinel 2 Cloudless",
+                "type": "wms",
+                "url": [
+                    "https://1maps.geo-solutions.it/geoserver/wms",
+                    "https://2maps.geo-solutions.it/geoserver/wms",
+                    "https://3maps.geo-solutions.it/geoserver/wms",
+                    "https://4maps.geo-solutions.it/geoserver/wms",
+                    "https://5maps.geo-solutions.it/geoserver/wms",
+                    "https://6maps.geo-solutions.it/geoserver/wms"
+                ],
+                "visibility": false,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "undefined__4",
+                "group": "background",
+                "source": "ol",
+                "title": "Empty Background",
+                "type": "empty",
+                "visibility": false,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "gs:us_states__5",
+                "format": "image/png",
+                "search": {
+                    "url": "https://gs-stable.geo-solutions.it/geoserver/wfs",
+                    "type": "wfs"
+                },
+                "name": "gs:us_states",
+                "description": "States of US",
+                "title": "States of US",
+                "type": "wms",
+                "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+                "bbox": {
+                    "crs": "EPSG:4326",
+                    "bounds": {
+                        "minx": "-124.73142200000001",
+                        "miny": "24.955967",
+                        "maxx": "-66.969849",
+                        "maxy": "49.371735"
+                    }
+                },
+                "visibility": true,
+                "singleTile": false,
+                "allowedSRS": {
+                    "EPSG:3857": true,
+                    "EPSG:900913": true
+                },
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "catalogURL": null,
+                "useForElevation": false,
+                "hidden": false,
+                "params": {}
+            },
+            {
+                "id": "gs:observatories__6",
+                "format": "image/png",
+                "search": {
+                    "url": "https://gs-stable.geo-solutions.it/geoserver/wfs",
+                    "type": "wfs"
+                },
+                "name": "gs:observatories",
+                "description": "observatories",
+                "title": "observatories",
+                "type": "wms",
+                "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+                "bbox": {
+                    "crs": "EPSG:4326",
+                    "bounds": {
+                        "minx": "-156.2575",
+                        "miny": "-90.0",
+                        "maxx": "123.33333333333333",
+                        "maxy": "46.5475"
+                    }
+                },
+                "visibility": true,
+                "singleTile": false,
+                "allowedSRS": {
+                    "EPSG:3857": true,
+                    "EPSG:900913": true
+                },
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "catalogURL": null,
+                "useForElevation": false,
+                "hidden": false,
+                "params": {}
+            },
+            {
+                "id": "annotations",
+                "features": [
+                    {
+                        "type": "FeatureCollection",
+                        "properties": {
+                            "id": "dbb9bff0-9f38-11ea-8593-45dd36f03002",
+                            "title": "Annotation 1",
+                            "description": "<p>Description 1</p>"
+                        },
+                        "features": [
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "coordinates": [
+                                        -99.09667968750001,
+                                        40.863679665481676
+                                    ],
+                                    "type": "Point"
+                                },
+                                "properties": {
+                                    "id": "e05b3480-9f38-11ea-8593-45dd36f03002",
+                                    "isValidFeature": true,
+                                    "canEdit": false
+                                },
+                                "style": [
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "id": "e05ba9b0-9f38-11ea-8593-45dd36f03002"
+                                    }
+                                ]
+                            }
+                        ],
+                        "style": {}
+                    },
+                    {
+                        "type": "FeatureCollection",
+                        "properties": {
+                            "id": "e56de170-9f38-11ea-8593-45dd36f03002",
+                            "title": "Annotation 2",
+                            "description": "<p>Description 2</p>"
+                        },
+                        "features": [
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "coordinates": [
+                                        [
+                                            -106.30371093750001,
+                                            47.323930570959405
+                                        ],
+                                        [
+                                            -111.57714843750001,
+                                            42.69858589169841
+                                        ],
+                                        [
+                                            -106.12792968750001,
+                                            41.393294288784865
+                                        ],
+                                        [
+                                            -109.51171875000003,
+                                            38.358887858666755
+                                        ],
+                                        [
+                                            -105.33691406250001,
+                                            38.77121637244271
+                                        ]
+                                    ],
+                                    "type": "LineString"
+                                },
+                                "properties": {
+                                    "id": "e7207370-9f38-11ea-8593-45dd36f03002",
+                                    "isValidFeature": true,
+                                    "canEdit": false
+                                },
+                                "style": [
+                                    {
+                                        "color": "#ffcc33",
+                                        "opacity": 1,
+                                        "weight": 3,
+                                        "editing": {
+                                            "fill": 1
+                                        },
+                                        "highlight": false,
+                                        "id": "e720c190-9f38-11ea-8593-45dd36f03002"
+                                    },
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "iconAnchor": [
+                                            0.5,
+                                            0.5
+                                        ],
+                                        "type": "Point",
+                                        "title": "StartPoint Style",
+                                        "geometry": "startPoint",
+                                        "filtering": false,
+                                        "id": "e720c191-9f38-11ea-8593-45dd36f03002"
+                                    },
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "iconAnchor": [
+                                            0.5,
+                                            0.5
+                                        ],
+                                        "type": "Point",
+                                        "title": "EndPoint Style",
+                                        "geometry": "endPoint",
+                                        "filtering": false,
+                                        "id": "e720c192-9f38-11ea-8593-45dd36f03002"
+                                    }
+                                ]
+                            }
+                        ],
+                        "style": {}
+                    },
+                    {
+                        "type": "FeatureCollection",
+                        "properties": {
+                            "id": "027166c0-9f39-11ea-8593-45dd36f03002",
+                            "title": "Annotation 3",
+                            "description": "<p>Description 3</p>"
+                        },
+                        "features": [
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "coordinates": [
+                                        [
+                                            [
+                                                -116.05957031250001,
+                                                46.33175800051562
+                                            ],
+                                            [
+                                                -118.12500000000003,
+                                                43.084937427075914
+                                            ],
+                                            [
+                                                -116.89453125000003,
+                                                42.114523952464246
+                                            ],
+                                            [
+                                                -113.99414062500001,
+                                                44.13491344375071
+                                            ],
+                                            [
+                                                -113.42285156250001,
+                                                42.63395872267315
+                                            ],
+                                            [
+                                                -116.05957031250001,
+                                                46.33175800051562
+                                            ]
+                                        ]
+                                    ],
+                                    "type": "Polygon"
+                                },
+                                "properties": {
+                                    "id": "0425f490-9f39-11ea-8593-45dd36f03002",
+                                    "isValidFeature": true,
+                                    "canEdit": false
+                                },
+                                "style": [
+                                    {
+                                        "color": "#ffcc33",
+                                        "opacity": 1,
+                                        "weight": 3,
+                                        "fillColor": "#ffffff",
+                                        "fillOpacity": 0.2,
+                                        "editing": {
+                                            "fill": 1
+                                        },
+                                        "highlight": false,
+                                        "id": "042669c0-9f39-11ea-8593-45dd36f03002"
+                                    }
+                                ]
+                            }
+                        ],
+                        "style": {}
+                    },
+                    {
+                        "type": "FeatureCollection",
+                        "properties": {
+                            "id": "aeefa610-9f51-11ea-bf90-eda404ba6d81",
+                            "title": "Annotation 4",
+                            "description": "<p>Multi Geoemtry</p>"
+                        },
+                        "features": [
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "coordinates": [
+                                        [
+                                            -105.55664062500001,
+                                            44.4808302785626
+                                        ],
+                                        [
+                                            -111.48925781250001,
+                                            49.2247727227948
+                                        ],
+                                        [
+                                            -105.82031250000003,
+                                            50.58323661480588
+                                        ],
+                                        [
+                                            -100.37109375000001,
+                                            47.82790816919327
+                                        ]
+                                    ],
+                                    "type": "LineString"
+                                },
+                                "properties": {
+                                    "id": "bd349a50-9f51-11ea-bf90-eda404ba6d81",
+                                    "isValidFeature": true,
+                                    "canEdit": false
+                                },
+                                "style": [
+                                    {
+                                        "color": "#ffcc33",
+                                        "opacity": 1,
+                                        "weight": 3,
+                                        "editing": {
+                                            "fill": 1
+                                        },
+                                        "highlight": false,
+                                        "id": "bd353690-9f51-11ea-bf90-eda404ba6d81"
+                                    },
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "iconAnchor": [
+                                            0.5,
+                                            0.5
+                                        ],
+                                        "type": "Point",
+                                        "title": "StartPoint Style",
+                                        "geometry": "startPoint",
+                                        "filtering": false,
+                                        "id": "bd353691-9f51-11ea-bf90-eda404ba6d81"
+                                    },
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "iconAnchor": [
+                                            0.5,
+                                            0.5
+                                        ],
+                                        "type": "Point",
+                                        "title": "EndPoint Style",
+                                        "geometry": "endPoint",
+                                        "filtering": false,
+                                        "id": "bd353692-9f51-11ea-bf90-eda404ba6d81"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "coordinates": [
+                                        -91.09863281250003,
+                                        48.850258199721495
+                                    ],
+                                    "type": "Point"
+                                },
+                                "properties": {
+                                    "id": "c2a03cb0-9f51-11ea-bf90-eda404ba6d81",
+                                    "isValidFeature": true,
+                                    "canEdit": false
+                                },
+                                "style": [
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "id": "c2a08ad0-9f51-11ea-bf90-eda404ba6d81"
+                                    }
+                                ]
+                            }
+                        ],
+                        "style": {}
+                    },
+                    {
+                        "type": "FeatureCollection",
+                        "properties": {
+                            "id": "ff11e080-a187-11ea-b201-8d362fe970ee",
+                            "title": "aaa",
+                            "description": "<p>aa</p>"
+                        },
+                        "features": [
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "coordinates": [
+                                        -135.52734375000003,
+                                        43.084937427075914
+                                    ],
+                                    "type": "Point"
+                                },
+                                "properties": {
+                                    "id": "0b145ed0-a188-11ea-b201-8d362fe970ee",
+                                    "isValidFeature": true,
+                                    "canEdit": false,
+                                    "isText": true,
+                                    "valueText": "New"
+                                },
+                                "style": [
+                                    {
+                                        "fontStyle": "normal",
+                                        "fontSize": "14",
+                                        "fontSizeUom": "px",
+                                        "fontFamily": "Arial",
+                                        "fontWeight": "normal",
+                                        "font": "14px Arial",
+                                        "textAlign": "center",
+                                        "color": "#000000",
+                                        "opacity": 1,
+                                        "fillColor": "#000000",
+                                        "fillOpacity": 1,
+                                        "highlight": false,
+                                        "type": "Text",
+                                        "title": "Text Style",
+                                        "id": "0b14d400-a188-11ea-b201-8d362fe970ee"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "coordinates": [
+                                        -132.89062500000003,
+                                        41.129021347495076
+                                    ],
+                                    "type": "Point"
+                                },
+                                "properties": {
+                                    "id": "16afb6e0-a188-11ea-b201-8d362fe970ee",
+                                    "isValidFeature": true,
+                                    "canEdit": false
+                                },
+                                "style": [
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "id": "16afddf0-a188-11ea-b201-8d362fe970ee"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "coordinates": [
+                                        [
+                                            [
+                                                -127.44140625000001,
+                                                34.47033512121748
+                                            ],
+                                            [
+                                                -131.04492187500003,
+                                                27.702983735525848
+                                            ],
+                                            [
+                                                -127.22167968750001,
+                                                26.056782885778798
+                                            ],
+                                            [
+                                                -127.44140625000001,
+                                                34.47033512121748
+                                            ]
+                                        ]
+                                    ],
+                                    "type": "Polygon"
+                                },
+                                "properties": {
+                                    "id": "1d57a9d0-a188-11ea-b201-8d362fe970ee",
+                                    "isValidFeature": true,
+                                    "canEdit": false
+                                },
+                                "style": [
+                                    {
+                                        "color": "#ffcc33",
+                                        "opacity": 1,
+                                        "weight": 3,
+                                        "fillColor": "#ffffff",
+                                        "fillOpacity": 0.2,
+                                        "editing": {
+                                            "fill": 1
+                                        },
+                                        "highlight": false,
+                                        "id": "1d57d0e0-a188-11ea-b201-8d362fe970ee"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "coordinates": [
+                                        [
+                                            -121.59667968750001,
+                                            27.58619785769265
+                                        ],
+                                        [
+                                            -120.41015625000001,
+                                            23.624394569716923
+                                        ],
+                                        [
+                                            -123.35449218750003,
+                                            21.71867980570314
+                                        ],
+                                        [
+                                            -134.560546875,
+                                            23.94609601499837
+                                        ]
+                                    ],
+                                    "type": "LineString"
+                                },
+                                "properties": {
+                                    "id": "22748ff0-a188-11ea-b201-8d362fe970ee",
+                                    "isValidFeature": true,
+                                    "canEdit": false
+                                },
+                                "style": [
+                                    {
+                                        "color": "#ffcc33",
+                                        "opacity": 1,
+                                        "weight": 3,
+                                        "editing": {
+                                            "fill": 1
+                                        },
+                                        "highlight": false,
+                                        "id": "2274b700-a188-11ea-b201-8d362fe970ee"
+                                    },
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "iconAnchor": [
+                                            0.5,
+                                            0.5
+                                        ],
+                                        "type": "Point",
+                                        "title": "StartPoint Style",
+                                        "geometry": "startPoint",
+                                        "filtering": false,
+                                        "id": "2274b701-a188-11ea-b201-8d362fe970ee"
+                                    },
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "iconAnchor": [
+                                            0.5,
+                                            0.5
+                                        ],
+                                        "type": "Point",
+                                        "title": "EndPoint Style",
+                                        "geometry": "endPoint",
+                                        "filtering": false,
+                                        "id": "2274b702-a188-11ea-b201-8d362fe970ee"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "type": "Polygon",
+                                    "coordinates": [
+                                        [
+                                            [
+                                                -138.0054174978572,
+                                                37.97884504049711
+                                            ],
+                                            [
+                                                -138.01162723796887,
+                                                38.134433265971296
+                                            ],
+                                            [
+                                                -138.03023195129663,
+                                                38.28907842335802
+                                            ],
+                                            [
+                                                -138.06115821353671,
+                                                38.442175615693266
+                                            ],
+                                            [
+                                                -138.10428397286083,
+                                                38.59312988076058
+                                            ],
+                                            [
+                                                -138.1594390315993,
+                                                38.74135839972737
+                                            ],
+                                            [
+                                                -138.22640571793318,
+                                                38.886292598392025
+                                            ],
+                                            [
+                                                -138.3049197449457,
+                                                39.027380135762485
+                                            ],
+                                            [
+                                                -138.39467125364186,
+                                                39.16408677608107
+                                            ],
+                                            [
+                                                -138.49530603582042,
+                                                39.29589814175613
+                                            ],
+                                            [
+                                                -138.6064269319718,
+                                                39.42232134593621
+                                            ],
+                                            [
+                                                -138.72759539868517,
+                                                39.54288650464766
+                                            ],
+                                            [
+                                                -138.85833323937905,
+                                                39.65714812949419
+                                            ],
+                                            [
+                                                -138.9981244915246,
+                                                39.76468640287335
+                                            ],
+                                            [
+                                                -139.14641746291423,
+                                                39.86510833848655
+                                            ],
+                                            [
+                                                -139.30262690893844,
+                                                39.95804883059897
+                                            ],
+                                            [
+                                                -139.46613634227907,
+                                                40.04317159603679
+                                            ],
+                                            [
+                                                -139.63630046590305,
+                                                40.12017001328871
+                                            ],
+                                            [
+                                                -139.8124477197551,
+                                                40.18876786330737
+                                            ],
+                                            [
+                                                -139.99388293109828,
+                                                40.24871997668682
+                                            ],
+                                            [
+                                                -140.1798900580432,
+                                                40.299812791829815
+                                            ],
+                                            [
+                                                -140.3697350154385,
+                                                40.341864828523036
+                                            ],
+                                            [
+                                                -140.56266857196917,
+                                                40.3747270810174
+                                            ],
+                                            [
+                                                -140.75792930703057,
+                                                40.39828333427982
+                                            ],
+                                            [
+                                                -140.95474661570753,
+                                                40.41245040655361
+                                            ],
+                                            [
+                                                -141.15234375,
+                                                40.41717832075439
+                                            ],
+                                            [
+                                                -141.3499408842925,
+                                                40.41245040655361
+                                            ],
+                                            [
+                                                -141.54675819296946,
+                                                40.39828333427982
+                                            ],
+                                            [
+                                                -141.74201892803086,
+                                                40.3747270810174
+                                            ],
+                                            [
+                                                -141.93495248456153,
+                                                40.341864828523036
+                                            ],
+                                            [
+                                                -142.12479744195682,
+                                                40.299812791829815
+                                            ],
+                                            [
+                                                -142.31080456890177,
+                                                40.24871997668682
+                                            ],
+                                            [
+                                                -142.49223978024494,
+                                                40.18876786330737
+                                            ],
+                                            [
+                                                -142.66838703409695,
+                                                40.12017001328871
+                                            ],
+                                            [
+                                                -142.83855115772099,
+                                                40.04317159603679
+                                            ],
+                                            [
+                                                -143.0020605910616,
+                                                39.95804883059897
+                                            ],
+                                            [
+                                                -143.1582700370858,
+                                                39.86510833848655
+                                            ],
+                                            [
+                                                -143.3065630084754,
+                                                39.76468640287335
+                                            ],
+                                            [
+                                                -143.44635426062098,
+                                                39.65714812949419
+                                            ],
+                                            [
+                                                -143.57709210131483,
+                                                39.54288650464766
+                                            ],
+                                            [
+                                                -143.69826056802825,
+                                                39.42232134593621
+                                            ],
+                                            [
+                                                -143.8093814641796,
+                                                39.29589814175613
+                                            ],
+                                            [
+                                                -143.91001624635817,
+                                                39.16408677608107
+                                            ],
+                                            [
+                                                -143.99976775505436,
+                                                39.027380135762485
+                                            ],
+                                            [
+                                                -144.07828178206685,
+                                                38.886292598392025
+                                            ],
+                                            [
+                                                -144.14524846840075,
+                                                38.74135839972737
+                                            ],
+                                            [
+                                                -144.2004035271392,
+                                                38.59312988076058
+                                            ],
+                                            [
+                                                -144.24352928646334,
+                                                38.442175615693266
+                                            ],
+                                            [
+                                                -144.2744555487034,
+                                                38.28907842335802
+                                            ],
+                                            [
+                                                -144.2930602620312,
+                                                38.134433265971296
+                                            ],
+                                            [
+                                                -144.29927000214286,
+                                                37.97884504049711
+                                            ],
+                                            [
+                                                -144.2930602620312,
+                                                37.82292626932157
+                                            ],
+                                            [
+                                                -144.2744555487034,
+                                                37.66729469835998
+                                            ],
+                                            [
+                                                -144.24352928646334,
+                                                37.512570812117715
+                                            ],
+                                            [
+                                                -144.2004035271392,
+                                                37.35937527657751
+                                            ],
+                                            [
+                                                -144.14524846840075,
+                                                37.20832632206641
+                                            ],
+                                            [
+                                                -144.07828178206685,
+                                                37.060037079441564
+                                            ],
+                                            [
+                                                -143.99976775505436,
+                                                36.91511288400469
+                                            ],
+                                            [
+                                                -143.91001624635817,
+                                                36.774148562491554
+                                            ],
+                                            [
+                                                -143.8093814641796,
+                                                36.63772571926786
+                                            ],
+                                            [
+                                                -143.69826056802825,
+                                                36.50641003848368
+                                            ],
+                                            [
+                                                -143.57709210131483,
+                                                36.38074861938378
+                                            ],
+                                            [
+                                                -143.44635426062098,
+                                                36.26126736223424
+                                            ],
+                                            [
+                                                -143.3065630084754,
+                                                36.14846842240104
+                                            ],
+                                            [
+                                                -143.15827003708577,
+                                                36.0428277500042
+                                            ],
+                                            [
+                                                -143.0020605910616,
+                                                35.944792732273264
+                                            ],
+                                            [
+                                                -142.83855115772099,
+                                                35.854779955249896
+                                            ],
+                                            [
+                                                -142.66838703409695,
+                                                35.773173100830306
+                                            ],
+                                            [
+                                                -142.49223978024494,
+                                                35.70032099432211
+                                            ],
+                                            [
+                                                -142.31080456890177,
+                                                35.63653581671854
+                                            ],
+                                            [
+                                                -142.12479744195682,
+                                                35.58209149478058
+                                            ],
+                                            [
+                                                -141.93495248456153,
+                                                35.5372222807781
+                                            ],
+                                            [
+                                                -141.74201892803086,
+                                                35.50212153238885
+                                            ],
+                                            [
+                                                -141.54675819296946,
+                                                35.47694070180342
+                                            ],
+                                            [
+                                                -141.3499408842925,
+                                                35.46178854155205
+                                            ],
+                                            [
+                                                -141.15234375,
+                                                35.45673053296836
+                                            ],
+                                            [
+                                                -140.95474661570756,
+                                                35.46178854155205
+                                            ],
+                                            [
+                                                -140.75792930703057,
+                                                35.47694070180342
+                                            ],
+                                            [
+                                                -140.56266857196917,
+                                                35.50212153238885
+                                            ],
+                                            [
+                                                -140.3697350154385,
+                                                35.5372222807781
+                                            ],
+                                            [
+                                                -140.1798900580432,
+                                                35.58209149478058
+                                            ],
+                                            [
+                                                -139.99388293109828,
+                                                35.63653581671854
+                                            ],
+                                            [
+                                                -139.81244771975514,
+                                                35.70032099432211
+                                            ],
+                                            [
+                                                -139.63630046590305,
+                                                35.773173100830306
+                                            ],
+                                            [
+                                                -139.46613634227907,
+                                                35.854779955249896
+                                            ],
+                                            [
+                                                -139.30262690893844,
+                                                35.944792732273264
+                                            ],
+                                            [
+                                                -139.14641746291423,
+                                                36.0428277500042
+                                            ],
+                                            [
+                                                -138.9981244915246,
+                                                36.14846842240104
+                                            ],
+                                            [
+                                                -138.85833323937905,
+                                                36.26126736223424
+                                            ],
+                                            [
+                                                -138.72759539868517,
+                                                36.38074861938378
+                                            ],
+                                            [
+                                                -138.6064269319718,
+                                                36.50641003848368
+                                            ],
+                                            [
+                                                -138.49530603582042,
+                                                36.63772571926786
+                                            ],
+                                            [
+                                                -138.39467125364186,
+                                                36.774148562491554
+                                            ],
+                                            [
+                                                -138.3049197449457,
+                                                36.91511288400469
+                                            ],
+                                            [
+                                                -138.22640571793318,
+                                                37.060037079441564
+                                            ],
+                                            [
+                                                -138.1594390315993,
+                                                37.20832632206641
+                                            ],
+                                            [
+                                                -138.10428397286083,
+                                                37.35937527657751
+                                            ],
+                                            [
+                                                -138.06115821353671,
+                                                37.512570812117715
+                                            ],
+                                            [
+                                                -138.03023195129663,
+                                                37.66729469835998
+                                            ],
+                                            [
+                                                -138.01162723796887,
+                                                37.82292626932157
+                                            ],
+                                            [
+                                                -138.0054174978572,
+                                                37.97884504049711
+                                            ]
+                                        ]
+                                    ]
+                                },
+                                "properties": {
+                                    "isCircle": true,
+                                    "radius": 350314.227952525,
+                                    "center": [
+                                        -141.15234375,
+                                        37.97884504049711
+                                    ],
+                                    "id": "27c0ea80-a188-11ea-b201-8d362fe970ee",
+                                    "crs": "EPSG:3857",
+                                    "polygonGeom": {
+                                        "type": "Polygon",
+                                        "coordinates": [
+                                            [
+                                                [
+                                                    -138.0054174978572,
+                                                    37.97884504049711
+                                                ],
+                                                [
+                                                    -138.01162723796887,
+                                                    38.134433265971296
+                                                ],
+                                                [
+                                                    -138.03023195129663,
+                                                    38.28907842335802
+                                                ],
+                                                [
+                                                    -138.06115821353671,
+                                                    38.442175615693266
+                                                ],
+                                                [
+                                                    -138.10428397286083,
+                                                    38.59312988076058
+                                                ],
+                                                [
+                                                    -138.1594390315993,
+                                                    38.74135839972737
+                                                ],
+                                                [
+                                                    -138.22640571793318,
+                                                    38.886292598392025
+                                                ],
+                                                [
+                                                    -138.3049197449457,
+                                                    39.027380135762485
+                                                ],
+                                                [
+                                                    -138.39467125364186,
+                                                    39.16408677608107
+                                                ],
+                                                [
+                                                    -138.49530603582042,
+                                                    39.29589814175613
+                                                ],
+                                                [
+                                                    -138.6064269319718,
+                                                    39.42232134593621
+                                                ],
+                                                [
+                                                    -138.72759539868517,
+                                                    39.54288650464766
+                                                ],
+                                                [
+                                                    -138.85833323937905,
+                                                    39.65714812949419
+                                                ],
+                                                [
+                                                    -138.9981244915246,
+                                                    39.76468640287335
+                                                ],
+                                                [
+                                                    -139.14641746291423,
+                                                    39.86510833848655
+                                                ],
+                                                [
+                                                    -139.30262690893844,
+                                                    39.95804883059897
+                                                ],
+                                                [
+                                                    -139.46613634227907,
+                                                    40.04317159603679
+                                                ],
+                                                [
+                                                    -139.63630046590305,
+                                                    40.12017001328871
+                                                ],
+                                                [
+                                                    -139.8124477197551,
+                                                    40.18876786330737
+                                                ],
+                                                [
+                                                    -139.99388293109828,
+                                                    40.24871997668682
+                                                ],
+                                                [
+                                                    -140.1798900580432,
+                                                    40.299812791829815
+                                                ],
+                                                [
+                                                    -140.3697350154385,
+                                                    40.341864828523036
+                                                ],
+                                                [
+                                                    -140.56266857196917,
+                                                    40.3747270810174
+                                                ],
+                                                [
+                                                    -140.75792930703057,
+                                                    40.39828333427982
+                                                ],
+                                                [
+                                                    -140.95474661570753,
+                                                    40.41245040655361
+                                                ],
+                                                [
+                                                    -141.15234375,
+                                                    40.41717832075439
+                                                ],
+                                                [
+                                                    -141.3499408842925,
+                                                    40.41245040655361
+                                                ],
+                                                [
+                                                    -141.54675819296946,
+                                                    40.39828333427982
+                                                ],
+                                                [
+                                                    -141.74201892803086,
+                                                    40.3747270810174
+                                                ],
+                                                [
+                                                    -141.93495248456153,
+                                                    40.341864828523036
+                                                ],
+                                                [
+                                                    -142.12479744195682,
+                                                    40.299812791829815
+                                                ],
+                                                [
+                                                    -142.31080456890177,
+                                                    40.24871997668682
+                                                ],
+                                                [
+                                                    -142.49223978024494,
+                                                    40.18876786330737
+                                                ],
+                                                [
+                                                    -142.66838703409695,
+                                                    40.12017001328871
+                                                ],
+                                                [
+                                                    -142.83855115772099,
+                                                    40.04317159603679
+                                                ],
+                                                [
+                                                    -143.0020605910616,
+                                                    39.95804883059897
+                                                ],
+                                                [
+                                                    -143.1582700370858,
+                                                    39.86510833848655
+                                                ],
+                                                [
+                                                    -143.3065630084754,
+                                                    39.76468640287335
+                                                ],
+                                                [
+                                                    -143.44635426062098,
+                                                    39.65714812949419
+                                                ],
+                                                [
+                                                    -143.57709210131483,
+                                                    39.54288650464766
+                                                ],
+                                                [
+                                                    -143.69826056802825,
+                                                    39.42232134593621
+                                                ],
+                                                [
+                                                    -143.8093814641796,
+                                                    39.29589814175613
+                                                ],
+                                                [
+                                                    -143.91001624635817,
+                                                    39.16408677608107
+                                                ],
+                                                [
+                                                    -143.99976775505436,
+                                                    39.027380135762485
+                                                ],
+                                                [
+                                                    -144.07828178206685,
+                                                    38.886292598392025
+                                                ],
+                                                [
+                                                    -144.14524846840075,
+                                                    38.74135839972737
+                                                ],
+                                                [
+                                                    -144.2004035271392,
+                                                    38.59312988076058
+                                                ],
+                                                [
+                                                    -144.24352928646334,
+                                                    38.442175615693266
+                                                ],
+                                                [
+                                                    -144.2744555487034,
+                                                    38.28907842335802
+                                                ],
+                                                [
+                                                    -144.2930602620312,
+                                                    38.134433265971296
+                                                ],
+                                                [
+                                                    -144.29927000214286,
+                                                    37.97884504049711
+                                                ],
+                                                [
+                                                    -144.2930602620312,
+                                                    37.82292626932157
+                                                ],
+                                                [
+                                                    -144.2744555487034,
+                                                    37.66729469835998
+                                                ],
+                                                [
+                                                    -144.24352928646334,
+                                                    37.512570812117715
+                                                ],
+                                                [
+                                                    -144.2004035271392,
+                                                    37.35937527657751
+                                                ],
+                                                [
+                                                    -144.14524846840075,
+                                                    37.20832632206641
+                                                ],
+                                                [
+                                                    -144.07828178206685,
+                                                    37.060037079441564
+                                                ],
+                                                [
+                                                    -143.99976775505436,
+                                                    36.91511288400469
+                                                ],
+                                                [
+                                                    -143.91001624635817,
+                                                    36.774148562491554
+                                                ],
+                                                [
+                                                    -143.8093814641796,
+                                                    36.63772571926786
+                                                ],
+                                                [
+                                                    -143.69826056802825,
+                                                    36.50641003848368
+                                                ],
+                                                [
+                                                    -143.57709210131483,
+                                                    36.38074861938378
+                                                ],
+                                                [
+                                                    -143.44635426062098,
+                                                    36.26126736223424
+                                                ],
+                                                [
+                                                    -143.3065630084754,
+                                                    36.14846842240104
+                                                ],
+                                                [
+                                                    -143.15827003708577,
+                                                    36.0428277500042
+                                                ],
+                                                [
+                                                    -143.0020605910616,
+                                                    35.944792732273264
+                                                ],
+                                                [
+                                                    -142.83855115772099,
+                                                    35.854779955249896
+                                                ],
+                                                [
+                                                    -142.66838703409695,
+                                                    35.773173100830306
+                                                ],
+                                                [
+                                                    -142.49223978024494,
+                                                    35.70032099432211
+                                                ],
+                                                [
+                                                    -142.31080456890177,
+                                                    35.63653581671854
+                                                ],
+                                                [
+                                                    -142.12479744195682,
+                                                    35.58209149478058
+                                                ],
+                                                [
+                                                    -141.93495248456153,
+                                                    35.5372222807781
+                                                ],
+                                                [
+                                                    -141.74201892803086,
+                                                    35.50212153238885
+                                                ],
+                                                [
+                                                    -141.54675819296946,
+                                                    35.47694070180342
+                                                ],
+                                                [
+                                                    -141.3499408842925,
+                                                    35.46178854155205
+                                                ],
+                                                [
+                                                    -141.15234375,
+                                                    35.45673053296836
+                                                ],
+                                                [
+                                                    -140.95474661570756,
+                                                    35.46178854155205
+                                                ],
+                                                [
+                                                    -140.75792930703057,
+                                                    35.47694070180342
+                                                ],
+                                                [
+                                                    -140.56266857196917,
+                                                    35.50212153238885
+                                                ],
+                                                [
+                                                    -140.3697350154385,
+                                                    35.5372222807781
+                                                ],
+                                                [
+                                                    -140.1798900580432,
+                                                    35.58209149478058
+                                                ],
+                                                [
+                                                    -139.99388293109828,
+                                                    35.63653581671854
+                                                ],
+                                                [
+                                                    -139.81244771975514,
+                                                    35.70032099432211
+                                                ],
+                                                [
+                                                    -139.63630046590305,
+                                                    35.773173100830306
+                                                ],
+                                                [
+                                                    -139.46613634227907,
+                                                    35.854779955249896
+                                                ],
+                                                [
+                                                    -139.30262690893844,
+                                                    35.944792732273264
+                                                ],
+                                                [
+                                                    -139.14641746291423,
+                                                    36.0428277500042
+                                                ],
+                                                [
+                                                    -138.9981244915246,
+                                                    36.14846842240104
+                                                ],
+                                                [
+                                                    -138.85833323937905,
+                                                    36.26126736223424
+                                                ],
+                                                [
+                                                    -138.72759539868517,
+                                                    36.38074861938378
+                                                ],
+                                                [
+                                                    -138.6064269319718,
+                                                    36.50641003848368
+                                                ],
+                                                [
+                                                    -138.49530603582042,
+                                                    36.63772571926786
+                                                ],
+                                                [
+                                                    -138.39467125364186,
+                                                    36.774148562491554
+                                                ],
+                                                [
+                                                    -138.3049197449457,
+                                                    36.91511288400469
+                                                ],
+                                                [
+                                                    -138.22640571793318,
+                                                    37.060037079441564
+                                                ],
+                                                [
+                                                    -138.1594390315993,
+                                                    37.20832632206641
+                                                ],
+                                                [
+                                                    -138.10428397286083,
+                                                    37.35937527657751
+                                                ],
+                                                [
+                                                    -138.06115821353671,
+                                                    37.512570812117715
+                                                ],
+                                                [
+                                                    -138.03023195129663,
+                                                    37.66729469835998
+                                                ],
+                                                [
+                                                    -138.01162723796887,
+                                                    37.82292626932157
+                                                ],
+                                                [
+                                                    -138.0054174978572,
+                                                    37.97884504049711
+                                                ]
+                                            ]
+                                        ]
+                                    },
+                                    "isValidFeature": true,
+                                    "canEdit": false
+                                },
+                                "style": [
+                                    {
+                                        "color": "#ffcc33",
+                                        "opacity": 1,
+                                        "weight": 3,
+                                        "fillColor": "#ffffff",
+                                        "fillOpacity": 0.2,
+                                        "highlight": false,
+                                        "type": "Circle",
+                                        "title": "Circle Style",
+                                        "id": "27c138a0-a188-11ea-b201-8d362fe970ee"
+                                    },
+                                    {
+                                        "iconGlyph": "comment",
+                                        "iconShape": "square",
+                                        "iconColor": "blue",
+                                        "highlight": false,
+                                        "iconAnchor": [
+                                            0.5,
+                                            0.5
+                                        ],
+                                        "type": "Point",
+                                        "title": "Center Style",
+                                        "filtering": false,
+                                        "geometry": "centerPoint",
+                                        "id": "27c138a1-a188-11ea-b201-8d362fe970ee"
+                                    }
+                                ]
+                            }
+                        ],
+                        "style": {
+                            "highlight": false
+                        }
+                    }
+                ],
+                "name": "Annotations",
+                "style": {},
+                "type": "vector",
+                "visibility": true,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": true,
+                "handleClickOnLayer": true,
+                "useForElevation": false,
+                "hidden": false
+            }
+        ],
+        "groups": [
+            {
+                "id": "Default",
+                "title": "Default",
+                "expanded": true
+            }
+        ],
+        "backgrounds": []
+    },
+    "catalogServices": {
+        "services": {
+            "gs_stable_csw": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/csw",
+                "type": "csw",
+                "title": "GeoSolutions GeoServer CSW",
+                "autoload": true
+            },
+            "gs_stable_wms": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+                "type": "wms",
+                "title": "GeoSolutions GeoServer WMS",
+                "autoload": false
+            },
+            "gs_stable_wmts": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/gwc/service/wmts",
+                "type": "wmts",
+                "title": "GeoSolutions GeoServer WMTS",
+                "autoload": false
+            }
         },
-        "links": [],
-        "params": {},
-        "allowedSRS": {
-          "EPSG:3857": true,
-          "EPSG:900913": true
-        },
-        "catalogURL": null,
-        "id": "gs:us_states__5",
-        "loading": false,
-        "search": {
-          "url": "https://gs-stable.geo-solutions.it/geoserver/wfs",
-          "type": "wfs"
-        },
-        "previousLoadingError": false,
-        "loadingError": false
-      },
-      {
-        "type": "wms",
-        "format": "image/png",
-        "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
-        "visibility": true,
-        "dimensions": [],
-        "name": "gs:observatories",
-        "title": "observatories",
-        "description": "observatories",
-        "bbox": {
-          "crs": "EPSG:4326",
-          "bounds": {
-            "minx": "-156.2575",
-            "miny": "-90.0",
-            "maxx": "123.33333333333333",
-            "maxy": "46.5475"
-          }
-        },
-        "links": [],
-        "params": {},
-        "allowedSRS": {
-          "EPSG:3857": true,
-          "EPSG:900913": true
-        },
-        "catalogURL": null,
-        "id": "gs:observatories__6",
-        "loading": false,
-        "search": {
-          "url": "https://gs-stable.geo-solutions.it/geoserver/wfs",
-          "type": "wfs"
-        },
-        "previousLoadingError": false,
-        "loadingError": false
-      }
-    ]
-  }
+        "selectedService": "gs_stable_csw"
+    },
+    "widgetsConfig": {},
+    "mapInfoConfiguration": {}
 }

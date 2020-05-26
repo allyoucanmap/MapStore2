@@ -16,7 +16,7 @@ const urlQuery = url.parse(window.location.href, true).query;
 
 const ConfigUtils = require('../utils/ConfigUtils');
 const PluginsUtils = require('../utils/PluginsUtils');
-
+const BorderLayout = require('../components/layout/BorderLayout');
 const PluginsContainer = connect((state) => ({
     statePluginsConfig: state.plugins,
     mode: urlQuery.mode || state.mode || (state.browser && state.browser.mobile ? 'mobile' : 'desktop'),
@@ -51,6 +51,7 @@ class MapViewer extends React.Component {
             pluginsConfig={this.props.pluginsConfig || this.props.statePluginsConfig || ConfigUtils.getConfigProp('plugins')}
             plugins={this.props.plugins}
             params={this.props.params}
+            component={BorderLayout}
         />);
     }
 }

@@ -36,12 +36,14 @@ class CoordinatesRow extends React.Component {
         showDraggable: PropTypes.bool,
         removeVisible: PropTypes.bool,
         formatVisible: PropTypes.bool,
-        removeEnabled: PropTypes.bool
+        removeEnabled: PropTypes.bool,
+        comfirmSave: PropTypes.bool
     };
 
     static defaultProps = {
         showLabels: false,
         formatVisible: false,
+        comfirmSave: true,
         onMouseEnter: () => {},
         onMouseLeave: () => {}
     };
@@ -77,9 +79,15 @@ class CoordinatesRow extends React.Component {
 
     render() {
         const {idx} = this.props;
-        const rowStyle = {marginLeft: -5, marginRight: -5};
+        const rowStyle = { /* marginLeft: -5, marginRight: -5 */ };
         // drag button must be a button in order to show the disabled state
         const toolButtons = [
+            ...(this.props.comfirmSave ? [{
+                glyph: "ok",
+                disabled: this.state.disabledApplyChange,
+                tooltipId: 'identifyCoordinateApplyChanges',
+                onClick: this.onSubmit
+            }] : []),
             {
                 visible: this.props.removeVisible,
                 disabled: !this.props.removeEnabled,
@@ -107,12 +115,6 @@ class CoordinatesRow extends React.Component {
                 ],
                 visible: this.props.formatVisible,
                 Element: DropdownToolbarOptions
-            },
-            {
-                glyph: "ok",
-                disabled: this.state.disabledApplyChange,
-                tooltipId: 'identifyCoordinateApplyChanges',
-                onClick: this.onSubmit
             }
         ];
         const dragButton = (

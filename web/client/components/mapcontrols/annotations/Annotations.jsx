@@ -17,18 +17,20 @@ const MultiGeomThumb = require('../../../components/style/thumbGeoms/MultiGeomTh
 const PolygonThumb = require('../../../components/style/thumbGeoms/PolygonThumb.jsx');
 const {head} = require('lodash');
 const assign = require('object-assign');
-const Filter = require('../../misc/Filter');
+const MSFilter = require('../../misc/Filter');
 const uuidv1 = require('uuid/v1');
-
-const {Grid, Col, Row, Glyphicon, Button} = require('react-bootstrap');
+const GeometryEditor = require('./GeometryEditor');
+const {Grid, Col, Row, Glyphicon, Button, ControlLabel, FormGroup, FormControl, Nav, NavItem} = require('react-bootstrap');
 const BorderLayout = require('../../layout/BorderLayout');
 const Toolbar = require('../../misc/toolbar/Toolbar');
 const SideGrid = require('../../misc/cardgrids/SideGrid');
-
+const localizedProps = require('../../misc/enhancers/localizedProps');
 const SelecAnnotationsFile = require("./SelectAnnotationsFile");
-
+const Manager = require('../../style/vector/Manager');
 const defaultConfig = require('./AnnotationsConfig');
-
+const { Editor } = require('react-draft-wysiwyg');
+const Filter = localizedProps('filterPlaceholder')(MSFilter);
+const ContentEditable = require('react-contenteditable').default;
 /**
  * Annotations panel component.
  * It can be in different modes:
@@ -86,6 +88,7 @@ const defaultConfig = require('./AnnotationsConfig');
  *
  * the annotation's attributes.
  */
+
 class Annotations extends React.Component {
     static propTypes = {
         id: PropTypes.string,
@@ -378,4 +381,496 @@ class Annotations extends React.Component {
     };
 }
 
-module.exports = Annotations;
+const uniq = require('lodash/uniq');
+
+function getAnnotationType(feature) {
+    if (feature?.properties?.isCircle) {
+        return 'Circle';
+    }
+    if (feature?.properties?.isText) {
+        return 'Text';
+    }
+    return feature?.geometry?.type;
+}
+
+function getAnnotationGlyph(type) {
+    const glyphs = {
+        Point: 'point',
+        MultiPoint: 'point',
+        LineString: 'polyline',
+        MultiLineString: 'polyline',
+        Polygon: 'polygon',
+        MultiPolygon: 'polygon',
+        Text: 'font',
+        Circle: '1-circle'
+    };
+    return glyphs[type] || 'geometry-collection';
+}
+
+function getAnnotationLabel(type) {
+    const glyphs = {
+        Point: 'Point',
+        MultiPoint: 'Point',
+        LineString: 'Line',
+        MultiLineString: 'Line',
+        Polygon: 'Polygon',
+        MultiPolygon: 'Polygon',
+        Text: 'Text',
+        Circle: 'Circle'
+    };
+    return glyphs[type];
+}
+
+function FeatureCard({
+    selected,
+    style,
+    properties,
+    geometry,
+    onSelect = () => {},
+    buttons = () => []
+}) {
+
+    const type = getAnnotationType({ properties, geometry });
+
+    const glyph = getAnnotationGlyph(type);
+
+    const selectedClassName = selected ? ' ms-selected' : '';
+
+    return (
+        <div
+            className={`ms-feature-card${selectedClassName}`}
+            onClick={() => onSelect()}>
+            <div className="ms-feature-card-preview">
+                <Glyphicon glyph={glyph}/>
+            </div>
+            <div className="ms-feature-card-info">
+                <div>{getAnnotationLabel(type) || properties?.id}</div>
+            </div>
+            <Toolbar
+                btnDefaultProps={{
+                    className: 'square-button-md no-border'
+                }}
+                buttons={buttons({
+                    properties,
+                    geometry,
+                    style
+                })}
+            />
+        </div>
+    );
+}
+
+function FeatureCollection({
+    features = [],
+    toolbar,
+    properties,
+    style,
+    children,
+    featureButtons = () => [],
+    selectedId,
+    onSelect = () => {}
+}) {
+    return (
+        <div
+            className="ms-feature-collection">
+            <div
+                className="ms-feature-collection-head">
+                
+            </div>
+            <div className="ms-feature-collection-main">
+                <div
+                    className="ms-feature-collection-body">
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%'
+                    }}>
+                        {toolbar}
+                        <div style={{ flex: 1, position: 'relative', width: '100%', height: '100%', overflow: 'auto'}}>
+                            <div
+                                className="ms-feature-collection-list">
+                                <FormGroup>
+                                    <ControlLabel>Title</ControlLabel>
+                                    <FormControl defaultValue={properties?.title} />
+                                </FormGroup>
+                                <FormGroup>
+                                    <ControlLabel>Description</ControlLabel>
+                                    {<Editor
+                                        toolbar={{
+                                            options: ['blockType', 'inline', 'link', 'list', 'remove'],
+                                            inline: {
+                                                options: ['bold', 'italic', 'underline']
+                                            },
+                                            list: {
+                                                options: ['ordered', 'unordered']
+                                            }
+                                        }}
+                                    />}
+                                    {/* <FormControl />*/}
+                                </FormGroup>
+                                {/* <div dangerouslySetInnerHTML={{__html: properties.description}}/>*/}
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    backgroundColor: '#ffffff',
+                                    position: 'sticky',
+                                    top: 0,
+                                    zIndex: 10
+                                }}>
+                                    <ControlLabel>Geometries</ControlLabel>
+                                    <Toolbar
+                                        btnDefaultProps={{
+                                            className: 'square-button-md no-border'
+                                        }}
+                                        buttons={[
+                                            {
+                                                glyph: 'point-plus',
+                                                onClick: () => {},
+                                                tooltip: 'Add new point'
+                                            },
+                                            {
+                                                glyph: 'polyline-plus',
+                                                onClick: () => { },
+                                                tooltip: 'Add new line'
+                                            },
+                                            {
+                                                glyph: 'polygon-plus',
+                                                onClick: () => { },
+                                                tooltip: 'Add new polygon'
+                                            },
+                                            {
+                                                glyph: 'font-add',
+                                                onClick: () => { },
+                                                tooltip: 'Add new text'
+                                            },
+                                            {
+                                                glyph: '1-circle-add',
+                                                onClick: () => { },
+                                                tooltip: 'Add new circle'
+                                            }
+                                        ]}
+                                    />
+                                </div>
+                                {features.length === 0 && <div style={{ textAlign: 'center' }}>Add a new geometry</div>}
+                                {features.map((feature, key) => {
+                                    return (
+                                        <FeatureCard
+                                            key={key}
+                                            { ...feature }
+                                            selected={selectedId === feature?.properties?.id}
+                                            buttons={featureButtons}
+                                            onSelect={() => onSelect(feature)}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                {children}
+            </div>
+        </div>
+    );
+}
+
+// evalute a different card
+function FeatureCollectionCard({
+    properties = {},
+    onSelect = () => {},
+    onMouseEnter = () => {},
+    onMouseLeave = () => {},
+    features
+}) {
+
+    const types = uniq(features?.map((feature) => getAnnotationType(feature)));
+    const type = types.length > 1
+        ? 'GeometryCollection'
+        : types[0];
+
+    const glyph = getAnnotationGlyph(type);
+
+    return (
+        <div
+            className="ms-feature-collection-card"
+            onClick={() => onSelect()}
+            onMouseEnter={() => onMouseEnter()}
+            onMouseLeave={() => onMouseLeave()}>
+            <div className="ms-feature-collection-card-preview">
+                <Glyphicon glyph={glyph}/>
+            </div>
+            <div className="ms-feature-collection-card-info">
+                <div>{properties?.title}</div>
+                <div dangerouslySetInnerHTML={{__html: properties?.description}}/>
+            </div>
+            <Toolbar
+                btnDefaultProps={{
+                    className: 'square-button-md no-border'
+                }}
+                buttons={[{
+                    glyph: 'zoom-to',
+                    tooltip: 'Zoom to annotation',
+                    onClick: (event) => {
+                        event.stopPropagation();
+                    }
+                },
+                {
+                    glyph: 'eye-open',
+                    tooltip: 'Hide annotation',
+                    onClick: (event) => {
+                        event.stopPropagation();
+                    }
+                }]}
+            />
+        </div>
+    );
+}
+
+function FeatureCollections({
+    collections = [],
+    toolbar,
+    onSelect = () => {},
+    onMouseEnter = () => {},
+    onMouseLeave = () => {}
+}) {
+    return (
+        <div
+            className="ms-feature-collections">
+            {toolbar}
+            <div
+                className="ms-feature-collections-head">
+                <Filter filterPlaceholder="annotations.filter"/>
+            </div>
+            <div
+                className="ms-feature-collections-body">
+                <div
+                    className="ms-feature-collections-list">
+                    {collections.map((collection, key) => {
+                        return (
+                            <FeatureCollectionCard
+                                key={key}
+                                { ...collection }
+                                onSelect={() => onSelect(collection)}
+                                onMouseEnter={() => onMouseEnter(collection)}
+                                onMouseLeave={() => onMouseLeave(collection)}
+                            />
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const Annot = ({
+    selected,
+    annotations,
+    onDetail,
+    onCleanHighlight,
+    onHighlight,
+    onAdd = () => {},
+    current,
+    onDownload = () => {},
+    mode,
+    onCancel = () => {},
+    onCancelEdit = () => {},
+    // onConfirmClose = () => {},
+    onBack = () => {},
+    onSelect = () => {}
+}) => {
+
+    const [tab, setTab] = React.useState('coordinates');
+
+    const [format, setFormat] = React.useState('decimal');
+    const [pointType, setPointType] = React.useState('marker');
+    const [symbolList, setSymbolList] = React.useState();
+
+    // this is wrong only mockup imp
+    if (mode === 'list') {
+        return (
+            <FeatureCollections
+                collections={annotations}
+                onSelect={(collection) => onDetail(collection?.properties?.id)}
+                onMouseEnter={(collection) => onHighlight(collection?.properties?.id)}
+                onMouseLeave={() => onCleanHighlight()}
+                toolbar={
+                    <Toolbar
+                        btnGroupProps={{
+                            style: {
+                                textAlign: 'center'
+                            }
+                        }}
+                        btnDefaultProps={{
+                            className: 'square-button-md',
+                            bsStyle: 'primary',
+                            tooltipPosition: 'bottom'
+                        }}
+                        buttons={[
+                            {
+                                glyph: 'upload',
+                                tooltip: <Message msgId="annotations.loadtooltip"/>,
+                                onClick: () => {}
+                            },
+                            {
+                                glyph: 'plus',
+                                tooltip: <Message msgId="annotations.add"/>,
+                                onClick: () => { onAdd(); }
+                            },
+                            {
+                                glyph: 'download',
+                                disabled: !(annotations && annotations.length > 0),
+                                tooltip: <Message msgId="annotations.downloadtooltip"/>,
+                                onClick: () => onDownload(annotations)
+                            }
+                        ]}
+                    />
+                }
+            />
+        );
+    }
+
+    const featureCollection = annotations?.find(({ properties }) => properties.id === current) || {};
+    const featureType = getAnnotationType(selected);
+    const glyph = selected && getAnnotationGlyph(featureType);
+
+    return (
+        <FeatureCollection
+            { ...featureCollection }
+            key={selected?.properties?.id}
+            selectedId={selected?.properties?.id}
+            toolbar={
+                <div style={{ textAlign: 'center'}}>
+                    <Toolbar
+                        btnDefaultProps={{
+                            className: 'square-button-md',
+                            bsStyle: 'primary',
+                            tooltipPosition: 'bottom'
+                        }}
+                        buttons={[
+                            {
+                                glyph: 'arrow-left',
+                                tooltip: 'Back to annotation',
+                                onClick: () => {
+                                    onCancel();
+                                    onCleanHighlight();
+                                    onCancelEdit();
+                                    onBack();
+                                    onSelect(null);
+                                }
+                            },
+                            {
+                                glyph: 'floppy-disk',
+                                tooltip: 'Save annotation'
+                            }
+                        ]}
+                    />
+                </div>
+            }
+            onSelect={(feature) => feature?.properties?.id === selected?.properties?.id
+                ? onSelect(null)
+                : onSelect(feature)}
+            featureButtons={() => [
+                {
+                    Element: () => <Glyphicon glyph="ok-sign" className="text-success"/>
+                },
+                {
+                    glyph: 'zoom-to',
+                    tooltip: 'Zoom to geometry',
+                    onClick: (event) => {
+                        event.stopPropagation();
+                    }
+                },
+                {
+                    glyph: 'trash',
+                    tooltip: 'Remove',
+                    onClick: (event) => {
+                        event.stopPropagation();
+                    }
+                }
+            ]}
+        >
+            {selected &&
+                <div style={{
+                    flex: 1,
+                    order: -1,
+                    borderRight: '1px solid #ddd',
+                    display: 'flex',
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    flexDirection: 'column'
+                }}>
+                    <div style={{ padding: 8, display: 'flex', alignItems: 'center' }}>
+                        <Glyphicon glyph={glyph} style={{ fontSize: 20, paddingRight: 8 }}/>
+                        <div style={{ flex: 1 }}>
+                            <FormControl
+                                defaultValue={getAnnotationLabel(featureType) || selected?.properties?.id}
+                                placeholder="Enter geometry title"
+                            />
+                        </div>
+                    </div>
+                    {selected?.properties?.isText && <div style={{ padding: 8 }}>
+                        <FormGroup>
+                            <ControlLabel>Label</ControlLabel>
+                            <FormControl defaultValue={selected?.properties?.valueText} />
+                        </FormGroup>
+                    </div>}
+                    <Nav bsStyle="tabs" activeKey={tab} justified>
+                        <NavItem
+                            key="coordinates"
+                            eventKey="coordinates"
+                            onClick={() => setTab('coordinates')}>
+                            Coordinates
+                        </NavItem>
+                        <NavItem
+                            key="style"
+                            eventKey="style"
+                            onClick={() => setTab('style')}>
+                            Style
+                        </NavItem>
+                    </Nav>
+                    <div style={{ flex: 1, overflow: 'auto', paddingTop: 8 }}>
+                        {tab === 'coordinates' && <GeometryEditor
+                            isDraggable
+                            featureType={featureType}
+                            comfirmSave={false}
+                            // mockup circle
+                            selected={featureType === 'Circle' ? {
+                                ...selected,
+                                geometry: {
+                                    type: 'Point',
+                                    coordinates: [0, 0]
+                                }
+                            } : selected}
+                            format={format}
+                            onChangeFormat={(newFormat) => setFormat(newFormat)}
+                        />}
+                        {tab === 'style' && <Manager
+                            style={selected?.style}
+                            markersOptions={defaultConfig}
+                            pointType={pointType}
+                            symbolList={symbolList}
+                            onUpdateSymbols={(symbols) => {
+                                // console.log(symbols);
+                                setSymbolList(symbols);
+                            }}
+                            onChangeStyle={(style) => {
+                                onSelect({
+                                    ...selected,
+                                    style
+                                });
+                            }}
+                            onChangePointType={(newPointType) => {
+                                setPointType(newPointType);
+                            }}
+                        />}
+                    </div>
+                </div>}
+        </FeatureCollection>
+    );
+};
+
+module.exports = Annot;

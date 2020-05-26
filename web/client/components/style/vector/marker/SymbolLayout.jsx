@@ -16,6 +16,7 @@ const axios = require('axios');
 const Slider = require('../../../misc/Slider');
 const Message = require('../../../I18N/Message');
 const {DEFAULT_SHAPE, DEFAULT_PATH, checkSymbolsError} = require('../../../../utils/AnnotationsUtils');
+const StyleField = require('../StyleField').default;
 
 /**
  * Styler for the layout of the symbol
@@ -74,57 +75,46 @@ class SymbolLayout extends React.Component {
         const shapeDefault = this.props.options && this.props.options.length ? find(this.props.options, (s) => s.value === this.props.defaultShape) && this.props.defaultShape : DEFAULT_SHAPE;
         return (
             <div>
-                <Row>
-                    <Col xs={12}>
-                        <strong><Message msgId="draw.marker.layout"/></strong>
-                    </Col>
-                </Row>
+                <div>
+                    <strong><Message msgId="draw.marker.layout"/></strong>
+                </div>
                 {   // managing misconfigruation of symbols.json (symbolsPath)
                     checkSymbolsError(this.props.symbolErrors) ? (
-                        <Row>
-                            <Col xs={6}>
-                                <Message msgId="draw.marker.shape"/>
-                            </Col>
-                            <Col xs={6} style={{ position: "static" }}>
-                                <Alert bsStyle="warning">
-                                    <Message msgId="annotations.errorLoadingSymbols"/>
-                                </Alert>
-                            </Col>
-                        </Row>
+                        <StyleField
+                            label={<Message msgId="draw.marker.shape"/>}>
+                            <Alert bsStyle="warning">
+                                <Message msgId="annotations.errorLoadingSymbols"/>
+                            </Alert>
+                        </StyleField>
                     ) : (
-                        <div>
-                            <Row>
-                                <Col xs={6}>
-                                    <Message msgId="draw.marker.shape"/>
-                                </Col>
-                                <Col xs={6} style={{ position: "static" }}>
-                                    <InputGroup>
-                                        <Select
-                                            clearable={false}
-                                            options={this.props.options}
-                                            value={this.props.style.shape}
-                                            onChange={(option) => {
-                                                const shape = option && option.value;
-                                                this.props.onChange(this.props.style.id, {symbolUrl: this.props.symbolsPath + shape + ".svg", shape});
-                                            }}
-                                            optionRenderer={iconRenderer}
-                                            valueRenderer={iconRenderer}
-                                        />
-                                        <InputGroup.Addon className="btn"
-                                            onClick={() => this.loadSymbolsList(shapeDefault)}
-                                        >
-                                            <Glyphicon glyph="refresh"/>
-                                        </InputGroup.Addon>
-                                    </InputGroup>
-                                </Col>
-                            </Row>
+                        <>
+
+                            <StyleField
+                                label={<Message msgId="draw.marker.shape"/>}>
+                                <InputGroup>
+                                    <Select
+                                        clearable={false}
+                                        options={this.props.options}
+                                        value={this.props.style.shape}
+                                        onChange={(option) => {
+                                            const shape = option && option.value;
+                                            this.props.onChange(this.props.style.id, {symbolUrl: this.props.symbolsPath + shape + ".svg", shape});
+                                        }}
+                                        optionRenderer={iconRenderer}
+                                        valueRenderer={iconRenderer}
+                                    />
+                                    <InputGroup.Addon className="btn"
+                                        onClick={() => this.loadSymbolsList(shapeDefault)}
+                                    >
+                                        <Glyphicon glyph="refresh"/>
+                                    </InputGroup.Addon>
+                                </InputGroup>
+                            </StyleField>
                             {
                                 !(checkSymbolsError(this.props.symbolErrors, "loading_symbol" + this.props.style.shape) ||
-                        checkSymbolsError(this.props.symbolErrors, "loading_symbol" + this.props.defaultShape)) && <Row>
-                                    <Col xs={6}>
-                                        <Message msgId="draw.marker.size"/>
-                                    </Col>
-                                    <Col xs={6} style={{ position: "static" }}>
+                        checkSymbolsError(this.props.symbolErrors, "loading_symbol" + this.props.defaultShape)) &&
+                                    <StyleField
+                                        label={<Message msgId="draw.marker.size"/>}>
                                         <div className="mapstore-slider with-tooltip">
                                             <Slider tooltips step={1}
                                                 start={[this.props.style.size || 64]}
@@ -139,8 +129,9 @@ class SymbolLayout extends React.Component {
                                                 }}
                                             />
                                         </div>
-                                    </Col>
-                                </Row>}</div>
+                                    </StyleField>
+                            }
+                        </>
                     )}
             </div>
         );

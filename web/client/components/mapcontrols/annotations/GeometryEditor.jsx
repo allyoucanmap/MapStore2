@@ -59,6 +59,7 @@ class GeometryEditor extends React.Component {
             components={this.props.selected && this.props.selected.geometry && this.props.selected.geometry.coordinates && this.props.selected.geometry.coordinates.length ? getComponents(this.props.selected.geometry) : []}
             properties={this.props.selected && this.props.selected.properties || {}}
             onComplete={() => {}}
+            comfirmSave={this.props.comfirmSave}
             onChangeRadius={this.props.onChangeRadius}
             aeronauticalOptions={this.props.aeronauticalOptions}
             onChangeFormat={this.props.onChangeFormat}

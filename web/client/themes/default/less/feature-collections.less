@@ -1,0 +1,150 @@
+
+@feature-collection-font-size: 13px;
+.ms-feature-collections,
+.ms-feature-collection {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.ms-feature-collections-head,
+.ms-feature-collection-head {
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    .mapstore-filter {
+        margin: 0;
+        flex: 1;
+        min-width: 170px;
+    }
+}
+
+.ms-feature-collection-main {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    display: flex;
+}
+
+.ms-feature-collections-body,
+.ms-feature-collection-body {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    min-width: 300px;
+}
+
+.ms-feature-collections-list,
+.ms-feature-collection-list {
+    position: absolute;
+    width: 100%;
+    padding: 8px;
+
+    .rdw-editor-wrapper {
+        border: 1px solid @ms2-color-shade-lighter;
+    }
+    .rdw-editor-toolbar {
+        border: none;
+        border-bottom: 1px solid @ms2-color-shade-lighter;
+    }
+
+    .rdw-editor-main {
+        height: 128px;
+        padding: 8px;
+    }
+}
+
+.ms-feature-collection-card,
+.ms-feature-card {
+    .shadow-soft;
+    display: flex;
+    position: relative;
+    width: 100%;
+    align-items: center;
+    margin: 8px 0;
+    padding-right: 8px;
+    &:hover {
+        cursor: pointer;
+        transition: 0.3s box-shadow;
+        .shadow-far;
+        z-index: 1;
+    }
+
+    &.ms-selected {
+        border: 2px solid lighten(@ms2-color-primary, 20%);
+    }
+}
+
+.ms-feature-collection-card-info,
+.ms-feature-card-info {
+    flex: 1;
+    font-size: @feature-collection-font-size;
+    overflow: hidden;
+    padding: 8px;
+    > * {
+        font-size: @feature-collection-font-size;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow-x: hidden;
+    }
+
+    > * * {
+        display: inline-block;
+        margin: 0;
+    }
+}
+
+.ms-feature-collection-card-preview,
+.ms-feature-card-preview {
+    width: @square-btn-medium-size;
+    height: @square-btn-medium-size;
+    margin: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .glyphicon {
+        font-size: @square-btn-medium-size * 2 / 3;
+    }
+
+}
+
+.ms-feature-collection-main {
+    
+    .ms-dragg + .ms-dragg {
+        padding-top: 8px;
+        margin-top: 8px;
+        border-top: 1px solid @ms2-color-shade-lighter;
+    }
+
+    .ms-dragg:first-child {
+        padding-top: 8px;
+        border-top: 1px solid @ms2-color-shade-lighter;
+    }
+    .ms-dragg:last-child {
+        padding-bottom: 8px;
+        border-bottom: 1px solid @ms2-color-shade-lighter;
+    }
+
+    .coordinateRow {
+        padding: 0 8px;
+    }
+    font-size: @feature-collection-font-size;
+
+    .panel-title {
+        font-size: @feature-collection-font-size;
+    }
+}
+
+#container .ms-feature-collection-main {
+    .Select-menu-outer {
+        z-index: 10;
+    }
+}

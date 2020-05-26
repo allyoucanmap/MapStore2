@@ -123,31 +123,29 @@ class CoordinatesEditor extends React.Component {
     }
 
     renderCircle() {
-        return (<Row style={{flex: 1, overflowY: 'auto'}}>
-            <Col xs={12}>
-                <FormGroup validationState={this.getValidationStateRadius(this.props.properties.radius)}>
-                    <ControlLabel><Message msgId="annotations.editor.radius"/></ControlLabel>
-                    <MeasureEditor
-                        placeholder="radius"
-                        {...this.props.measureOptions}
-                        value={this.props.properties.radius}
-                        projection={this.props.mapProjection}
-                        name="radius"
-                        onChange={(radius, uom) => {
-                            if (this.isValid(this.props.components, radius )) {
-                                this.props.onChangeRadius(parseFloat(radius), this.props.components.map(coordToArray), uom);
-                            } else if (radius !== "") {
-                                this.props.onChangeRadius(parseFloat(radius), [], uom);
-                            } else {
-                                this.props.onChangeRadius(null, this.props.components.map(coordToArray), uom);
-                                this.props.onSetInvalidSelected("radius", this.props.components.map(coordToArray));
-                            }
-                        }}
-                        step={1}
-                        type="number"/>
-                </FormGroup>
-            </Col>
-        </Row>);
+        return (<div style={{ padding: 8 }}>
+            <FormGroup validationState={this.getValidationStateRadius(this.props.properties.radius)} style={{ margin: 0 }}>
+                <ControlLabel><Message msgId="annotations.editor.radius"/></ControlLabel>
+                <MeasureEditor
+                    placeholder="radius"
+                    {...this.props.measureOptions}
+                    value={this.props.properties.radius}
+                    projection={this.props.mapProjection}
+                    name="radius"
+                    onChange={(radius, uom) => {
+                        if (this.isValid(this.props.components, radius )) {
+                            this.props.onChangeRadius(parseFloat(radius), this.props.components.map(coordToArray), uom);
+                        } else if (radius !== "") {
+                            this.props.onChangeRadius(parseFloat(radius), [], uom);
+                        } else {
+                            this.props.onChangeRadius(null, this.props.components.map(coordToArray), uom);
+                            this.props.onSetInvalidSelected("radius", this.props.components.map(coordToArray));
+                        }
+                    }}
+                    step={1}
+                    type="number"/>
+            </FormGroup>
+        </div>);
     }
     renderText() {
         return (<Row style={{flex: 1, overflowY: 'auto'}}>
@@ -220,68 +218,60 @@ class CoordinatesEditor extends React.Component {
             }
         ];
         const toolbarVisible = !!buttons.filter(b => b.visible).length;
+
         return (
-            <Grid fluid style={{display: 'flex', flexDirection: 'column', flex: 1}}>
-                <Row style={{display: 'flex', alignItems: 'center', marginBottom: 8}}>
-                    <Col xs={toolbarVisible ? 6 : 12}>
-                        <h5><Message msgId={"annotations.editor.title." + this.props.type}/></h5>
-                        {this.props.showFeatureSelector ? <Select
-                            value={this.props.currentFeature}
-                            options={[
-                                ...this.props.features.map((f, i) => {
-                                    const values = get(f, 'properties.values', []);
-                                    const geomType = (values[0] || {}).type === 'bearing' ? 'Bearing' : f.geometry.type;
-                                    if (geomType !== this.props.type) {
-                                        return null;
-                                    }
-                                    const measureName = geomType === 'LineString' ? 'Length' : geomType === 'Bearing' ? 'Bearing' : 'Area';
-                                    const valueLabel = values.length > 0 ?
-                                        `${measureName} ${values[0].formattedValue}` :
-                                        '';
-                                    const secondValueLabel =
-                                        values.length > 1 && geomType === 'Polygon' ?
-                                            `, Perimeter: ${values[1].formattedValue}` :
-                                            '';
-                                    return {label: `${geomType} (${valueLabel}${secondValueLabel})`, value: i};
-                                }), {
-                                    label: LocaleUtils.getMessageById(this.context.messages, 'annotations.editor.newFeature'),
-                                    value: this.props.features.length
+            <div style={{display: 'flex', flexDirection: 'column', flex: 1, width: '100%', height: '100%'}}>
+                <div style={{display: 'flex', alignItems: 'center', marginBottom: 8}}>
+
+                    <h5 style={{ flex: 1, padding: '0 8px' }}>{/* <Message msgId={"annotations.editor.title." + this.props.type}/>*/}</h5>
+                    {this.props.showFeatureSelector ? <Select
+                        value={this.props.currentFeature}
+                        options={[
+                            ...this.props.features.map((f, i) => {
+                                const values = get(f, 'properties.values', []);
+                                const geomType = (values[0] || {}).type === 'bearing' ? 'Bearing' : f.geometry.type;
+                                if (geomType !== this.props.type) {
+                                    return null;
                                 }
-                            ].filter(f => !!f)}
-                            onChange={e => this.props.onChangeCurrentFeature(e?.value)}/> : null}
-                    </Col>
-                    <Col xs={6}>
-                        <Toolbar
-                            btnGroupProps={{ className: 'pull-right' }}
-                            btnDefaultProps={{ className: 'square-button-md no-border'}}
-                            buttons={buttons}/>
-                    </Col>
-                </Row>
+                                const measureName = geomType === 'LineString' ? 'Length' : geomType === 'Bearing' ? 'Bearing' : 'Area';
+                                const valueLabel = values.length > 0 ?
+                                    `${measureName} ${values[0].formattedValue}` :
+                                    '';
+                                const secondValueLabel =
+                                    values.length > 1 && geomType === 'Polygon' ?
+                                        `, Perimeter: ${values[1].formattedValue}` :
+                                        '';
+                                return {label: `${geomType} (${valueLabel}${secondValueLabel})`, value: i};
+                            }), {
+                                label: LocaleUtils.getMessageById(this.context.messages, 'annotations.editor.newFeature'),
+                                value: this.props.features.length
+                            }
+                        ].filter(f => !!f)}
+                        onChange={e => this.props.onChangeCurrentFeature(e?.value)}/> : null}
+                    <Toolbar
+                        btnDefaultProps={{ className: 'square-button-md no-border'}}
+                        buttons={buttons}/>
+                </div>
                 {this.props.type === "Circle" && this.renderCircle()}
-                {this.props.type === "Text" && this.renderText()}
+                {/* this.props.type === "Text" && this.renderText() */}
                 {
-                    this.props.type === "Circle" && <Row style={{flex: 1, overflowY: 'auto'}}>
-                        <Col xs={12}>
-                            <ControlLabel><Message msgId={"annotations.editor.center"}/></ControlLabel>
-                        </Col>
-                    </Row>
+                    this.props.type === "Circle" && <div  style={{ padding: 8 }}>
+                        <ControlLabel><Message msgId={"annotations.editor.center"}/></ControlLabel>
+                    </div>
                 }
-                {!(!this.props.components || this.props.components.length === 0) &&
-                     <Row style={{flex: 1, overflowY: 'auto'}}>
-                         <Col xs={5} xsOffset={1}>
-                             <Message msgId="annotations.editor.lat"/>
-                         </Col>
-                         <Col xs={5}>
+                {/* !(!this.props.components || this.props.components.length === 0) &&
+                     <div>
+                            <Message msgId="annotations.editor.lat"/>
                              <Message msgId="annotations.editor.lon"/>
-                         </Col>
-                         <Col xs={1}/>
-                     </Row>}
-                <Row style={{flex: 1, flexBasis: 'auto', overflowY: 'auto', overflowX: 'hidden'}}>
+                     </div>*/}
+                <div>
                     {this.props.components.map((component, idx) => <CoordinatesRow
                         format={this.props.format}
+                        showLabels
                         aeronauticalOptions={this.props.aeronauticalOptions}
                         sortId={idx}
                         key={idx + " key"}
+                        comfirmSave={this.props.comfirmSave}
                         isDraggable={this.props.isDraggable}
                         isDraggableEnabled={this.props.isDraggable && this[componentsValidation[type].validation]()}
                         showDraggable={this.props.isDraggable && !(this.props.type === "Point" || this.props.type === "Text" || this.props.type === "Circle")}
@@ -334,12 +324,12 @@ class CoordinatesEditor extends React.Component {
                                 this.props.onSetInvalidSelected("coords", this.props.components.map(coordToArray));
                             }
                         }}/>)}
-                </Row>
+                </div>
                 {(!this.props.components || this.props.components.length === 0) &&
-                     <Row><Col xs={12} className="text-center" style={{padding: 15, paddingBottom: 30}}>
+                     <div className="text-center" style={{padding: 15, paddingBottom: 30}}>
                          <i><Message msgId="annotations.editor.addByClick"/></i>
-                     </Col></Row>}
-            </Grid>
+                     </div>}
+            </div>
         );
     }
     validateCoordinates = (components = this.props.components, remove = false, idx) => {

@@ -55,6 +55,7 @@ class DecimalCoordinateEditor extends React.Component {
                     key={coordinate}
                     value={value}
                     placeholder={coordinate}
+                    style={{ minWidth: 100 }}
                     onChange={e => {
                         // when inserting 4eee5 as number here it comes "" that makes the re-render fail
                         if (e.target.value === "") {

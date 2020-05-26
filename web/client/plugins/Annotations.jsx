@@ -12,7 +12,7 @@ const assign = require('object-assign');
 const Message = require('../components/I18N/Message');
 const PropTypes = require('prop-types');
 
-const {Glyphicon} = require('react-bootstrap');
+const {Glyphicon, Button} = require('react-bootstrap');
 const {on, toggleControl} = require('../actions/controls');
 const {createSelector} = require('reselect');
 
@@ -27,6 +27,8 @@ const {cancelRemoveAnnotation, confirmRemoveAnnotation, editAnnotation, newAnnot
 } = require('../actions/annotations');
 
 const { zoomToExtent } = require('../actions/map');
+
+const BorderLayout = require('../components/layout/BorderLayout');
 
 const { annotationsInfoSelector, annotationsListSelector } = require('../selectors/annotations');
 const { mapLayoutValuesSelector } = require('../selectors/maplayout');
@@ -86,6 +88,7 @@ const AnnotationsInfoViewer = connect(annotationsInfoSelector,
 
 const panelSelector = createSelector([annotationsListSelector], (list) => ({
     ...list,
+    collections: list.annotations || [],
     editor: AnnotationsEditor
 }));
 
@@ -105,7 +108,8 @@ const Annotations = connect(panelSelector, {
     onDetail: showAnnotation,
     onFilter: filterAnnotations,
     onDownload: download,
-    onLoadAnnotations: loadAnnotations
+    onLoadAnnotations: loadAnnotations,
+    onBack: cancelShowAnnotation
 })(require('../components/mapcontrols/annotations/Annotations'));
 
 const ContainerDimensions = require('react-container-dimensions').default;
@@ -157,21 +161,60 @@ class AnnotationsPanel extends React.Component {
         dockStyle: {}
     };
 
+    state = {
+        size: 330,
+        selected: null
+    };
+
     render() {
-        return this.props.active ? (
-            <ContainerDimensions>
-                { ({ width }) =>
-                    <span className="ms-annotations-panel react-dock-no-resize ms-absolute-dock ms-side-panel">
-                        <Dock
-                            dockStyle={this.props.dockStyle} {...this.props.dockProps}
-                            isVisible={this.props.active}
-                            size={this.props.width / width > 1 ? 1 : this.props.width / width} >
-                            <Annotations {...this.props} width={this.props.width}/>
-                        </Dock>
-                    </span>
-                }
-            </ContainerDimensions>
-        ) : null;
+        return (
+            <Dock
+                dockStyle={this.props.dockStyle}
+                duration={0}
+                position="right"
+                dimMode="none"
+                isVisible={this.props.active}
+                fluid={false}
+                size={this.state.size}
+            >
+                <BorderLayout
+                    header={<div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ padding: 8 }}>
+                            <Glyphicon glyph="comment" className="text-primary" style={{ fontSize: 26 }}/>
+                        </div>
+                        <div style={{ flex: 1, padding: 8, textAlign: 'center', fontSize: 17 }}>
+                            Annotations
+                        </div>
+                        <Button
+                            className="square-button no-border"
+                            onClick={() => {
+                                this.props.toggleControl();
+                                this.props.onCleanHighlight();
+                                this.props.onCancelEdit();
+                                this.props.onBack();
+                                this.setState({
+                                    size: 330,
+                                    selected: null
+                                });
+                                
+                            }}>
+                            <Glyphicon glyph="1-close"/>
+                        </Button>
+                    </div>}>
+                    <Annotations
+                        {...this.props}
+                        width={this.props.width}
+                        selected={this.state.selected}
+                        onSelect={(selected) => {
+                            this.setState({
+                                size: selected ? 660 : 330,
+                                selected
+                            });
+                        }}/>
+                </BorderLayout>
+                
+            </Dock>
+        );
     }
 }
 
@@ -209,7 +252,10 @@ const annotationsSelector = createSelector([
 }));
 
 const AnnotationsPlugin = connect(annotationsSelector, {
-    toggleControl: conditionalToggle
+    toggleControl: conditionalToggle,
+    onCancelEdit: cancelEditAnnotation,
+    onCleanHighlight: cleanHighlight,
+    onBack: cancelShowAnnotation
 })(AnnotationsPanel);
 
 module.exports = {

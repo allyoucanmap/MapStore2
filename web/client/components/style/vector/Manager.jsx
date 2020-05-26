@@ -82,7 +82,8 @@ class Manager extends React.Component {
         onChangeStyle: () => {},
         onChangePointType: () => {},
         onUpdateSymbols: () => {},
-        switchPanelOptions: []
+        switchPanelOptions: [],
+        onSetErrorSymbol: () => {}
     };
 
     state = {}
@@ -90,7 +91,6 @@ class Manager extends React.Component {
 
     UNSAFE_componentWillMount() {
         // we assume that the default symbols shape is correctly configured
-
         const styles = castArray(this.props.style);
         const expanded = styles.map((s, i) => i === 0 || s.filtering );
         const locked = styles.map((s, i) => i === 0 );
@@ -105,7 +105,6 @@ class Manager extends React.Component {
      * @prop {object} switchPanelOptions
     */
     renderPanelStyle = (style = {}, switchPanelOptions = {}, i) => {
-
         const stylerProps = {
             style,
             onChange: this.change,
@@ -156,7 +155,7 @@ class Manager extends React.Component {
                 onLoadingError={this.props.onSetErrorSymbol}/>) || null;
         const separator = <hr/>;
 
-        const sections = [markerType, preview, symbolLayout, markerGlyph, text, fill, stroke];
+        const sections = [markerType, /* preview,*/ symbolLayout, markerGlyph, text, fill, stroke];
 
         return (<Grid fluid style={{ width: '100%' }} className="ms-style" key={"grid" + i}>
             <SwitchPanel {...switchPanelOptions} key={"switchPanel" + i}>

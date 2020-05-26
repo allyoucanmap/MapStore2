@@ -65,7 +65,6 @@ const updateMapLayoutEpic = (action$, store) =>
                     boundingMapRect
                 }));
             }
-
             const mapLayout = ConfigUtils.getConfigProp("mapLayout") || {left: {sm: 300, md: 500, lg: 600}, right: {md: 658}, bottom: {sm: 30}};
 
             if (get(state, "mode") === 'embedded') {
@@ -91,7 +90,7 @@ const updateMapLayoutEpic = (action$, store) =>
 
             const rightPanels = head([
                 get(state, "controls.details.enabled") && {right: mapLayout.right.md} || null,
-                get(state, "controls.annotations.enabled") && {right: mapLayout.right.md} || null,
+                get(state, "controls.annotations.enabled") && {right: 330} || null,
                 get(state, "controls.metadataexplorer.enabled") && {right: mapLayout.right.md} || null,
                 get(state, "controls.measure.enabled") && showCoordinateEditorSelector(state) && {right: mapLayout.right.md} || null,
                 get(state, "controls.userExtensions.enabled") && { right: mapLayout.right.md } || null,

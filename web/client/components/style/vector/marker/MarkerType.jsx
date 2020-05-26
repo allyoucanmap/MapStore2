@@ -12,7 +12,7 @@ const {Row, Col} = require('react-bootstrap');
 const Select = require('react-select').default;
 
 const Message = require('../../../I18N/Message');
-
+const StyleField = require('../StyleField').default;
 /**
  * Styler for the gliph, color and shape
 */
@@ -40,24 +40,18 @@ class MarkerType extends React.Component {
 
     render() {
         return (
-            <div>
-                <Row>
-                    <Col xs={6}>
-                        <strong><Message msgId="draw.marker.type"/></strong>
-                    </Col>
-                    <Col xs={6} style={{ position: 'static' }}>
-                        <Select
-                            clearable={false}
-                            options={this.props.options}
-                            value={this.props.pointType || 'marker'}
-                            onChange={(option) => {
-                                const pointType = option && option.value;
-                                this.props.onChangeType(this.props.style.id, pointType);
-                            }}
-                        />
-                    </Col>
-                </Row>
-            </div>
+            <StyleField
+                label={<Message msgId="draw.marker.type"/>}>
+                <Select
+                    clearable={false}
+                    options={this.props.options}
+                    value={this.props.pointType || 'marker'}
+                    onChange={(option) => {
+                        const pointType = option && option.value;
+                        this.props.onChangeType(this.props.style.id, pointType);
+                    }}
+                />
+            </StyleField>
         );
     }
 

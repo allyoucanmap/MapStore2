@@ -21,6 +21,7 @@ const Message = require('../../I18N/Message');
 const OpacitySlider = require('../../TOC/fragments/OpacitySlider');
 const ColorSelector = require('../ColorSelector').default;
 const {addOpacityToColor} = require('../../../utils/VectorStyleUtils');
+const StyleField = require('./StyleField').default;
 
 /**
  * Styler for the stroke properties of a vector style
@@ -39,17 +40,14 @@ class Fill extends React.Component {
 
     render() {
         const {style} = this.props;
-        return (<div>
-            <Row>
-                <Col xs={12}>
+        return (
+            <div>
+                <div>
                     <strong><Message msgId="draw.fill"/></strong>
-                </Col>
-            </Row>
-            <Row>
-                <Col xs={6}>
-                    <Message msgId="draw.color"/>
-                </Col>
-                <Col xs={6} style={{position: "static"}}>
+                </div>
+
+                <StyleField
+                    label={<Message msgId="draw.color"/>}>
                     <ColorSelector color={addOpacityToColor(tinycolor(style.fillColor).toRgb(), style.fillOpacity)} width={this.props.width}
                         onChangeColor={c => {
                             if (!isNil(c)) {
@@ -58,21 +56,18 @@ class Fill extends React.Component {
                                 this.props.onChange(style.id, {fillColor, fillOpacity});
                             }
                         }}/>
-                </Col>
-            </Row>
-            <Row>
-                <Col xs={6}>
-                    <Message msgId="draw.opacity"/>
-                </Col>
-                <Col xs={6} style={{position: 'static'}}>
+                </StyleField>
+
+                <StyleField
+                    label={<Message msgId="draw.opacity"/>}>
                     <OpacitySlider
                         opacity={style.fillOpacity}
                         onChange={(fillOpacity) => {
                             this.props.onChange(style.id, {fillOpacity});
                         }}/>
-                </Col>
-            </Row>
-        </div>);
+                </StyleField>
+            </div>
+        );
     }
 }
 
