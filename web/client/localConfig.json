@@ -470,7 +470,8 @@
             "Timeline",
             "Playback",
             "FeedbackMask",
-            "StyleEditor"
+            "StyleEditor",
+            "LayerSync"
         ],
         "embedded": [{
                 "name": "Map",

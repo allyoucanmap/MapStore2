@@ -33,7 +33,8 @@ class Toolbar extends React.Component {
         layerMetadata: PropTypes.object,
         wfsdownload: PropTypes.object,
         maxDepth: PropTypes.number,
-        metadataTemplate: PropTypes.oneOfType([PropTypes.string, PropTypes.array, PropTypes.object, PropTypes.func])
+        metadataTemplate: PropTypes.oneOfType([PropTypes.string, PropTypes.array, PropTypes.object, PropTypes.func]),
+        buttons: PropTypes.array
     };
 
     static defaultProps = {
@@ -194,6 +195,11 @@ class Toolbar extends React.Component {
                     transitionName="toc-toolbar-btn-transition"
                     transitionEnterTimeout={300}
                     transitionLeaveTimeout={300}>
+                    {this.props.buttons.map(({ Element }, idx) => {
+                        return (
+                            <Element key={idx} status={status}/>
+                        );
+                    })}
                     {this.props.activateTool.activateAddLayer && (status === 'DESELECT' || status === 'GROUP') ?
                         <OverlayTrigger
                             key="addLayer"

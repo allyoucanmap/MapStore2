@@ -125,7 +125,8 @@ module.exports = {
         ZoomInPlugin: require('../plugins/ZoomIn'),
         ZoomOutPlugin: require('../plugins/ZoomOut'),
 
-        SearchByBookmarkPlugin: require('../plugins/SearchByBookmark').default
+        SearchByBookmarkPlugin: require('../plugins/SearchByBookmark').default,
+        LayerSyncPlugin: require('../plugins/LayerSync').default
     },
     requires: {
         ReactSwipe: require('react-swipeable-views').default,

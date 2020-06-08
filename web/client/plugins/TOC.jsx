@@ -359,6 +359,9 @@ class LayerTree extends React.Component {
     }
 
     renderTOC = () => {
+        const buttons = this.props.items.map(item => {
+            return item.button;
+        }).filter(val => val);
         const Group = this.getDefaultGroup();
         const Layer = this.getDefaultLayer();
         const sections = [this.props.activateToolsContainer, this.props.activateFilterLayer, this.props.activateMapTitle].filter(s => s);
@@ -377,6 +380,7 @@ class LayerTree extends React.Component {
                     filterText={this.props.filterText}
                     toolbar={
                         <Toolbar
+                            buttons={buttons}
                             groups={this.props.groups}
                             selectedLayers={this.props.selectedLayers}
                             selectedGroups={this.props.selectedGroups}
