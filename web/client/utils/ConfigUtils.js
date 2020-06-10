@@ -5,14 +5,13 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var Proj4js = require('proj4').default;
+var Proj4js = require('@geosolutions/proj4').default;
 const PropTypes = require('prop-types');
 var url = require('url');
 
 var axios = require('axios');
 const {isArray, isObject, endsWith, isNil} = require('lodash');
 const assign = require('object-assign');
-const {Promise} = require('es6-promise');
 
 const epsg4326 = Proj4js ? new Proj4js.Proj('EPSG:4326') : null;
 const centerPropType = PropTypes.shape({

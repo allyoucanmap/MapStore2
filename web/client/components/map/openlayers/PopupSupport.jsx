@@ -100,7 +100,9 @@ export default class PopupSupport extends React.Component {
         const size = map.getSize();
         (this._popups || []).forEach(({popup, observer}) => {
             !!observer && observer.disconnect();
-            !!popup && map.removeOverlay(popup);
+            if (!!popup) {
+                map.removeOverlay(popup);
+            }
         });
 
         this._popups = popups.map((options) => {

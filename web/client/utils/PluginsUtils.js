@@ -9,13 +9,13 @@
 import React from 'react';
 import assign from 'object-assign';
 import { omit, isObject, head, isArray, isString, isFunction, memoize, get, endsWith } from 'lodash';
-import {connect as originalConnect} from 'react-redux';
+// import {connect as originalConnect} from 'react-redux';
 import axios from '../libs/ajax';
 import url from 'url';
 import curry from 'lodash/curry';
-import { combineEpics as originalCombineEpics } from 'redux-observable';
-import { combineReducers as originalCombineReducers } from 'redux';
-import {wrapEpics} from "./EpicsUtils";
+// import { combineEpics as originalCombineEpics } from 'redux-observable';
+// import { combineReducers as originalCombineReducers } from 'redux';
+// import {wrapEpics} from "./EpicsUtils";
 
 const defaultMonitoredState = [{name: "mapType", path: 'maptype.mapType'}, {name: "user", path: 'security.user'}];
 
@@ -32,11 +32,12 @@ export const getEpics = getFromPlugins('epics');
 * @param {object} [reducers] other reducers
 * @returns {function} a reducer made from the plugins' reducers and the reducers passed as 2nd parameter
 */
+/*
 export const combineReducers = (plugins, reducers) => {
     const pluginsReducers = getReducers(plugins);
     return originalCombineReducers({ ...reducers, ...pluginsReducers });
 };
-
+*/
 /**
  * Produces the rootEpic for the plugins, combined with other epics passed as 2nd argument
  * @param {array} plugins the plugins
@@ -44,10 +45,11 @@ export const combineReducers = (plugins, reducers) => {
  * @param {function} [epicWrapper] returns a function that wraps the epic
  * @return {function} the rootEpic, obtained combining plugins' epics and the other epics passed as argument.
  */
+/*
 export const combineEpics = (plugins, epics = {}, epicWrapper) => {
     const pluginEpics = { ...getEpics(plugins), ...epics };
     return originalCombineEpics(...wrapEpics(pluginEpics, epicWrapper));
-};
+};*/
 
 /**
  * Gives a reduced version of the status to check.
@@ -444,10 +446,11 @@ export const setRefToWrappedComponent = (name) => {
  * @param {object} [options] connect options (look at react-redux docs for details)
  * @returns {function} function to be applied to the dumb object to connect it to state / dispatchers
  */
+/*
 export const connect = (mapStateToProps, mapDispatchToProps, mergeProps, options) => {
     return originalConnect(mapStateToProps, mapDispatchToProps, mergeProps || pluginsMergeProps, options);
 };
-
+*/
 /**
  * Use this function to export a plugin from a module.
  *
@@ -552,8 +555,8 @@ export const loadPlugin = (pluginUrl) => {
  * @memberof utils
  */
 export default {
-    combineReducers,
-    combineEpics,
+    // combineReducers,
+    // combineEpics,
     filterState,
     filterDisabledPlugins,
     getMonitoredState,
@@ -563,7 +566,7 @@ export default {
     getPluginItems,
     getConfiguredPlugin,
     setRefToWrappedComponent,
-    connect,
+    // connect,
     createPlugin,
     importPlugin,
     loadPlugin,

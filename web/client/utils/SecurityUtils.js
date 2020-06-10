@@ -11,12 +11,19 @@ const ConfigUtils = require('./ConfigUtils');
 const URL = require('url');
 const assign = require('object-assign');
 const {head, isNil} = require('lodash');
-const {setStore, getState} = require('./StateUtils');
+// const {setStore, getState} = require('./StateUtils');
 
+let setStore = () => {};
+let getState = () => {};
 /**
  * This utility class will get information about the current logged user directly from the store.
  */
 const SecurityUtils = {
+
+    init: function(options) {
+        setStore = options.setStore;
+        getState = options.getState;
+    },
 
     /**
      * Stores the logged user security information.

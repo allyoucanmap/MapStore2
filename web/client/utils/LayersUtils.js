@@ -343,13 +343,13 @@ const LayersUtils = {
     },
     denormalizeGroups: (allLayers, groups) => {
         let getGroupVisibility = (nodes) => {
-            let visibility = true;
-            nodes.forEach((node) => {
+            // let visibility = true;
+            /* nodes.forEach((node) => {
                 if (!node.visibility) {
                     visibility = false;
                 }
-            });
-            return visibility;
+            });*/
+            return !!nodes.find(({ visibility }) => visibility);
         };
         let getNormalizedGroup = (group, layers) => {
             const nodes = group.nodes.map((node) => {
@@ -590,7 +590,7 @@ const LayersUtils = {
         const urls = getURLs(isArray(options.url) ? options.url : [options.url]);
         let authenticationParam = {};
         urls.forEach(url => {
-            SecurityUtils.addAuthenticationParameter(url, authenticationParam, options.securityToken);
+            // SecurityUtils.addAuthenticationParameter(url, authenticationParam, options.securityToken);
         });
         return authenticationParam;
     },

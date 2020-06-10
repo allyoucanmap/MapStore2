@@ -10,7 +10,7 @@ const csstree = require('css-tree');
 const assign = require('object-assign');
 
 const css = {
-    fontawesome: require('raw-loader!./font-awesome.txt')
+    // fontawesome: require('raw-loader!./font-awesome.txt')
 };
 const baseImageUrl = require('../components/mapcontrols/annotations/img/markers_default.png');
 const shadowImageUrl = require('../components/mapcontrols/annotations/img/markers_shadow.png');

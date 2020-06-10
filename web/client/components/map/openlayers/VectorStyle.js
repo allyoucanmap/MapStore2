@@ -27,16 +27,16 @@ import CircleStyle from 'ol/style/Circle';
 import {Stroke, Fill, Text, Style} from 'ol/style';
 import {Point, LineString} from 'ol/geom';
 
-import {Promise} from 'es6-promise';
-import axios from '../../../libs/ajax';
+// import axios from '../../../libs/ajax';
 
-import OlStyleParser from 'geostyler-openlayers-parser';
+// import OlStyleParser from 'geostyler-openlayers-parser';
 
-const olStyleParser = new OlStyleParser();
 
 import {
     getStyle as getStyleLegacy, getMarkerStyle as getMarkerStyleLegacyFun,
     startEndPolylineStyle as startEndPolylineStyleLegacy, defaultStyles as defaultStylesLegacy} from './LegacyVectorStyle';
+
+// const olStyleParser = new OlStyleParser();
 
 const selectedStyle = {
     white: [255, 255, 255, 1],
@@ -311,6 +311,7 @@ export const parseStyles = (feature = {properties: {}}) => {
 };
 
 export const getStyle = (options, isDrawing = false, textValues = []) => {
+    /*
     if (options.style && options.style.url) {
         return axios.get(options.style.url).then(response => {
             return getStyleParser(options.style.format).readStyle(response.data)
@@ -320,6 +321,7 @@ export const getStyle = (options, isDrawing = false, textValues = []) => {
     if (options.style && options.style.format === 'geostyler') {
         return olStyleParser.writeStyle(options.style.styleObj);
     }
+    */
     const style = getStyleLegacy(options, isDrawing, textValues);
     if (options.asPromise) {
         return new Promise((resolve) => {

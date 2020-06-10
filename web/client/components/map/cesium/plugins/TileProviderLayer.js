@@ -32,7 +32,7 @@ function TileProviderProxy(proxy) {
 TileProviderProxy.prototype.getURL = function(resource) {
     let {url, queryString} = splitUrl(resource);
     if (url.indexOf("//") === 0) {
-        url = location.protocol + url;
+        // url = location.protocol + url;
     }
     return ProxyUtils.getProxyUrl() + encodeURIComponent(url + queryString);
 };

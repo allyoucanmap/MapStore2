@@ -11,7 +11,6 @@ import React from 'react';
 import Layers from '../../../utils/openlayers/Layers';
 import CoordinatesUtils from '../../../utils/CoordinatesUtils';
 import assign from 'object-assign';
-import Rx from 'rxjs';
 import isNumber from 'lodash/isNumber';
 import isArray from 'lodash/isArray';
 import omit from 'lodash/omit';
@@ -49,7 +48,9 @@ export default class OpenlayersLayer extends React.Component {
     componentDidMount() {
         this.valid = true;
         this.tilestoload = 0;
+        this.tilesEndEvents = [];
         this.imagestoload = 0;
+        this.imagesEndEvents = [];
         this.createLayer(
             this.props.type,
             this.props.options,
@@ -76,12 +77,6 @@ export default class OpenlayersLayer extends React.Component {
 
     componentWillUnmount() {
         if (this.layer && this.props.map) {
-            if (this.tileLoadEndStream$) {
-                this.tileLoadEndStream$.complete();
-                this.tileStopStream$.complete();
-                this.imageLoadEndStream$.complete();
-                this.imageStopStream$.complete();
-            }
             if (this.layer.detached) {
                 this.layer.remove();
             } else {
@@ -203,6 +198,45 @@ export default class OpenlayersLayer extends React.Component {
         if (this.isValid()) {
             this.props.map.addLayer(this.layer);
 
+            if (options.handleClickOnLayer) {
+                this.layer.set("handleClickOnLayer", true);
+            }
+
+            const tileLoadEnd = (tileEvents) => {
+                const errors = tileEvents.filter(e => e.type === 'tileloaderror');
+                if (errors.length > 0 && (options && !options.hideErrors || !options)) {
+                    this.props.onLayerLoad(options.id, {error: true});
+                    this.props.onLayerError(options.id, tileEvents.length, errors.length);
+                } else {
+                    this.props.onLayerLoad(options.id);
+                }
+            };
+
+            this.layer.getSource().on('tileloadstart', () => {
+                if (this.tilestoload === 0) {
+                    this.props.onLayerLoading(options.id);
+                    this.tilesEndEvents = [];
+                    this.tilestoload++;
+                } else {
+                    this.tilestoload++;
+                }
+            });
+            this.layer.getSource().on('tileloadend', () => {
+                this.tilesEndEvents.push({ type: 'tileloadend' });
+                this.tilestoload--;
+                if (this.tilestoload === 0) {
+                    tileLoadEnd(this.tilesEndEvents);
+                }
+            });
+            this.layer.getSource().on('tileloaderror', (event) => {
+                this.tilesEndEvents.push({ type: 'tileloaderror', event });
+                this.tilestoload--;
+                if (this.tilestoload === 0) {
+                    tileLoadEnd(this.tilesEndEvents);
+                }
+            });
+
+/*
             const tileLoadEndStream$ = new Rx.Subject();
             const tileStopStream$ = new Rx.Subject();
 
@@ -293,7 +327,7 @@ export default class OpenlayersLayer extends React.Component {
 
             this.imageLoadEndStream$ = imageLoadEndStream$;
             this.imageStopStream$ = imageStopStream$;
-
+            */
             if (options.refresh) {
                 let counter = 0;
                 this.refreshTimer = setInterval(() => {

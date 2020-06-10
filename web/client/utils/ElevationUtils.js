@@ -8,7 +8,7 @@
 
 const axios = require('../libs/ajax');
 const LRUCache = require('lrucache');
-const {Promise} = require('es6-promise');
+// const {Promise} = require('es6-promise');
 const DEFAULT_SIZE = 100;
 let elevationTiles = new LRUCache(DEFAULT_SIZE);
 

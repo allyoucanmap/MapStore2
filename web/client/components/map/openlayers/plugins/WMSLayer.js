@@ -5,8 +5,8 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import React from 'react';
-import Message from '../../../../components/I18N/Message';
+// import React from 'react';
+// import Message from '../../../../components/I18N/Message';
 import Layers from '../../../../utils/openlayers/Layers';
 import isNil from 'lodash/isNil';
 import isEqual from 'lodash/isEqual';
@@ -129,9 +129,9 @@ function getElevation(pos) {
         if (elevation.available) {
             return elevation.value;
         }
-        return <Message msgId={elevation.message} />;
+        return elevation.message; // <Message msgId={elevation.message} />;
     } catch (e) {
-        return <Message msgId="elevationLoadingError" />;
+        return 'elevationLoadingError'; // <Message msgId="elevationLoadingError" />;
     }
 }
 const toOLAttributions = credits => credits && creditsToAttribution(credits) || undefined;

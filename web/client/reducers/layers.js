@@ -200,7 +200,7 @@ function layers(state = { flat: [] }, action) {
         return state;
     }
     case UPDATE_NODE: {
-        const selector = action.nodeType === 'groups' ? 'group' : 'id';
+        const selector = action.nodeType === 'groups' || action.nodeType === 'group' ? 'group' : 'id';
         if (selector === 'group') {
             const groups = state.groups ? [].concat(state.groups) : [];
             // updating correctly options in a (deep) subgroup

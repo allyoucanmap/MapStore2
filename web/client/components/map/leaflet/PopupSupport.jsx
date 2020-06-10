@@ -57,7 +57,9 @@ export default class PopupSupport extends React.Component {
         // Clean old popups without throwing event
         (this._popups || []).forEach(({popup}) => {
             popup.off('remove', this.popupClose);
-            popup && this.props.map?.removeLayer?.(popup);
+            if (popup) {
+                this.props.map?.removeLayer?.(popup);
+            }
         });
         if (this.props.map) {
             this.props.map.off('resize', this.updatePopup);
@@ -92,7 +94,9 @@ export default class PopupSupport extends React.Component {
         // Clean old popups without throwing event
         (this._popups || []).forEach(({popup}) => {
             popup.off('remove', this.popupClose);
-            popup && this.props.map.removeLayer(popup);
+            if (popup) {
+                this.props.map.removeLayer(popup);
+            }
         });
         // Create popups
         this._popups = popups.map(( options = {}) => {

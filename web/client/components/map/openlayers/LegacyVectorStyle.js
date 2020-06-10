@@ -152,7 +152,7 @@ const STYLE_LINE = {
     }
 };
 const STYLE_POLYGON = {
-    color: '#ffcc33',
+    color: '#dddddd',
     opacity: 1,
     weight: 3,
     fillColor: '#ffffff',
@@ -179,7 +179,7 @@ export const defaultStyles = {
     "MultiPolygon": STYLE_POLYGON
 };
 
-const strokeStyle = (options, defaultsStyle = {color: 'blue', width: 3, lineDash: [6]}) => ({
+const strokeStyle = (options, defaultsStyle = {color: '#cce', width: 0.5, lineDash: [0]}) => ({
     stroke: new Stroke(
         options.style ?
             options.style.stroke || {
@@ -195,7 +195,7 @@ const strokeStyle = (options, defaultsStyle = {color: 'blue', width: 3, lineDash
     )
 });
 
-const fillStyle = (options, defaultsStyle = {color: 'rgba(0, 0, 255, 0.1)'}) => ({
+const fillStyle = (options, defaultsStyle = {color: 'rgba(200, 200, 240, 0.2)'}) => ({
     fill: new Fill(
         options.style ?
             options.style.fill || {

@@ -9,7 +9,7 @@
 import { compose, withHandlers, withProps } from 'recompose';
 import {connect} from 'react-redux';
 import { head, isArray, isObject, mapValues } from 'lodash';
-import Proj4js from 'proj4';
+import Proj4js from '@geosolutions/proj4';
 import CoordinatesUtils from '../../../utils/CoordinatesUtils';
 import MapUtils from '../../../utils/MapUtils';
 import { onEditorChange } from '../../../actions/widgets';
