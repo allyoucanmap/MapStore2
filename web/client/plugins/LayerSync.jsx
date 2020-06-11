@@ -6,10 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {connect, createPlugin} from '../utils/PluginsUtils';
 import {createSelector} from 'reselect';
-import { Button as ButtonRB, Glyphicon } from 'react-bootstrap';
+import { Button as ButtonRB, Glyphicon as GlyphiconRB } from 'react-bootstrap';
 import {layersSelector} from '../selectors/layers';
 import Portal from '../components/misc/Portal';
 import ResizableModal from '../components/misc/ResizableModal';
@@ -17,7 +17,11 @@ import SideCard from '../components/misc/cardgrids/SideCard';
 import {getTitleAndTooltip} from '../utils/TOCUtils';
 import {setControlProperty} from '../actions/controls';
 import tooltip from '../components/misc/enhancers/tooltip';
+import Toolbar from '../components/misc/toolbar/Toolbar';
+import Loader from '../components/misc/Loader';
+
 const Button = tooltip(ButtonRB);
+const Glyphicon = tooltip(GlyphiconRB);
 
 function LayerSync({
     layers,
@@ -33,17 +37,32 @@ function LayerSync({
         setSelected(newSelected);
     }
 
+    const [mockLoading, setMockLoading] = useState(false);
+    const [mockRequested, setMockRequested] = useState([]);
+
+    useEffect(() => {
+        if (mockLoading) {
+            setTimeout(() => {
+                setMockLoading(false);
+            }, 1000);
+        }
+    }, [mockLoading]);
+
     return (
         <Portal>
             <ResizableModal
                 show={enabled}
                 size="sm"
                 title="Update Layer Title and Description"
-                onClose={() => onClose()}
+                onClose={mockLoading ? null : () => onClose()}
                 buttons={[
                     {
                         text: 'Sync title and descriptions',
-                        disabled: selected.length === 0
+                        disabled: selected.length === 0 || mockLoading,
+                        onClick: () => {
+                            setMockLoading(true);
+                            setMockRequested([...selected]);
+                        }
                     }
                 ]}
             >
@@ -62,9 +81,11 @@ function LayerSync({
                             {selected.length === layers.length ? 'Deselect all' : 'Select all'}
                         </Button>
                     </div>
-                    {layers.map((layer) => {
+                    {layers.map((layer, idx) => {
                         const { title } = getTitleAndTooltip({ node: layer });
                         const isSelected = selected.indexOf(layer.id) !== -1;
+                        const isRequested = mockRequested.indexOf(layer.id) !== -1;
+                        const isError = idx === 0;
                         return (
                             <SideCard
                                 key={layer.id}
@@ -77,6 +98,32 @@ function LayerSync({
                                 }}
                                 preview={
                                     <Glyphicon glyph={isSelected ? 'check' : 'unchecked'} style={{ fontSize: 16 }}/>
+                                }
+                                tools={
+                                    <>
+                                    {isRequested && <Toolbar
+                                        btnDefaultProps={{
+                                            className: 'square-button-md no-border'
+                                        }}
+                                        buttons={[
+                                            {
+                                                Element: () => mockLoading
+                                                    ? <Loader size={16}/>
+                                                    : <Glyphicon
+                                                        tooltip={
+                                                            isError
+                                                                ? "It's not possible to update the title and description of this layer. You could verify if all layer options are correct in the settings panel"
+                                                                : 'Title and description are successfully updated for this layer'
+                                                        }
+                                                        glyph={
+                                                            isError
+                                                                ? 'exclamation-mark'
+                                                                : 'ok-sign'
+                                                        }/>
+                                            }
+                                        ]}
+                                    />}
+                                    </>
                                 }
                             />
                         );

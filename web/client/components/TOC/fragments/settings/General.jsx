@@ -10,7 +10,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const Spinner = require('react-spinkit');
 const { get } = require('lodash');
-const { FormControl, FormGroup, ControlLabel, InputGroup, Col } = require('react-bootstrap');
+const { FormControl, FormGroup, ControlLabel, InputGroup, Col, Glyphicon } = require('react-bootstrap');
 const LayersUtils = require('../../../../utils/LayersUtils');
 const Message = require('../../../I18N/Message');
 const { SimpleSelect } = require('react-selectize');
@@ -108,12 +108,18 @@ class General extends React.Component {
                     </FormGroup>)}
                     <FormGroup>
                         <ControlLabel><Message msgId="layerProperties.name" /></ControlLabel>
-                        <FormControl
-                            defaultValue={this.props.element.name || ''}
-                            key="name"
-                            type="text"
-                            disabled
-                            onBlur={this.updateEntry.bind(null, "name")} />
+                        <InputGroup>
+                            <FormControl
+                                defaultValue={this.props.element.name || ''}
+                                key="name"
+                                type="text"
+                                onBlur={this.updateEntry.bind(null, "name")} />
+                            <InputGroup.Addon
+                                className="btn"
+                                onClick={() => {}}>
+                                <Glyphicon glyph="refresh"/>
+                            </InputGroup.Addon>
+                        </InputGroup>
                     </FormGroup>
                     <FormGroup>
                         <ControlLabel><Message msgId="layerProperties.description" /></ControlLabel>
