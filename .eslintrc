@@ -18,7 +18,8 @@
     "beforeEach" : false,
     "after"      : false,
     "afterEach"  : false,
-    "__DEVTOOLS__": false
+    "__DEVTOOLS__": false,
+    "__MS_VERSION__": false
   },
   "rules": {
 /**

@@ -21,7 +21,7 @@ const reducePropsToState = (props) => {
             themeElement: innermostProps.themeElement || 'theme_stylesheet',
             prefix: innermostProps.prefix || ConfigUtils.getConfigProp('themePrefix') || 'ms2',
             prefixContainer: innermostProps.prefixContainer && document.querySelector(innermostProps.prefixContainer) || document.body,
-            path: innermostProps.path || 'dist/themes',
+            path: innermostProps.path || '/themes',
             onLoad: innermostProps.onLoad || null
         };
     }

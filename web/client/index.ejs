@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
-        <title>MapStore HomePage</title>
+        <title><%= title %></title>
         <style>
         body {
             margin: 0;
@@ -103,7 +103,6 @@
             <div class="_ms2_init_spinner _ms2_init_center"><div></div></div>
             <div class="_ms2_init_text _ms2_init_center">Loading MapStore</div>
         </div>
-        <script src="dist/mapstore2.js"></script>
-
+        <script src="<%= htmlWebpackPlugin.files.js.find((fileName) => fileName.indexOf('mapstore2') !== -1) %>"></script>
     </body>
 </html>

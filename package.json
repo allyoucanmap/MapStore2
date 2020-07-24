@@ -36,7 +36,7 @@
     "file-loader": "2.0.0",
     "glob": "7.1.1",
     "html-loader": "0.5.1",
-    "html-webpack-plugin": "3.2.0",
+    "html-webpack-plugin": "4.3.0",
     "jsdoc-jsx": "0.1.0",
     "karma": "4.3.0",
     "karma-chrome-launcher": "3.1.0",
@@ -243,6 +243,7 @@
   },
   "scripts": {
     "doc": "docma -c build/docma-config.json --dest web/docs",
+    "create-version": "node ./createVersion.js ./web",
     "cleandoc": "rimraf web/docs && rimraf web/client/mapstore/docs",
     "doctest": "docma -c build/docma-config.json --dest web/client/mapstore/docs && echo documentation is accessible from the mapstore/docs path when running npm start",
     "i18n": "node  utility/translations/findMissingTranslations.js",

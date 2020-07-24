@@ -78,7 +78,7 @@ class StandardContainer extends React.Component {
             </div>);
     }
     render() {
-        return this.props.loadAfterTheme ? this.renderAfterTheme() : this.renderWithTheme();
+        return  this.props.loadAfterTheme ? this.renderAfterTheme() : this.renderWithTheme();
     }
     themeLoaded = () => {
         this.setState({

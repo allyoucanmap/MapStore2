@@ -6,6 +6,7 @@ const NoEmitOnErrorsPlugin = require("webpack/lib/NoEmitOnErrorsPlugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 /**
  * Webpack configuration builder.
@@ -30,188 +31,207 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
  * @param {object} proxy webpack-devserver custom proxy configuration object
  * @returns a webpack configuration object
  */
-module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publicPath, cssPrefix, prodPlugins, alias = {}, proxy) => ({
-    entry: assign({
-        'webpack-dev-server': 'webpack-dev-server/client?http://0.0.0.0:8081', // WebpackDevServer host and port
-        'webpack': 'webpack/hot/only-dev-server' // "only" prevents reload on syntax errors
-    }, bundles, themeEntries),
-    mode: prod ? "production" : "development",
-    optimization: {
-        minimize: !!prod,
-        moduleIds: "named",
-        chunkIds: "named"
-    },
-    output: {
-        path: paths.dist,
-        publicPath,
-        filename: "[name].js",
-        chunkFilename: prod ? "[name].[hash].chunk.js" : "[name].js"
-    },
-    plugins: [
-        new CopyWebpackPlugin([
-            { from: path.join(paths.base, 'node_modules', 'bootstrap', 'less'), to: path.join(paths.dist, "bootstrap", "less") }
-        ]),
-        new CopyWebpackPlugin([
-            { from: path.join(paths.base, 'node_modules', 'react-nouislider', 'example'), to: path.join(paths.dist, "react-nouislider", "example") }
-        ]),
-        new LoaderOptionsPlugin({
-            debug: !prod,
-            options: {
-                context: paths.base
-            }
-        }),
-        new DefinePlugin({
-            "__DEVTOOLS__": !prod
-        }),
-        new DefinePlugin({
-            'process.env': {
-                'NODE_ENV': prod ? '"production"' : '""'
-            }
-        }),
-        new NormalModuleReplacementPlugin(/leaflet$/, path.join(paths.framework, "libs", "leaflet")),
-        new NormalModuleReplacementPlugin(/proj4$/, path.join(paths.framework, "libs", "proj4")),
-        new NoEmitOnErrorsPlugin(),
-        extractThemesPlugin
-    ].concat(prod && prodPlugins || []),
-    resolve: {
-        extensions: [".js", ".jsx"],
-        alias: assign({}, {
-            jsonix: '@boundlessgeo/jsonix',
-            // next libs are added because of this issue https://github.com/geosolutions-it/MapStore2/issues/4569
-            proj4: '@geosolutions/proj4',
-            "react-joyride": '@geosolutions/react-joyride'
-        }, alias)
-    },
-    module: {
-        noParse: [/html2canvas/],
-        rules: [
-            {
-                test: /\.css$/,
-                use: [{
-                    loader: 'style-loader'
-                }, {
-                    loader: 'css-loader'
-                }, {
-                    loader: 'postcss-loader',
-                    options: {
-                        plugins: [
-                            require('postcss-prefix-selector')({ prefix: cssPrefix || '.ms2', exclude: ['.ms2', '[data-ms2-container]'].concat(cssPrefix ? [cssPrefix] : []) })
-                        ]
-                    }
-                }]
-            },
-            {
-                test: /\.less$/,
-                exclude: /themes[\\\/]?.+\.less$/,
-                use: [{
-                    loader: 'style-loader'
-                }, {
-                    loader: 'css-loader'
-                }, {
-                    loader: 'less-loader'
-                }]
-            },
-            {
-                test: /themes[\\\/]?.+\.less$/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    'css-loader', {
+module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publicPath, cssPrefix, prodPlugins, alias = {}, proxy) => {
+
+    const fs = require('fs-extra');
+    const versionData = fs.readFileSync(path.join(__dirname, '..', 'version.txt'), 'utf8');
+    const __MS_VERSION__ = versionData.toString();
+
+    return {
+        entry: assign({
+            'webpack-dev-server': 'webpack-dev-server/client?http://0.0.0.0:8081', // WebpackDevServer host and port
+            'webpack': 'webpack/hot/only-dev-server' // "only" prevents reload on syntax errors
+        }, bundles, themeEntries),
+        mode: prod ? "production" : "development",
+        optimization: {
+            minimize: !!prod,
+            moduleIds: "named",
+            chunkIds: "named"
+        },
+        output: {
+            path: paths.dist,
+            publicPath,
+            filename: "[name]." + __MS_VERSION__ + ".js",
+            chunkFilename: prod ? "[name]." + __MS_VERSION__ + ".chunk.js" : "[name].js"
+        },
+        plugins: [
+            new CopyWebpackPlugin([
+                { from: path.join(paths.base, 'node_modules', 'bootstrap', 'less'), to: path.join(paths.dist, "bootstrap", "less") }
+            ]),
+            new CopyWebpackPlugin([
+                { from: path.join(paths.base, 'node_modules', 'react-nouislider', 'example'), to: path.join(paths.dist, "react-nouislider", "example") }
+            ]),
+            new LoaderOptionsPlugin({
+                debug: !prod,
+                options: {
+                    context: paths.base
+                }
+            }),
+            new DefinePlugin({
+                "__DEVTOOLS__": !prod
+            }),
+            new DefinePlugin({
+                'process.env': {
+                    'NODE_ENV': prod ? '"production"' : '""'
+                }
+            }),
+            // NEW
+            new DefinePlugin({
+                "__MS_VERSION__": '"' + __MS_VERSION__ + '"'
+            }),
+            new HtmlWebpackPlugin({
+                inject: false,
+                template: path.resolve(__dirname, '..', 'web', 'client', 'index.ejs'),
+                templateParameters: {
+                    title: 'MapStore HomePage'
+                }
+            }),
+            // END NEW
+            new NormalModuleReplacementPlugin(/leaflet$/, path.join(paths.framework, "libs", "leaflet")),
+            new NormalModuleReplacementPlugin(/proj4$/, path.join(paths.framework, "libs", "proj4")),
+            new NoEmitOnErrorsPlugin(),
+            extractThemesPlugin
+        ].concat(prod && prodPlugins || []),
+        resolve: {
+            extensions: [".js", ".jsx"],
+            alias: assign({}, {
+                jsonix: '@boundlessgeo/jsonix',
+                // next libs are added because of this issue https://github.com/geosolutions-it/MapStore2/issues/4569
+                proj4: '@geosolutions/proj4',
+                "react-joyride": '@geosolutions/react-joyride'
+            }, alias)
+        },
+        module: {
+            noParse: [/html2canvas/],
+            rules: [
+                {
+                    test: /\.css$/,
+                    use: [{
+                        loader: 'style-loader'
+                    }, {
+                        loader: 'css-loader'
+                    }, {
                         loader: 'postcss-loader',
                         options: {
                             plugins: [
                                 require('postcss-prefix-selector')({ prefix: cssPrefix || '.ms2', exclude: ['.ms2', '[data-ms2-container]'].concat(cssPrefix ? [cssPrefix] : []) })
                             ]
                         }
-                    }, 'less-loader'
-                ]
-            },
-            {
-                test: /\.woff(2)?(\?v=[0-9].[0-9].[0-9])?$/,
-                use: [{
-                    loader: 'url-loader',
-                    options: {
-                        mimetype: "application/font-woff"
+                    }]
+                },
+                {
+                    test: /\.less$/,
+                    exclude: /themes[\\\/]?.+\.less$/,
+                    use: [{
+                        loader: 'style-loader'
+                    }, {
+                        loader: 'css-loader'
+                    }, {
+                        loader: 'less-loader'
+                    }]
+                },
+                {
+                    test: /themes[\\\/]?.+\.less$/,
+                    use: [
+                        MiniCssExtractPlugin.loader,
+                        'css-loader', {
+                            loader: 'postcss-loader',
+                            options: {
+                                plugins: [
+                                    require('postcss-prefix-selector')({ prefix: cssPrefix || '.ms2', exclude: ['.ms2', '[data-ms2-container]'].concat(cssPrefix ? [cssPrefix] : []) })
+                                ]
+                            }
+                        }, 'less-loader'
+                    ]
+                },
+                {
+                    test: /\.woff(2)?(\?v=[0-9].[0-9].[0-9])?$/,
+                    use: [{
+                        loader: 'url-loader',
+                        options: {
+                            mimetype: "application/font-woff"
+                        }
+                    }]
+                },
+                {
+                    test: /\.(ttf|eot|svg)(\?v=[0-9].[0-9].[0-9])?$/,
+                    use: [{
+                        loader: 'file-loader',
+                        options: {
+                            name: "[name].[ext]"
+                        }
+                    }]
+                },
+                {
+                    test: /\.(png|jpg|gif)$/,
+                    use: [{
+                        loader: 'url-loader',
+                        options: {
+                            name: "[path][name].[ext]",
+                            limit: 8192
+                        }
+                    }] // inline base64 URLs for <=8k images, direct URLs for the rest
+                },
+                {
+                    test: /\.jsx?$/,
+                    exclude: /(ol\.js)$|(Cesium\.js)$/,
+                    use: [{
+                        loader: "babel-loader",
+                        options: {
+                            configFile: path.join(__dirname, 'babel.config.js')
+                        }
+                    }],
+                    include: [
+                        paths.code,
+                        paths.framework,
+                        path.join(paths.base, "node_modules", "query-string"),
+                        path.join(paths.base, "node_modules", "strict-uri-encode"),
+                        path.join(paths.base, "node_modules", "react-draft-wysiwyg"), // added for issue #4602
+                        path.join(paths.base, "node_modules", "split-on-first")
+                    ]
+                }
+            ].concat(prod ? [{
+                test: /\.html$/,
+                loader: 'html-loader'
+            }] : [])
+        },
+        devServer: {
+            proxy: proxy || {
+                '/rest': {
+                    target: "https://dev.mapstore.geo-solutions.it/mapstore",
+                    secure: false,
+                    headers: {
+                        host: "dev.mapstore.geo-solutions.it"
                     }
-                }]
-            },
-            {
-                test: /\.(ttf|eot|svg)(\?v=[0-9].[0-9].[0-9])?$/,
-                use: [{
-                    loader: 'file-loader',
-                    options: {
-                        name: "[name].[ext]"
+                },
+                '/pdf': {
+                    target: "https://dev.mapstore.geo-solutions.it/mapstore",
+                    secure: false,
+                    headers: {
+                        host: "dev.mapstore.geo-solutions.it"
                     }
-                }]
-            },
-            {
-                test: /\.(png|jpg|gif)$/,
-                use: [{
-                    loader: 'url-loader',
-                    options: {
-                        name: "[path][name].[ext]",
-                        limit: 8192
+                },
+                '/mapstore/pdf': {
+                    target: "https://dev.mapstore.geo-solutions.it",
+                    secure: false,
+                    headers: {
+                        host: "dev.mapstore.geo-solutions.it"
                     }
-                }] // inline base64 URLs for <=8k images, direct URLs for the rest
-            },
-            {
-                test: /\.jsx?$/,
-                exclude: /(ol\.js)$|(Cesium\.js)$/,
-                use: [{
-                    loader: "babel-loader",
-                    options: {
-                        configFile: path.join(__dirname, 'babel.config.js')
+                },
+                '/proxy': {
+                    target: "https://dev.mapstore.geo-solutions.it/mapstore",
+                    secure: false,
+                    headers: {
+                        host: "dev.mapstore.geo-solutions.it"
                     }
-                }],
-                include: [
-                    paths.code,
-                    paths.framework,
-                    path.join(paths.base, "node_modules", "query-string"),
-                    path.join(paths.base, "node_modules", "strict-uri-encode"),
-                    path.join(paths.base, "node_modules", "react-draft-wysiwyg"), // added for issue #4602
-                    path.join(paths.base, "node_modules", "split-on-first")
-                ]
+                },
+                '/docs': {
+                    target: "http://localhost:8081",
+                    pathRewrite: { '/docs': '/mapstore/docs' }
+                }
             }
-        ].concat(prod ? [{
-            test: /\.html$/,
-            loader: 'html-loader'
-        }] : [])
-    },
-    devServer: {
-        proxy: proxy || {
-            '/rest': {
-                target: "https://dev.mapstore.geo-solutions.it/mapstore",
-                secure: false,
-                headers: {
-                    host: "dev.mapstore.geo-solutions.it"
-                }
-            },
-            '/pdf': {
-                target: "https://dev.mapstore.geo-solutions.it/mapstore",
-                secure: false,
-                headers: {
-                    host: "dev.mapstore.geo-solutions.it"
-                }
-            },
-            '/mapstore/pdf': {
-                target: "https://dev.mapstore.geo-solutions.it",
-                secure: false,
-                headers: {
-                    host: "dev.mapstore.geo-solutions.it"
-                }
-            },
-            '/proxy': {
-                target: "https://dev.mapstore.geo-solutions.it/mapstore",
-                secure: false,
-                headers: {
-                    host: "dev.mapstore.geo-solutions.it"
-                }
-            },
-            '/docs': {
-                target: "http://localhost:8081",
-                pathRewrite: {'/docs': '/mapstore/docs'}
-            }
-        }
-    },
+        },
 
-    devtool: !prod ? 'eval' : undefined
-});
+        devtool: !prod ? 'eval' : undefined
+    };
+};

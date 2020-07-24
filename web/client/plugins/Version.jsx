@@ -50,8 +50,5 @@ module.exports = {
             tool: <Version key="version"/>,
             position: 4
         }
-    }),
-    reducers: {
-        version: require('../reducers/version')
-    }
+    })
 };

@@ -15,7 +15,6 @@ module.exports = (config = {}, pluginsDef, overrideConfig = cfg => cfg) => {
     const LocaleUtils = require('../utils/LocaleUtils');
 
     const startApp = () => {
-        const {loadVersion} = require('../actions/version');
         const {versionSelector} = require('../selectors/version');
         const {loadAfterThemeSelector} = require('../selectors/config');
         const StandardApp = require('../components/app/StandardApp');
@@ -62,7 +61,6 @@ module.exports = (config = {}, pluginsDef, overrideConfig = cfg => cfg) => {
                 maptype: require('../reducers/maptype'),
                 maps: require('../reducers/maps'),
                 maplayout: require('../reducers/maplayout'),
-                version: require('../reducers/version'),
                 mapPopups: require('../reducers/mapPopups').default,
                 ...appReducers
             },
@@ -74,9 +72,7 @@ module.exports = (config = {}, pluginsDef, overrideConfig = cfg => cfg) => {
             }
         );
 
-        const initialActions = [
-            loadVersion
-        ];
+        const initialActions = [];
 
         const appConfig = overrideConfig({
             storeOpts,
