@@ -281,6 +281,7 @@
             "FeedbackMask"
         ],
         "desktop": [ "Details",
+          "Mockup",
           {
             "name": "Map",
             "cfg": {

@@ -23,6 +23,41 @@
                 "source": "osm",
                 "group": "background",
                 "visibility": true
+            },
+            {
+                "id": "gs:us_states__5",
+                "format": "image/png",
+                "search": {
+                    "url": "https://gs-stable.geo-solutions.it/geoserver/wfs",
+                    "type": "wfs"
+                },
+                "name": "gs:us_states",
+                "description": "States of US",
+                "title": "States of US",
+                "type": "wms",
+                "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+                "bbox": {
+                    "crs": "EPSG:4326",
+                    "bounds": {
+                        "minx": "-124.73142200000001",
+                        "miny": "24.955967",
+                        "maxx": "-66.969849",
+                        "maxy": "49.371735"
+                    }
+                },
+                "visibility": true,
+                "singleTile": false,
+                "allowedSRS": {
+                    "EPSG:3857": true,
+                    "EPSG:900913": true
+                },
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "catalogURL": null,
+                "useForElevation": false,
+                "hidden": false,
+                "params": {}
             }
         ]
     }
