@@ -10,8 +10,7 @@
 
 const path = require('path');
 const fs = require('fs-extra');
-// write the version on a txt file to be available for other purpose (eg: backend)
-const versionFileDestination = process.argv[2] || path.join(__dirname, 'version.txt');
+const versionFileDestination = process.argv[2] || path.join(__dirname, '..', '..', '..', 'version.txt');
 const version = require('child_process')
     .execSync('git rev-parse HEAD')
     .toString().trim();
@@ -22,6 +21,6 @@ fs.writeFile(versionFileDestination,
         if (err) {
             return console.log(err);
         }
-        return console.log(`- version file written ${versionFileDestination}`);
+        return console.log(`- version file created at ${versionFileDestination}`);
     }
 );

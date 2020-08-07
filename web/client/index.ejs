@@ -103,6 +103,7 @@
             <div class="_ms2_init_spinner _ms2_init_center"><div></div></div>
             <div class="_ms2_init_text _ms2_init_center">Loading MapStore</div>
         </div>
-        <script src="<%= htmlWebpackPlugin.files.js.find((fileName) => fileName.indexOf('mapstore2') !== -1) %>"></script>
+        <script src="<%= htmlWebpackPlugin.files.js.find((fileName) => fileName.indexOf(bundleName) !== -1) %>"></script>
+        <div><%= bundleName %></div>
     </body>
 </html>

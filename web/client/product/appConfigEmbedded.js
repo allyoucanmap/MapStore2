@@ -44,7 +44,6 @@ module.exports = {
     },
     baseReducers: {
         mode: (state = 'embedded') => state,
-        version: require('../reducers/version'),
         maplayout: require('../reducers/maplayout'),
         searchconfig: require('../reducers/searchconfig')
     },

@@ -31,12 +31,12 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
  * @param {object} proxy webpack-devserver custom proxy configuration object
  * @returns a webpack configuration object
  */
-module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publicPath, cssPrefix, prodPlugins, alias = {}, proxy) => {
+module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publicPath, cssPrefix, prodPlugins, alias = {}, proxy, info) => {
 
-    const fs = require('fs-extra');
-    const versionData = fs.readFileSync(path.join(__dirname, '..', 'version.txt'), 'utf8');
-    const __MS_VERSION__ = versionData.toString();
+    const __MS_VERSION__ = info.version;
 
+    console.log('BUNDLES______', bundles);
+    console.log('INFO______', info);
     return {
         entry: assign({
             'webpack-dev-server': 'webpack-dev-server/client?http://0.0.0.0:8081', // WebpackDevServer host and port
@@ -81,9 +81,20 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
             }),
             new HtmlWebpackPlugin({
                 inject: false,
-                template: path.resolve(__dirname, '..', 'web', 'client', 'index.ejs'),
+                template: path.join(paths.templates, "index.ejs"),
+                filename: 'index.html',
                 templateParameters: {
-                    title: 'MapStore HomePage'
+                    title: info.appBundleTitle,
+                    bundleName: info.appBundleName
+                }
+            }),
+            new HtmlWebpackPlugin({
+                inject: false,
+                template: path.join(paths.templates, "embedded.ejs"),
+                filename: 'embedded.html',
+                templateParameters: {
+                    title: info.embeddedBundleTitle,
+                    bundleName: info.embeddedName
                 }
             }),
             // END NEW
@@ -127,7 +138,14 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
                     }, {
                         loader: 'css-loader'
                     }, {
-                        loader: 'less-loader'
+                        loader: 'less-loader',
+                        options: {
+                            lessOptions: {
+                                paths: paths.less || [
+                                    path.resolve(__dirname, 'node_modules')
+                                ]
+                            }
+                        }
                     }]
                 },
                 {
@@ -141,7 +159,16 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
                                     require('postcss-prefix-selector')({ prefix: cssPrefix || '.ms2', exclude: ['.ms2', '[data-ms2-container]'].concat(cssPrefix ? [cssPrefix] : []) })
                                 ]
                             }
-                        }, 'less-loader'
+                        }, {
+                            loader: 'less-loader',
+                            options: {
+                                lessOptions: {
+                                    paths: paths.less || [
+                                        path.resolve(__dirname, 'node_modules')
+                                    ]
+                                }
+                            }
+                        }
                     ]
                 },
                 {
