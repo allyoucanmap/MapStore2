@@ -41,9 +41,10 @@
 .ms-story-color-contrast { color: contrast(@ms-story-bg); }
 .ms-story-color-no-contrast { color: @ms-story-bg; }
 
+@ms-react-draft-wysiwyg-path: "~react-draft-wysiwyg/dist/";
 /* TEXT EDITOR TODO: externalize */
 @import '~draft-js-inline-toolbar-plugin/lib/plugin.css';
-@import '~react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+@import "@{ms-react-draft-wysiwyg-path}react-draft-wysiwyg.css";
 
 
 // needed to assure the fontsize numbers to be correctly displayed (2 sided digits )
