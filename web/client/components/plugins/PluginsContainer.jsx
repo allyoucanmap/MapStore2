@@ -43,7 +43,8 @@ class PluginsContainer extends React.Component {
         pluginsState: PropTypes.object,
         monitoredState: PropTypes.object,
         defaultMode: PropTypes.string,
-        onPluginLoaded: PropTypes.func
+        onPluginLoaded: PropTypes.func,
+        onPluginsLoaded: PropTypes.func
     };
 
     static contextTypes = {
@@ -70,7 +71,8 @@ class PluginsContainer extends React.Component {
         style: {},
         pluginsState: {},
         monitoredState: {},
-        onPluginLoaded: () => {}
+        onPluginLoaded: () => {},
+        onPluginsLoaded: () => {}
     };
 
     state = {
@@ -185,23 +187,30 @@ class PluginsContainer extends React.Component {
 
     loadPlugins = (state, newProps) => {
         const getState = (path) => this.getState(path, newProps);
-        (newProps.pluginsConfig && this.getPluginsConfig(newProps) || [])
+        this.tmpLoadedPluginsState = { ...this.state.loadedPlugins };
+        this.tmpLoadedPluginsCount = 0;
+        const loadingPlugins = (newProps.pluginsConfig && this.getPluginsConfig(newProps) || [])
             .map((plugin) => PluginsUtils.getPluginDescriptor(getState, (newProps.plugins),
                 this.getPluginsConfig(newProps), plugin, this.state.loadedPlugins))
             .filter(plugin => PluginsUtils.filterDisabledPlugins({ plugin: plugin && plugin.impl || plugin, cfg: plugin && plugin.cfg || {}}, getState))
-            .filter((plugin) => plugin && plugin.impl.loadPlugin).forEach((plugin) => {
-                if (!this.state.loadedPlugins[plugin.name]) {
-                    if (!plugin.impl.enabler || plugin.impl.enabler(state)) {
-                        plugin.impl.loadPlugin((impl) => this.loadPlugin(plugin, impl));
-                    }
-                }
-            });
-    };
-    loadPlugin = (plugin, impl) => {
-        this.setState({
-            loadedPlugins: assign({}, this.state.loadedPlugins, {[plugin.name]: impl})
+            .filter((plugin) => plugin && plugin.impl.loadPlugin)
+            .filter(plugin => !this.state.loadedPlugins[plugin.name])
+            .filter(plugin => !plugin.impl.enabler || plugin.impl.enabler(state));
+
+        loadingPlugins.forEach((plugin) => {
+            plugin.impl.loadPlugin((impl) => this.loadPlugin(plugin, impl, loadingPlugins.length));
         });
+    };
+    loadPlugin = (plugin, impl, loadingPluginsCount) => {
+        this.tmpLoadedPluginsState = { ...this.tmpLoadedPluginsState, [plugin.name]: impl };
         this.props.onPluginLoaded(plugin.name, impl);
+        this.tmpLoadedPluginsCount += 1;
+        // update after for each and store all loaded plugin once
+        if (this.tmpLoadedPluginsCount === loadingPluginsCount) {
+            const loadedPlugins = assign({}, this.state.loadedPlugins, this.tmpLoadedPluginsState);
+            this.setState({ loadedPlugins });
+            this.props.onPluginsLoaded(loadedPlugins);
+        }
     };
 }
 
