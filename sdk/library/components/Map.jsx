@@ -5,12 +5,20 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
+import React from 'react';
 import PropTypes from 'prop-types';
 import BaseMap from '../../../web/client/components/map/BaseMap';
 import mapType from '../../../web/client/components/map/enhancers/mapType';
 
-const Map = mapType(BaseMap);
+const MapComponent = mapType(BaseMap);
+/**
+ * Base map component that renders a map.
+ * It is implementation independent.
+ * The implementation of the layer is provided by the `plugins` property
+ */
+const Map = (props) => {
+    return <MapComponent {...props}/>;
+};
 
 Map.propTypes = {
     id: PropTypes.string,
