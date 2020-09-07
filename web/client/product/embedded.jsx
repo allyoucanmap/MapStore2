@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
 */
 
-const {loadVersion} = require('../actions/version');
+const {loadVersion} = require('../../../framework/actions/version');
 
 require('./main')(
     require('./appConfigEmbedded'),

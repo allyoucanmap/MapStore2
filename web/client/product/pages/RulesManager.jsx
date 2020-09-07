@@ -13,14 +13,14 @@ const {connect} = require('react-redux');
 const url = require('url');
 const urlQuery = url.parse(window.location.href, true).query;
 
-const ConfigUtils = require('../../utils/ConfigUtils');
-const Message = require("../../components/I18N/Message");
+const ConfigUtils = require('../../../../framework/utils/ConfigUtils');
+const Message = require("../../../../framework/components/I18N/Message");
 
-const {loadMapConfig} = require('../../actions/config');
-const {resetControls} = require('../../actions/controls');
+const {loadMapConfig} = require('../../../../framework/actions/config');
+const {resetControls} = require('../../../../framework/actions/controls');
 
-const Page = require('../../containers/Page');
-const BorderLayout = require('../../components/layout/BorderLayout');
+const Page = require('../../../../framework/containers/Page');
+const BorderLayout = require('../../../../framework/components/layout/BorderLayout');
 /**
   * @name RulesManager
   * @memberof pages

@@ -8,10 +8,10 @@
 const PropTypes = require('prop-types');
 const React = require('react');
 const {Label, FormControl, FormGroup} = require('react-bootstrap');
-const Message = require('../../components/I18N/Message');
+const Message = require('../../../../framework/components/I18N/Message');
 const {compose} = require('redux');
-const {changeMapType} = require('../../actions/maptype');
-const {mapTypeSelector} = require('../../selectors/maptype');
+const {changeMapType} = require('../../../../framework/actions/maptype');
+const {mapTypeSelector} = require('../../../../framework/selectors/maptype');
 const {connect} = require('react-redux');
 const assign = require('object-assign');
 
@@ -63,5 +63,5 @@ module.exports = {
             priority: 1
         }
     }),
-    reducers: {maptype: require('../../reducers/maptype')}
+    reducers: {maptype: require('../../../../framework/reducers/maptype')}
 };

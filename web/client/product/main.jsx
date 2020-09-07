@@ -6,19 +6,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const {themeLoaded} = require('../actions/theme');
+const {themeLoaded} = require('../../../framework/actions/theme');
 
 module.exports = (config = {}, pluginsDef, overrideConfig = cfg => cfg) => {
     const React = require('react');
     const ReactDOM = require('react-dom');
     const {connect} = require('react-redux');
-    const LocaleUtils = require('../utils/LocaleUtils');
+    const LocaleUtils = require('../../../framework/utils/LocaleUtils');
 
     const startApp = () => {
-        const {loadVersion} = require('../actions/version');
-        const {versionSelector} = require('../selectors/version');
-        const {loadAfterThemeSelector} = require('../selectors/config');
-        const StandardApp = require('../components/app/StandardApp');
+        const {loadVersion} = require('../../../framework/actions/version');
+        const {versionSelector} = require('../../../framework/selectors/version');
+        const {loadAfterThemeSelector} = require('../../../framework/selectors/config');
+        const StandardApp = require('../../../framework/components/app/StandardApp');
 
         const {
             appEpics = {},
@@ -42,11 +42,11 @@ module.exports = (config = {}, pluginsDef, overrideConfig = cfg => cfg) => {
             themeLoaded: state.theme && state.theme.loaded
         }), {
             onThemeLoaded: themeLoaded
-        })(require('../components/app/StandardRouter').default);
+        })(require('../../../framework/components/app/StandardRouter').default);
 
-        const {updateMapLayoutEpic} = require('../epics/maplayout');
-        const {setSupportedLocales} = require('../epics/localconfig');
-        const {readQueryParamsOnMapEpic} = require('../epics/queryparams');
+        const {updateMapLayoutEpic} = require('../../../framework/epics/maplayout');
+        const {setSupportedLocales} = require('../../../framework/epics/localconfig');
+        const {readQueryParamsOnMapEpic} = require('../../../framework/epics/queryparams');
 
         /**
          * appStore data needed to create the store
@@ -56,14 +56,14 @@ module.exports = (config = {}, pluginsDef, overrideConfig = cfg => cfg) => {
          * @param {object} appEpics is used to extend the appEpics
          * @param {object} initialState is used to initialize the state of the application
         */
-        const appStore = require('../stores/StandardStore').bind(null,
+        const appStore = require('../../../framework/stores/StandardStore').bind(null,
             initialState,
             baseReducers || {
-                maptype: require('../reducers/maptype'),
-                maps: require('../reducers/maps'),
-                maplayout: require('../reducers/maplayout'),
-                version: require('../reducers/version'),
-                mapPopups: require('../reducers/mapPopups').default,
+                maptype: require('../../../framework/reducers/maptype'),
+                maps: require('../../../framework/reducers/maps'),
+                maplayout: require('../../../framework/reducers/maplayout'),
+                version: require('../../../framework/reducers/version'),
+                mapPopups: require('../../../framework/reducers/mapPopups').default,
                 ...appReducers
             },
             baseEpics || {

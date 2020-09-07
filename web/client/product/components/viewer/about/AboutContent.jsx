@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 var React = require('react');
-var I18N = require('../../../../components/I18N/I18N');
+var I18N = require('../../../../../../framework/components/I18N/I18N');
 var gsLogo = require('../../../assets/img/geosolutions-brand.png');
 var msLogo = require('../../../assets/img/mapstore-logo-0.20.png');
 

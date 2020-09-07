@@ -12,8 +12,8 @@ const {connect} = require('react-redux');
 const url = require('url');
 const urlQuery = url.parse(window.location.href, true).query;
 
-const Page = require('../../containers/Page');
-const BorderLayout = require('../../components/layout/BorderLayout');
+const Page = require('../../../../framework/containers/Page');
+const BorderLayout = require('../../../../framework/components/layout/BorderLayout');
 /**
   * @name Importer
   * @memberof pages

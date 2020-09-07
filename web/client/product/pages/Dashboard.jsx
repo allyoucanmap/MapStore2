@@ -12,11 +12,11 @@ const { get, isNil } = require('lodash');
 const url = require('url');
 const urlQuery = url.parse(window.location.href, true).query;
 
-const { loadDashboard, resetDashboard } = require('../../actions/dashboard');
-const { checkLoggedUser } = require('../../actions/security');
+const { loadDashboard, resetDashboard } = require('../../../../framework/actions/dashboard');
+const { checkLoggedUser } = require('../../../../framework/actions/security');
 
-const Page = require('../../containers/Page');
-const BorderLayout = require('../../components/layout/BorderLayout');
+const Page = require('../../../../framework/containers/Page');
+const BorderLayout = require('../../../../framework/components/layout/BorderLayout');
 
 class DashboardPage extends React.Component {
     static propTypes = {

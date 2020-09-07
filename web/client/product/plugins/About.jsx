@@ -8,8 +8,8 @@
 
 const React = require('react');
 const {connect} = require('react-redux');
-const Message = require('../../components/I18N/Message');
-const {toggleControl} = require('../../actions/controls');
+const Message = require('../../../../framework/components/I18N/Message');
+const {toggleControl} = require('../../../../framework/actions/controls');
 
 const About = connect((state) => ({
     enabled: state.controls && state.controls.about && state.controls.about.enabled || false,

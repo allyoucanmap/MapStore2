@@ -163,7 +163,9 @@ module.exports = (bundles, themeEntries, paths, extractThemesPlugin, prod, publi
                     }
                 }],
                 include: [
-                    paths.code,
+                    ...(Array.isArray(paths.code)
+                        ? paths.code
+                        : [paths.code]),
                     paths.framework,
                     path.join(paths.base, "node_modules", "query-string"),
                     path.join(paths.base, "node_modules", "strict-uri-encode"),

@@ -8,7 +8,7 @@
 
 const React = require('react');
 const PropTypes = require('prop-types');
-const src = require("../product/plugins/attribution/geosolutions-brand.png");
+const src = require("../../web/client/product/plugins/attribution/geosolutions-brand.png");
 const {connect} = require('react-redux');
 
 class RulesManagerFooter extends React.Component {

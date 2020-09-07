@@ -14,12 +14,12 @@ const {connect} = require('react-redux');
 
 const url = require('url');
 const urlQuery = url.parse(window.location.href, true).query;
-const ConfigUtils = require('../../utils/ConfigUtils');
+const ConfigUtils = require('../../../../framework/utils/ConfigUtils');
 
-const {resetControls} = require('../../actions/controls');
-const {loadMaps} = require('../../actions/maps');
+const {resetControls} = require('../../../../framework/actions/controls');
+const {loadMaps} = require('../../../../framework/actions/maps');
 
-const Page = require('../../containers/Page');
+const Page = require('../../../../framework/containers/Page');
 
 class MapsPage extends React.Component {
     static propTypes = {

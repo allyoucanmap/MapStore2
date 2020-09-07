@@ -7,10 +7,10 @@ var PropTypes = require('prop-types');
  * LICENSE file in the root directory of this source tree.
  */
 const React = require('react');
-const InfoButton = require('../../../../components/buttons/InfoButton');
-const Dialog = require('../../../../components/misc/Dialog');
+const InfoButton = require('../../../../../../framework/components/buttons/InfoButton');
+const Dialog = require('../../../../../../framework/components/misc/Dialog');
 const AboutContent = require('./AboutContent');
-const {Message} = require('../../../../components/I18N/I18N');
+const {Message} = require('../../../../../../framework/components/I18N/I18N');
 const aboutImg = require('../../../assets/img/Blank.gif');
 const assign = require('object-assign');
 const {Glyphicon} = require('react-bootstrap');

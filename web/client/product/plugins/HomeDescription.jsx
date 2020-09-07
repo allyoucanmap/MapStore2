@@ -8,7 +8,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const {Jumbotron, Grid, Row, Col} = require('react-bootstrap');
-const HTML = require('../../components/I18N/HTML');
+const HTML = require('../../../../framework/components/I18N/HTML');
 
 class HomeDescription extends React.Component {
     static propTypes = {

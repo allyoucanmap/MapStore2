@@ -8,7 +8,7 @@
 var React = require('react');
 
 var {Panel} = require('react-bootstrap');
-var I18N = require('../../../components/I18N/I18N');
+var I18N = require('../../../../../framework/components/I18N/I18N');
 
 class Description extends React.Component {
     render() {

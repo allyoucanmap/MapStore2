@@ -9,8 +9,8 @@ const PropTypes = require('prop-types');
 const React = require('react');
 
 const {Glyphicon, Tooltip} = require('react-bootstrap');
-const ToggleButton = require('../../../components/buttons/ToggleButton');
-const Message = require('../../../components/I18N/Message');
+const ToggleButton = require('../../../../../framework/components/buttons/ToggleButton');
+const Message = require('../../../../../framework/components/I18N/Message');
 
 class Home extends React.Component {
     static propTypes = {

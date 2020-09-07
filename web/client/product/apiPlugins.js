@@ -9,24 +9,24 @@
 module.exports = {
     plugins: {
         // framework plugins
-        BackgroundSwitcherPlugin: require('../plugins/BackgroundSwitcher'),
-        DrawerMenuPlugin: require('../plugins/DrawerMenu'),
-        FeedbackMaskPlugin: require('../plugins/FeedbackMask'),
-        GoFullPlugin: require('../plugins/GoFull'),
-        IdentifyPlugin: require('../plugins/Identify'),
-        LocatePlugin: require('../plugins/Locate'),
-        MapFooterPlugin: require('../plugins/MapFooter'),
-        MapLoadingPlugin: require('../plugins/MapLoading'),
-        MapPlugin: require('../plugins/Map'),
-        OmniBarPlugin: require('../plugins/OmniBar'),
-        SearchPlugin: require('../plugins/Search'),
-        TOCPlugin: require('../plugins/TOC'),
-        ToolbarPlugin: require('../plugins/Toolbar'),
-        ZoomAllPlugin: require('../plugins/ZoomAll')
+        BackgroundSwitcherPlugin: require('../../../framework/plugins/BackgroundSwitcher'),
+        DrawerMenuPlugin: require('../../../framework/plugins/DrawerMenu'),
+        FeedbackMaskPlugin: require('../../../framework/plugins/FeedbackMask'),
+        GoFullPlugin: require('../../../framework/plugins/GoFull'),
+        IdentifyPlugin: require('../../../framework/plugins/Identify'),
+        LocatePlugin: require('../../../framework/plugins/Locate'),
+        MapFooterPlugin: require('../../../framework/plugins/MapFooter'),
+        MapLoadingPlugin: require('../../../framework/plugins/MapLoading'),
+        MapPlugin: require('../../../framework/plugins/Map'),
+        OmniBarPlugin: require('../../../framework/plugins/OmniBar'),
+        SearchPlugin: require('../../../framework/plugins/Search'),
+        TOCPlugin: require('../../../framework/plugins/TOC'),
+        ToolbarPlugin: require('../../../framework/plugins/Toolbar'),
+        ZoomAllPlugin: require('../../../framework/plugins/ZoomAll')
     },
     requires: {
         ReactSwipe: require('react-swipeable-views').default,
 
-        SwipeHeader: require('../components/data/identify/SwipeHeader')
+        SwipeHeader: require('../../../framework/components/data/identify/SwipeHeader')
     }
 };

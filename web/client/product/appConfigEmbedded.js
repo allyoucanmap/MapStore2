@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
 */
 
-const {updateMapLayoutEpic} = require('../epics/maplayout');
-const {readQueryParamsOnMapEpic} = require('../epics/queryparams');
+const {updateMapLayoutEpic} = require('../../../framework/epics/maplayout');
+const {readQueryParamsOnMapEpic} = require('../../../framework/epics/queryparams');
 
 module.exports = {
     mode: "embedded",
@@ -44,9 +44,9 @@ module.exports = {
     },
     baseReducers: {
         mode: (state = 'embedded') => state,
-        version: require('../reducers/version'),
-        maplayout: require('../reducers/maplayout'),
-        searchconfig: require('../reducers/searchconfig')
+        version: require('../../../framework/reducers/version'),
+        maplayout: require('../../../framework/reducers/maplayout'),
+        searchconfig: require('../../../framework/reducers/searchconfig')
     },
     baseEpics: {
         updateMapLayoutEpic,

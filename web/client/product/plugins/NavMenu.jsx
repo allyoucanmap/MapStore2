@@ -9,12 +9,12 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const src = require("./attribution/geosolutions-brand-sm.png");
 const assign = require('object-assign');
-const tooltip = require('../../components/misc/enhancers/tooltip');
+const tooltip = require('../../../../framework/components/misc/enhancers/tooltip');
 const {isString, trimStart, isFunction} = require('lodash');
 const {Nav, NavItem, Glyphicon} = require('react-bootstrap');
 const ContainerDimensions = require('react-container-dimensions').default;
 const NavItemT = tooltip(NavItem);
-const {scrollIntoViewId} = require('../../utils/DOMUtil');
+const {scrollIntoViewId} = require('../../../../framework/utils/DOMUtil');
 
 /**
  * Plugin for navigation menu. It renders some items passed as props (or injected by other plugins)

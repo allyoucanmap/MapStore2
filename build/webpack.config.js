@@ -10,8 +10,11 @@ module.exports = require('./buildConfig')(
     {
         base: path.join(__dirname, ".."),
         dist: path.join(__dirname, "..", "web", "client", "dist"),
-        framework: path.join(__dirname, "..", "web", "client"),
-        code: path.join(__dirname, "..", "web", "client")
+        framework: path.join(__dirname,  "..", "framework"),
+        code: [
+            path.join(__dirname, "..", "web", "client"),
+            path.join(__dirname, "..", "framework")
+        ]
     },
     extractThemesPlugin,
     false,

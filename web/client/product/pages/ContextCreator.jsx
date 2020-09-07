@@ -12,9 +12,9 @@ import {get} from 'lodash';
 import url from 'url';
 const urlQuery = url.parse(window.location.href, true).query;
 
-import {clearContextCreator, loadContext} from '../../actions/contextcreator';
-import Page from '../../containers/Page';
-import BorderLayout from '../../components/layout/BorderLayout';
+import {clearContextCreator, loadContext} from '../../../../framework/actions/contextcreator';
+import Page from '../../../../framework/containers/Page';
+import BorderLayout from '../../../../framework/components/layout/BorderLayout';
 
 class ContextCreator extends React.Component {
     static propTypes = {

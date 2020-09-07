@@ -8,8 +8,8 @@ var PropTypes = require('prop-types');
  */
 var React = require('react');
 
-var I18N = require('../../../components/I18N/I18N');
-var LangSelector = require('../../../components/I18N/LangSelector');
+var I18N = require('../../../../../framework/components/I18N/I18N');
+var LangSelector = require('../../../../../framework/components/I18N/LangSelector');
 
 class Language extends React.Component {
     static propTypes = {

@@ -12,15 +12,15 @@ import { get, isNil } from 'lodash';
 import url from 'url';
 const urlQuery = url.parse(window.location.href, true).query;
 
-import Page from '../../containers/Page';
+import Page from '../../../../framework/containers/Page';
 import {
     loadGeostory,
     setEditing,
     updateUrlOnScroll
-} from '../../actions/geostory';
-import { geostoryIdSelector } from '../../selectors/geostory';
-import { isLoggedIn } from '../../selectors/security';
-import BorderLayout from '../../components/layout/BorderLayout';
+} from '../../../../framework/actions/geostory';
+import { geostoryIdSelector } from '../../../../framework/selectors/geostory';
+import { isLoggedIn } from '../../../../framework/selectors/security';
+import BorderLayout from '../../../../framework/components/layout/BorderLayout';
 
 class GeoStoryPage extends React.Component {
     static propTypes = {

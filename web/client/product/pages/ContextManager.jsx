@@ -9,8 +9,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
-import Page from '../../containers/Page';
-import {resetControls} from '../../actions/controls';
+import Page from '../../../../framework/containers/Page';
+import {resetControls} from '../../../../framework/actions/controls';
 
 import '../assets/css/manager.css';
 

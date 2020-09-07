@@ -8,9 +8,9 @@ const PropTypes = require('prop-types');
  */
 const React = require('react');
 const {connect} = require('react-redux');
-const Page = require('../../containers/Page');
+const Page = require('../../../../framework/containers/Page');
 
-const {resetControls} = require('../../actions/controls');
+const {resetControls} = require('../../../../framework/actions/controls');
 
 
 require('../assets/css/manager.css');

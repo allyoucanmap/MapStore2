@@ -11,9 +11,9 @@ const {connect} = require('react-redux');
 const url = require('url');
 const urlQuery = url.parse(window.location.href, true).query;
 const MapViewerCmp = require('../components/viewer/MapViewerCmp');
-const {loadNewMap, loadMapConfig} = require('../../actions/config');
-const {initMap} = require('../../actions/map');
-const MapViewerContainer = require('../../containers/MapViewer');
+const {loadNewMap, loadMapConfig} = require('../../../../framework/actions/config');
+const {initMap} = require('../../../../framework/actions/map');
+const MapViewerContainer = require('../../../../framework/containers/MapViewer');
 
 class MapViewerPage extends React.Component {
     static propTypes = {
