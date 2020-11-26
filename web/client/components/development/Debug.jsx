@@ -16,14 +16,22 @@ if (!global.Symbol) {
 const urlQuery = url.parse(window.location.href, true).query;
 
 class Debug extends React.Component {
-    render() {
+    state = {
+        DevTools: null
+    }
+    componentWillMount() {
         if (urlQuery && urlQuery.debug && __DEVTOOLS__ && !window.devToolsExtension) {
-            const DevTools = require('./DevTools');
-            return (
-                <DevTools/>
-            );
+            import(/* webpackChunkName: 'dev-tools' */'./DevTools')
+                .then((mod) => {
+                    this.setState({
+                        DevTools: mod.default
+                    });
+                });
         }
-        return null;
+    }
+    render() {
+        const { DevTools } = this.state;
+        return DevTools ? <DevTools /> : null;
     }
 }
 
