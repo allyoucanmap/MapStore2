@@ -12,7 +12,7 @@ try {
     const files = fs.readdirSync(svgDirectory);
     const destinationDirectory = path.join(__dirname, '../web/client/themes/default/');
     const dest = path.join(destinationDirectory, 'icons');
-    const cssDest = path.join(destinationDirectory, 'icons.less');
+    const cssDest = path.join(destinationDirectory, 'icons.scss');
     const cssTemplate = path.join(destinationDirectory, 'icons.template.hbs');
     console.log(`  Template -> ${cssTemplate}`);
     console.log(' ');
@@ -43,7 +43,7 @@ try {
             console.log(`  Generated fonts in eot, svg, ttf, woff and woff2 formats from ${files.length} icons`);
             console.log(' ');
             console.log(`  - fonts      -> ${dest}`);
-            console.log(`  - icons.less -> ${cssDest}`);
+            console.log(`  - icons.scss -> ${cssDest}`);
             console.log(' ');
         }
         console.log(' -------------------------------------------------------------------------------');

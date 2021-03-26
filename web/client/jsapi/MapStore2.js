@@ -23,7 +23,6 @@ import localConfig from '../localConfig.json';
 import { standardEpics, standardReducers, standardRootReducerFunc } from '../stores/defaultOptions';
 import ConfigUtils from '../utils/ConfigUtils';
 import { ensureIntl } from '../utils/LocaleUtils';
-import { renderFromLess } from '../utils/ThemeUtils';
 import { getApi } from '../api/userPersistedStorage';
 
 const defaultPlugins = {
@@ -131,9 +130,8 @@ const MapStore2 = {
      *  * **originalUrl**: url of the original instance of MapStore. If present it will be linked inside the map using the "GoFull" plugin, present by default.
      *  * **initialState**: allows setting the initial application state (look at [State Configuration](https://mapstore.readthedocs.io/en/latest/developer-guide/local-config/) for details)
      *
-     * Styling can be configured either using a **theme**, or a complete custom **less stylesheet**, using the
+     * Styling can be configured either using a **theme** using the
      * following options properties:
-     *  * **style**: less style to be applied
      *  * **startAction**: the actionType to wait before start triggering actions. By default CHANGE_MAP_VIEW
      *  * **theme**: theme configuration options:
      *    * path: path/url of the themes folder related to the current page
@@ -212,15 +210,6 @@ const MapStore2 = {
             appComponent: StandardContainer,
             printingEnabled: options.printingEnabled || false
         };
-        if (options.style) {
-            let dom = document.getElementById('custom_theme');
-            if (!dom) {
-                dom = document.createElement('style');
-                dom.id = 'custom_theme';
-                document.head.appendChild(dom);
-            }
-            renderFromLess(options.style, 'custom_theme', 'themes/default/');
-        }
         const defaultThemeCfg = {
             prefixContainer: '#' + container
         };

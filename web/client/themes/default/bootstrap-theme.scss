@@ -1,0 +1,181 @@
+/*!
+ * Bootstrap v3.3.5 (http://getbootstrap.com)
+ * Copyright 2011-2015 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ */
+// Core variables and mixins
+// @import "~bootstrap-sass/assets/stylesheets/bootstrap/_variables.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_mixins.scss";
+// Reset and dependencies
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_normalize.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_print.scss";
+// @import "~bootstrap-sass/assets/stylesheets/bootstrap/_glyphicons.scss";
+// Core CSS
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_scaffolding.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_type.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_code.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_grid.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_tables.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_forms.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_buttons.scss";
+// Components
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_component-animations.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_dropdowns.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_button-groups.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_input-groups.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_navs.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_navbar.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_breadcrumbs.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_pagination.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_pager.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_labels.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_badges.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_jumbotron.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_thumbnails.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_alerts.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_progress-bars.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_media.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_list-group.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_panels.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_responsive-embed.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_wells.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_close.scss";
+// Components w/ JavaScript
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_modals.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_tooltip.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_popovers.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_carousel.scss";
+// Utility classes
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_utilities.scss";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/_responsive-utilities.scss";
+
+// Custom theme
+
+// Button
+button.close {
+    opacity: 1.0;
+
+    &:first-child {
+        font-family: "mapstore2";
+        font-size: 0;
+        @extend .glyphicon;
+    }
+
+    &:first-child:before {
+        @extend .glyphicon-1-close-content;
+        font-size: ($font-size-base * 1.5);
+    }
+}
+
+@mixin btn-styles($btn-color-hover) {
+
+    &:hover {
+      background-color: darken($btn-color-hover, 10%);
+    }
+}
+
+.btn-primary {
+    @include btn-styles($ms2-color-primary-hover);
+    &:focus,
+    &.focus {
+        background-color: $ms2-color-primary;
+        border-color: $btn-primary-border;
+    }
+}
+
+.btn-success {
+    @include btn-styles($ms2-color-success-hover);
+    &:focus,
+    &.focus {
+        background-color: $ms2-color-success;
+        border-color: $btn-success-border;
+    }
+}
+
+.btn-info {
+    @include btn-styles($ms2-color-info-hover);
+    &:focus,
+    &.focus {
+        background-color: $ms2-color-info;
+        border-color: $btn-info-border;
+    }
+}
+
+.btn-warning {
+    @include btn-styles($ms2-color-warning-hover);
+    &:focus,
+    &.focus {
+        background-color: $ms2-color-warning;
+        border-color: $btn-warning-border;
+    }
+}
+
+.btn-danger {
+    @include btn-styles($ms2-color-danger-hover);
+    &:focus,
+    &.focus {
+        background-color: $ms2-color-danger;
+        border-color: $btn-danger-border;
+    }
+}
+
+// Modal
+.modal {
+    z-index: 2050;
+}
+
+.modal-dialog {
+    width: 290px;
+    margin: auto;
+}
+
+.modal-header {
+    background-color: $ms2-color-primary;
+    color: $ms2-color-text-primary;
+}
+
+@media (min-width: $screen-sm-min) {
+    .modal-dialog {
+        width: $modal-md;
+        margin: auto;
+        margin-top: 150px;
+    }
+    .modal-dialog-draggable {
+        margin-top: 0;
+    }
+}
+
+// Dropdown
+.dropdown-menu {
+    padding: 0;
+}
+
+.tooltip-inner {
+    word-wrap: break-word;
+}
+
+.btn {
+    &.no-events {
+        pointer-events: none;
+        // this class removes the border from the button
+        border: none !important;
+        border-top: none !important;
+        &:active,
+        &:active:focus,
+        &:focus,
+        &:hover {
+            box-shadow: none;
+            -webkit-box-shadow: none;
+            -moz-box-shadow: none;
+            outline: none;
+        }
+    }
+}
+//popover
+.popover-title{
+    word-wrap: break-word;
+}
+
+.popover-content{
+    word-wrap: break-word;
+}

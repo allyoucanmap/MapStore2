@@ -20,6 +20,23 @@ This is a list of things to check if you want to update from a previous version 
 - Optionally check also accessory files like `.eslinrc`, if you want to keep aligned with lint standards.
 - Follow the instructions below, in order, from your version to the one you want to update to.
 
+## Migration from 2021.01.01 to 2021.02.00
+
+All themes has been migrated from .less to .scss format so all projects needs to update their custom themes accordingly.
+Needed changes:
+- update the package.json with the library related to sass: sass and sass-loader
+- remove library related to .less language
+- convert all your custom style from .less to .scss
+- replace the theme.less entry with theme.scss in webpack configuration
+
+It's possible to convert automatically the .less styles with this tool https://github.com/ekryski/less2sass. The result is not perfect but it create a good base to work with.
+Some notes about the migration from .less to .scss using less2sass tool:
+- you should manually remove quote from native css calc() function
+- you should manually replace all used fade() function with native css rgba() function
+- scss has not the contrast() function but you could replace it with the color-yiq() mixin
+- sometimes mixins are not converted correctly and need to be updated using the @mixin and @include rules
+- for classes used as a mixin it's possible to use the @extend rule
+
 ## Migration from 2021.01.00 to 2021.01.01
 
 ### Update embedded entry to load the correct configuration

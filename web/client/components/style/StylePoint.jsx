@@ -17,7 +17,7 @@ import MarkNameSelector from './MarkNameSelector';
 import numberLocalizer from 'react-widgets/lib/localizers/simple-number';
 numberLocalizer();
 import { NumberPicker } from 'react-widgets';
-import 'react-widgets/lib/less/react-widgets.less';
+import 'react-widgets/dist/css/react-widgets.css';
 
 class StylePoint extends React.Component {
     static propTypes = {

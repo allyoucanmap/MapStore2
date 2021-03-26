@@ -46,9 +46,6 @@ module.exports = (bundles, themeEntries, paths, plugins = [], prod, publicPath, 
     },
     plugins: [
         new CopyWebpackPlugin([
-            { from: path.join(paths.base, 'node_modules', 'bootstrap', 'less'), to: path.join(paths.dist, "bootstrap", "less") }
-        ]),
-        new CopyWebpackPlugin([
             { from: path.join(paths.base, 'node_modules', 'react-nouislider', 'example'), to: path.join(paths.dist, "react-nouislider", "example") }
         ]),
         new LoaderOptionsPlugin({
@@ -105,18 +102,18 @@ module.exports = (bundles, themeEntries, paths, plugins = [], prod, publicPath, 
                 }]
             },
             {
-                test: /\.less$/,
-                exclude: /themes[\\\/]?.+\.less$/,
+                test: /\.s[ac]ss$/i,
+                exclude: /themes[\\\/]?.+\.s[ac]ss$/,
                 use: [{
                     loader: 'style-loader'
                 }, {
                     loader: 'css-loader'
                 }, {
-                    loader: 'less-loader'
+                    loader: 'sass-loader'
                 }]
             },
             {
-                test: /themes[\\\/]?.+\.less$/,
+                test: /themes[\\\/]?.+\.s[ac]ss$/,
                 use: [
                     MiniCssExtractPlugin.loader,
                     'css-loader', {
@@ -126,7 +123,7 @@ module.exports = (bundles, themeEntries, paths, plugins = [], prod, publicPath, 
                                 require('postcss-prefix-selector')({ prefix: cssPrefix || '.ms2', exclude: ['.ms2', '[data-ms2-container]'].concat(cssPrefix ? [cssPrefix] : []) })
                             ]
                         }
-                    }, 'less-loader'
+                    }, 'sass-loader'
                 ]
             },
             {

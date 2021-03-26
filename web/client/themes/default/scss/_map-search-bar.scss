@@ -1,0 +1,286 @@
+/* search */
+#mapstore-navbar .navbar-dx .MapSearchBar .input-group {
+    background-color: $ms2-color-background;
+    border-radius: 0;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    box-shadow: unset;
+    display: table;
+    border-collapse: separate;
+}
+/* remove default inbox bootstrap shadow on focus for the input */
+div.MapSearchBar .form-control:focus {
+	box-shadow: none;
+}
+
+#mapstore-navbar .MapSearchBar {
+    -webkit-box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    -moz-box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    .square-button-md {
+        .ms-loader {
+            > div{
+                border-top-color: rgba(7, 138, 163, 0.2);
+                border-right-color: rgba(7, 138, 163, 0.2);
+                border-bottom-color: rgba(7, 138, 163, 0.2);
+                border-left-color: #078aa3;
+            }
+        }
+    }
+}
+
+.MapSearchBar .input-group-addon{
+    background-color: #f2f2f2 !important;
+}
+
+#mapstore-navbar .navbar-dx .search-result-list {
+	top: $square-btn-size + $padding-left-square;
+}
+
+.navbar-dx .MapSearchBar .input-group{
+    background-color: #ffffff;
+    border-radius: 0;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    position: relative;
+    -webkit-box-shadow: unset;
+    box-shadow: unset;
+    flex: 1 1 0%;
+    margin-right: 8px;
+    display: table;
+    border-collapse: separate;
+}
+.navbar-dx .MapSearchBar .advanced-search-panel,
+.navbar-dx.shadow {
+	-webkit-box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+	-moz-box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+	box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+#mapstore-navbar #helpbadge-null {
+	position: absolute;
+	left: -10px;
+	bottom: -8px;
+	z-index: 1;
+}
+@media (max-width: 768px ) {
+	#mapstore-navbar .search-toggle {
+		display: inline-block;
+	}
+
+	#mapstore-navbar .MapSearchBar {
+		width: 400px;
+		top: $square-btn-size;
+		left: auto;
+	}
+
+	#mapstore-navbar .search-result-list {
+		top: 85px;
+		left: auto;
+		width: 400px;
+	}
+}
+/* Small devices (tablets, 768px and up) */
+@media (max-width: 768px ) {
+	#mapstore-navbar .search-toggle {
+		display: inline-block;
+	}
+
+	#mapstore-navbar .navbar-dx .MapSearchBar {
+		position: fixed;
+		left: 1px;
+		right: 1px;
+		top: $square-btn-size;
+		width: auto;
+	}
+
+	#mapstore-navbar .navbar-dx .MapSearchBar .input-group {
+		width: 100%;
+	}
+
+	#mapstore-navbar .navbar-dx .search-result-list {
+		position: fixed;
+		left: 15px;
+		right: 15px;
+		top: 105px;
+		width: 95%;
+	}
+}
+/* Medium devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+	#mapstore-navbar .MapSearchBar {
+		width: 500px;
+		right: auto;
+	}
+
+	#mapstore-navbar .search-result-list {
+		width: 500px;
+		right: auto;
+	}
+}
+/* Large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+	#mapstore-navbar .MapSearchBar {
+		width: 500px;
+		position: absolute;
+	}
+
+	#mapstore-navbar .search-result-list {
+		width: 500px;
+		right: auto;
+	}
+}
+
+#mapstore-navbar .form-group {
+	margin-bottom: 0;
+}
+
+#mapstore-navbar .search-result-list {
+	background-color: $ms2-color-background;
+}
+
+
+.MapSearchBar .input-group {
+    background-color: $ms2-color-background;
+    .searchInput {
+        border: none;
+        outline: none !important;
+        flex: 1;
+        height: 100%;
+        position: relative;
+        min-height: 52px;
+        align-items: center;
+    }
+    .search-select {
+        display: flex;
+        flex: 1;
+        height: 100%;
+        position: relative;
+        min-height: 52px;
+        align-items: center;
+    }
+    .coordinateEditor {
+        width: 75%;
+        align-items: center;
+        box-sizing: border-box;
+        margin: 6px 0 !important;
+        display: flex;
+        flex: 1 1 0%;
+        justify-content: space-between;
+        padding: 0 6px;
+
+        .entryRow {
+            margin-left: unset;
+            margin-right: unset;
+            padding: 5px;
+            flex: 1 1 0%;
+            .coordinateLabel {
+                margin-top: 9px;
+            }
+            .form-group{
+                width: 100%;
+            }
+            input {
+                font-family: inherit;
+                float: unset;
+            }
+            .degrees, .minutes {
+                display: flex;
+                flex: 1;
+                min-width: 45px;
+            }
+            .seconds {
+                min-width: 80px;
+                display: flex;
+                flex: 1;
+            }
+            .direction-select select.form-control {
+                min-width: 55px !important;
+                display: flex;
+                flex: 1;
+            }
+        }
+    }
+    // search toolbar
+    .search-toolbar-options {
+        .magnifying-glass {
+            pointer-events: none;
+            &.clickable {
+                pointer-events: auto
+            }
+        }
+        //width: 25%;
+        padding-right: 4px;
+        .dropdown-menu > .active > a,
+        .dropdown-menu > .active > a .glyphicon {
+          &,
+          &:hover,
+          &:focus {
+            color: $dropdown-link-active-color;
+            text-decoration: none;
+            outline: 0;
+            background-color: $dropdown-link-active-bg;
+          }
+        }
+        .btn-group-menu-options, .btn-group-menu-options-format {
+            //position: absolute;
+            //top: 13px;
+            //right: 5px;
+            //display: block;
+            [disabled]{
+                background-color: $ms2-color-background;
+                opacity: 0.75;
+            }
+            &.btn-group {
+                .btn-danger {
+                    background-color: $ms2-color-background;
+                    color: $ms2-color-danger;
+                }
+            }
+        }
+        .btn-group-menu-options-format {
+            top: 60px;
+
+        }
+    }
+}
+
+.MapSearchBar {
+    z-index: 1
+}
+
+.advanced-search-panel {
+    position: absolute;
+    width: 100%;
+    border-radius: 4px;
+    background-color: $ms2-color-background;
+    padding: 8px;
+
+    .advanced-search-title-area {
+        display: flex;
+
+        h5 {
+            flex-grow: 1;
+        }
+    }
+
+    .advanced-search-context {
+        h5 {
+            font-weight: bold;
+        }
+        .Select {
+            .Select-option.is-selected {
+                background-color: $ms2-color-background
+            }
+        }
+    }
+}
+
+#map-search-bar{
+    .aeronautical .react-numeric-input{
+        width: 100%;
+    }
+}

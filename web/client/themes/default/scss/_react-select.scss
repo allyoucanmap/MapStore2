@@ -1,0 +1,197 @@
+@use 'sass:map';
+
+@mixin react-select-theme($theme-vars) {
+    .Select.is-disabled>.Select-control {
+        @include background-color-var(map.get($theme-vars, 'disabled-bg'), --ms-disabled-bg);
+    }
+
+    .Select.is-disabled>.Select-control:hover {
+        box-shadow: none;
+    }
+
+    .Select.is-open>.Select-control {
+        @include color-var(map.get($theme-vars, 'body-color'), --ms-body-color);
+        @include background-color-var(map.get($theme-vars, 'body-bg'), --ms-body-bg);
+        @include border-color-var(map.get($theme-vars, 'body-border-color'), --ms-body-border-color);
+    }
+
+    .Select.is-open>.Select-control .Select-arrow {
+        border-bottom-color: map.get($theme-vars, 'body-color');
+        border-bottom-color: var(map.get($theme-vars, 'body-color'), --ms-body-color);
+    }
+
+    .Select.is-focused>.Select-control {
+        @include background-color-var(map.get($theme-vars, 'body-bg'), --ms-body-bg);
+    }
+
+    .Select.is-focused:not(.is-open)>.Select-control {
+        box-shadow: none;
+        outline: 2px solid map.get($theme-vars, 'focus-color');
+        @include outline-color-var(map.get($theme-vars, 'focus-color'), --ms-focus-color);
+        @include border-color-var(map.get($theme-vars, 'focus-color'), --ms-focus-color);
+        @include background-color-var(map.get($theme-vars, 'body-bg'), --ms-body-bg);
+    }
+
+    .Select.has-value.Select--single>.Select-control .Select-value .Select-value-label,
+    .Select.has-value.is-pseudo-focused.Select--single>.Select-control .Select-value .Select-value-label {
+        @include color-var(map.get($theme-vars, 'body-color'), --ms-body-color);
+    }
+
+    .Select.has-value.Select--single>.Select-control .Select-value a.Select-value-label:hover,
+    .Select.has-value.is-pseudo-focused.Select--single>.Select-control .Select-value a.Select-value-label:hover,
+    .Select.has-value.Select--single>.Select-control .Select-value a.Select-value-label:focus,
+    .Select.has-value.is-pseudo-focused.Select--single>.Select-control .Select-value a.Select-value-label:focus {
+        @include color-var(map.get($theme-vars, 'body-color'), --ms-body-color);
+    }
+
+    .Select.has-value.Select--single>.Select-control .Select-value a.Select-value-label:focus,
+    .Select.has-value.is-pseudo-focused.Select--single>.Select-control .Select-value a.Select-value-label:focus {
+        @include background-color-var(map.get($theme-vars, 'body-bg'), --ms-body-bg);
+    }
+
+    .Select.is-open .Select-arrow,
+    .Select .Select-arrow-zone:hover>.Select-arrow {
+        border-top-color: map.get($theme-vars, 'body-color');
+        border-top-color: var(map.get($theme-vars, 'body-color'), --ms-body-color);
+    }
+
+    .Select-control {
+        @include color-var(map.get($theme-vars, 'body-color'), --ms-body-color);
+        @include background-color-var(map.get($theme-vars, 'body-bg'), --ms-body-bg);
+        @include border-color-var(map.get($theme-vars, 'body-border-color'), --ms-body-border-color);
+    }
+
+    .Select-control:hover {
+        box-shadow: none;
+    }
+
+    .Select-control .Select-input:focus {
+        @include background-color-var(map.get($theme-vars, 'body-bg'), --ms-body-bg);
+    }
+
+    .Select-placeholder,
+    .Select--single>.Select-control .Select-value {
+        @include color-var(map.get($theme-vars, 'placeholder-color'), --ms-placeholder-color);
+    }
+
+    .Select-loading {
+        @include border-color-var(map.get($theme-vars, 'body-border-color'), --ms-body-border-color);
+        border-right-color: map.get($theme-vars, 'body-color');
+        border-right-color: var(map.get($theme-vars, 'body-color'), --ms-body-color);
+    }
+
+    .Select-clear-zone {
+        @include color-var(map.get($theme-vars, 'body-color'), --ms-body-color);
+    }
+
+    .Select-clear-zone:hover {
+        @include color-var(map.get($theme-vars, 'danger-color'), --ms-danger-color);
+    }
+
+    .Select-arrow {
+        border-top-color: map.get($theme-vars, 'body-color');
+        border-top-color: var(map.get($theme-vars, 'body-color'), --ms-body-color);
+    }
+
+    .Select-menu-outer {
+        @include color-var(map.get($theme-vars, 'body-color'), --ms-body-color);
+        @include background-color-var(map.get($theme-vars, 'body-bg'), --ms-body-bg);
+        @include border-color-var(map.get($theme-vars, 'body-border-color'), --ms-body-border-color);
+    }
+
+    .Select-option {
+        @include color-var(map.get($theme-vars, 'body-color'), --ms-body-color);
+        @include background-color-var(map.get($theme-vars, 'body-bg'), --ms-body-bg);
+    }
+
+    .Select-option.is-selected {
+        @include color-var(map.get($theme-vars, 'tag-active-color'), --ms-tag-active-color);
+        @include background-color-var(map.get($theme-vars, 'tag-active-bg'), --ms-tag-active-bg);
+    }
+
+    .Select-option.is-focused {
+        @include color-var(map.get($theme-vars, 'tag-hover-color'), --ms-tag-hover-color);
+        @include background-color-var(map.get($theme-vars, 'tag-hover-bg'), --ms-tag-hover-bg);
+    }
+
+    .Select-option.is-disabled {
+        @include color-var(map.get($theme-vars, 'disabled-color'), --ms-disabled-color);
+    }
+
+    .Select-noresults {
+        @include color-var(map.get($theme-vars, 'placeholder-color'), --ms-placeholder-color);
+    }
+
+    .Select--multi .Select-value {
+        @include color-var(map.get($theme-vars, 'tag-active-color'), --ms-tag-active-color);
+        @include background-color-var(map.get($theme-vars, 'tag-active-bg'), --ms-tag-active-bg);
+        border-color: transparent;
+    }
+
+    .Select--multi a.Select-value-label {
+        @include color-var(map.get($theme-vars, 'link-color'), --ms-link-color);
+    }
+
+    .Select--multi .Select-value-icon {
+        @include border-color-var(map.get($theme-vars, 'tag-active-color'), --ms-tag-active-color);
+    }
+
+    .Select--multi .Select-value-icon:hover,
+    .Select--multi .Select-value-icon:focus {
+        @include color-var(map.get($theme-vars, 'tag-hover-color'), --ms-tag-hover-color);
+        @include background-color-var(map.get($theme-vars, 'tag-hover-bg'), --ms-tag-hover-bg);
+    }
+
+    .Select--multi .Select-value-icon:active {
+        @include background-color-var(map.get($theme-vars, 'tag-active-bg'), --ms-tag-active-bg);
+    }
+
+    .Select--multi.Select--rtl .Select-value-icon {
+        @include border-color-var(map.get($theme-vars, 'tag-active-color'), --ms-tag-active-color);
+    }
+
+    .Select--multi.is-disabled .Select-value {
+        @include background-color-var(map.get($theme-vars, 'disabled-bg'), --ms-disabled-bg);
+        @include border-color-var(map.get($theme-vars, 'disabled-color'), --ms-disabled-color);
+        @include color-var(map.get($theme-vars, 'disabled-color'), --ms-disabled-color);
+    }
+
+    .Select--multi.is-disabled .Select-value-icon {
+        @include border-color-var(map.get($theme-vars, 'disabled-color'), --ms-disabled-color);
+    }
+
+    .Select--multi.is-disabled .Select-value-icon:hover,
+    .Select--multi.is-disabled .Select-value-icon:focus,
+    .Select--multi.is-disabled .Select-value-icon:active {
+        @include background-color-var(map.get($theme-vars, 'disabled-bg'), --ms-disabled-bg);
+    }
+}
+.test {
+    color: #000000;
+}
+#container {
+    @import "~react-select/dist/react-select.css";
+    @include react-select-theme((
+        'body-color': $ms2-color-text,
+        'body-bg': $ms2-color-background,
+        'body-border-color': $ms2-color-shade-lighter,
+        'placeholder-color':  $ms2-color-text-placeholder,
+        'disabled-color': $ms2-color-shade-lighter,
+        'disabled-bg': $ms2-color-disabled,
+        'danger-color': $ms2-color-danger,
+        'link-color': $ms2-color-primary,
+        'focus-color': rgba($ms2-color-primary, 0.4),
+        'tag-hover-color': $ms2-color-text,
+        'tag-hover-bg': rgba($ms2-color-primary, 0.1),
+        'tag-active-color': $ms2-color-text,
+        'tag-active-bg':  rgba($ms2-color-primary, 0.25)
+    ));
+    .Select {
+        * {
+            font-size: $font-size-base;
+        }
+        &.Select--multi .Select-value {
+            margin-top: 3px;
+        }
+    }
+}

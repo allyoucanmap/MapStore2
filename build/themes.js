@@ -12,7 +12,7 @@ const themeEntries = (() => {
     return files.filter((f) => f.lastIndexOf('/') === f.length - 1).reduce((res, curr) => {
         var finalRes = res || {};
         var themeName = path.basename(curr, path.extname(curr));
-        finalRes["themes/" + themeName] = path.join(__dirname, "..", "web", "client", "themes", `${themeName}`, "theme.less");
+        finalRes["themes/" + themeName] = path.join(__dirname, "..", "web", "client", "themes", `${themeName}`, "theme.scss");
         return finalRes;
     }, {});
 

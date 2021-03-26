@@ -1,0 +1,20 @@
+
+@mixin color-var($fallback, $color) {
+    color: $fallback;
+    color: var($color, $fallback);
+}
+
+@mixin background-color-var($fallback, $color) {
+    background-color: $fallback;
+    background-color: var($color, $fallback);
+}
+
+@mixin border-color-var($fallback, $color) {
+    border-color: $fallback;
+    border-color: var($color, $fallback);
+}
+
+@mixin outline-color-var($fallback, $color) {
+    outline-color: $fallback;
+    outline-color: var($color, $fallback);
+}
