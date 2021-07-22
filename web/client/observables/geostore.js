@@ -159,11 +159,11 @@ const updateOtherLinkedResourcesPermissions = (id, linkedResources, permission, 
  * @param {object} API the API to use, default GeoStoreDAO
  * @return an observable that emits the resource
  */
-export const getResource = (id, { includeAttributes = true, withData = true, withPermissions = false } = {}, API = GeoStoreDAO) =>
+export const getResource = (id, { includeAttributes = true, withData = true, withPermissions = false, baseURL } = {}, API = GeoStoreDAO) =>
     Observable.forkJoin([
         Observable.defer(() => API.getShortResource(id)).pluck("ShortResource"),
         ...(includeAttributes ? [ Observable.defer(() => API.getResourceAttributes(id))] : []),
-        ...(withData ? [Observable.defer(() =>API.getData(id))] : []),
+        ...(withData ? [Observable.defer(() =>API.getData(id, { baseURL }))] : []),
         ...(withPermissions ? [Observable.defer( () => API.getResourcePermissions(id, {}, true))] : [])
     ]).map(([resource, attributes, data, permissions]) => ({
         ...resource,

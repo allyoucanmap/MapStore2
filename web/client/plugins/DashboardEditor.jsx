@@ -110,7 +110,8 @@ class DashboardEditorComponent extends React.Component {
         src: PropTypes.string,
         style: PropTypes.object,
         pluginCfg: PropTypes.object,
-        catalog: PropTypes.object
+        catalog: PropTypes.object,
+        disableEmptyMap: PropTypes.bool
     };
     static defaultProps = {
         id: "dashboard-editor",
@@ -138,7 +139,7 @@ class DashboardEditorComponent extends React.Component {
         const defaultServices = this.props.pluginCfg.services || {};
 
         return this.props.editing
-            ? <div className="dashboard-editor de-builder"><Builder defaultSelectedService={defaultSelectedService} defaultServices={defaultServices} enabled={this.props.editing} onClose={() => this.props.setEditing(false)} catalog={this.props.catalog} /></div>
+            ? <div className="dashboard-editor de-builder"><Builder disableEmptyMap={this.props.disableEmptyMap} defaultSelectedService={defaultSelectedService} defaultServices={defaultServices} enabled={this.props.editing} onClose={() => this.props.setEditing(false)} catalog={this.props.catalog} /></div>
             : (<div className="ms-vertical-toolbar dashboard-editor de-toolbar" id={this.props.id}>
                 <EditorToolbar transitionProps={false} btnGroupProps={{ vertical: true }} btnDefaultProps={{ tooltipPosition: 'right', className: 'square-button-md', bsStyle: 'primary' }} />
                 {this.props.loading ? <LoadingSpinner style={{ position: 'fixed', bottom: 0}} /> : null}
