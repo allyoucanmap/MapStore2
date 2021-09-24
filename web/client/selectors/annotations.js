@@ -85,7 +85,8 @@ export const annotationsInfoSelector = (state) => (assign({}, {
     unsavedStyle: unsavedStyleSelector(state),
     symbolList: symbolListSelector(state),
     showAgain: showAgainSelector(state),
-    showPopupWarning: showPopupWarningSelector(state)
+    showPopupWarning: showPopupWarningSelector(state),
+    disableToolbar: !state?.annotations
 }) );
 
 export const annotationsSelector = (state) => ({

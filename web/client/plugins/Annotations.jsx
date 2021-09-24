@@ -18,7 +18,6 @@ import Dock from 'react-dock';
 import { createPlugin, connect } from '../utils/PluginsUtils';
 import Message from '../components/I18N/Message';
 import { on, toggleControl } from '../actions/controls';
-import AnnotationsEditorComp from '../components/mapcontrols/annotations/AnnotationsEditor';
 import AnnotationsComp from '../components/mapcontrols/annotations/Annotations';
 import annotationsReducer from '../reducers/annotations';
 import {
@@ -26,124 +25,29 @@ import {
     confirmRemoveAnnotation,
     editAnnotation,
     newAnnotation,
-    removeAnnotation,
     cancelEditAnnotation,
-    saveAnnotation,
-    toggleAdd,
-    validationError,
-    removeAnnotationGeometry,
-    toggleStyle,
-    setStyle,
     restoreStyle,
     highlight,
     cleanHighlight,
     showAnnotation,
-    cancelShowAnnotation,
     filterAnnotations,
     closeAnnotations,
     cancelCloseAnnotations,
     confirmCloseAnnotations,
-    startDrawing,
-    setUnsavedChanges,
     toggleUnsavedChangesModal,
-    changedProperties,
-    setUnsavedStyle,
     toggleUnsavedStyleModal,
-    addText,
     download,
     loadAnnotations,
-    changeSelected,
-    resetCoordEditor,
-    changeRadius,
-    changeText,
     toggleUnsavedGeometryModal,
-    addNewFeature,
-    setInvalidSelected,
-    highlightPoint,
-    confirmDeleteFeature,
-    toggleDeleteFtModal,
-    changeFormat,
-    openEditor,
-    updateSymbols,
-    setErrorSymbol,
     toggleVisibilityAnnotation,
-    loadDefaultStyles,
-    changeGeometryTitle,
-    filterMarker,
-    toggleShowAgain,
-    hideMeasureWarning,
-    initPlugin,
-    geometryHighlight,
-    unSelectFeature
+    loadDefaultStyles
 } from '../actions/annotations';
 
 import annotationsEpics from '../epics/annotations';
-import { selectFeatures } from '../actions/draw';
-import { setAnnotationMeasurement } from '../actions/measurement';
 import { zoomToExtent } from '../actions/map';
-import { annotationsInfoSelector, annotationsListSelector } from '../selectors/annotations';
+import { annotationsListSelector } from '../selectors/annotations';
 import { mapLayoutValuesSelector } from '../selectors/maplayout';
-const commonEditorActions = {
-    onUpdateSymbols: updateSymbols,
-    onSetErrorSymbol: setErrorSymbol,
-    onEdit: editAnnotation,
-    onCancelEdit: cancelEditAnnotation,
-    onChangeFormat: changeFormat,
-    onConfirmDeleteFeature: confirmDeleteFeature,
-    onCleanHighlight: cleanHighlight,
-    onHighlightPoint: highlightPoint,
-    onHighlight: highlight,
-    onError: validationError,
-    onSave: saveAnnotation,
-    onRemove: removeAnnotation,
-    onAddGeometry: toggleAdd,
-    onAddText: addText,
-    onSetUnsavedChanges: setUnsavedChanges,
-    onSetUnsavedStyle: setUnsavedStyle,
-    onChangeProperties: changedProperties,
-    onToggleDeleteFtModal: toggleDeleteFtModal,
-    onToggleUnsavedChangesModal: toggleUnsavedChangesModal,
-    onToggleUnsavedGeometryModal: toggleUnsavedGeometryModal,
-    onToggleUnsavedStyleModal: toggleUnsavedStyleModal,
-    onAddNewFeature: addNewFeature,
-    onResetCoordEditor: resetCoordEditor,
-    onStyleGeometry: toggleStyle,
-    onCancelStyle: restoreStyle,
-    onChangeSelected: changeSelected,
-    onSaveStyle: toggleStyle,
-    onSetStyle: setStyle,
-    onStartDrawing: startDrawing,
-    onDeleteGeometry: removeAnnotationGeometry,
-    onZoom: zoomToExtent,
-    onSelectFeature: selectFeatures,
-    onChangeRadius: changeRadius,
-    onSetInvalidSelected: setInvalidSelected,
-    onChangeText: changeText,
-    onChangeGeometryTitle: changeGeometryTitle,
-    onCancelRemove: cancelRemoveAnnotation,
-    onCancelClose: cancelCloseAnnotations,
-    onConfirmClose: confirmCloseAnnotations,
-    onConfirmRemove: confirmRemoveAnnotation,
-    onDownload: download,
-    onFilterMarker: filterMarker,
-    onGeometryHighlight: geometryHighlight,
-    onSetAnnotationMeasurement: setAnnotationMeasurement,
-    onHideMeasureWarning: hideMeasureWarning,
-    onToggleShowAgain: toggleShowAgain,
-    onInitPlugin: initPlugin,
-    onUnSelectFeature: unSelectFeature
-};
-const AnnotationsEditor = connect(annotationsInfoSelector,
-    {
-        onCancel: cancelShowAnnotation,
-        ...commonEditorActions
-    })(AnnotationsEditorComp);
-
-const AnnotationsInfoViewer = connect(annotationsInfoSelector,
-    {
-        ...commonEditorActions,
-        onEdit: openEditor
-    })(AnnotationsEditorComp);
+import AnnotationsEditor from './identify/AnnotationsEditor';
 
 const panelSelector = createSelector([annotationsListSelector], (list) => ({
     ...list,
@@ -319,5 +223,5 @@ export default createPlugin('Annotations', {
     reducers: {
         annotations: annotationsReducer
     },
-    epics: annotationsEpics(AnnotationsInfoViewer)
+    epics: annotationsEpics
 });
