@@ -14,7 +14,7 @@ export default ({response, layer, rowViewer}) => {
     return (
         <div className="mapstore-json-viewer">
             {(response?.features || []).map((feature, i) => {
-                return <RowViewer key={i} feature={feature} layer={layer} rowViewer={rowViewer}/>;
+                return <RowViewer key={i} feature={feature} layer={layer} component={rowViewer}/>;
             })}
         </div>
     );

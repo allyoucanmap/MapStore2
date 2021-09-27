@@ -6,13 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {isString} from 'lodash';
+import { isString, capitalize } from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { containsHTML } from '../../../../../utils/StringUtils';
 
-import {containsHTML} from '../../../../../utils/StringUtils';
-
-const alwaysExcluded = ["exclude", "titleStyle", "listStyle", "componentStyle", "title", "feature"];
+const alwaysExcluded = ['title'];
 
 class PropertiesViewer extends React.Component {
     static displayName = 'PropertiesViewer';
@@ -20,9 +19,11 @@ class PropertiesViewer extends React.Component {
     static propTypes = {
         title: PropTypes.string,
         exclude: PropTypes.array,
+        include: PropTypes.array,
         titleStyle: PropTypes.object,
         listStyle: PropTypes.object,
-        componentStyle: PropTypes.object
+        componentStyle: PropTypes.object,
+        properties: PropTypes.object
     };
 
     static defaultProps = {
@@ -33,17 +34,17 @@ class PropertiesViewer extends React.Component {
     };
 
     getBodyItems = () => {
-        return Object.keys(this.props)
-            .filter(this.toExclude)
+        return Object.keys(this.props.properties || {})
+            .filter(this.props?.include?.length > 0 ? this.toInclude : this.toExclude)
             .map((key) => {
-                const val = this.renderProperty(this.props[key]);
+                const val = this.renderProperty(this.props.properties[key]);
                 return (
-                    <tr
+                    <li
                         key={key}
                         style={this.props.listStyle}>
-                        <td>{key}</td>
-                        <td>{containsHTML(val) ? <span dangerouslySetInnerHTML={{__html: val}}/> : val}</td>
-                    </tr>);
+                        <div><strong>{capitalize(key)}</strong></div>
+                        {containsHTML(val) ? <div dangerouslySetInnerHTML={{__html: val}}/> : <div>{val}</div>}
+                    </li>);
             });
     };
 
@@ -52,27 +53,26 @@ class PropertiesViewer extends React.Component {
             return null;
         }
         return (
-            <thead
+            <div
                 key={this.props.title}
                 style={this.props.titleStyle}
                 className="ms-properties-viewer-title">
-                <tr>
-                    <th colSpan="2" >{this.props.title}</th>
-                </tr>
-            </thead>
+                <div><strong>Title</strong></div>
+                <div>{this.props.title}</div>
+            </div>
         );
     };
 
     renderBody = () => {
-        var items = this.getBodyItems();
+        const items = this.getBodyItems();
         if (items.length === 0) {
             return null;
         }
         return (
-            <tbody
+            <ul
                 className="ms-properties-viewer-body">
                 {items}
-            </tbody>
+            </ul>
         );
     };
 
@@ -85,12 +85,12 @@ class PropertiesViewer extends React.Component {
 
     render() {
         return (
-            <table
+            <div
                 className="ms-properties-viewer"
                 style={this.props.componentStyle}>
                 {this.renderHeader()}
                 {this.renderBody()}
-            </table>
+            </div>
         );
     }
 
@@ -98,6 +98,11 @@ class PropertiesViewer extends React.Component {
         return alwaysExcluded
             .concat(this.props.exclude)
             .indexOf(propName) === -1;
+    };
+
+    toInclude = () => {
+        return this.props.include
+            .indexOf(propName) !== -1;
     };
 }
 

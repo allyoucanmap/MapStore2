@@ -13,14 +13,16 @@ import { getRowViewer } from '../../../../../utils/MapInfoUtils';
 
 function RowViewer({
     layer,
-    rowViewer,
+    component,
     feature
 }) {
     // the name of the registered viewer could be associate by a string in the rowViewer or id
     const layerRowViewerProperty = layer?.rowViewer || layer?.layerId;
+    const excludeProperties = layer?.excludeInfoProperties ? layer?.excludeInfoProperties : ['bbox'];
+    const includeProperties = layer?.includeInfoProperties;
     const layerRowViewer = layerRowViewerProperty && (isString(layerRowViewerProperty) ? getRowViewer(layerRowViewerProperty) : layerRowViewerProperty);
-    const Row = layerRowViewer || rowViewer || PropertiesViewer;
-    return <Row feature={feature} title={feature.id + ''} exclude={['bbox']} {...feature.properties}/>;
+    const Row = layerRowViewer || component || PropertiesViewer;
+    return <Row feature={feature} title={feature.id + ''} exclude={excludeProperties} include={includeProperties} {...feature.properties} properties={feature.properties}/>;
 }
 
 export default RowViewer;

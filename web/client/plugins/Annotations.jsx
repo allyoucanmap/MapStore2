@@ -47,7 +47,11 @@ import annotationsEpics from '../epics/annotations';
 import { zoomToExtent } from '../actions/map';
 import { annotationsListSelector } from '../selectors/annotations';
 import { mapLayoutValuesSelector } from '../selectors/maplayout';
-import AnnotationsEditor from './identify/AnnotationsEditor';
+import AnnotationsEditor, { AnnotationsInfoViewer } from './identify/AnnotationsEditor';
+import { ANNOTATIONS } from '../utils/AnnotationsUtils';
+import { registerRowViewer } from '../utils/MapInfoUtils';
+// Register all needed custom row viewers
+registerRowViewer(ANNOTATIONS, AnnotationsInfoViewer);
 
 const panelSelector = createSelector([annotationsListSelector], (list) => ({
     ...list,

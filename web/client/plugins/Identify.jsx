@@ -70,12 +70,10 @@ import {
 import { mapLayoutValuesSelector } from '../selectors/maplayout';
 import { isCesium, mapTypeSelector } from '../selectors/maptype';
 import ConfigUtils from '../utils/ConfigUtils';
-import { getDefaultInfoFormatValue, getValidator, registerRowViewer } from '../utils/MapInfoUtils';
+import { getDefaultInfoFormatValue, getValidator } from '../utils/MapInfoUtils';
 import getFeatureButtons from './identify/featureButtons';
 import getToolButtons from './identify/toolButtons';
 import Message from './locale/Message';
-import { ANNOTATIONS } from '../utils/AnnotationsUtils';
-import { AnnotationsInfoViewer } from './identify/AnnotationsEditor';
 
 const selector = createStructuredSelector({
     enabled: (state) => mapInfoEnabledSelector(state) || state.controls && state.controls.info && state.controls.info.enabled || false,
@@ -118,8 +116,7 @@ const DefaultViewer = compose(
     loadingState(({ loaded }) => isUndefined(loaded))
 )(DefaultViewerComp);
 
-// Register all needed custom row viewers
-registerRowViewer(ANNOTATIONS, AnnotationsInfoViewer);
+
 
 const identifyDefaultProps = defaultProps({
     formatCoord: "decimal",
