@@ -149,7 +149,10 @@ const FeatureDock = (props = {
                     className="feature-grid-container"
                     key={"feature-grid-container"}
                     height={height - (62 + 32)}
-                    header={getHeader()}
+                    header={getHeader({
+                        hideCloseButton: props.hideCloseButton,
+                        hideLayerTitle: props.hideLayerTitle
+                    })}
                     columns={getPanels(props.tools)}
                     footer={getFooter(props)}>
                     {getDialogs(props.tools)}
