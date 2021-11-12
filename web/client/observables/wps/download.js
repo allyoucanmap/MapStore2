@@ -75,7 +75,7 @@ export const downloadEstimatorXML = ({layerName, ROI, roiCRS, dataFilter, target
  * @param {string} [downloadOptions.roiCRS] CRS of coordinates of geometry data specified in downloadOptions.ROI
  * @param {boolean} [downloadOptions.asynchronous] if true gs:Download will run asynchronously
  * @param {boolean} [downloadOptions.outputAsReference] instructs gs:Download process to return a link where output file can be downloaded instead of the file itself
- * @param {string} [downloadOptions.resultOutput] MIME type of the output (application/zip by default)
+ * @param {string} [downloadOptions.resultOutput] MIME type of the output (it uses outputFormat by default)
  * @param {object} [downloadOptions.writeParameters] object that describes write parameters to be added in 'writeParameters' Input (For more info see {@link https://docs.geoserver.org/stable/en/user/community/wps-download/rawDownload.html#writing-parameters|GeoServer documentation})
  */
 export const downloadXML = ({layerName, dataFilter, outputFormat, targetCRS, roiCRS, ROI, cropToROI, asynchronous, outputAsReference, resultOutput, writeParameters}) => executeProcessXML(
@@ -91,10 +91,12 @@ export const downloadXML = ({layerName, dataFilter, outputFormat, targetCRS, roi
         ...(writeParameters && keys(writeParameters).length > 0 ? [writingParametersData(toPairs(writeParameters).map(([key, value]) => downloadParameter(key, value)).join(''))] : [])
     ],
     responseForm(!asynchronous ?
-        rawDataOutput('result', resultOutput) :
+        // ensure that the output format matches the format selected
+        // by default geoserver uses tiff that could cause issue
+        rawDataOutput('result', resultOutput || outputFormat) :
         responseDocument(true, true, outputAsReference ?
-            processOutput(resultOutput, true, 'result') :
-            rawDataOutput('result', resultOutput)
+            processOutput(resultOutput || outputFormat, true, 'result') :
+            rawDataOutput('result', resultOutput || outputFormat)
         )
     )
 );
