@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, cloneElement } from 'react';
 import { createPortal } from 'react-dom';
+import clamp from 'lodash/clamp';
 import { getConfigProp } from '../../utils/ConfigUtils';
 import isFunction from 'lodash/isFunction';
 
@@ -93,17 +94,8 @@ export function ControlledPopover({
                     height: swatchHeight
                 } = swatchBoundingClientRect;
 
-                const swatchCenter = [
-                    swatchLeft + swatchWidth / 2,
-                    swatchTop + swatchHeight / 2
-                ];
-
-                const isInsideWidth = (swatchCenter[0] - overlayLeft) > (popoverWidth / 2 + margin)
-                    && (overlayLeft + overlayWidth) - swatchCenter[0] > (popoverWidth / 2 + margin);
-
-                const isInsideHeight = (swatchCenter[1] - overlayTop) > (popoverHeight / 2 + margin)
-                    && (overlayTop + overlayHeight) - swatchCenter[1] > (popoverHeight / 2 + margin);
-
+                const isInsideWidth = (popoverWidth + margin * 2) < overlayWidth;
+                const isInsideHeight = (popoverHeight + margin * 2) < overlayHeight;
                 const placements = {
                     top: {
                         filter: () => isInsideWidth
@@ -115,7 +107,7 @@ export function ControlledPopover({
                                 picker: {
                                     position: 'absolute',
                                     top,
-                                    left
+                                    left: clamp(left, overlayLeft + margin, overlayLeft + overlayWidth - popoverWidth - margin)
                                 },
                                 overlay: {},
                                 arrow: {
@@ -135,7 +127,7 @@ export function ControlledPopover({
                             return {
                                 picker: {
                                     position: 'absolute',
-                                    top,
+                                    top: clamp(top, overlayTop + margin, overlayTop + overlayHeight - popoverHeight - margin),
                                     left
                                 },
                                 overlay: {},
@@ -157,7 +149,7 @@ export function ControlledPopover({
                                 picker: {
                                     position: 'absolute',
                                     top,
-                                    left
+                                    left: clamp(left, overlayLeft + margin, overlayLeft + overlayWidth - popoverWidth - margin)
                                 },
                                 overlay: {},
                                 arrow: {
@@ -177,7 +169,7 @@ export function ControlledPopover({
                             return {
                                 picker: {
                                     position: 'absolute',
-                                    top,
+                                    top: clamp(top, overlayTop + margin, overlayTop + overlayHeight - popoverHeight - margin),
                                     left
                                 },
                                 overlay: {},

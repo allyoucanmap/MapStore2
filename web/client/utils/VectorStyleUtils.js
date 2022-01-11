@@ -11,11 +11,11 @@ import { isNil } from 'lodash';
 import { set } from './ImmutableUtils';
 import { colorToRgbaStr } from './ColorUtils';
 import axios from 'axios';
-import SLDParser from '@geosolutions/geostyler-sld-parser';
-import GeoCSSParser from '@geosolutions/geostyler-geocss-parser';
+
 const StyleParsers = {
-    sld: new SLDParser(),
-    css: new GeoCSSParser()
+    sld: () => import('@geosolutions/geostyler-sld-parser').then(mod => new mod.default),
+    css: () => import('@geosolutions/geostyler-geocss-parser').then(mod => new mod.default),
+    openlayers: () =>  import('geostyler-openlayers-parser').then(mod => new mod.default)
 };
 
 /**
@@ -334,5 +334,6 @@ export const createStylesAsync = (styles = []) => {
 };
 
 export const getStyleParser = (format = 'sld') => {
-    return StyleParsers[format];
+    // import parser libraries dynamically
+    return StyleParsers[format]();
 };
