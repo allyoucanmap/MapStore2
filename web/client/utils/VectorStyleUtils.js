@@ -20,7 +20,8 @@ function initParserLib(mod) {
 const StyleParsers = {
     sld: () => import('@geosolutions/geostyler-sld-parser').then(initParserLib),
     css: () => import('@geosolutions/geostyler-geocss-parser').then(initParserLib),
-    openlayers: () =>  import('geostyler-openlayers-parser').then(initParserLib)
+    openlayers: () =>  import('geostyler-openlayers-parser').then(initParserLib),
+    tileset3d: () => import('./styleparser/Tileset3DParser').then(initParserLib)
 };
 
 /**

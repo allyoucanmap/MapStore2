@@ -225,7 +225,7 @@ class CesiumLayer extends React.Component {
         }
         // detached layers are layers that do not work through a provider
         // for this reason they cannot be added or removed from the map imageryProviders
-        if (this.layer.detached && this.layer?.remove) {
+        if (this.layer?.detached && this.layer?.remove) {
             this.layer.remove();
         }
     };

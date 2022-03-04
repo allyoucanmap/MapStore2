@@ -12,9 +12,10 @@ import 'codemirror/addon/selection/mark-selection';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint';
 import 'codemirror/mode/xml/xml';
+import 'codemirror/mode/javascript/javascript';
 
 import CM from 'codemirror/lib/codemirror';
-import { debounce, endsWith, isEqual, isFunction } from 'lodash';
+import { debounce, endsWith, isEqual, isFunction, isObject } from 'lodash';
 import assign from 'object-assign';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -63,7 +64,7 @@ class Editor extends React.Component {
     static propTypes = {
         mode: PropTypes.string,
         theme: PropTypes.string,
-        style: PropTypes.object,
+        style: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
         code: PropTypes.string,
         onChange: PropTypes.func,
         waitTime: PropTypes.number,
@@ -87,7 +88,11 @@ class Editor extends React.Component {
     state = {}
 
     UNSAFE_componentWillMount() {
-        this.setState({ code: this.props.code });
+        this.setState({
+            code: isObject(this.props.code)
+                ? JSON.stringify(this.props.code, null, 2) // if the code is JSON
+                : this.props.code
+        });
     }
 
     UNSAFE_componentWillUpdate(newProps) {

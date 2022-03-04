@@ -15,5 +15,6 @@ import './BingLayer';
 import './GraticuleLayer';
 import './OSMLayer';
 import './OverlayLayer';
+import './ThreeDimTileSetLayer';
 
 export default {};

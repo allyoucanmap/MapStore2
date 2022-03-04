@@ -1,0 +1,180 @@
+{
+    "version": 2,
+    "map": {
+        "center": {
+            "crs": "EPSG:4326",
+            "x": 8.91992936333572,
+            "y": 44.420120483422984
+        },
+        "maxExtent": [
+            -20037508.34,
+            -20037508.34,
+            20037508.34,
+            20037508.34
+        ],
+        "projection": "EPSG:900913",
+        "units": "m",
+        "zoom": 12,
+        "mapOptions": {},
+        "layers": [
+            {
+                "id": "mapnik__0",
+                "group": "background",
+                "source": "osm",
+                "name": "mapnik",
+                "title": "Open Street Map",
+                "type": "osm",
+                "visibility": false,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "undefined__1",
+                "group": "background",
+                "source": "ol",
+                "title": "Empty Background",
+                "type": "empty",
+                "visibility": true,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "undefined__2",
+                "title": "Cesium (error zoom)",
+                "type": "tileset3d",
+                "url": "https://geoportale.comune.genova.it/sites/default/files/field/image/Cesium/tileset.json",
+                "visibility": false,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "undefined__3",
+                "style": {
+                    "format": "tileset3d",
+                    "body": {
+                        "color": "color('#ff0000')"
+                    }
+                },
+                "title": "AA5 (styling)",
+                "type": "tileset3d",
+                "url": "https://geoportale.comune.genova.it/sites/default/files/field/image/aa5/tileset.json",
+                "visibility": true,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "undefined__4",
+                "title": "Genova3D (mesh)",
+                "type": "tileset3d",
+                "url": "https://www.cityexplorer3d.com/Genova3D/dataset/tileset.json",
+                "visibility": true,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "undefined__5",
+                "title": "LAS3930_4326_RGB (point cloud)",
+                "type": "tileset3d",
+                "url": "https://geoportale.comune.genova.it/sites/default/files/field/image/LAS3930_4326_RGB/tileset.json",
+                "visibility": false,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false
+            },
+            {
+                "id": "etopo:dtm_liguria_2017__6",
+                "format": "image/png",
+                "name": "liguria:dtm_liguria_2017",
+                "description": "DTM",
+                "title": "DTM Liguria",
+                "type": "wms",
+                "url": "http://localhost:8080/geoserver/wms",
+                "bbox": {
+                    "crs": "EPSG:4326",
+                    "bounds": {
+                        "minx": "-180.0",
+                        "miny": "-85.0",
+                        "maxx": "180.0",
+                        "maxy": "85.0"
+                    }
+                },
+                "visibility": true,
+                "singleTile": false,
+                "allowedSRS": {
+                    "EPSG:3785": true,
+                    "EPSG:3857": true,
+                    "EPSG:4269": true,
+                    "EPSG:4326": true,
+                    "EPSG:102113": true,
+                    "EPSG:900913": true
+                },
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "catalogURL": null,
+                "useForElevation": false,
+                "hidden": false,
+                "version": "1.3.0",
+                "params": {}
+            }
+        ],
+        "groups": [
+            {
+                "id": "Default",
+                "title": "Default",
+                "expanded": true
+            }
+        ],
+        "backgrounds": [],
+        "bookmark_search_config": {}
+    },
+    "catalogServices": {
+        "services": {
+            "local_geoserver": {
+                "url": "http://localhost:8080/geoserver/wms",
+                "type": "wms",
+                "title": "Local GeoServer",
+                "autoload": true,
+                "oldService": "local_geoserver",
+                "showTemplate": false,
+                "metadataTemplate": "",
+                "domainAliases": []
+            }
+        },
+        "selectedService": "local_geoserver"
+    },
+    "widgetsConfig": {
+        "layouts": {
+            "xxs": [],
+            "md": []
+        }
+    },
+    "mapInfoConfiguration": {
+        "trigger": "click"
+    },
+    "dimensionData": {},
+    "timelineData": {}
+}

@@ -1,5 +1,6 @@
 /* eslint-disable */
 const createBilTerrainProvider = function(Cesium) {
+	console.log(Cesium);
 	var OGCHelper = {};
 	 var intersectionRectangle=function(rectangle0,rectangle1){
 		var west = Math.max(rectangle0.west, rectangle1.west);
@@ -953,7 +954,14 @@ const createBilTerrainProvider = function(Cesium) {
 							var limitations={highest:resultat.highest,lowest:resultat.lowest,offset:resultat.offset};
                             var proxy = resultat.proxy || { getURL: v => v } ;
 							var hasChildren = terrainChildrenMask(x, y, level,provider);
-                            var promise = Cesium.throttleRequestByServer(proxy.getURL(url),Cesium.loadImage);
+                            var promise = Cesium.Resource.fetchImage({
+								url: proxy.getURL(url),
+								request: new Cesium.Request({
+									// url: proxy.getURL(url),
+									throttleByServer: true
+								})
+							}); //Cesium.loadImage(proxy.getURL(url), {}, new Cesium.Request({ throttleByServer: true })); // Cesium.throttleRequestByServer(proxy.getURL(url),Cesium.loadImage);
+							
 							if (Cesium.defined(promise)) {
 								retour = Cesium.when(promise,function(image){
 											return GeoserverTerrainProvider.imageToHeightmapTerrainData(image,limitations,
@@ -984,7 +992,14 @@ const createBilTerrainProvider = function(Cesium) {
 							var limitations={highest:resultat.highest,lowest:resultat.lowest,offset:resultat.offset};
 							var hasChildren = terrainChildrenMask(x, y, level,provider);
                             var proxy = resultat.proxy || { getURL: v => v };
-                            var promise = Cesium.throttleRequestByServer(proxy.getURL(urlArray),Cesium.loadArrayBuffer);
+							
+                            var promise = Cesium.Resource.fetchArrayBuffer({
+								url: proxy.getURL(urlArray),
+								request: new Cesium.Request({
+									// url: proxy.getURL(urlArray),
+									throttleByServer: true
+								})
+							}); // Cesium.throttleRequestByServer(proxy.getURL(urlArray),Cesium.loadArrayBuffer);
 					        if (Cesium.defined(promise)) {
 								retour = Cesium.when(promise,
 													function(arrayBuffer) {

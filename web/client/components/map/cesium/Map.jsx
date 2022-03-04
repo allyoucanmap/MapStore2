@@ -15,7 +15,7 @@ import viewerCesiumNavigationMixin from '@znemz/cesium-navigation';
 
 import PropTypes from 'prop-types';
 import Rx from 'rxjs';
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import ConfigUtils from '../../../utils/ConfigUtils';
 import ClickUtils from '../../../utils/cesium/ClickUtils';
@@ -50,7 +50,8 @@ class CesiumMap extends React.Component {
         registerHooks: PropTypes.bool,
         hookRegister: PropTypes.object,
         viewerOptions: PropTypes.object,
-        zoomControl: PropTypes.bool
+        zoomControl: PropTypes.bool,
+        onReload: PropTypes.func
     };
 
     static defaultProps = {
@@ -73,10 +74,13 @@ class CesiumMap extends React.Component {
                 pitch: -1 * Math.PI / 2,
                 roll: 0
             }
-        }
+        },
+        onReload: () => {}
     };
 
-    state = { };
+    state = {
+        renderError: null
+    };
 
     UNSAFE_componentWillMount() {
         /*
@@ -109,6 +113,13 @@ class CesiumMap extends React.Component {
                 ? creditContainer
                 : undefined
         }, this.getMapOptions(this.props.mapOptions)));
+
+        // override the default error message popup
+        map.cesiumWidget.showErrorPanel = (title, message, error) => {
+            console.log(title, message, error);
+            this.setState({ renderError: { title, message, error } });
+        };
+
         if (this.props.registerHooks) {
             this.registerHooks();
         }
@@ -165,7 +176,19 @@ class CesiumMap extends React.Component {
     }
 
     onClick = (map, movement) => {
+        // console.log('CLICK');
         if (this.props.onClick && movement.position !== null) {
+            /*
+            const feature = this.map.scene.pick(movement.position);
+            if (feature instanceof Cesium.Cesium3DTileFeature) {
+                const propertyNames = feature.getPropertyNames();
+                const length = propertyNames.length;
+                for (let i = 0; i < length; ++i) {
+                    const propertyName = propertyNames[i];
+                    console.log(propertyName + ': ' + feature.getProperty(propertyName));
+                }
+            }
+            */
             const cartesian = map.camera.pickEllipsoid(movement.position, map.scene.globe.ellipsoid);
             let cartographic = ClickUtils.getMouseXYZ(map, movement) || cartesian && Cesium.Cartographic.fromCartesian(cartesian);
             if (cartographic) {
@@ -262,6 +285,28 @@ class CesiumMap extends React.Component {
         return (
             <div id={this.props.id}>
                 {children}
+                {this.state.renderError
+                    ? <div
+                        style={{
+                            position: 'absolute',
+                            width: '100%',
+                            height: '100%',
+                            background: 'rgba(0, 0, 0, 0.75)',
+                            zIndex: 100,
+                            top: 0,
+                            left: 0,
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}>
+                        {/* use base button tag instead of import react-bootstrap in this component */}
+                        <button
+                            className="btn btn-default"
+                            onClick={() => this.props.onReload()}
+                        >
+                            Reload
+                        </button>
+                    </div>
+                    : null}
             </div>
         );
     }
@@ -435,4 +480,19 @@ class CesiumMap extends React.Component {
     };
 }
 
-export default CesiumMap;
+
+function ReloadCesiumMap(props) {
+    // once the cesium map crashes the internal render cycle is stopped
+    // we allow a complete refresh of the map by changing the key based on a reload request
+    // new key will unmount and mount again the component
+    const [key, setKey] = useState(1);
+    return (
+        <CesiumMap
+            key={key}
+            {...props}
+            onReload={() => setKey(key + 1)}
+        />
+    );
+}
+
+export default ReloadCesiumMap;

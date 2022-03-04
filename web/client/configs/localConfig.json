@@ -10,7 +10,8 @@
           "https://gs-stable.geo-solutions.it/geoserver",
           "https://gs-stable.geo-solutions.it:443/geoserver",
           "http://gs-stable.geo-solutions.it/geoserver",
-          "http://gs-stable.geo-solutions.it:443/geoserver"
+          "http://gs-stable.geo-solutions.it:443/geoserver",
+          "http://localhost:8080/geoserver"
         ]
     },
     "geoStoreUrl": "rest/geostore/",
@@ -285,6 +286,14 @@
           {
             "name": "Map",
             "cfg": {
+              "additionalLayers": [{
+                "type": "wms",
+                "url": "http://localhost:8080/geoserver/wms",
+                "name": "liguria:dtm_liguria_2017",
+                "format": "application/bil16",
+                "visibility": true,
+                "useForElevation": true
+              }],
               "mapOptions": {
                 "openlayers": {
                   "interactions": {

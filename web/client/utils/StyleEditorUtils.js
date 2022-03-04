@@ -37,7 +37,8 @@ const StyleEditorCustomUtils = {};
 
 const EDITOR_MODES = {
     css: 'geocss',
-    sld: 'xml'
+    sld: 'xml',
+    tileset3d: 'application/json'
 };
 
 const getGeometryType = (geomProperty = {}) => {

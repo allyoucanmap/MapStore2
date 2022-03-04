@@ -33,6 +33,7 @@ import html from 'raw-loader!./featureInfoPreviews/responseHTML.txt';
 import json from 'raw-loader!./featureInfoPreviews/responseJSON.txt';
 import text from 'raw-loader!./featureInfoPreviews/responseText.txt';
 import SimpleVectorStyleEditor from './SimpleVectorStyleEditor';
+import VectorStyleEditor from '../styleeditor/VectorStyleEditor';
 import { mapSelector } from '../../selectors/map';
 
 const responses = {
@@ -49,7 +50,7 @@ const ConnectedDisplay = connect(
 )(Display);
 
 const isLayerNode = ({settings = {}} = {}) => settings.nodeType === 'layers';
-const isVectorStylableLayer = ({element = {}} = {}) => element.type === "wfs" || element.type === "vector" && element.id !== "annotations";
+const isVectorStylableLayer = ({element = {}} = {}) => element.type === "tileset3d" || element.type === "wfs" || element.type === "vector" && element.id !== "annotations";
 const isWMS = ({element = {}} = {}) => element.type === "wms";
 const isStylableLayer = (props) =>
     isLayerNode(props)
@@ -146,6 +147,11 @@ const getConfiguredPlugin = (plugin, loaded, loadingComp) => {
 };
 
 export const getStyleTabPlugin = ({ settings, items = [], loadedPlugins, onToggleStyleEditor = () => { }, onUpdateParams = () => { }, element, ...props }) => {
+    if (element.type === 'tileset3d') {
+        return {
+            Component: VectorStyleEditor
+        };
+    }
     if (isVectorStylableLayer({element})) {
         return {
             Component: SimpleVectorStyleEditor
