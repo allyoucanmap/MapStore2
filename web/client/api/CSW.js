@@ -616,6 +616,7 @@ var Api = {
         }
         return null;
     },
+    recordToLayer,
     getLayerFromRecord: (record, options) => {
         return Promise.resolve(recordToLayer(record, options));
     }

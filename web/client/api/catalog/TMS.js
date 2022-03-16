@@ -98,7 +98,7 @@ export const getCatalogRecords = (data, options) => {
  * @param object TileMapService a JSON representation of TileMapService resource, see https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification
  * @param service the original catalog service
  */
-const tmsToLayer = ({ tileMapUrl }, { tileMap, service }) => {
+export const tmsToLayer = ({ tileMapUrl }, { tileMap, service }) => {
     const { TileMap = {} } = tileMap || {};
     const { forceDefaultTileGrid } = service || {};
     const { Title, Abstract, SRS, BoundingBox = {}, Origin, TileFormat = {}, TileSets } = TileMap;
@@ -140,7 +140,7 @@ const tmsToLayer = ({ tileMapUrl }, { tileMap, service }) => {
 /**
  * Converts a record into a layer
  */
-const tileProviderToLayer = (record) => {
+export const tileProviderToLayer = (record) => {
     return {
         type: "tileprovider",
         visibility: true,

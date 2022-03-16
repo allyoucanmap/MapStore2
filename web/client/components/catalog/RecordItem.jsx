@@ -137,7 +137,7 @@ class RecordItem extends React.Component {
 
     getButtons = (record) => {
         const links = this.props.showGetCapLinks ? getRecordLinks(record) : [];
-        const formats = this.getFormats(record.type, record) || [];
+        const formats = this.getFormats(record.layerType || record.serviceType, record) || [];
         const localizedLayerStyles = this.props.service && this.props.service.localizedLayerStyles;
         const autoSetVisibilityLimits = this.props?.service?.autoSetVisibilityLimits;
         return [

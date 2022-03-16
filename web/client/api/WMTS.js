@@ -298,7 +298,8 @@ const Api = {
     },
     getLayerFromRecord: (record, options) => {
         return Promise.resolve(recordToLayer(record, options));
-    }
+    },
+    recordToLayer
 };
 
 export default Api;
