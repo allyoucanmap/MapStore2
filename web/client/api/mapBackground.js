@@ -28,8 +28,41 @@ const getRecords = (url, startPosition, maxRecords, text) => {
 
 const reset = () => {};
 
+export const getCatalogRecords = (records) => {
+    if (records && records.records) {
+        return records.records.map(record => {
+            return {
+                serviceType: 'backgrounds',
+                isValid: !!record,
+                description: record.title,
+                title: record.title,
+                identifier: record.name,
+                thumbnail: record.thumbURL,
+                references: [],
+                background: record
+            };
+        });
+    }
+    return null;
+};
+
+export const recordToLayer = (record) => {
+    return {
+        ...record?.background,
+        id: record?.background.name,
+        visibility: false
+    };
+};
+
+export const getLayerFromRecord = (record, options) => {
+    return Promise.resolve(recordToLayer(record, options));
+};
+
 export default {
     getRecords,
     reset,
-    textSearch: (url, startPosition, maxRecords, text) => getRecords(url, startPosition, maxRecords, text)
+    textSearch: (url, startPosition, maxRecords, text) => getRecords(url, startPosition, maxRecords, text),
+    getCatalogRecords,
+    recordToLayer,
+    getLayerFromRecord
 };

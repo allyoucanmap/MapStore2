@@ -59,14 +59,9 @@ import { getSelectedLayer, selectedNodesSelector, layersSelector } from '../sele
 
 import {
     buildSRSMap,
-    esriToLayer,
-    extractEsriReferences,
-    extractOGCServicesReferences,
-    getCatalogRecords,
-    recordToLayer,
-    wfsToLayer,
-    getSupportedFormat
+    extractOGCServicesReferences
 } from '../utils/CatalogUtils';
+import { getSupportedFormat } from '../api/WMS';
 import CoordinatesUtils from '../utils/CoordinatesUtils';
 import ConfigUtils from '../utils/ConfigUtils';
 import {getCapabilitiesUrl, getLayerId, getLayerUrl} from '../utils/LayersUtils';
@@ -141,40 +136,26 @@ export default (API) => ({
                             return Rx.Observable.of(results.map(r => {
                                 const { format, url, text, layerOptions, ...result } = r;
                                 const locales = currentMessagesSelector(state);
-                                const records = getCatalogRecords(format, result, layerOptions, locales) || [];
+                                const records = API[format].getCatalogRecords(result, layerOptions, locales) || [];
                                 const record = head(records.filter(rec => rec.identifier || rec.name === text)); // exact match of text and record identifier
-                                const { wms, wmts, wfs } = extractOGCServicesReferences(record);
-                                let layer = {};
-                                const layerBaseConfig = {}; // DO WE NEED TO FETCH IT FROM STATE???
-                                const authkeyParamName = authkeyParamNameSelector(state);
-                                if (wms) {
-                                    const allowedSRS = buildSRSMap(wms.SRS);
-                                    if (wms.SRS.length > 0 && !CoordinatesUtils.isAllowedSRS("EPSG:3857", allowedSRS)) {
+                                const { wms, wmts } = extractOGCServicesReferences(record);
+                                const servicesReferences = wms || wmts;
+                                if (servicesReferences) {
+                                    const allowedSRS = buildSRSMap(servicesReferences.SRS);
+                                    if (servicesReferences.SRS.length > 0 && !CoordinatesUtils.isAllowedSRS("EPSG:3857", allowedSRS)) {
                                         return Rx.Observable.empty(); // TODO CHANGE THIS
                                         // onError('catalog.srs_not_allowed');
-                                    }
-                                    layer = recordToLayer(record, "wms", {
-                                        removeParams: authkeyParamName,
-                                        catalogURL: format === 'csw' && url ? url + "?request=GetRecordById&service=CSW&version=2.0.2&elementSetName=full&id=" + record.identifier : url
-                                    }, layerBaseConfig);
-                                } else if (wmts) {
-                                    layer = {};
-                                    const allowedSRS = buildSRSMap(wmts.SRS);
-                                    if (wmts.SRS.length > 0 && !CoordinatesUtils.isAllowedSRS("EPSG:3857", allowedSRS)) {
-                                        return Rx.Observable.empty(); // TODO CHANGE THIS
-                                        // onError('catalog.srs_not_allowed');
-                                    }
-                                    layer = recordToLayer(record, "wmts", {
-                                        removeParams: authkeyParamName
-                                    }, layerBaseConfig);
-                                } else if (wfs) {
-                                    layer = wfsToLayer(record);
-                                } else {
-                                    const { esri } = extractEsriReferences(record);
-                                    if (esri) {
-                                        layer = esriToLayer(record, layerBaseConfig);
                                     }
                                 }
+                                const layerBaseConfig = {}; // DO WE NEED TO FETCH IT FROM STATE???
+                                const authkeyParamName = authkeyParamNameSelector(state);
+                                const layer = API[format].recordToLayer(record, {
+                                    removeParams: authkeyParamName,
+                                    catalogURL: format === 'csw' && url
+                                        ? url + "?request=GetRecordById&service=CSW&version=2.0.2&elementSetName=full&id=" + record.identifier
+                                        : url,
+                                    layerBaseConfig
+                                });
                                 if (!record) {
                                     return [text];
                                 }

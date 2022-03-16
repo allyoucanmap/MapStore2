@@ -10,7 +10,9 @@
           "https://gs-stable.geo-solutions.it/geoserver",
           "https://gs-stable.geo-solutions.it:443/geoserver",
           "http://gs-stable.geo-solutions.it/geoserver",
-          "http://gs-stable.geo-solutions.it:443/geoserver"
+          "http://gs-stable.geo-solutions.it:443/geoserver",
+          "https://geoportale.comune.genova.it/sites",
+          "https://www.cityexplorer3d.com/Genova3D"
         ]
     },
     "geoStoreUrl": "rest/geostore/",
