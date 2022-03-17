@@ -8,7 +8,7 @@
 
 import urlUtil from 'url';
 
-import { get, head, last, template, isNil, isString, includes, castArray, sortBy, uniq, isArray } from 'lodash';
+import { get, head, last, template, isNil, isString, includes, castArray, sortBy, uniq } from 'lodash';
 import assign from 'object-assign';
 
 import axios from '../libs/ajax';
@@ -34,20 +34,13 @@ const getBaseCatalogUrl = (url) => {
 };
 
 // Try to find thumb from dc documents works both with geonode pycsw and geosolutions-csw
-const getThumb = (dc) => {
-    let refs = Array.isArray(dc.references) ? dc.references : [dc.references];
-    return head([].filter.call( refs, (ref) => {
-        return ref.scheme === "WWW:LINK-1.0-http--image-thumbnail" || ref.scheme === "thumbnail" || (ref.scheme === "WWW:DOWNLOAD-1.0-http--download" && (ref.value || "").indexOf(`${dc.identifier || ""}-thumb`) !== -1) || (ref.scheme === "WWW:DOWNLOAD-REST_MAP" && (ref.value || "").indexOf(`${dc.identifier || ""}-thumb`) !== -1);
-    }));
-};
+const getThumb = (dc) => head(castArray(dc.references).filter((ref) => {
+    return ref.scheme === "WWW:LINK-1.0-http--image-thumbnail" || ref.scheme === "thumbnail" || (ref.scheme === "WWW:DOWNLOAD-1.0-http--download" && (ref.value || "").indexOf(`${dc.identifier || ""}-thumb`) !== -1) || (ref.scheme === "WWW:DOWNLOAD-REST_MAP" && (ref.value || "").indexOf(`${dc.identifier || ""}-thumb`) !== -1);
+}));
 
 // Extract the relevant information from the wms URL for (RNDT / INSPIRE)
 const extractWMSParamsFromURL = wms => {
-    const params = new URLSearchParams(wms.value);
-    const lowerCaseParams = new URLSearchParams();
-    for (const [name, value] of params) {
-        lowerCaseParams.append(name.toLocaleLowerCase(), value);
-    }
+    const lowerCaseParams = new Map(Array.from(new URLSearchParams(wms.value)).map(([key, value]) => [key.toLowerCase(), value]));
     const layerName = lowerCaseParams.get('layers');
     const wmsVersion = lowerCaseParams.get('version');
     if (layerName) {
@@ -76,8 +69,7 @@ const getMetaDataDownloadFormat = (protocol) => {
             displayValue: 'WFS'
         }
     ];
-    const format = formatsMap.filter(formatItem => (formatItem.protocol === protocol))[0]?.displayValue;
-    return format ?? 'Link';
+    return head(formatsMap.filter(item => item.protocol === protocol))?.displayValue ?? "Link";
 };
 
 const getURILinks = (metadata, locales, uriItem) => {
@@ -225,10 +217,103 @@ export const recordToLayer = (record, options) => {
         return null;
     }
 };
+
+function toReference(layerType, data, options) {
+    if (!data.name) {
+        return null;
+    }
+    switch (layerType) {
+    case 'wms':
+        const urlValue = !(data.value.indexOf("http") === 0)
+            ? (options && options.catalogURL || "") + "/" + data.value
+            : data.value;
+        return {
+            type: data.protocol || data.scheme,
+            url: urlValue,
+            SRS: [],
+            params: {
+                name: data.name
+            }
+        };
+    case 'arcgis':
+        return {
+            type: 'arcgis',
+            url: data.value,
+            SRS: [],
+            params: {
+                name: data.name
+            }
+        };
+    default:
+        return null;
+    }
+}
+
+function getLayerReferenceFromDc(dc, options) {
+    const URI = dc?.URI && castArray(dc.URI);
+    // look in URI objects for wms and thumbnail
+    if (URI) {
+        const wms = head(URI.map( uri => {
+            if (uri.protocol) {
+                if (uri.protocol.match(/^OGC:WMS-(.*)-http-get-map/g) || uri.protocol.match(/^OGC:WMS/g) ) {
+                    /** wms protocol params are explicitly defined as attributes (INSPIRE)*/
+                    return uri;
+                }
+                if (uri.protocol.match(/serviceType\/ogc\/wms/g)) {
+                    /** wms protocol params must be extracted from the element text (RNDT / INSPIRE) */
+                    return extractWMSParamsFromURL(uri);
+                }
+            }
+            return false;
+        }).filter(item => item));
+        if (wms) {
+            return toReference('wms', wms, options);
+        }
+    }
+    // look in references objects
+    if (dc?.references?.length) {
+        const refs = castArray(dc.references);
+        const wms = head(refs.filter((ref) => { return ref.scheme && (ref.scheme.match(/^OGC:WMS-(.*)-http-get-map/g) || ref.scheme === "OGC:WMS"); }));
+        if (wms) {
+            let urlObj = urlUtil.parse(wms.value, true);
+            let layerName = urlObj.query && urlObj.query.layers || dc.alternative;
+            return toReference('wms', { ...wms, name: layerName }, options);
+        }
+        // checks for esri arcgis in geonode csw
+        const esri = head(refs.filter((ref) => { return ref.scheme && ref.scheme === "WWW:DOWNLOAD-REST_MAP"; }));
+        if (esri) {
+            return toReference('arcgis', { ...esri, name: dc.alternative }, options);
+        }
+    }
+    return null;
+}
+
+function getThumbnailFromDc(dc, options) {
+    const URI = dc?.URI && castArray(dc.URI);
+    let thumbURL;
+    if (URI) {
+        const thumb = head(URI.filter(uri => uri.name === 'thumbnail')) || head(URI.filter(uri => !uri.name && uri.protocol?.indexOf('image/') > -1));
+        thumbURL = thumb ? thumb.value : null;
+    }
+    if (!thumbURL && dc && dc.references) {
+        const thumb = getThumb(dc);
+        if (thumb) {
+            thumbURL = thumb.value;
+        }
+    }
+    if (thumbURL) {
+        const absolute = (thumbURL.indexOf("http") === 0);
+        if (!absolute) {
+            thumbURL = (getBaseCatalogUrl(options && options.url) || "") + thumbURL;
+        }
+    }
+    return thumbURL;
+}
+
 /**
  * API for local config
  */
-var Api = {
+const Api = {
     parseUrl,
     getRecordById: function(catalogURL) {
         return new Promise((resolve) => {
@@ -434,54 +519,7 @@ var Api = {
         // let searchOptions = catalog.searchOptions;
         if (result && result.records) {
             return result.records.map((record) => {
-                let dc = record.dc;
-                let thumbURL;
-                let wms;
-                let esri;
-                // look in URI objects for wms and thumbnail
-                if (dc && dc.URI) {
-                    const URI = isArray(dc.URI) ? dc.URI : (dc.URI && [dc.URI] || []);
-                    let thumb = head([].filter.call(URI, (uri) => {return uri.name === "thumbnail"; }) ) || head([].filter.call(URI, (uri) => !uri.name && uri.protocol?.indexOf('image/') > -1));
-                    thumbURL = thumb ? thumb.value : null;
-                    wms = head(URI.map( uri => {
-                        if (uri.protocol) {
-                            if (uri.protocol.match(/^OGC:WMS-(.*)-http-get-map/g) || uri.protocol.match(/^OGC:WMS/g) ) {
-                                /** wms protocol params are explicitly defined as attributes (INSPIRE)*/
-                                return uri;
-                            }
-                            if (uri.protocol.match(/serviceType\/ogc\/wms/g)) {
-                                /** wms protocol params must be extracted from the element text (RNDT / INSPIRE) */
-                                return extractWMSParamsFromURL(uri);
-                            }
-                        }
-                        return false;
-                    }).filter(item => item));
-                }
-                // look in references objects
-                if (!wms && dc && dc.references && dc.references.length) {
-                    let refs = Array.isArray(dc.references) ? dc.references : [dc.references];
-                    wms = head([].filter.call(refs, (ref) => { return ref.scheme && (ref.scheme.match(/^OGC:WMS-(.*)-http-get-map/g) || ref.scheme === "OGC:WMS"); }));
-                    if (wms) {
-                        let urlObj = urlUtil.parse(wms.value, true);
-                        let layerName = urlObj.query && urlObj.query.layers || dc.alternative;
-                        wms = assign({}, wms, {name: layerName} );
-                    }
-                }// checks for esri arcgis in geonode csw
-                if (!wms && dc && dc.references && dc.references.length) {
-                    let refs = Array.isArray(dc.references) ? dc.references : [dc.references];
-                    esri = head([].filter.call(refs, (ref) => { return ref.scheme && ref.scheme === "WWW:DOWNLOAD-REST_MAP"; }));
-                    if (esri) {
-                        let layerName = dc.alternative;
-                        esri = assign({}, esri, {name: layerName} );
-                    }
-                }
-                if (!thumbURL && dc && dc.references) {
-                    let thumb = getThumb(dc);
-                    if (thumb) {
-                        thumbURL = thumb.value;
-                    }
-                }
-
+                const dc = record.dc;
                 let references = [];
 
                 // extract get capabilities references and add them to the final references
@@ -503,39 +541,11 @@ var Api = {
                     });
                 }
 
-                if (wms && wms.name) {
-                    let absolute = (wms.value.indexOf("http") === 0);
-                    if (!absolute) {
-                        assign({}, wms, {value: (options && options.catalogURL || "") + "/" + wms.value} );
-                    }
-                    let wmsReference = {
-                        type: wms.protocol || wms.scheme,
-                        url: wms.value,
-                        SRS: [],
-                        params: {
-                            name: wms.name
-                        }
-                    };
-                    references.push(wmsReference);
-                }
-                if (esri && esri.name) {
-                    let esriReference = {
-                        type: 'arcgis',
-                        url: esri.value,
-                        SRS: [],
-                        params: {
-                            name: esri.name
-                        }
-                    };
-                    references.push(esriReference);
+                const layerReference = getLayerReferenceFromDc(dc, options);
+                if (layerReference) {
+                    references.push(layerReference);
                 }
 
-                if (thumbURL) {
-                    let absolute = (thumbURL.indexOf("http") === 0);
-                    if (!absolute) {
-                        thumbURL = (getBaseCatalogUrl(options && options.url) || "") + thumbURL;
-                    }
-                }
                 // create the references array (now only wms is supported)
                 let metadata = {boundingBox: record.boundingBox && record.boundingBox.extent && castArray(record.boundingBox.extent.join(","))};
                 if (dc) {
@@ -605,7 +615,7 @@ var Api = {
                     layerOptions: options && options.layerOptions || {},
                     identifier: dc && isString(dc.identifier) && dc.identifier || '',
                     references: references,
-                    thumbnail: thumbURL,
+                    thumbnail: getThumbnailFromDc(dc, options),
                     title: dc && isString(dc.title) && dc.title || '',
                     tags: dc && dc.tags || '',
                     metadata,
