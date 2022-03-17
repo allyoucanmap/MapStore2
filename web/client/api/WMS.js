@@ -8,24 +8,13 @@
 
 import urlUtil from 'url';
 
-import { isArray, castArray, get, filter, isEmpty, includes, uniq, isNil } from 'lodash';
+import { isArray, castArray, get, isEmpty, includes, uniq } from 'lodash';
 import assign from 'object-assign';
 import xml2js from 'xml2js';
-import { getResolutionObject } from "../utils/MapUtils";
-
 import axios from '../libs/ajax';
-import { getConfigProp, cleanDuplicatedQuestionMarks } from '../utils/ConfigUtils';
+import { getConfigProp } from '../utils/ConfigUtils';
 import { getWMSBoundingBox } from '../utils/CoordinatesUtils';
-import Rx from "rxjs";
-import { getLayerTitleTranslations } from '../utils/LayersUtils';
 import { getAvailableInfoFormat } from "../utils/MapInfoUtils";
-import {
-    extractOGCServicesReferences,
-    toURLArray,
-    removeParameters,
-    buildSRSMap,
-    getRecordLinks
-} from '../utils/CatalogUtils';
 const capabilitiesCache = {};
 
 
@@ -278,162 +267,6 @@ export const reset = () => {
     });
 };
 
-export const preprocess = (service) => {
-    let { domainAliases } = service;
-    service.domainAliases = filter(domainAliases);
-    return Rx.Observable.of(service);
-};
-
-export const getCatalogRecords = (records, options) => {
-    if (records && records.records) {
-        return records.records.map((record) => {
-            const references = [{
-                type: "OGC:WMS",
-                url: options && options.url,
-                SRS: (record.SRS && (isArray(record.SRS) ? record.SRS : [record.SRS])) || [],
-                params: {
-                    name: record.Name
-                }
-            }];
-            const { wms: ogcReferences } = extractOGCServicesReferences({ references });
-            return {
-                serviceType: 'wms',
-                isValid: !!ogcReferences,
-                capabilities: record,
-                credits: record.credits,
-                boundingBox: getBBox(record),
-                description: record.Abstract || record.Title || record.Name,
-                identifier: record.Name,
-                service: records.service,
-                tags: "",
-                layerOptions: {
-                    ...(options?.layerOptions || {}),
-                    ...(records?.layerOptions || {})
-                },
-                title: getLayerTitleTranslations(record) || record.Name,
-                formats: castArray(record.formats || []),
-                dimensions: (record.Dimension && castArray(record.Dimension) || []).map((dim) => assign({}, {
-                    values: dim._ && dim._.split(',') || []
-                }, dim.$ || {}))
-                // TODO: re-enable when support to inline values is full (now timeline miss snap, auto-select and forward-backward buttons enabled/disabled for this kind of values)
-                // TODO: replace with capabilities URL service. something like this:
-                    /*
-                    .map(dim => dim && dim.name !== "time" ? dim : {
-                        ...dim,
-                        values: undefined, <-- remove values (they can be removed from dimension's epic instead, using them as initial value)
-                        source: { <-- add the source
-                            type: "wms-capabilities",
-                            url: options.url
-                        }
-                    })
-                    */
-                    // excludes time from dimensions. TODO: remove when time from WMS capabilities is supported
-                    .filter(dim => dim && dim.name !== "time"),
-
-                references,
-                ogcReferences
-            };
-        });
-    }
-    return null;
-};
-
-
-export const recordToLayer = (record, {
-    removeParams = [],
-    format,
-    catalogURL,
-    url,
-    formats = {},
-    map = {},
-    layerBaseConfig,
-    localizedLayerStyles
-} = {}) => {
-    if (!record || !record.references) {
-        // we don't have a valid record so no buttons to add
-        return null;
-    }
-    // let's extract the references we need
-    const { wms: ogcServiceReference } = extractOGCServicesReferences(record);
-
-    // typically you should remove authkey parameters
-    const cleanURL = URL => removeParameters(cleanDuplicatedQuestionMarks(URL), ["request", "layer", "layers", "service", "version"].concat(removeParams));
-    let originalUrl;
-    let params;
-    const urls = toURLArray(ogcServiceReference.url);
-
-    // extract additional parameters and alternative URLs.
-    if (urls && isArray(urls)) {
-        originalUrl = urls.map( u => cleanURL(u)).map( ({url: u}) => u);
-        params = urls.map(u => cleanURL(u)).map(({params: p}) => p).reduce( (prev, cur) => ({...prev, ...cur}), {});
-    } else {
-        const { url: uu, params: pp } = cleanURL(urls || catalogURL);
-        originalUrl = uu;
-        params = pp;
-    }
-
-    // calculate and normalize URL
-    // if array of 1 element, take simply the string
-    const toLayerURL = u => isArray(u) && u.length === 1 ? u[0] : u;
-    const layerURL = toLayerURL(url || originalUrl);
-
-    const allowedSRS = buildSRSMap(ogcServiceReference.SRS);
-    const {
-        MaxScaleDenominator: maxScaleDenominator,
-        MinScaleDenominator: minScaleDenominator
-    } = record?.capabilities ?? {};
-
-    let layer = {
-        type: 'wms',
-        requestEncoding: record.requestEncoding, // WMTS KVP vs REST, KVP by default
-        style: record.style,
-        format,
-        url: layerURL,
-        capabilitiesURL: record.capabilitiesURL,
-        queryable: record.queryable,
-        visibility: true,
-        dimensions: record.dimensions || [],
-        name: ogcServiceReference.params && ogcServiceReference.params.name,
-        title: record.title || ogcServiceReference.params && ogcServiceReference.params.name,
-        description: record.description || "",
-        credits: !getConfigProp("noCreditsFromCatalog") && record.credits,
-        bbox: {
-            crs: record.boundingBox.crs,
-            bounds: {
-                minx: record.boundingBox.extent[0],
-                miny: record.boundingBox.extent[1],
-                maxx: record.boundingBox.extent[2],
-                maxy: record.boundingBox.extent[3]
-            }
-        },
-        links: getRecordLinks(record),
-        params: params,
-        allowedSRS: allowedSRS,
-        catalogURL,
-        ...layerBaseConfig,
-        ...record.layerOptions,
-        localizedLayerStyles: !isNil(localizedLayerStyles) ? localizedLayerStyles : undefined
-    };
-
-    if (!isEmpty(formats)) {
-        layer = {...layer, imageFormats: formats.imageFormats, infoFormats: formats.infoFormats};
-    }
-    if (!isEmpty(map) && (maxScaleDenominator || minScaleDenominator)) {
-        const {resolution: minResolution} = !isNil(minScaleDenominator)
-        && getResolutionObject(minScaleDenominator, 'scale', map) || {};
-        const {resolution: maxResolution} = !isNil(maxScaleDenominator)
-        && getResolutionObject(maxScaleDenominator, 'scale', map) || {};
-        layer = {...layer, minResolution, maxResolution};
-    }
-
-    return layer;
-};
-
-export const getLayerFromRecord = (record, options) => {
-    return Promise.resolve(recordToLayer(record, options));
-};
-
-
 export const DEFAULT_FORMAT_WMS = [{
     label: 'image/png',
     value: 'image/png'
@@ -509,11 +342,8 @@ const Api = {
     parseLayerCapabilities,
     getBBox,
     reset,
-    preprocess,
-    getCatalogRecords,
-    getSupportedFormat,
-    recordToLayer,
-    getLayerFromRecord
+    getUniqueInfoFormats,
+    getSupportedFormat
 };
 
 export default Api;

@@ -61,12 +61,13 @@ import {
     buildSRSMap,
     extractOGCServicesReferences
 } from '../utils/CatalogUtils';
-import { getSupportedFormat } from '../api/WMS';
+import { getSupportedFormat, getCapabilities, describeLayers } from '../api/WMS';
 import CoordinatesUtils from '../utils/CoordinatesUtils';
 import ConfigUtils from '../utils/ConfigUtils';
 import {getCapabilitiesUrl, getLayerId, getLayerUrl} from '../utils/LayersUtils';
 import { wrapStartStop } from '../observables/epics';
 import {zoomToExtent} from "../actions/map";
+import CSW from '../api/CSW';
 
 /**
     * Epics for CATALOG
@@ -200,7 +201,7 @@ export default (API) => ({
                     actions.push(zoomToExtent(layer.bbox.bounds, layer.bbox.crs));
                 }
                 if (layer.type === 'wms') {
-                    return Rx.Observable.defer(() => API.wms.describeLayers(getLayerUrl(layer), layer.name))
+                    return Rx.Observable.defer(() => describeLayers(getLayerUrl(layer), layer.name))
                         .switchMap(results => {
                             if (results) {
                                 let description = find(results, (desc) => desc.name === layer.name );
@@ -303,7 +304,7 @@ export default (API) => ({
                 const state = store.getState();
                 const layer = getSelectedLayer(state);
 
-                return Rx.Observable.defer(() => API.wms.getCapabilities(getCapabilitiesUrl(layer)))
+                return Rx.Observable.defer(() => getCapabilities(getCapabilitiesUrl(layer)))
                     .switchMap((caps) => {
                         const layersXml = get(caps, 'capability.layer.layer', []);
                         const metadataUrls = layersXml.length === 1 ? layersXml[0].metadataURL : find(layersXml, l => l.name === layer.name.split(':')[1]);
@@ -321,7 +322,7 @@ export default (API) => ({
                         );
                         const defaultMetadata = metadataUrlHTML ? {metadataUrl: metadataUrlHTML} : {};
 
-                        const cswDCFlow = Rx.Observable.defer(() => API.csw.getRecordById(layer.catalogURL))
+                        const cswDCFlow = Rx.Observable.defer(() => CSW.getRecordById(layer.catalogURL))
                             .switchMap((action) => {
                                 if (action && action.error) {
                                     return Rx.Observable.of(error({
