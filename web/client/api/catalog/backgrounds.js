@@ -8,6 +8,7 @@
 
 import mapBackground from '../mapBackground';
 
+export const parseUrl = url => url;
 export const textSearch = mapBackground.textSearch;
 
 export const getCatalogRecords = (records) => {

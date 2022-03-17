@@ -187,6 +187,7 @@ function getThumbnailFromDc(dc, options) {
 }
 
 export const textSearch = CSW.textSearch;
+export const parseUrl = CSW.parseUrl;
 
 export const getCatalogRecords = (records, options, locales) => {
     let result = records;

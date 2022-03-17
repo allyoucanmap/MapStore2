@@ -49,6 +49,7 @@ const filterOnMatrix = (SRS, matrixIds) => {
 };
 
 export const textSearch = WMTS.textSearch;
+export const parseUrl = WMTS.parseUrl;
 
 export const getCatalogRecords = (records, options) => {
     if (records && records.records) {

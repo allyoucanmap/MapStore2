@@ -22,10 +22,12 @@ import {
 
 import {
     getBBox,
-    textSearch as wmsTextSearch
+    textSearch as wmsTextSearch,
+    parseUrl as wmsParseUrl
 } from '../WMS';
 
 export const textSearch = wmsTextSearch;
+export const parseUrl = wmsParseUrl;
 
 export const getCatalogRecords = (records, options) => {
     if (records && records.records) {
