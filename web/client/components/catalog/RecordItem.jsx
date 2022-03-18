@@ -178,7 +178,7 @@ class RecordItem extends React.Component {
                             }
                         }),
                         localizedLayerStyles
-                    })
+                    }, true)
                         .then((layer) => {
                             if (layer) {
                                 this.addLayer(layer, record);

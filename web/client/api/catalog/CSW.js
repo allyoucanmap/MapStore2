@@ -9,7 +9,7 @@
 import urlUtil from 'url';
 
 import { head, isString, includes, castArray, sortBy, uniq } from 'lodash';
-import { recordToLayer as wmsRecordToLayer } from './WMS';
+import { getLayerFromRecord as getLayerFromWMSRecord } from './WMS';
 import { getMessageById } from '../../utils/LocaleUtils';
 import { extractEsriReferences, extractOGCServicesReferences } from '../../utils/CatalogUtils';
 import CSW from '../CSW';
@@ -302,10 +302,10 @@ export const getCatalogRecords = (records, options, locales) => {
     return null;
 };
 
-export const recordToLayer = (record, options) => {
+const recordToLayer = (record, options) => {
     switch (record.layerType) {
     case 'wms':
-        return wmsRecordToLayer(record, options);
+        return getLayerFromWMSRecord(record, options);
     case 'esri':
         return esriToLayer(record, options);
     default:
@@ -313,6 +313,7 @@ export const recordToLayer = (record, options) => {
     }
 };
 
-export const getLayerFromRecord = (record, options) => {
-    return Promise.resolve(recordToLayer(record, options));
+export const getLayerFromRecord = (record, options, asPromise) => {
+    const layer = recordToLayer(record, options);
+    return asPromise ? Promise.resolve(layer) : layer;
 };

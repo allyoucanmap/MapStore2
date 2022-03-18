@@ -150,7 +150,7 @@ export default (API) => ({
                                 }
                                 const layerBaseConfig = {}; // DO WE NEED TO FETCH IT FROM STATE???
                                 const authkeyParamName = authkeyParamNameSelector(state);
-                                const layer = API[format].recordToLayer(record, {
+                                const layer = API[format].getLayerFromRecord(record, {
                                     removeParams: authkeyParamName,
                                     catalogURL: format === 'csw' && url
                                         ? url + "?request=GetRecordById&service=CSW&version=2.0.2&elementSetName=full&id=" + record.identifier

@@ -126,7 +126,7 @@ export const getCatalogRecords = (records, options) => {
     return null;
 };
 
-export const recordToLayer = (record, {
+const recordToLayer = (record, {
     removeParams = [],
     format,
     catalogURL,
@@ -199,6 +199,7 @@ export const recordToLayer = (record, {
     };
 };
 
-export const getLayerFromRecord = (record, options) => {
-    return Promise.resolve(recordToLayer(record, options));
+export const getLayerFromRecord = (record, options, asPromise) => {
+    const layer = recordToLayer(record, options);
+    return asPromise ? Promise.resolve(layer) : layer;
 };

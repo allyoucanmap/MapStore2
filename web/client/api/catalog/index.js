@@ -31,8 +31,7 @@ import { validate, testService, preprocess } from './common';
  * }
  * ```
  * - `getCatalogRecords` (data, options) => function that returns an array of catalogs records
- * - `recordToLayer` (record, options) => function that returns a mapstore layer configuration object given a catalog record
- * - `getLayerFromRecord` (record, options) => function that returns a promise that resolve with a mapstore layer configuration object given a catalog record
+ * - `getLayerFromRecord` (record, options, asPromise) => function that returns a promise/object that resolve with a mapstore layer configuration object given a catalog record
  * Optionally implements validation functions:
  * - `parseUrl` return a url string parsed used by default testService
  * - `preprocess` return an Observable that performs actions on service object prior to its save

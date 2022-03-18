@@ -119,7 +119,7 @@ export const getCatalogRecords = ({records} = {}) => {
     return null;
 };
 
-export const recordToLayer = (record) => {
+const recordToLayer = (record) => {
     const DEFAULT_VECTOR_STYLE = {
         "weight": 1,
         "color": "rgba(0, 0, 255, 1)",
@@ -147,6 +147,7 @@ export const recordToLayer = (record) => {
     };
 };
 
-export const getLayerFromRecord = (record, options) => {
-    return Promise.resolve(recordToLayer(record, options));
+export const getLayerFromRecord = (record, options, asPromise) => {
+    const layer = recordToLayer(record, options);
+    return asPromise ? Promise.resolve(layer) : layer;
 };

@@ -9,7 +9,7 @@
 import expect from 'expect';
 import {
     getCatalogRecords,
-    recordToLayer
+    getLayerFromRecord
 } from '../WMS';
 
 describe('Test correctness of the WMS APIs', () => {
@@ -67,7 +67,7 @@ describe('Test correctness of the WMS APIs', () => {
             }]
         }, { url: 'http://sample' });
         expect(records.length).toBe(1);
-        const layer = recordToLayer(records[0]);
+        const layer = getLayerFromRecord(records[0]);
         expect(layer.allowedSRS['EPSG:4326']).toBe(true);
         expect(layer.allowedSRS['EPSG:3857']).toBe(true);
         expect(layer.allowedSRS['EPSG:5041']).toNotExist();
@@ -77,7 +77,7 @@ describe('Test correctness of the WMS APIs', () => {
             records: [{}]
         }, { url: 'http://sample1, http://sample2' });
         expect(records.length).toBe(1);
-        const layer = recordToLayer(records[0]);
+        const layer = getLayerFromRecord(records[0]);
         expect(layer.url.length).toBe(2);
         expect(layer.url[0]).toBe('http://sample1');
         expect(layer.url[1]).toBe('http://sample2');
@@ -94,7 +94,7 @@ describe('Test correctness of the WMS APIs', () => {
             }
         });
         expect(records.length).toBe(1);
-        const layer = recordToLayer(records[0]);
+        const layer = getLayerFromRecord(records[0]);
         expect(layer.tileSize).toBe(512);
     });
 
@@ -109,7 +109,7 @@ describe('Test correctness of the WMS APIs', () => {
         });
         const resolutions = [156543, 78271, 39135, 19567, 9783, 4891, 2445, 1222];
         expect(records.length).toBe(1);
-        const layer = recordToLayer(records[0], { map: { projection: "EPSG:900913", resolutions } });
+        const layer = getLayerFromRecord(records[0], { map: { projection: "EPSG:900913", resolutions } });
         expect(Math.ceil(layer.minResolution)).toBe(1);
         expect(Math.ceil(layer.maxResolution)).toBe(21);
     });
@@ -127,7 +127,7 @@ describe('Test correctness of the WMS APIs', () => {
         );
         expect(records.length).toBe(1);
         const sampleUrl = "http://sample";
-        const layer = recordToLayer(records[0], { catalogURL: sampleUrl });
+        const layer = getLayerFromRecord(records[0], { catalogURL: sampleUrl });
 
         expect(layer.url).toBe(sampleUrl);
     });

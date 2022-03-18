@@ -153,7 +153,7 @@ export const tileProviderToLayer = (record) => {
     };
 };
 
-export const recordToLayer = (record, options) => {
+const recordToLayer = (record, options) => {
     if (record.layerType === 'tms') {
         return tmsToLayer(record, options);
     }
@@ -163,15 +163,18 @@ export const recordToLayer = (record, options) => {
     return null;
 };
 
-export const getLayerFromRecord = (record, options) => {
-    if (record.layerType === 'tms') {
-        return getTileMap(record.tileMapUrl)
-            .then((tileMap) => {
-                return tmsToLayer(record, {
-                    ...options,
-                    tileMap
+export const getLayerFromRecord = (record, options, asPromise) => {
+    if (asPromise) {
+        if (record.layerType === 'tms') {
+            return getTileMap(record.tileMapUrl)
+                .then((tileMap) => {
+                    return tmsToLayer(record, {
+                        ...options,
+                        tileMap
+                    });
                 });
-            });
+        }
+        return Promise.resolve(tileProviderToLayer(record));
     }
-    return Promise.resolve(tileProviderToLayer(record));
+    return recordToLayer(record, options);
 };
