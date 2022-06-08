@@ -12,7 +12,7 @@ import {
     GeographicTilingScheme
 } from 'cesium';
 
-function EmptyImageryProvider({ color = '#ffffff' } = {}) {
+export function EmptyImageryProvider({ color = '#ffffff' } = {}) {
     this._tilingScheme = new GeographicTilingScheme();
     this._readyPromise = when.resolve(true);
     // create a tile 1px x 1px of color white to simulate an empty background

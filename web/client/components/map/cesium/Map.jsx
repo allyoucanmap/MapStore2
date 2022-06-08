@@ -29,6 +29,7 @@ import {
 import { reprojectBbox } from '../../../utils/CoordinatesUtils';
 import assign from 'object-assign';
 import { throttle, isEqual } from 'lodash';
+import { EmptyImageryProvider } from './plugins/EmptyLayer';
 
 class CesiumMap extends React.Component {
     static propTypes = {
@@ -97,7 +98,7 @@ class CesiumMap extends React.Component {
     componentDidMount() {
         const creditContainer = document.querySelector(this.props.mapOptions?.attribution?.container || '#footer-attribution-container');
         let map = new Cesium.Viewer(this.getDocument().getElementById(this.props.id), assign({
-            imageryProvider: new Cesium.OpenStreetMapImageryProvider(), // redefining to avoid to use default bing (that queries the bing API without any reason, because baseLayerPicker is false, anyway)
+            imageryProvider: new EmptyImageryProvider(),
             baseLayerPicker: false,
             animation: false,
             fullscreenButton: false,
@@ -113,7 +114,10 @@ class CesiumMap extends React.Component {
             // to avoid error on mount
             creditContainer: creditContainer
                 ? creditContainer
-                : undefined
+                : undefined,
+            requestRenderMode: true,
+            maximumRenderTimeChange: Infinity,
+            skyBox: false
         }, this.getMapOptions(this.props.mapOptions)));
 
         if (this.props.errorPanel) {
@@ -162,6 +166,7 @@ class CesiumMap extends React.Component {
         scene.globe.depthTestAgainstTerrain = this.props.mapOptions?.depthTestAgainstTerrain ?? false;
 
         this.forceUpdate();
+        map.scene.requestRender();
     }
 
     UNSAFE_componentWillReceiveProps(newProps) {

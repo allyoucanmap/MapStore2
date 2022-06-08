@@ -26,7 +26,14 @@ const createLayer = (options, map) => {
         features
     };
 
-    dataSource.load(collection).then(() => {
+    dataSource.load(collection, {
+        // ensure default style is not applied
+        stroke: new Cesium.Color(0, 0, 0, 0),
+        fill: new Cesium.Color(0, 0, 0, 0),
+        markerColor: new Cesium.Color(0, 0, 0, 0),
+        strokeWidth: 0,
+        markerSize: 0
+    }).then(() => {
         map.dataSources.add(dataSource);
         layerToGeoStylerStyle(options)
             .then((style) => {
@@ -38,6 +45,7 @@ const createLayer = (options, map) => {
                                 map,
                                 opacity: options.opacity ?? 1
                             });
+                            map.scene.requestRender();
                         }
                     });
             });
@@ -68,6 +76,7 @@ Layers.registerType('vector', {
         }
         if (newOptions.visibility !== oldOptions.visibility) {
             layer.setVisible(newOptions.visibility);
+            map.scene.requestRender();
         }
         if (layer?.dataSource?.entities?.values
             && (
@@ -85,6 +94,7 @@ Layers.registerType('vector', {
                                     map,
                                     opacity: newOptions.opacity ?? 1
                                 });
+                                map.scene.requestRender();
                             }
                         });
                 });

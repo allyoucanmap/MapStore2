@@ -34,7 +34,18 @@ const createLoader = (source, options) => (extent, resolution, projection) => {
     }).then(response => {
         if (response.status === 200) {
             source.addFeatures(
-                source.getFormat().readFeatures(response.data));
+                source.getFormat().readFeatures({
+                    ...response.data,
+                    features: response.data.features.map((feature) => {
+                        const { properties = {} } = feature;
+                        // exclude geometry if exist to avoid conflict with the default geometry property
+                        const { geometry, ...validProperties } = properties;
+                        return {
+                            ...feature,
+                            properties: validProperties
+                        };
+                    })
+                }));
         } else {
             onError();
         }
