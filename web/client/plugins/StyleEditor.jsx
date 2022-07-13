@@ -15,7 +15,7 @@ import { branch, compose, lifecycle, toClass } from 'recompose';
 import { createSelector } from 'reselect';
 
 import { updateSettingsParams } from '../actions/layers';
-import { initStyleService, toggleStyleEditor } from '../actions/styleeditor';
+import { initStyleService, toggleStyleEditor, setStyleEditorOptions } from '../actions/styleeditor';
 import HTML from '../components/I18N/HTML';
 import BorderLayout from '../components/layout/BorderLayout';
 import emptyState from '../components/misc/enhancers/emptyState';
@@ -49,7 +49,9 @@ class StyleEditorPanel extends React.Component {
         editingAllowedRoles: PropTypes.array,
         enableSetDefaultStyle: PropTypes.bool,
         canEdit: PropTypes.bool,
-        editorConfig: PropTypes.object
+        editorConfig: PropTypes.object,
+        disabledWorkspaceCapabilities: PropTypes.array,
+        setOptions: PropTypes.func
     };
 
     static defaultProps = {
@@ -58,10 +60,13 @@ class StyleEditorPanel extends React.Component {
         editingAllowedRoles: [
             'ADMIN'
         ],
-        editorConfig: {}
+        editorConfig: {},
+        disabledWorkspaceCapabilities: [],
+        setOptions: () => {}
     };
 
     UNSAFE_componentWillMount() {
+        this.props.setOptions({ disabledWorkspaceCapabilities: this.props.disabledWorkspaceCapabilities });
         const canEdit = !this.props.editingAllowedRoles || (isArray(this.props.editingAllowedRoles) && isString(this.props.userRole)
             && this.props.editingAllowedRoles.indexOf(this.props.userRole) !== -1);
         this.props.onInit(this.props.styleService, canEdit && isSameOrigin(this.props.layer, this.props.styleService));
@@ -152,7 +157,8 @@ const StyleEditorPlugin = compose(
         ),
         {
             onInit: initStyleService,
-            onUpdateParams: updateSettingsParams
+            onUpdateParams: updateSettingsParams,
+            setOptions: setStyleEditorOptions
         },
         (stateProps, dispatchProps, ownProps) => {
             // detect if the static service has been updated with new information in the global state

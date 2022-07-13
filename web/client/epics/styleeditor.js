@@ -53,7 +53,8 @@ import {
     loadingStyleSelector,
     styleServiceSelector,
     getUpdatedLayer,
-    editorMetadataSelector
+    editorMetadataSelector,
+    getStyleEditorOptions
 } from '../selectors/styleeditor';
 
 import { getSelectedLayer, layerSettingSelector } from '../selectors/layers';
@@ -192,14 +193,18 @@ const updateLayerSettingsObservable = (action$, store, filter = () => true, star
         );
 
 
-function getAvailableStylesFromLayerCapabilities(layer, reset) {
+function getAvailableStylesFromLayerCapabilities(layer, reset, store) {
     if (!reset && layer.availableStyles) {
         return Rx.Observable.of(
             updateSettingsParams({ availableStyles: layer.availableStyles  }),
             loadedStyle()
         );
     }
-    return getLayerCapabilities(layer)
+    const {
+        disabledWorkspaceCapabilities = []
+    } = getStyleEditorOptions(store.getState());
+    const isWorkspaceCapabilitiesDisabled = !!disabledWorkspaceCapabilities.find(geoServerUrl => layer.url.match(geoServerUrl));
+    return getLayerCapabilities({ ...layer, requestFullCapabilities: isWorkspaceCapabilitiesDisabled })
         .switchMap((capabilities) => {
             const layerCapabilities = formatCapabitiliesOptions(capabilities);
             if (!layerCapabilities.availableStyles) {
@@ -256,7 +261,7 @@ export const toggleStyleEditorEpic = (action$, store) =>
 
             const geoserverName = findGeoServerName(layer);
             if (!geoserverName) {
-                return getAvailableStylesFromLayerCapabilities(layer);
+                return getAvailableStylesFromLayerCapabilities(layer, false, store);
             }
 
             const layerUrl = layer.url.split(geoserverName);
@@ -332,7 +337,7 @@ export const toggleStyleEditorEpic = (action$, store) =>
                                 })
                                 .catch(() => {
                                     // fallback to get capabilities to get list of styles
-                                    return getAvailableStylesFromLayerCapabilities(layer, true);
+                                    return getAvailableStylesFromLayerCapabilities(layer, true, store);
                                 })
                         );
                     })

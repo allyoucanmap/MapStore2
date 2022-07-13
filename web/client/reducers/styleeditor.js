@@ -16,7 +16,8 @@ import {
     LOADED_STYLE,
     INIT_STYLE_SERVICE,
     SET_EDIT_PERMISSION,
-    UPDATE_EDITOR_METADATA
+    UPDATE_EDITOR_METADATA,
+    SET_STYLE_EDITOR_OPTIONS
 } from '../actions/styleeditor';
 
 import isString from 'lodash/isString';
@@ -69,7 +70,8 @@ function styleeditor(state = {}, action) {
         return {
             service: state.service && {...state.service} || {},
             canEdit: state.canEdit,
-            loading: state.loading
+            loading: state.loading,
+            options: state.options
         };
     }
     case ADD_STYLE: {
@@ -126,6 +128,15 @@ function styleeditor(state = {}, action) {
             metadata: {
                 ...state.metadata,
                 ...action.metadata
+            }
+        };
+    }
+    case SET_STYLE_EDITOR_OPTIONS: {
+        return {
+            ...state,
+            options: {
+                ...state?.options,
+                ...action?.options
             }
         };
     }

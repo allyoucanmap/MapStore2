@@ -23,6 +23,7 @@ export const INIT_STYLE_SERVICE = 'STYLEEDITOR:INIT_STYLE_SERVICE';
 export const SET_EDIT_PERMISSION = 'STYLEEDITOR:SET_EDIT_PERMISSION';
 export const SET_DEFAULT_STYLE = 'STYLEEDITOR:SET_DEFAULT_STYLE';
 export const UPDATE_EDITOR_METADATA = 'STYLEEDITOR:UPDATE_EDITOR_METADATA';
+export const SET_STYLE_EDITOR_OPTIONS = 'STYLEEDITOR:SET_STYLE_EDITOR_OPTIONS';
 
 /**
 * Toggle style editor, it triggers an epic to initialize or stop the style editor
@@ -189,11 +190,12 @@ export function deleteStyle(styleName) {
 * @param {bool} canEdit flag to enable/disable style editor in current session
 * @return {object} of type `INIT_STYLE_SERVICE`
 */
-export function initStyleService(service, canEdit) {
+export function initStyleService(service, canEdit, options) {
     return {
         type: INIT_STYLE_SERVICE,
         service,
-        canEdit
+        canEdit,
+        options
     };
 }
 /**
@@ -224,6 +226,13 @@ export function updateEditorMetadata(metadata) {
     return {
         type: UPDATE_EDITOR_METADATA,
         metadata
+    };
+}
+
+export function setStyleEditorOptions(options) {
+    return {
+        type: SET_STYLE_EDITOR_OPTIONS,
+        options
     };
 }
 

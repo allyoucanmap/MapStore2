@@ -619,7 +619,7 @@ export const findGeoServerName = ({url, regexRule}) => {
  * otherwise it returns the default getCapabilitiesUrl
  */
 export const getCapabilitiesUrl = (layer) => {
-    const matchedGeoServerName = LayersUtils.findGeoServerName({url: layer.url});
+    const matchedGeoServerName = !layer.requestFullCapabilities && LayersUtils.findGeoServerName({url: layer.url});
     let reqUrl = getLayerUrl(layer);
     if (!!matchedGeoServerName) {
         let urlParts = reqUrl.split(matchedGeoServerName);
