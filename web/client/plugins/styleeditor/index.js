@@ -6,22 +6,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React  from 'react';
+import React, { lazy }  from 'react';
 import { connect } from 'react-redux';
 import { branch, compose, defaultProps, lifecycle, withState } from 'recompose';
 import { createSelector } from 'reselect';
 
-import { updateOptionsByOwner } from '../../actions/additionallayers';
 import { getLayerCapabilities } from '../../actions/layerCapabilities';
 import { updateSettingsParams } from '../../actions/layers';
 import {
     addStyle,
     createStyle,
-    deleteStyle,
-    selectStyleTemplate,
-    setDefaultStyle,
-    updateStatus,
-    updateStyleCode
+    selectStyleTemplate
 } from '../../actions/styleeditor';
 import Message from '../../components/I18N/Message';
 import BorderLayout from '../../components/layout/BorderLayout';
@@ -31,30 +26,24 @@ import withMask from '../../components/misc/enhancers/withMask';
 import Loader from '../../components/misc/Loader';
 import StyleListComp from '../../components/styleeditor/StyleList';
 import StyleTemplatesComp from '../../components/styleeditor/StyleTemplates';
-import StyleToolbarComp from '../../components/styleeditor/StyleToolbar';
 import {
     addStyleSelector,
     canEditStyleSelector,
-    codeStyleSelector,
-    errorStyleSelector,
     geometryTypeSelector,
     getAllStyles,
     getUpdatedLayer,
-    initialCodeStyleSelector,
     loadingStyleSelector,
-    selectedStyleFormatSelector,
-    selectedStyleSelector,
     statusStyleSelector,
     styleServiceSelector,
     templateIdSelector
 } from '../../selectors/styleeditor';
 import {
-    STYLE_OWNER_NAME,
     getStyleTemplates
 } from '../../utils/StyleEditorUtils';
-import StyleCodeEditorComp from './StyleCodeEditor';
 
-export const StyleCodeEditor = StyleCodeEditorComp;
+import withSuspense from '../../components/misc/withSuspense';
+export const StyleCodeEditor = withSuspense()(lazy(() => import('./StyleCodeEditor')));
+
 const stylesTemplates = getStyleTemplates();
 
 const permissionDeniedEnhancers = emptyState(({canEdit}) => !canEdit, {glyph: 'exclamation-mark', title: <Message msgId="styleeditor.noPermission"/>});
@@ -140,49 +129,6 @@ export const StyleList = compose(
     )
 )(StyleListComp);
 
-export const StyleToolbar = compose(
-    withState('showModal', 'onShowModal'),
-    connect(
-        createSelector(
-            [
-                statusStyleSelector,
-                templateIdSelector,
-                errorStyleSelector,
-                initialCodeStyleSelector,
-                codeStyleSelector,
-                loadingStyleSelector,
-                selectedStyleSelector,
-                canEditStyleSelector,
-                getAllStyles,
-                styleServiceSelector,
-                selectedStyleFormatSelector
-            ],
-            (status, templateId, error, initialCode, code, loading, selectedStyle, canEdit, { defaultStyle }, { formats = [ 'sld' ] } = {}, format) => ({
-                status,
-                templateId,
-                error,
-                isCodeChanged: initialCode !== code,
-                loading,
-                layerDefaultStyleName: defaultStyle,
-                selectedStyle: defaultStyle === selectedStyle ? '' : selectedStyle,
-                editEnabled: canEdit,
-                // enable edit only if service support current format
-                disableCodeEditing: formats.indexOf(format) === -1
-            })
-        ),
-        {
-            onSelectStyle: updateStatus.bind(null, 'template'),
-            onEditStyle: updateStatus.bind(null, 'edit'),
-            onBack: updateStatus.bind(null, ''),
-            onReset: updateOptionsByOwner.bind(null, STYLE_OWNER_NAME, [{}]),
-            onAdd: addStyle.bind(null, true),
-            onUpdate: updateStyleCode,
-            onDelete: deleteStyle,
-            onSetDefault: setDefaultStyle
-        }
-    )
-)(StyleToolbarComp);
-
 const ReadOnlyStyleList = compose(
     connect(createSelector(
         [
@@ -217,6 +163,5 @@ export const StyleSelector = branch(
 export default {
     StyleSelector,
     StyleTemplates,
-    StyleToolbar,
     StyleCodeEditor
 };

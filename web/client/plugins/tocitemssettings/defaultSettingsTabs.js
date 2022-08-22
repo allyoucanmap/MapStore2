@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import React, { lazy } from 'react';
 import Message from '../../components/I18N/Message';
 import HTML from '../../components/I18N/HTML';
 import { filter, head, sortBy } from 'lodash';
@@ -33,7 +33,10 @@ import LoadingView from '../../components/misc/LoadingView';
 import html from 'raw-loader!./featureInfoPreviews/responseHTML.txt';
 import json from 'raw-loader!./featureInfoPreviews/responseJSON.txt';
 import text from 'raw-loader!./featureInfoPreviews/responseText.txt';
-import VectorStyleEditor from '../styleeditor/VectorStyleEditor';
+
+import withSuspense from '../../components/misc/withSuspense';
+export const VectorStyleEditor = withSuspense()(lazy(() => import('../styleeditor/VectorStyleEditor')));
+
 import { mapSelector } from '../../selectors/map';
 
 const responses = {

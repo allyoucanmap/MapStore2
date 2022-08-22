@@ -8,7 +8,7 @@
 
 import isArray from 'lodash/isArray';
 import isObject from 'lodash/isObject';
-import React, { useState }  from 'react';
+import React, { useState, lazy }  from 'react';
 import { Alert, Glyphicon } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
@@ -27,8 +27,7 @@ import Message from '../../components/I18N/Message';
 import BorderLayout from '../../components/layout/BorderLayout';
 import Loader from '../../components/misc/Loader';
 import Toolbar from '../../components/misc/toolbar/Toolbar';
-import TextareaEditor from '../../components/styleeditor/Editor';
-import VisualStyleEditor from '../../components/styleeditor/VisualStyleEditor';
+
 import {
     mapSelector,
     scalesSelector
@@ -46,11 +45,15 @@ import {
     styleServiceSelector
 } from '../../selectors/styleeditor';
 import { createShallowSelector } from '../../utils/ReselectUtils';
+import withSuspense from '../../components/misc/withSuspense';
 import {
     getEditorMode,
     getAttributes
 } from '../../utils/StyleEditorUtils';
 import inlineWidgets from './inlineWidgets';
+
+const VisualStyleEditor = withSuspense()(lazy(() => import('../../components/styleeditor/VisualStyleEditor')));
+const TextareaEditor = withSuspense()(lazy(() => import('../../components/styleeditor/Editor')));
 
 const styleUpdateTypes = {
     'classificationVector': classificationVector,

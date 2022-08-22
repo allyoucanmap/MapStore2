@@ -16,7 +16,7 @@
 				"name": "mapnik",
         "source": "osm",
 				"group": "background",
-        "visibility": true
+        "visibility": false
 			},
       {
         "type": "tileprovider",
@@ -56,10 +56,10 @@
         "title": "Empty Background",
         "fixed": true,
         "type": "empty",
-        "visibility": false,
+        "visibility": true,
         "args": [
           "Empty Background", {
-            "visibility": false
+            "visibility": true
           }
         ]
       }
