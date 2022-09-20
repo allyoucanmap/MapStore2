@@ -57,6 +57,14 @@ export function loadFeatureInfo(reqId, data, rParams, lMetaData, layer) {
     };
 }
 
+export function loadFeatureInfoBulk(responses) {
+    return {
+        type: LOAD_FEATURE_INFO,
+        bulk: true,
+        responses
+    };
+}
+
 /**
  * Private
  * @return a ERROR_FEATURE_INFO action with the error occurred
@@ -68,6 +76,14 @@ export function errorFeatureInfo(reqId, e, rParams, lMetaData) {
         reqId: reqId,
         requestParams: rParams,
         layerMetadata: lMetaData
+    };
+}
+
+export function errorFeatureInfoBulk(responses) {
+    return {
+        type: ERROR_FEATURE_INFO,
+        bulk: true,
+        responses
     };
 }
 
@@ -83,6 +99,14 @@ export function exceptionsFeatureInfo(reqId, exceptions, rParams, lMetaData) {
         exceptions: exceptions,
         requestParams: rParams,
         layerMetadata: lMetaData
+    };
+}
+
+export function exceptionsFeatureInfoBulk(responses) {
+    return {
+        type: EXCEPTIONS_FEATURE_INFO,
+        bulk: true,
+        responses
     };
 }
 
@@ -106,6 +130,14 @@ export function newMapInfoRequest(reqId, reqConfig) {
     };
 }
 
+export function newMapInfoRequestBulk(requests) {
+    return {
+        type: NEW_MAPINFO_REQUEST,
+        bulk: true,
+        requests
+    };
+}
+
 export function getVectorInfo(layer, request, metadata, queryableLayers) {
     return {
         type: GET_VECTOR_INFO,
@@ -113,6 +145,14 @@ export function getVectorInfo(layer, request, metadata, queryableLayers) {
         request,
         metadata,
         queryableLayers
+    };
+}
+
+export function getVectorInfoBulk(responses) {
+    return {
+        type: GET_VECTOR_INFO,
+        bulk: true,
+        responses
     };
 }
 

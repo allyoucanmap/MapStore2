@@ -19,7 +19,12 @@ import {
     exceptionsFeatureInfo, loadFeatureInfo, errorFeatureInfo,
     noQueryableLayers, newMapInfoRequest, getVectorInfo,
     showMapinfoMarker, hideMapinfoMarker, setCurrentEditFeatureQuery,
-    SET_MAP_TRIGGER, CLEAR_WARNING
+    SET_MAP_TRIGGER, CLEAR_WARNING, EXCEPTIONS_FEATURE_INFO,
+    newMapInfoRequestBulk,
+    loadFeatureInfoBulk,
+    exceptionsFeatureInfoBulk,
+    errorFeatureInfoBulk,
+    getVectorInfoBulk
 } from '../actions/mapInfo';
 
 import { SET_CONTROL_PROPERTIES, SET_CONTROL_PROPERTY, TOGGLE_CONTROL } from '../actions/controls';
@@ -96,11 +101,13 @@ export const getFeatureInfoOnFeatureInfoClick = (action$, { getState = () => { }
                 "filter",
                 "propertyName"
             ];
-            const out$ = Rx.Observable.from((queryableLayers.filter(l => {
-            // filtering a subset of layers
-                return filterNameList.length ? (filterNameList.filter(name => name.indexOf(l.name) !== -1).length > 0) : true;
-            })))
-                .mergeMap(layer => {
+
+            const queryableLayersInfo = queryableLayers
+                .filter(l => {
+                    // filtering a subset of layers
+                    return filterNameList.length ? (filterNameList.filter(name => name.indexOf(l.name) !== -1).length > 0) : true;
+                })
+                .map((layer) => {
                     let env = localizedLayerStylesEnvSelector(getState());
                     let { url, request, metadata } = buildIdentifyRequest(layer, {...identifyOptionsSelector(getState()), env});
                     // request override
@@ -119,17 +126,80 @@ export const getFeatureInfoOnFeatureInfoClick = (action$, { getState = () => { }
                         const itemId = itemIdSelector(getState());
                         const reqId = uuid.v1();
                         const param = { ...appParams, ...requestParams };
-                        return getFeatureInfo(basePath, param, layer, {attachJSON, itemId})
-                            .map((response) =>
-                                response.data.exceptions
-                                    ? exceptionsFeatureInfo(reqId, response.data.exceptions, requestParams, lMetaData)
-                                    : loadFeatureInfo(reqId, response.data, requestParams, { ...lMetaData, features: response.features, featuresCrs: response.featuresCrs }, layer)
-                            )
-                            .catch((e) => Rx.Observable.of(errorFeatureInfo(reqId, e.data || e.statusText || e.status, requestParams, lMetaData)))
-                            .startWith(newMapInfoRequest(reqId, param));
+                        return {
+                            basePath,
+                            lMetaData,
+                            attachJSON,
+                            layer,
+                            url,
+                            request,
+                            itemId,
+                            reqId,
+                            metadata,
+                            param
+                        };
                     }
-                    return Rx.Observable.of(getVectorInfo(layer, request, metadata, queryableLayers));
+                    return {
+                        layer,
+                        url,
+                        request,
+                        metadata
+                    };
                 });
+
+
+            if (queryableLayersInfo.length === 0) {
+                return Rx.Observable.of(purgeMapInfoResults(), noQueryableLayers());
+            }
+
+            const getFeatureInfoRequests = queryableLayersInfo.filter(({ url }) => url);
+
+            const out$ = Rx.Observable.concat(
+                ...(getFeatureInfoRequests.length > 0
+                    ? [ Rx.Observable.of(newMapInfoRequestBulk(getFeatureInfoRequests.map(({ reqId, param }) => newMapInfoRequest(reqId, param))))]
+                    : []),
+                Rx.Observable.defer(() => {
+                    return Promise.all(
+                        queryableLayersInfo.map(({
+                            basePath,
+                            lMetaData,
+                            attachJSON,
+                            layer,
+                            url,
+                            request: requestParams,
+                            itemId,
+                            reqId,
+                            metadata,
+                            param
+                        }) => {
+                            if (url) {
+                                return getFeatureInfo(basePath, param, layer, {attachJSON, itemId})
+                                    .toPromise()
+                                    .then((response) =>
+                                        response.data.exceptions
+                                            ? exceptionsFeatureInfo(reqId, response.data.exceptions, requestParams, lMetaData)
+                                            : loadFeatureInfo(reqId, response.data, requestParams, { ...lMetaData, features: response.features, featuresCrs: response.featuresCrs }, layer)
+                                    )
+                                    .catch((e) => errorFeatureInfo(reqId, e.data || e.statusText || e.status, requestParams, lMetaData));
+                            }
+                            return Promise.resolve(getVectorInfo(layer, requestParams, metadata, queryableLayers));
+                        })
+                    );
+                })
+                    .switchMap((actions) => {
+                        const exceptionsFeatureInfoActions = actions.filter(({ type }) => type === EXCEPTIONS_FEATURE_INFO);
+                        const loadFeatureInfoActions = actions.filter(({ type }) => type === LOAD_FEATURE_INFO);
+                        const errorFeatureInfoActions = actions.filter(({ type }) => type === ERROR_FEATURE_INFO);
+                        const getVectorInfoActions = actions.filter(({ type }) => type === GET_VECTOR_INFO);
+                        return Rx.Observable.of(
+                            ...(loadFeatureInfoActions.length > 0 ? [loadFeatureInfoBulk(loadFeatureInfoActions)] : []),
+                            ...(exceptionsFeatureInfoActions.length > 0 ? [exceptionsFeatureInfoBulk(exceptionsFeatureInfoActions)] : []),
+                            ...(errorFeatureInfoActions.length > 0 ? [errorFeatureInfoBulk(errorFeatureInfoActions)] : []),
+                            ...(getVectorInfoActions.length > 0 ? [getVectorInfoBulk(getVectorInfoActions)] : [])
+                        );
+                    })
+            );
+
             // NOTE: multiSelection is inside the event
             // TODO: move this flag in the application state
             if (point && point.modifiers && point.modifiers.ctrl === true && point.multiSelection) {
