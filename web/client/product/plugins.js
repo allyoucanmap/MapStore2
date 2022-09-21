@@ -46,6 +46,7 @@ export const plugins = {
 
     // ### DYNAMIC PLUGINS ### //
     // product plugins
+    MapViewsPlugin: toModulePlugin('MapViews', () => import(/* webpackChunkName: 'plugins/map-views' */ '../plugins/MapViews')),
     AboutPlugin: toModulePlugin('About', () => import(/* webpackChunkName: 'plugins/about' */ './plugins/About')),
     AttributionPlugin: toModulePlugin('Attribution', () => import(/* webpackChunkName: 'plugins/attribution' */ './plugins/Attribution')),
     FooterPlugin: toModulePlugin('Footer', () => import(/* webpackChunkName: 'plugins/footer' */ './plugins/Footer'), {}, 'FooterPlugin'),

@@ -14,7 +14,11 @@
           "https://gs-stable.geosolutionsgroup.com/geoserver",
           "https://gs-stable.geosolutionsgroup.com:443/geoserver",
           "http://gs-stable.geosolutionsgroup.com/geoserver",
-          "http://gs-stable.geosolutionsgroup.com:443/geoserver"
+          "http://gs-stable.geosolutionsgroup.com:443/geoserver",
+          "http://localhost:8080/geoserver",
+          "http://localhost:8000/tiles/",
+          "http://localhost:8000/update/",
+          "http://localhost:8080/geoserver/"
         ]
     },
     "geoStoreUrl": "rest/geostore/",
@@ -496,7 +500,13 @@
             "Playback",
             "FeedbackMask",
             "StyleEditor",
-            "DeleteMap"
+            "DeleteMap",
+            {
+              "name": "MapViews",
+              "cfg": {
+
+              }
+            }
         ],
         "embedded": ["Details", {
                 "name": "Map",
