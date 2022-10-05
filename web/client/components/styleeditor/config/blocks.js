@@ -296,6 +296,50 @@ const getBlocks = ({
                 fillOpacity: 1
             }
         },
+        ...(enable3dStyleOptions && {
+            Model: {
+                kind: 'Model',
+                glyph: 'point',
+                glyphAdd: 'user',
+                tooltipAddId: 'styleeditor.addIconRule',
+                supportedTypes: ['point', 'vector'],
+                hideMenu: true,
+                params: {
+                    model: property.model({
+                        label: 'styleeditor.model',
+                        key: 'model'
+                    }),
+                    scale: property.size({
+                        key: 'scale',
+                        label: 'styleeditor.scale'
+                    }),
+                    heading: property.rotate({
+                        key: 'heading',
+                        label: 'styleeditor.heading'
+                    }),
+                    pitch: property.rotate({
+                        key: 'pitch',
+                        label: 'styleeditor.pitch'
+                    }),
+                    roll: property.rotate({
+                        key: 'roll',
+                        label: 'styleeditor.roll'
+                    }),
+                    color: property.color({
+                        key: 'color',
+                        opacityKey: 'opacity',
+                        label: 'styleeditor.color'
+                    })
+                },
+                defaultProperties: {
+                    kind: 'Model',
+                    model: '',
+                    scale: 1,
+                    color: '#ffffff',
+                    opacity: 1
+                }
+            }
+        }),
         Text: {
             kind: 'Text',
             glyph: 'font',

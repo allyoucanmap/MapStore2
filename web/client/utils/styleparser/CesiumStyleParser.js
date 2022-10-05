@@ -214,6 +214,26 @@ function getStyleFuncFromRules({
                                 outlineWidth: symbolizer.haloWidth
                             });
                         }
+                        if (symbolizer.kind === 'Model' && entity.position) {
+                            if (!entity._msStoredPosition) {
+                                entity._msStoredPosition = entity.position.getValue(Cesium.JulianDate.now());
+                            }
+                            const position = entity._msStoredPosition;
+                            const heading = Cesium.Math.toRadians(symbolizer?.heading ?? 0);
+                            const pitch = Cesium.Math.toRadians(symbolizer?.pitch ?? 0);
+                            const roll = Cesium.Math.toRadians(symbolizer?.roll ?? 0);
+                            const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+                            const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+                            entity.orientation = orientation;
+                            entity.model = new Cesium.ModelGraphics({
+                                uri: symbolizer?.model,
+                                scale: symbolizer?.scale ?? 1,
+                                color: getCesiumColor({
+                                    color: symbolizer.color ?? '#ffffff',
+                                    opacity: (symbolizer.opacity ?? 1) * globalOpacity
+                                })
+                            });
+                        }
                     }
                 });
             });
