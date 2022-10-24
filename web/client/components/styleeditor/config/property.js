@@ -355,6 +355,16 @@ const property = {
             };
         }
     }),
+    model: ({ label, key = 'model' }) => ({
+        type: 'input',
+        label,
+        config: {},
+        getValue: (value = '') => {
+            return {
+                [key]: value
+            };
+        }
+    }),
     fontStyle: ({ label, key = 'fontStyle' }) => ({
         type: 'toolbar',
         label,
