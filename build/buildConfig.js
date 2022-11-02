@@ -187,7 +187,10 @@ module.exports = (...args) => mapArgumentsToObject(args, ({
     resolve: {
         fallback: {
             timers: false,
-            stream: false
+            stream: false,
+            http: false,
+            https: false,
+            zlib: false
         },
         extensions: [".js", ".jsx"],
         alias: assign({}, {

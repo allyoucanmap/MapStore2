@@ -7,14 +7,11 @@
  */
 
 import Layers from '../../../../utils/cesium/Layers';
-import {
-    when,
-    GeographicTilingScheme
-} from 'cesium';
+import { GeographicTilingScheme } from 'cesium';
 
 function EmptyImageryProvider({ color = '#ffffff' } = {}) {
     this._tilingScheme = new GeographicTilingScheme();
-    this._readyPromise = when.resolve(true);
+    this._readyPromise = Promise.resolve(true);
     // create a tile 1px x 1px of color white to simulate an empty background
     this._canvas = document.createElement('canvas');
     this._canvas.width = 1;

@@ -8,18 +8,12 @@
 
 import { Observable } from 'rxjs';
 import { isValidURLTemplate } from '../../utils/URLUtils';
-import { preprocess as commonPreprocess } from './common';
+import { preprocess as commonPreprocess, ServiceValidationError } from './common';
 import { getCapabilities } from '../ThreeDTiles';
+import axios from '../../libs/ajax';
 
 function validateUrl(serviceUrl) {
-    if (isValidURLTemplate(serviceUrl)) {
-        const parts = serviceUrl.split(/\./g);
-        // from spec: Tileset files use the .json extension and the application/json MIME type.
-        return parts[parts.length - 1] === 'json'
-            ? true
-            : false;
-    }
-    return false;
+    return isValidURLTemplate(serviceUrl);
 }
 
 const recordToLayer = (record) => {
@@ -63,7 +57,14 @@ const getRecords = (url, startPosition, maxRecords, text, info) => {
 };
 
 export const preprocess = commonPreprocess;
-export const testService = (service) => Observable.of(service);
+export const testService = (service) => Observable.defer(() => axios.get(service.url))
+    .catch(() => { throw new ServiceValidationError('Service Test error', 'catalog.notification.errorServiceUrl'); })
+    .switchMap(({ data }) => {
+        if (!data?.root) {
+            throw new ServiceValidationError('Service Test error', 'catalog.notification.errorServiceUrl');
+        }
+        return Observable.of(service);
+    });
 export const textSearch = (url, startPosition, maxRecords, text, info) => getRecords(url, startPosition, maxRecords, text, info);
 export const getCatalogRecords = (response) => {
     return response?.records

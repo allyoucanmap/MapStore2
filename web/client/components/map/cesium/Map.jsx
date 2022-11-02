@@ -329,7 +329,11 @@ class CesiumMap extends React.Component {
                     msId = feature.tileset.msId;
                     // 3d tile feature does not contain a geometry in the Cesium3DTileFeature class
                     // it has content but refers to the whole tile model
-                    const propertyNames = feature.getPropertyNames();
+                    const propertyNames = feature?.getPropertyNames
+                        ? feature.getPropertyNames()
+                        : feature?.getPropertyIds
+                            ? feature.getPropertyIds()
+                            : [];
                     properties = Object.fromEntries(propertyNames.map(key => [key, feature.getProperty(key)]));
                 } else if (feature?.id instanceof Cesium.Entity && feature.id.id && feature.id.properties) {
                     const {properties: {propertyNames}, entityCollection: {owner: {name}}} = feature.id;
