@@ -1727,7 +1727,9 @@
                     "edge": "Bordo",
                     "pixelTolerance": "Tolleranza (pixel)",
                     "loadingStrategy": "Strategia di caricamento"
-                  }
+                  },
+                "disableViewportFilter": "Non filtrare i dati in base alla vista corrente",
+                "enableViewportFilter": "Filtra i dati in base alla vista corrente"
             }
         },
         "layerdownload": {
@@ -2403,7 +2405,9 @@
             "pitch": "Rotazione asse X",
             "roll": "Rotazione asse Y",
             "color": "Colore",
-            "pointHeight": "Altezza punto"
+            "pointHeight": "Altezza punto",
+            "leaderLineColor": "Colore linea guida",
+            "leaderLineWidth": "Spessore linea guida"
         },
         "playback": {
             "settings": {
@@ -2467,6 +2471,11 @@
             "disablePlayBack": "Disabilita i controlli di riproduzione",
             "expand" : "Espandi",
             "collapse" : "Riduci",
+            "reset" : {
+                "range": "Imposta l'intervallo per includere tutti i dati",
+                "singleNow": "Imposta l'ora su adesso",
+                "singleNearest": "Imposta l'ora sul valore più vicino a adesso"
+            },
             "collapsed": {
                 "title": "La timeline è stata collassata",
                 "tooltip": "Clicca qui per espanderla di nuovo"

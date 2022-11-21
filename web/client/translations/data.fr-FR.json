@@ -1728,7 +1728,9 @@
                   "edge": "Bord",
                   "pixelTolerance": "Tolérance (pixel)",
                   "loadingStrategy": "Stratégie de chargement"
-              }
+              },
+              "disableViewportFilter": "Ne pas filtrer les données par la fenêtre actuelle",
+              "enableViewportFilter": "Filtrer les données par la fenêtre actuelle"
             }
         },
         "layerdownload": {
@@ -2402,7 +2404,9 @@
             "pitch": "Rotation de l'axe X",
             "roll": "Rotation de l'axe Y",
             "color": "Couleur",
-            "pointHeight": "Hauteur du point"
+            "pointHeight": "Hauteur du point",
+            "leaderLineColor": "Couleur de la ligne de repère",
+            "leaderLineWidth": "Largeur de la ligne de repère"
         },
         "playback": {
             "settings": {
@@ -2466,6 +2470,11 @@
             "disablePlayBack": "Désactiver les contrôles de lecture",
             "expand": "Développer le curseur temporel",
             "collapse": "Réduire le curseur temporel",
+            "reset" : {
+                "range": "Définir la plage pour inclure toutes les données",
+                "singleNow": "Réglez l'heure à maintenant",
+                "singleNearest": "Réglez l'heure sur la valeur la plus proche de maintenant"
+            },
             "collapsed": {
                 "title": "La timeline a été réduite",
                 "tooltip": "Cliquez ici pour la développer à nouveau"

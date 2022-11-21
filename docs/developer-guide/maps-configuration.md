@@ -123,19 +123,6 @@ i.e.
 !!! warning
     Actually the custom resolution values are valid for one single CRS. It's therefore suggested to avoid to add this parameter when multiple CRSs in the same map configuration are needed.
 
-## Additional map configuration options
-
-Map configuration also contains the following additional options:
-
-- `catalogServices` object describing services configuration for Catalog
-- `widgetsConfig` configuration of map widgets
-- `mapInfoConfiguration` map info configuration options
-- `dimensionData` contains map time information
-- `currentTime` currently selected time; the beginning of a time range if offsetTime is set
-- `offsetTime` the end of a time range
-- `timelineData` timeline options
-- `selectedLayer` selected layer id; if not present time cursor will be unlocked
-
 ## Layers options
 
 Every layer has it's own properties. Anyway there are some options valid for every layer:
@@ -858,69 +845,117 @@ example:
 
 Available logical operators:
 
-- `||` OR operator
-- `&&` AND operator
+| Operator | Description |
+| --- | --- |
+| `\|\|` | OR operator |
+| `&&` | AND operator |
 
 Available comparison operators:
 
-- `==` equal to
-- `*=` like (for string type)
-- `!=` is not
-- `<` less than
-- `<=` less and equal than
-- `>` grater than
-- `>=` grater and equal than
+| Operator | Description |
+| --- | --- |
+| `==` | equal to |
+| `*=` | like (for string type) |
+| `!=` | is not |
+| `<` | less than |
+| `<=` | less and equal than |
+| `>` | grater than |
+| `>=` | grater and equal than |
 
 The `symbolizer` could be of following `kinds`:
 
 - `Mark` symbolizer properties
-  - `kind` must be equal to `Mark`
-  - `color` fill color of the mark
-  - `fillOpacity` fill opacity of the mark
-  - `strokeColor` stroke color of the mark
-  - `strokeOpacity` stroke opacity of the mark
-  - `strokeWidth` stroke width of the mark
-  - `radius` radius size in px of the mark
-  - `msBringToFront` this boolean will allow setting the `disableDepthTestDistance` value for the feature. This would only apply on Cesium maps.
-  - `wellKnownName` rendered shape, one of Circle, Square, Triangle, Star, Cross, X, shape://vertline, shape://horline, shape://slash, shape://backslash, shape://dot, shape://plus, shape://times, shape://oarrow or shape://carrow
+
+  | Property | Description | 2D | 3D |
+  | --- | --- | --- | --- |
+  | `kind` | must be equal to **Mark** | x | x |
+  | `color` | fill color of the mark | x | x |
+  | `fillOpacity` | fill opacity of the mark | x | x |
+  | `strokeColor` | stroke color of the mark | x | x |
+  | `strokeOpacity` | stroke opacity of the mark | x | x |
+  | `strokeWidth` | stroke width of the mark | x | x |
+  | `radius` | radius size in px of the mark | x | x |
+  | `wellKnownName` | rendered shape, one of Circle, Square, Triangle, Star, Cross, X, shape://vertline, shape://horline, shape://slash, shape://backslash, shape://dot, shape://plus, shape://times, shape://oarrow or shape://carrow | x | x |
+  | `msBringToFront` | this boolean will allow setting the **disableDepthTestDistance** value for the feature. This would |  | x |
+  | `msHeightReference` | reference to compute the distance of the point geometry, one of **none**, **ground** or **clamp** |  | x |
+  | `msHeight` | height of the point, the original geometry is applied if undefined  |  | x |
+  | `msLeaderLineColor` | color of the leading line connecting the point to the terrain  |  | x |
+  | `msLeaderLineOpacity` | opacity of the leading line connecting the point to the terrain |  | x |
+  | `msLeaderLineWidth` | width of the leading line connecting the point to the terrain |  | x |
 
 - `Icon` symbolizer properties
-  - `kind` must be equal to `Icon`
-  - `image` url of the image to use as icon
-  - `size` size of the icon
-  - `opacity` opacity of the icon
-  - `rotate` rotation of the icon
-  - `msBringToFront` this boolean will allow setting the `disableDepthTestDistance` value for the feature. This would only apply on Cesium maps.
+  | Property | Description | 2D | 3D |
+  | --- | --- | --- | --- |
+  | `kind` | must be equal to **Icon** | x | x |
+  | `image` | url of the image to use as icon | x | x |
+  | `size` | size of the icon | x | x |
+  | `opacity` | opacity of the icon | x | x |
+  | `rotate` | rotation of the icon | x | x |
+  | `msBringToFront` | this boolean will allow setting the **disableDepthTestDistance** value for the feature. This would |  | x |
+  | `msHeightReference` | reference to compute the distance of the point geometry, one of **none**, **ground** or **clamp** |  | x |
+  | `msHeight` | height of the point, the original geometry is applied if undefined  |  | x |
+  | `msLeaderLineColor` | color of the leading line connecting the point to the terrain  |  | x |
+  | `msLeaderLineOpacity` | opacity of the leading line connecting the point to the terrain |  | x |
+  | `msLeaderLineWidth` | width of the leading line connecting the point to the terrain |  | x |
 
 - `Line` symbolizer properties
-  - `kind` must be equal to `Line`
-  - `color` stroke color of the line
-  - `opacity` stroke opacity of the line
-  - `width` stroke width of the line
-  - `dasharray` array that represent the dashed line intervals
-  - `msClampToGround` this boolean will allow setting the `clampToGround` value for the feature. This would only apply on Cesium maps.
+  | Property | Description | 2D | 3D |
+  | --- | --- | --- | --- |
+  | `kind` | must be equal to **Line** | x | x |
+  | `color` | stroke color of the line | x | x |
+  | `opacity` | stroke opacity of the line | x | x |
+  | `width` | stroke width of the line | x | x |
+  | `dasharray` | array that represent the dashed line intervals | x | x |
+  | `msClampToGround` | this boolean will allow setting the **clampToGround** value for the feature. This would only apply on Cesium maps. |  | x |
 
 - `Fill` symbolizer properties
-  - `kind` must be equal to `Fill`
-  - `color` fill color of the polygon
-  - `fillOpacity` fill opacity of the polygon
-  - `outlineColor` outline color of the polygon
-  - `outlineOpacity` outline opacity of the polygon
-  - `outlineWidth` outline width of the polygon
-  - `msClassificationType` allow setting `classificationType` value for the feature. This would only apply on polygon graphics in Cesium maps.
-  - `msClampToGround` this boolean will allow setting the `clampToGround` value for the feature. This would only apply on Cesium maps.
+  | Property | Description | 2D | 3D |
+  | --- | --- | --- | --- |
+  | `kind` | must be equal to **Fill** | x | x |
+  | `color` | fill color of the polygon | x | x |
+  | `fillOpacity` | fill opacity of the polygon | x | x |
+  | `outlineColor` | outline color of the polygon | x | x |
+  | `outlineOpacity` | outline opacity of the polygon | x | x |
+  | `outlineWidth` | outline width of the polygon | x | x |
+  | `msClassificationType` | allow setting **classificationType** value for the feature. This would only apply on polygon graphics in Cesium maps. |  | x |
+  | `msClampToGround` | this boolean will allow setting the **clampToGround** value for the feature. This would only apply on Cesium maps. |  | x |
 
 - `Text` symbolizer properties
-  - `kind` must be equal to `Text`
-  - `label` text to show in the label, the {{propertyKey}} notetion allow to access feature properties (eg. 'feature name is {{name}}')
-  - `font` array of font family names
-  - `size` font size of the label
-  - `fontStyle` font style of the label: normal or italic
-  - `fontWeight` font style of the label: normal or bold
-  - `color` font color of the label
-  - `haloColor` halo color of the label
-  - `haloWidth` halo width of the label
-  - `offset` array of x and y values offset of the label
+  | Property | Description | 2D | 3D |
+  | --- | --- | --- | --- |
+  | `kind` | must be equal to **Text** | x | x |
+  | `label` | text to show in the label, the {{propertyKey}} notetion allow to access feature properties (eg. 'feature name is {{name}}') | x | x |
+  | `font` | array of font family names | x | x |
+  | `size` | font size of the label | x | x |
+  | `fontStyle` | font style of the label: normal or italic | x | x |
+  | `fontWeight` | font style of the label: normal or bold | x | x |
+  | `color` | font color of the label | x | x |
+  | `haloColor` | halo color of the label | x | x |
+  | `haloWidth` | halo width of the label | x | x |
+  | `offset` | array of x and y values offset of the label | x | x |
+  | `msBringToFront` | this boolean will allow setting the **disableDepthTestDistance** value for the feature. This would |  | x |
+  | `msHeightReference` | reference to compute the distance of the point geometry, one of **none**, **ground** or **clamp** |  | x |
+  | `msHeight` | height of the point, the original geometry is applied if undefined  |  | x |
+  | `msLeaderLineColor` | color of the leading line connecting the point to the terrain  |  | x |
+  | `msLeaderLineOpacity` | opacity of the leading line connecting the point to the terrain |  | x |
+  | `msLeaderLineWidth` | width of the leading line connecting the point to the terrain |  | x |
+
+- `Model` symbolizer properties (custom symbolizer to visualize 3D model as point geometries)
+  | Property | Description | 2D | 3D |
+  | --- | --- | --- | --- |
+  | `kind` | must be equal to **Model** |  | x |
+  | `model` | url of a 3D .glb file |  | x |
+  | `heading` | heading rotation |  | x |
+  | `pitch` | pitch rotation |  | x |
+  | `roll` | roll rotation |  | x |
+  | `scale` | scale factor |  | x |
+  | `color` | color mixed with the mesh texture/material |  | x |
+  | `opacity` | color opacity |  | x |
+  | `msHeightReference` | reference to compute the distance of the point geometry, one of **none**, **ground** or **clamp** |  | x |
+  | `msHeight` | height of the point, the original geometry is applied if undefined  |  | x |
+  | `msLeaderLineColor` | color of the leading line connecting the point to the terrain  |  | x |
+  | `msLeaderLineOpacity` | opacity of the leading line connecting the point to the terrain |  | x |
+  | `msLeaderLineWidth` | width of the leading line connecting the point to the terrain |  | x |
 
 #### Legacy Vector Style (deprecated)
 
@@ -1472,3 +1507,155 @@ Due to the limitations posed by WMC format the conversion process will not prese
 to do this is to export to MapStore JSON format. The WMC export option presumably should be used in cases when the WMS layers inside
 a MapStore map need to be used in some way with a different geospatial software suite, or to import such layers from outside
 MapStore or if you already have WMC context files that you want to use.
+
+## Additional map configuration options
+
+Map configuration also contains the following additional options:
+
+- `catalogServices` object describing services configuration for Catalog
+- `widgetsConfig` configuration of map widgets
+- `mapInfoConfiguration` map info configuration options
+- `dimensionData` contains map time information
+- `currentTime` currently selected time; the beginning of a time range if offsetTime is set
+- `offsetTime` the end of a time range
+- `timelineData` timeline options
+- `selectedLayer` selected layer id; if not present time cursor will be unlocked
+- `mapViews` map views options
+
+### mapViews
+
+Example:
+
+```js
+{
+  "mapViews": {
+    "active": true,
+    "selectedId": "view.id.01",
+    "views": [
+      {
+        "id": "view.id.01",
+        "title": "Title",
+        "description": "<p>Description</p>",
+        "duration": 10,
+        "flyTo": true,
+        "center": {
+          "longitude": 8.93690091201193,
+          "latitude": 44.39522451776296,
+          "height": -0.0022900843616703204
+        },
+        "cameraPosition": {
+          "longitude": 8.93925651181738,
+          "latitude": 44.38698231953802,
+          "height": 655.705914040523
+        },
+        "zoom": 17.89659156734602,
+        "bbox": [
+          8.920925393119584,
+          44.39084055670365,
+          8.948118718933738,
+          44.40554444092288
+        ],
+        "mask": {
+          "enabled": true,
+          "resourceId": "resource.id.01",
+          "inverse": true,
+          "offset": 10000
+        },
+        "terrain": {
+          "clippingLayerResourceId": "resource.id.02",
+          "clippingPolygonFeatureId": "feature.id.01",
+          "clippingPolygonUnion": true
+        },
+        "globeTranslucency": {
+          "enabled": true,
+          "fadeByDistance": false,
+          "nearDistance": 500,
+          "farDistance": 50000,
+          "opacity": 0.5
+        },
+        "layers": [
+          {
+            "id": "layer.id.01",
+            "visibility": true,
+            "opacity": 0.5
+          },
+          {
+            "id": "layer.id.04",
+            "visibility": true,
+            "clippingLayerResourceId": "resource.id.02",
+            "clippingPolygonFeatureId": "feature.id.01",
+            "clippingPolygonUnion": false
+          }
+        ]
+      }
+    ],
+    "resources": [
+      {
+        "id": "resource.id.01",
+        "data": {
+          "type": "vector",
+          "name": "mask",
+          "title": "Mask",
+          "id": "layer.id.02"
+        }
+      },
+      {
+        "id": "resource.id.02",
+        "data": {
+          "type": "wfs",
+          "url": "/service/wfs",
+          "name": "clip",
+          "title": "Clip",
+          "id": "layer.id.03"
+        }
+      }
+    ]
+  }
+}
+```
+
+The mapViews properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| active | boolean | if true the map view tool will be active at initialization |
+| selectedId | string | id of the selected view |
+| views | array | array of views configurations (see below) |
+| resources | array | resources configurations (see below) |
+
+View configuration object
+
+| Name | Type | Description |
+| --- | --- | --- |
+| id | string | identifier of the view |
+| title | string | title of the view |
+| description | string | an html string to describe the view |
+| duration | number | when playing, duration in seconds of the view|
+| flyTo | boolean | enable animation transition during navigation |
+| center | object | center target position as { latitude (degrees), longitude (degrees), height (meters) } |
+| cameraPosition | object | point of view position as { latitude (degrees), longitude (degrees), height (meters) } |
+| zoom | number | zoom level |
+| bbox | array | bounding box in WGS84 as [minx, miny, maxx, maxy] |
+| mask | object | optional configuration for the 3D tiles mask |
+| mask.enabled | boolean | if true enables the mask |
+| mask.resourceId | string | identifier of a resource configuration in the `resources` array |
+| mask.inverse | boolean | if true enables the inverse mask |
+| mask.offset | number | offset in meters for the inverse mask |
+| terrain | object | optional configurations for terrain clipping |
+|terrain.clippingLayerResourceId | string | identifier of a resource configuration in the `resources` array |
+| terrain.clippingPolygonFeatureId | string | identifier of a polygonal feature available in the selected layer source to use to apply the clipping |
+| terrain.clippingPolygonUnion | boolean | if true it applies inverse clipping |
+| globeTranslucency | object | optional configuration for the globe translucency |
+| globeTranslucency.enabled | boolean | if true enables translucency |
+| globeTranslucency.opacity | number | opacity of the globe translucency, it should be a value between 0 and 1 where 1 is fully opaque  |
+| globeTranslucency.fadeByDistance | boolean | if true the translucency is visible only between the `nearDistance` and `farDistance` values |
+| globeTranslucency.nearDistance | number | when `fadeByDistance` is true it indicates the minimum distance to apply translucency |
+| globeTranslucency.farDistance | number |  when `fadeByDistance` is true it indicates the maximum distance to apply translucency |
+| layers | array | array of layer configuration overrides, default properties override `visibility` and `opacity` |
+
+Resource object configuration
+
+| Name | Type | Description |
+| --- | --- | --- |
+| id | string | identifier for the resource |
+| data | object | properties related to the layer used for the resource (wfs or vector type) |

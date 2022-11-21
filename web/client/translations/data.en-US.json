@@ -1727,7 +1727,9 @@
                   "edge": "Edge",
                   "pixelTolerance": "Tolerance (pixel)",
                   "loadingStrategy": "Loading strategy"
-                }
+                },
+                "disableViewportFilter": "Do not filter data by the current viewport",
+                "enableViewportFilter": "Filter data by the current viewport"
             }
         },
         "layerdownload": {
@@ -2412,7 +2414,9 @@
             "pitch": "X axis rotation",
             "roll": "Y axis rotation",
             "color": "Color",
-            "pointHeight": "Point height"
+            "pointHeight": "Point height",
+            "leaderLineColor": "Leader line color",
+            "leaderLineWidth": "Leader line width"
         },
         "playback": {
             "settings": {
@@ -2476,6 +2480,11 @@
             "disablePlayBack": "Disable playback controls",
             "expand" : "Expand time slider",
             "collapse" : "Collapse time slider",
+            "reset" : {
+              "range": "Set range to include all data",
+              "singleNow": "Set time to now",
+              "singleNearest": "Set time to nearest value to now"
+            },
             "collapsed": {
                 "title": "Timeline has been collapsed",
                 "tooltip": "Click here to expand it again"
