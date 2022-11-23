@@ -5,11 +5,11 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import MarkIcon from './MarkIcon';
 import { Glyphicon } from 'react-bootstrap';
-
+import { getStyleParser } from '../../../utils/VectorStyleUtils';
 function WFSLegend({ style }) {
     const renderIcon = (symbolizer) => {
         const {
@@ -78,13 +78,26 @@ function WFSLegend({ style }) {
         });
     };
 
-    return <>
-        {
-            style.format === 'geostyler' && <div className="wfs-legend">
-                {renderRules(style.body.rules)}
-            </div>
+    const [rules, setRules] = useState([]);
+
+    useEffect(() => {
+        if (style?.format === 'geostyler') {
+            setRules(style?.body?.rules || []);
+        } else {
+            getStyleParser(style.format)
+                .then((parser) =>
+                    parser
+                        .readStyle(style?.body)
+                        .then(parsedStyle => setRules(parsedStyle?.rules || []))
+                );
         }
-    </>;
+    }, [style]);
+
+    return (
+        <div className="wfs-legend">
+            {renderRules(rules)}
+        </div>
+    );
 }
 
 WFSLegend.propTypes = {

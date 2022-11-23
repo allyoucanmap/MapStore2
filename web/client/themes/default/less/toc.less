@@ -140,23 +140,6 @@
                         color: #333333;
                     }
                 }
-
-                .wfs-legend {
-                    .wfs-legend-rule {
-                        display: flex;
-                        margin-bottom: @padding-left-square-md;
-                        .wfs-legend-icon {
-                            margin-right: @padding-left-square-md;
-                            display: flex;
-                            align-items: center;
-                            
-                            svg {
-                                width: 16px;
-                                height: 16px;
-                            }
-                        }
-                    }
-                }
             }
 
             &.selected {
@@ -316,6 +299,23 @@
 // **************
 #mapstore-layer-settings {
     z-index: 1022 !important;
+}
+
+.wfs-legend {
+    .wfs-legend-rule {
+        display: flex;
+        margin-bottom: @padding-left-square-md;
+        .wfs-legend-icon {
+            margin-right: @padding-left-square-md;
+            display: flex;
+            align-items: center;
+            
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
 }
 
 #mapstore-layer-groups-settings {
