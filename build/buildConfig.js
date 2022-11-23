@@ -100,7 +100,7 @@ function mapArgumentsToObject(args, func) {
 const getCesiumPath = ({ prod, paths }) => {
     return prod
         ? path.join(paths.base, 'node_modules', 'cesium', 'Build', 'Cesium')
-        : path.join(paths.base, 'node_modules', 'cesium', 'Source');
+        : path.join(paths.base, 'node_modules', 'cesium', 'Build', 'CesiumUnminified');
 };
 
 module.exports = (...args) => mapArgumentsToObject(args, ({
