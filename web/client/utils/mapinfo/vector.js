@@ -6,29 +6,43 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const {getCurrentResolution} = require('../MapUtils');
-const isNil = require('lodash/isNil');
+import { isObject, isNil } from 'lodash';
+import { Observable } from 'rxjs';
+import { getCurrentResolution } from '../MapUtils';
 
-module.exports = {
-    buildRequest: (layer, props) => {
+export default {
+    buildRequest: (layer, { map, buffer, point, currentLocale } = {}, infoFormat, viewer, featureInfo) => {
+        const { features = [] } = point?.intersectedFeatures?.find(({ id }) => id === layer.id) || {};
         return {
             request: {
-                lat: props.point.latlng.lat,
-                lng: props.point.latlng.lng
+                features: [...features],
+                outputFormat: 'application/json'
             },
             metadata: {
+                title: isObject(layer.title)
+                    ? layer.title[currentLocale] || layer.title.default
+                    : layer.title,
+                regex: layer.featureInfoRegex,
+                viewer: layer.viewer ?? viewer,
+                featureInfo,
                 fields: layer.features?.[0]?.properties && Object.keys(layer.features[0].properties) || [],
-                title: layer.name,
-                resolution: isNil(props?.map?.resolution)
-                    ? props?.map?.zoom && getCurrentResolution(props.map.zoom, 0, 21, 96)
-                    : props.map.resolution,
-                buffer: props.buffer || 2,
-                units: props.map && props.map.units,
+                resolution: isNil(map?.resolution)
+                    ? map?.zoom && getCurrentResolution(map.zoom, 0, 21, 96)
+                    : map.resolution,
+                buffer: buffer || 2,
+                units: map?.units,
                 rowViewer: layer.rowViewer,
-                viewer: layer.viewer,
                 layerId: layer.id
             },
-            url: ""
+            url: 'client'
         };
+    },
+    getIdentifyFlow: (layer, baseURL, defaultParams) => {
+        const { features = [] } = defaultParams;
+        return Observable.of({
+            data: {
+                features
+            }
+        });
     }
 };

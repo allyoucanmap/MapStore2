@@ -8,8 +8,6 @@
 
 import assign from 'object-assign';
 import { findIndex, isUndefined, isEmpty } from 'lodash';
-import buffer from 'turf-buffer';
-import intersect from 'turf-intersect';
 
 import {
     ERROR_FEATURE_INFO,
@@ -23,7 +21,6 @@ import {
     HIDE_MAPINFO_MARKER,
     SHOW_REVERSE_GEOCODE,
     HIDE_REVERSE_GEOCODE,
-    GET_VECTOR_INFO,
     NO_QUERYABLE_LAYERS,
     CLEAR_WARNING,
     FEATURE_INFO_CLICK,
@@ -53,18 +50,15 @@ import { getValidator } from '../utils/MapInfoUtils';
  * @param {number} requestIndex index position of the current request
  * @param {boolean} isVector type of the response received is vector or not
  */
-const isIndexValid = (state, responses, requestIndex, isVector) => {
-    const {configuration, requests, queryableLayers = [], index} = state;
-    const {infoFormat} = configuration || {};
-    const { layer = {} } = responses[requestIndex] || {};
-    // these layers do not perform requests to a backend
-    const isVectorLayer = !!(isVector || layer.type === '3dtiles');
+const isIndexValid = (state, responses, requestIndex) => {
+    const { configuration, requests, queryableLayers = [], index } = state;
+    const { infoFormat } = configuration || {};
     // Index when first response received is valid
     const validResponse = getValidator(infoFormat)?.getValidResponses([responses[requestIndex]]);
     const inValidResponse = getValidator(infoFormat)?.getNoValidResponses(responses);
     const cond1 = isUndefined(index) && !!validResponse.length;
-    const cond2 = !isVectorLayer && requests.length === inValidResponse.filter(res => res).length;
-    const cond3 = isUndefined(index) && isVector && requests.filter(r => isEmpty(r)).length === queryableLayers.length;
+    const cond2 = requests.length === inValidResponse.filter(res => res).length;
+    const cond3 = isUndefined(index) &&  requests.filter(r => isEmpty(r)).length === queryableLayers.length;
     return (cond1 || cond2 || cond3);
     // Check if all requested layers are vector
 };
@@ -75,9 +69,7 @@ const isIndexValid = (state, responses, requestIndex, isVector) => {
  * @param {string} type type of the response received
  */
 function receiveResponse(state, action, type) {
-    const isVector = type === "vector";
-    const requestIndex = !isVector ? findIndex((state.requests || []), (req) => req.reqId === action.reqId) : action.reqId;
-
+    const requestIndex = findIndex((state.requests || []), (req) => req.reqId === action.reqId);
     if (requestIndex !== -1) {
         // Filter un-queryable layer
         if (["exceptions", "error"].includes(type)) {
@@ -92,27 +84,23 @@ function receiveResponse(state, action, type) {
         const {configuration: config, requests} = state;
         let responses = state.responses || [];
         const isHover = (config?.trigger === "hover") || state?.showInMapPopup; // Display feature info in popup
-
-        if (!isVector) {
-            const updateResponse = {
-                response: action[type],
-                queryParams: action.requestParams,
-                layerMetadata: action.layerMetadata,
-                layer: action.layer
-            };
-            if (isHover) {
-                // Add response upon it is received
-                responses = [...responses, updateResponse];
-            } else {
-                // Add response in same order it was requested
-                responses[requestIndex] = updateResponse;
-            }
+        const updateResponse = {
+            response: action[type],
+            queryParams: action.requestParams,
+            layerMetadata: action.layerMetadata,
+            layer: action.layer
+        };
+        if (isHover) {
+            // Add response upon it is received
+            responses = [...responses, updateResponse];
+        } else {
+            // Add response in same order it was requested
+            responses[requestIndex] = updateResponse;
         }
-
         let indexObj;
         if (isHover) {
             indexObj = {loaded: true, index: 0};
-        } else if (!isHover && isIndexValid(state, responses, requestIndex, isVector)) {
+        } else if (!isHover && isIndexValid(state, responses, requestIndex)) {
             indexObj = {loaded: true, index: requestIndex};
         } else if (responses.length === requests.length && !indexObj?.loaded) {
             // if all responses are empty hence valid but with no valid index
@@ -121,7 +109,6 @@ function receiveResponse(state, action, type) {
         }
         // Set responses and index as first response is received
         return assign({}, state, {
-            ...(isVector && {requests}),
             ...(!isUndefined(indexObj) && indexObj),
             responses: [...responses]}
         );
@@ -341,84 +328,6 @@ function mapInfo(state = initState, action) {
                 trigger: "click"
             }
         });
-    }
-    case GET_VECTOR_INFO: {
-        const point = {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "type": "Point",
-                "coordinates": [action.request.lng, action.request.lat]
-            }
-        };
-        let unit = action.metadata && action.metadata.units;
-        switch (unit) {
-        case "m":
-            unit = "meters";
-            break;
-        case "deg":
-            unit = "degrees";
-            break;
-        case "mi":
-            unit = "miles";
-            break;
-        default:
-            unit = "meters";
-        }
-        let resolution = action.metadata && action.metadata.resolution || 1;
-        let bufferedPoint = buffer(point, (action.metadata.buffer || 1) * resolution, unit);
-        const intersected = (action.layer.features || []).filter(
-            (feature) => {
-                try {
-                    // TODO: instead of create a fixed buffer, we should check the feature style to create the proper buffer.
-
-                    if (feature.type === "FeatureCollection" && feature.features && feature.features.length) {
-                        return feature.features.reduce((p, c) => {
-                            // if required use the geodesic geometry
-                            let ft = c.properties.useGeodesicLines && c.properties.geometryGeodesic ? {...c,
-                                geometry: c.properties.geometryGeodesic
-                            } : c;
-                            return p || intersect(bufferedPoint, resolution && action.metadata.buffer && unit ? buffer(ft, 1, "meters") : ft);
-                        }, false);
-                    }
-                    return intersect(bufferedPoint, resolution && action.metadata.buffer && unit ? buffer(feature, 1, "meters") : feature);
-
-                } catch (e) {
-                    return false;
-                }
-            }
-
-        );
-        let responses = state.responses || [];
-        // Display feature info in popup
-        const isHover = state?.configuration?.trigger === 'hover' || state?.showInMapPopup;
-        const vectorResponse = {
-            response: {
-                crs: null,
-                features: intersected,
-                totalFeatures: "unknown",
-                type: "FeatureCollection"
-            },
-            queryParams: action.request,
-            layerMetadata: action.metadata,
-            format: 'JSON'
-        };
-        let vectorAction;
-        // Add response such that it doesn't replace other layer response's index
-        if (!isHover) {
-            responses[state.requests.length] = vectorResponse;
-            // To identify vector request index
-            vectorAction = {reqId: state.requests.length};
-        } else {
-            responses = [...responses, vectorResponse];
-            vectorAction = {reqId: 0};
-        }
-        const requests = [...state.requests, {}];
-        return receiveResponse(assign({}, state, {
-            requests,
-            queryableLayers: action.queryableLayers,
-            responses: [...responses]
-        }), vectorAction, "vector");
     }
     case UPDATE_CENTER_TO_MARKER: {
         return assign({}, state, {

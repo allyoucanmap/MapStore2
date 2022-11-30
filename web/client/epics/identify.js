@@ -11,13 +11,13 @@ import { get, find, reverse} from 'lodash';
 import uuid from 'uuid';
 import { LOCATION_CHANGE } from 'connected-react-router';
 import {
-    LOAD_FEATURE_INFO, ERROR_FEATURE_INFO, GET_VECTOR_INFO,
+    LOAD_FEATURE_INFO, ERROR_FEATURE_INFO,
     FEATURE_INFO_CLICK, CLOSE_IDENTIFY, TOGGLE_HIGHLIGHT_FEATURE,
     PURGE_MAPINFO_RESULTS, EDIT_LAYER_FEATURES,
     UPDATE_FEATURE_INFO_CLICK_POINT,
     featureInfoClick, updateCenterToMarker, purgeMapInfoResults,
     exceptionsFeatureInfo, loadFeatureInfo, errorFeatureInfo,
-    noQueryableLayers, newMapInfoRequest, getVectorInfo,
+    noQueryableLayers, newMapInfoRequest,
     showMapinfoMarker, hideMapinfoMarker, setCurrentEditFeatureQuery,
     SET_MAP_TRIGGER, CLEAR_WARNING
 } from '../actions/mapInfo';
@@ -114,39 +114,37 @@ export const getFeatureInfoOnFeatureInfoClick = (action$, { getState = () => { }
                     if (overrideParams[layer.name]) {
                         request = {...request, ...overrideParams[layer.name]};
                     }
-                    if (url) {
-                        const basePath = url;
-                        const requestParams = request;
-                        const lMetaData = metadata;
-                        const appParams = filterRequestParams(layer, includeOptions, excludeParams);
-                        const attachJSON = isHighlightEnabledSelector(getState());
-                        const itemId = itemIdSelector(getState());
-                        const reqId = uuid.v1();
-                        const param = { ...appParams, ...requestParams };
-                        return getFeatureInfo(basePath, param, layer, {attachJSON, itemId})
-                            // this 0 delay is needed for vector/3dtiles layer because makes the response async and give time to the GUI to render
-                            // these type of layers don't perform requests to the server because the values are taken from the client map so the response were applied synchronously
-                            // this delay allows the panel to open and show the spinner for the first one
-                            // this delay mitigates the freezing of the app when there are a great amount of queried layers at the same time
-                            .delay(0)
-                            .map((response) =>
-                                response.data.exceptions
-                                    ? exceptionsFeatureInfo(reqId, response.data.exceptions, requestParams, lMetaData)
-                                    : loadFeatureInfo(reqId, response.data, requestParams, { ...lMetaData, features: response.features, featuresCrs: response.featuresCrs }, layer)
-                            )
-                            .catch((e) => Rx.Observable.of(errorFeatureInfo(reqId, e.data || e.statusText || e.status, requestParams, lMetaData)))
-                            .concat(Rx.Observable.defer(() => {
-                                // update the layout only after the initial response
-                                // we don't need to trigger this for each query layer
-                                if (!firstResponseReturned) {
-                                    firstResponseReturned = true;
-                                    return Rx.Observable.of(forceUpdateMapLayout());
-                                }
-                                return Rx.Observable.empty();
-                            }))
-                            .startWith(newMapInfoRequest(reqId, param));
-                    }
-                    return Rx.Observable.of(getVectorInfo(layer, request, metadata, queryableLayers));
+
+                    const basePath = url;
+                    const requestParams = request;
+                    const lMetaData = metadata;
+                    const appParams = filterRequestParams(layer, includeOptions, excludeParams);
+                    const attachJSON = isHighlightEnabledSelector(getState());
+                    const itemId = itemIdSelector(getState());
+                    const reqId = uuid.v1();
+                    const param = { ...appParams, ...requestParams };
+                    return getFeatureInfo(basePath, param, layer, {attachJSON, itemId})
+                        // this 0 delay is needed for vector/3dtiles layer because makes the response async and give time to the GUI to render
+                        // these type of layers don't perform requests to the server because the values are taken from the client map so the response were applied synchronously
+                        // this delay allows the panel to open and show the spinner for the first one
+                        // this delay mitigates the freezing of the app when there are a great amount of queried layers at the same time
+                        .delay(0)
+                        .map((response) =>
+                            response.data.exceptions
+                                ? exceptionsFeatureInfo(reqId, response.data.exceptions, requestParams, lMetaData)
+                                : loadFeatureInfo(reqId, response.data, requestParams, { ...lMetaData, features: response.features, featuresCrs: response.featuresCrs }, layer)
+                        )
+                        .catch((e) => Rx.Observable.of(errorFeatureInfo(reqId, e.data || e.statusText || e.status, requestParams, lMetaData)))
+                        .concat(Rx.Observable.defer(() => {
+                            // update the layout only after the initial response
+                            // we don't need to trigger this for each query layer
+                            if (!firstResponseReturned) {
+                                firstResponseReturned = true;
+                                return Rx.Observable.of(forceUpdateMapLayout());
+                            }
+                            return Rx.Observable.empty();
+                        }))
+                        .startWith(newMapInfoRequest(reqId, param));
                 });
             // NOTE: multiSelection is inside the event
             // TODO: move this flag in the application state
@@ -166,7 +164,7 @@ export const handleMapInfoMarker = (action$, {getState}) =>
             : showMapinfoMarker()
         );
 export const closeFeatureGridFromIdentifyEpic = (action$, store) =>
-    action$.ofType(LOAD_FEATURE_INFO, GET_VECTOR_INFO)
+    action$.ofType(LOAD_FEATURE_INFO)
         .switchMap(() => {
             if (isFeatureGridOpen(store.getState())) {
                 return Rx.Observable.of(closeFeatureGrid());
