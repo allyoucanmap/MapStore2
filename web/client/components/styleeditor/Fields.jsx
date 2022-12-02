@@ -246,11 +246,14 @@ export const fields = {
                 draggable>
                 <ThemaClassesEditor
                     classification={value}
-                    onUpdateClasses={(classification, type) =>
+                    enableOpacity
+                    onUpdateClasses={(classification, type) => {
+                        console.log(classification, type);
                         onChange({
                             classification,
                             type
-                        })}
+                        });
+                    }}
                 />
             </div>
         );

@@ -23,6 +23,7 @@ import { AutocompleteCombobox } from '../../components/misc/AutocompleteCombobox
 import ConfigUtils from '../../utils/ConfigUtils';
 import { generateRandomHexColor } from '../../utils/ColorUtils';
 import uuid from 'uuid';
+import chroma from 'chroma-js';
 class ThemaClassesEditor extends React.Component {
     static propTypes = {
         classification: PropTypes.array,
@@ -33,7 +34,8 @@ class ThemaClassesEditor extends React.Component {
         uniqueValuesClasses: PropTypes.bool,
         autoCompleteOptions: PropTypes.object,
         dropUpMenu: PropTypes.bool,
-        usePresetColors: PropTypes.bool
+        usePresetColors: PropTypes.bool,
+        enableOpacity: PropTypes.bool
     };
 
     static defaultProps = {
@@ -43,7 +45,8 @@ class ThemaClassesEditor extends React.Component {
         allowEmpty: true,
         customLabels: false,
         uniqueValuesClasses: false,
-        dropUpMenu: false
+        dropUpMenu: false,
+        enableOpacity: false
     };
 
     renderFieldByClassification = (classItem, index, uniqueValuesClasses, autoCompleteOptions) => {
@@ -113,8 +116,7 @@ class ThemaClassesEditor extends React.Component {
                 <ColorSelector
                     key={classItem.color}
                     color={classItem.color}
-                    disableAlpha
-                    format="hex"
+                    disableAlpha={!this.props.enableOpacity}
                     onChangeColor={(color) => this.updateColor(index, color)}
                 />
                 { this.renderFieldByClassification(classItem, index, this.props.uniqueValuesClasses, this.props.autoCompleteOptions) }
@@ -159,11 +161,14 @@ class ThemaClassesEditor extends React.Component {
         </div>);
     }
 
-    updateColor = (classIndex, color) => {
+    updateColor = (classIndex, _color) => {
+        const opacity = this.props.enableOpacity ? _color?.a : 1;
+        const color = chroma({ ..._color, a: 1 }).hex();
         if (color) {
             const newClassification = this.props.classification.map((classItem, index) => {
                 return index === classIndex ? assign({}, classItem, {
-                    color
+                    color,
+                    opacity
                 }) : classItem;
             });
             this.props.onUpdateClasses(newClassification, 'color');
