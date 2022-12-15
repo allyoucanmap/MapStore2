@@ -2247,6 +2247,7 @@
             "shape": "Forme",
             "fill": "Fill color",
             "clampToGround": "S'adapter au terrain",
+            "clampOutlineToGround": "Fixer le contour au sol",
             "msBringToFront": "Mettre en avant",
             "heightReferenceFromGround": "Référence de hauteur à partir du sol",
             "height": "Hauteur",
@@ -2411,7 +2412,14 @@
         "playback": {
             "settings": {
                 "tooltip": "Paramètres",
-                "title": "Paramètres de lecture",
+                "tab": {
+                    "playback": "Relecture",
+                    "layers": "Couches"
+                },
+                "layer": {
+                    "enabled": "Afficher ou masquer le calque de la chronologie",
+                    "disabled": "Guide layer cannot be hidden"
+                },
                 "frameDuration": "Durée de la trame",
                 "range": {
                     "title": "Plage d'animations",
@@ -2860,6 +2868,7 @@
             "titlePlaceholder": "Entrez le nom affiché",
             "add": "Ajouter",
             "thumbnailMessage": "La taille des images doit être un carré de 98px x 98px ou 128px x 128px, maximum 500kb",
+            "imageUploadMessage": "Cliquez ou faites glisser et déposez pour ajouter une image",
             "additionalParameters": "Paramètres additionnels",
             "addAdditionalParameterTooltip": "Ajouter un paramètre",
             "removeAdditionalParameterTooltip": "Supprimer le paramètre",

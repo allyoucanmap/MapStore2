@@ -60,7 +60,23 @@ describe('DateTimePicker component', () => {
         const calendar = container.querySelector('.rw-calendar-popup');
         expect(calendar.style.display).toBe('block');
     });
-
+    it('calendar opens to today when value is null or undefined', function() {
+        ReactDOM.render(<DateTimePicker/>, document.getElementById("container"));
+        const container = document.getElementById('container');
+        const button = container.querySelector('.rw-btn-calendar');
+        TestUtils.Simulate.click(button);
+        const monthLabel = document.querySelector('#container > div > div.rw-calendar-popup.rw-popup-container .rw-btn-view');
+        expect(monthLabel.innerHTML).toBe(moment().format('MMMM YYYY'));
+    });
+    it('calendar opens at the values date', function() {
+        const value = "01-01-2010";
+        ReactDOM.render(<DateTimePicker value={value} />, document.getElementById("container"));
+        const container = document.getElementById('container');
+        const button = container.querySelector('.rw-btn-calendar');
+        TestUtils.Simulate.click(button);
+        const monthLabel = document.querySelector('#container > div > div.rw-calendar-popup.rw-popup-container .rw-btn-view');
+        expect(monthLabel.innerHTML).toBe(moment(value).format('MMMM YYYY'));
+    });
     it('DateTimePicker show hours on time button click', function() {
         ReactDOM.render(<DateTimePicker />, document.getElementById("container"));
         const container = document.getElementById('container');
@@ -149,7 +165,7 @@ describe('DateTimePicker component', () => {
             done();
         };
         const dateObj = moment.utc(date, 'YYYY-MM-DDTHH:mm:ss[Z]').toDate();
-        ReactDOM.render(<DateTimePicker format="YYYY-MM-DDTHH:mm:ss[Z]" options={{ shouldCalendarSetHours: false }} value={dateObj} currentDate={dateObj} onChange={handleChange} />, document.getElementById("container"));
+        ReactDOM.render(<DateTimePicker format="YYYY-MM-DDTHH:mm:ss[Z]" value={dateObj} currentDate={dateObj} onChange={handleChange} />, document.getElementById("container"));
         const container = document.getElementById('container');
         const calendar = container.querySelector('.rw-btn-calendar');
         TestUtils.Simulate.click(calendar);

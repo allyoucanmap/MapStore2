@@ -2247,6 +2247,7 @@
             "shape": "Shape",
             "fill": "Fill color",
             "clampToGround": "Clamp to ground",
+            "clampOutlineToGround": "Clamp outline to ground",
             "msBringToFront": "Bring to front",
             "heightReferenceFromGround": "Height reference from ground",
             "height": "Height",
@@ -2421,7 +2422,14 @@
         "playback": {
             "settings": {
                 "tooltip": "Settings",
-                "title": "Playback Settings",
+                "tab": {
+                  "playback": "Playback",
+                  "layers": "Layers"
+                },
+                "layer": {
+                  "enabled": "Display or hide layer from the timeline",
+                  "disabled": "Guide layer cannot be hidden"
+                },
                 "frameDuration": "Frame Duration",
                 "range": {
                     "title": "Animation Range",
@@ -2870,6 +2878,7 @@
             "titlePlaceholder": "Enter displayed name",
             "add": "Add",
             "thumbnailMessage": "Size of images should be a square of 98px x 98px or 128px x 128px, max 500kb",
+            "imageUploadMessage": "Click, or drag and drop to add an image",
             "additionalParameters": "Additional Parameters",
             "addAdditionalParameterTooltip": "Add parameter",
             "removeAdditionalParameterTooltip": "Remove parameter",

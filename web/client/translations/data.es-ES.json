@@ -2246,6 +2246,7 @@
             "shape": "Forma",
             "fill": "Color de relleno",
             "clampToGround": "Adaptar al terreno",
+            "clampOutlineToGround": "Adaptar el contorno al suelo",
             "msBringToFront": "Traer al frente",
             "heightReferenceFromGround": "Referencia de altura desde el suelo",
             "height": "Altura",
@@ -2410,7 +2411,14 @@
         "playback": {
             "settings": {
                 "tooltip": "Configuraciones",
-                "title": "Ajustes de reproducción",
+                "tab": {
+                    "playback": "Reproducción",
+                    "layers": "Capas"
+                },
+                "layer": {
+                    "enabled": "Mostrar u ocultar capa de la línea de tiempo",
+                    "disabled": "La capa de guía no se puede ocultar"
+                },
                 "frameDuration": "Duración del marco",
                 "range": {
                     "title": "Intervalo de animación",
@@ -2858,6 +2866,7 @@
             "titlePlaceholder": "Ingrese el nombre que se muestra",
             "add": "Añadir",
             "thumbnailMessage": "El tamaño de las imágenes debe ser un cuadrado de 98 px x 98 px o 128 px x 128 px, máximo 500kb",
+            "imageUploadMessage": "Haga clic, o arrastre y suelte para agregar una imagen",
             "additionalParameters": "Parámetros adicionales",
             "addAdditionalParameterTooltip": "Agregar parámetro",
             "removeAdditionalParameterTooltip": "Eliminar parámetro",

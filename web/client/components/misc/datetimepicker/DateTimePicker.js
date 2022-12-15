@@ -7,12 +7,13 @@
  */
 
 import React, { Component } from 'react';
+
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import { Calendar } from 'react-widgets';
 import localizer from 'react-widgets/lib/localizers/moment';
 import { Tooltip } from 'react-bootstrap';
-import { isDate } from 'lodash';
+import { isDate, isNil } from 'lodash';
 import OverlayTrigger from '../OverlayTrigger';
 import Hours from './Hours';
 
@@ -74,18 +75,7 @@ class DateTimePicker extends Component {
         time: true,
         onChange: () => { },
         value: null,
-        popupPosition: 'bottom',
-        options: {
-            shouldCalendarSetHours: true
-        }
-    }
-
-    constructor() {
-        super();
-        this.fallbackDate = new Date();
-        this.fallbackDate.setHours(0);
-        this.fallbackDate.setMinutes(0);
-        this.fallbackDate.setSeconds(0);
+        popupPosition: 'bottom'
     }
 
     state = {
@@ -163,7 +153,14 @@ class DateTimePicker extends Component {
                 </div>
                 <div className={`rw-calendar-popup rw-popup-container ${popupPosition === 'top' ? 'rw-dropup' : ''} ${!calendarVisible ? 'rw-popup-animating' : ''}`} style={{ display: calendarVisible ? 'block' : 'none', overflow: calendarVisible ? 'visible' : 'hidden', height: '285px' }}>
                     <div className={`rw-popup`} style={{ transform: calendarVisible ? 'translateY(0)' : 'translateY(-100%)', padding: '0', borderRadius: '4px', position: calendarVisible ? '' : 'absolute' }}>
-                        <Calendar tabIndex="-1" ref={this.attachCalRef} onMouseDown={this.handleMouseDown} onChange={this.handleCalendarChange} {...props} />
+                        <Calendar
+                            tabIndex="-1"
+                            ref={this.attachCalRef}
+                            onMouseDown={this.handleMouseDown}
+                            onChange={this.handleCalendarChange}
+                            {...props}
+                            value={!isNil(this.props.value) ? new Date(this.props.value) : undefined}
+                        />
                     </div>
                 </div>
             </div>
@@ -306,13 +303,7 @@ class DateTimePicker extends Component {
     }
 
     handleCalendarChange = value => {
-        let date;
-        if (this.props.options?.shouldCalendarSetHours) {
-            date = setTime(value, new Date());
-        } else {
-            // keep hours value defined by value in state or default date
-            date = setTime(value, this.state.date ?? this.props.value ?? this.fallbackDate);
-        }
+        const date = setTime(value, this.state.date || new Date());
         const inputValue = this.format(date);
         this.setState({ date, inputValue, open: '' });
         this.props.onChange(date, `${this.state.operator}${inputValue}`);

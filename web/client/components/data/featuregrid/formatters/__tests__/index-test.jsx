@@ -62,4 +62,24 @@ describe('Tests for the formatter functions', () => {
         expect(formatter({value: null})).toBe(null);
         expect(formatter({value: undefined})).toBe(null);
     });
+    it('test getFormatter for date / date-time / time', () => {
+        const dateFormats = {
+            date: 'YYYY',
+            "date-time": 'YYYY DD',
+            time: 'HH:mm'
+        };
+        const dateFormatter = getFormatter({localType: "date"}, dateFormats);
+        const dateTimeFormatter = getFormatter({localType: "date-time"}, dateFormats);
+        const timeFormatter = getFormatter({localType: "time"}, dateFormats);
+        expect(typeof dateFormatter).toBe("function");
+        expect(dateFormatter()).toBe(null);
+        expect(dateFormatter({value: '2015-02-01T12:45:00Z'})).toBe('2015');
+        expect(typeof dateTimeFormatter).toBe("function");
+        expect(dateTimeFormatter()).toBe(null);
+        expect(dateTimeFormatter({value: '2015-02-01Z'})).toBe('2015 01');
+        expect(typeof timeFormatter).toBe("function");
+        expect(timeFormatter()).toBe(null);
+        expect(timeFormatter({value: '12:45:00Z'})).toBe('12:45');
+        expect(timeFormatter({ value: '1970-01-01T02:30:00Z' })).toBe('02:30'); // still able to format time even when found a full date (sometimes GeoServer returns full date instead of time only)
+    });
 });
