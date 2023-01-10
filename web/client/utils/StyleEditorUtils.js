@@ -651,6 +651,20 @@ export function getVectorLayerAttributes(layer) {
             });
         return attributes;
     }
+    if (layer?.type === 'vector-tile') {
+        const propertiesKeys = Object.keys(layer.properties || {});
+        const attributes = propertiesKeys
+            .filter(key => ['String', 'Number'].includes(layer.properties[key]))
+            .map((key) => {
+                const type = layer.properties[key] === 'Number' ? 'number' : 'string';
+                return {
+                    attribute: key,
+                    label: key,
+                    type: type
+                };
+            });
+        return attributes;
+    }
     return null;
 }
 

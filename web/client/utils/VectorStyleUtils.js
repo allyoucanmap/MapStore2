@@ -1007,11 +1007,11 @@ export function applyDefaultStyleToLayer(layer) {
                         symbolizers: [
                             {
                                 kind: 'Fill',
-                                color: '#f2f2f2',
-                                fillOpacity: 0.3,
+                                color: '#3075e9',
+                                fillOpacity: 0.6,
                                 outlineColor: '#3075e9',
                                 outlineOpacity: 1,
-                                outlineWidth: 2
+                                outlineWidth: 0
                             }
                         ]
                     }

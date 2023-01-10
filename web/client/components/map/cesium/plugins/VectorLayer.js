@@ -15,9 +15,37 @@ import {
     flattenFeatures,
     applyDefaultStyleToLayer
 } from '../../../../utils/VectorStyleUtils';
+import VectorTileLayerProvider from '../../../../utils/cesium/VectorTileLayerProvider';
+
+const createStylePromise = (options, map) => (dataSource) => layerToGeoStylerStyle(options)
+    .then((style) => {
+        getStyle(applyDefaultStyleToLayer({ ...options, style }), 'cesium')
+            .then((styleFunc) => {
+                if (styleFunc) {
+                    styleFunc({
+                        entities: dataSource.entities.values,
+                        map,
+                        opacity: options.opacity ?? 1
+                    }).then(() => {
+                        map.scene.requestRender();
+                    });
+                }
+            });
+    });
 
 const createLayer = (options, map) => {
-
+    if (options.tiled !== false) {
+        return new VectorTileLayerProvider({
+            id: options.id,
+            map,
+            geojson: {
+                type: 'FeatureCollection',
+                features: options.features
+            },
+            type: 'geojson',
+            stylePromise: createStylePromise(options, map)
+        });
+    }
     let dataSource = new Cesium.GeoJsonDataSource(options?.id);
 
     const features = flattenFeatures(options?.features || [], ({ style, ...feature }) => feature);
@@ -36,21 +64,7 @@ const createLayer = (options, map) => {
             markerSize: 0
         }).then(() => {
             map.dataSources.add(dataSource);
-            layerToGeoStylerStyle(options)
-                .then((style) => {
-                    getStyle(applyDefaultStyleToLayer({ ...options, style }), 'cesium')
-                        .then((styleFunc) => {
-                            if (styleFunc) {
-                                styleFunc({
-                                    entities: dataSource?.entities?.values,
-                                    map,
-                                    opacity: options.opacity ?? 1
-                                }).then(() => {
-                                    map.scene.requestRender();
-                                });
-                            }
-                        });
-                });
+            createStylePromise(options, map)(dataSource);
         });
     }
 
@@ -74,31 +88,23 @@ Layers.registerType('vector', {
     create: createLayer,
     update: (layer, newOptions, oldOptions, map) => {
         if (!isEqual(newOptions.features, oldOptions.features)
-        || newOptions.visibility !== oldOptions.visibility) {
+        || newOptions.visibility !== oldOptions.visibility
+        || newOptions.tiled !== oldOptions.tiled) {
             return createLayer(newOptions, map);
         }
 
-        if (layer?.dataSource?.entities?.values
+        if ((layer?.dataSource?.entities?.values || layer?.setStylePromise)
             && (
                 !isEqual(newOptions.style, oldOptions.style)
                 || newOptions.opacity !== oldOptions.opacity
             )
         ) {
-            layerToGeoStylerStyle(newOptions)
-                .then((style) => {
-                    getStyle(applyDefaultStyleToLayer({ ...newOptions, style }), 'cesium')
-                        .then((styleFunc) => {
-                            if (styleFunc) {
-                                styleFunc({
-                                    entities: layer.dataSource.entities.values,
-                                    map,
-                                    opacity: newOptions.opacity ?? 1
-                                }).then(() => {
-                                    map.scene.requestRender();
-                                });
-                            }
-                        });
-                });
+            const stylePromise = createStylePromise(newOptions, map);
+            if (newOptions.tiled !== false) {
+                layer.setStylePromise(stylePromise);
+            } else {
+                stylePromise(layer.dataSource);
+            }
         }
         return null;
     }

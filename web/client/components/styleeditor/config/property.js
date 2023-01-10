@@ -335,6 +335,9 @@ const property = {
         label,
         config: {
             options: [{
+                labelId: 'styleeditor.none',
+                value: 'none'
+            }, {
                 labelId: 'styleeditor.3dTile',
                 value: '3d'
             }, {

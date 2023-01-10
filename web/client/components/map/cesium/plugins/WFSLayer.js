@@ -18,6 +18,7 @@ import {
     layerToGeoStylerStyle,
     applyDefaultStyleToLayer
 } from '../../../../utils/VectorStyleUtils';
+import VectorTileLayerProvider from '../../../../utils/cesium/VectorTileLayerProvider';
 
 const requestFeatures = (options, params, cancelToken) => {
     return getFeature(options.url, options.name, {
@@ -30,11 +31,36 @@ const requestFeatures = (options, params, cancelToken) => {
     });
 };
 
+const createStylePromise = (options, map) => (dataSource) => layerToGeoStylerStyle(options)
+    .then((style) => {
+        getStyle(applyDefaultStyleToLayer({ ...options, style }), 'cesium')
+            .then((styleFunc) => {
+                if (styleFunc) {
+                    styleFunc({
+                        entities: dataSource.entities.values,
+                        map,
+                        opacity: options.opacity ?? 1
+                    }).then(() => {
+                        map.scene.requestRender();
+                    });
+                }
+            });
+    });
+
 const createLayer = (options, map) => {
-
-    let dataSource = new Cesium.GeoJsonDataSource(options?.id);
-
     const params = optionsToVendorParams(options);
+    if (options.tiled !== false) {
+        return new VectorTileLayerProvider({
+            id: options.id,
+            map,
+            url: options.url,
+            layerName: options.name,
+            params,
+            type: 'wfs',
+            stylePromise: createStylePromise(options, map)
+        });
+    }
+    let dataSource = new Cesium.GeoJsonDataSource(options?.id);
 
     const cancelToken = axios.CancelToken;
     const source = cancelToken.source();
@@ -51,21 +77,7 @@ const createLayer = (options, map) => {
                     markerSize: 0
                 }).then(() => {
                     map.dataSources.add(dataSource);
-                    layerToGeoStylerStyle(options)
-                        .then((style) => {
-                            getStyle(applyDefaultStyleToLayer({ ...options, style }), 'cesium')
-                                .then((styleFunc) => {
-                                    if (styleFunc) {
-                                        styleFunc({
-                                            entities: dataSource?.entities?.values,
-                                            map,
-                                            opacity: options.opacity ?? 1
-                                        }).then(() => {
-                                            map.scene.requestRender();
-                                        });
-                                    }
-                                });
-                        });
+                    createStylePromise(options, map)(dataSource);
                 });
             });
     }
@@ -93,30 +105,22 @@ Layers.registerType('wfs', {
     create: createLayer,
     update: (layer, newOptions, oldOptions, map) => {
         if (needsReload(oldOptions, newOptions)
-        || newOptions.visibility !== oldOptions.visibility) {
+        || newOptions.visibility !== oldOptions.visibility
+        || newOptions.tiled !== oldOptions.tiled) {
             return createLayer(newOptions, map);
         }
-        if (layer?.dataSource?.entities?.values
+        if ((layer?.dataSource?.entities?.values || layer?.setStylePromise)
             && (
                 !isEqual(newOptions.style, oldOptions.style)
                 || newOptions.opacity !== oldOptions.opacity
             )
         ) {
-            layerToGeoStylerStyle(newOptions)
-                .then((style) => {
-                    getStyle(applyDefaultStyleToLayer({ ...newOptions, style }), 'cesium')
-                        .then((styleFunc) => {
-                            if (styleFunc) {
-                                styleFunc({
-                                    entities: layer.dataSource.entities.values,
-                                    map,
-                                    opacity: newOptions.opacity ?? 1
-                                }).then(() => {
-                                    map.scene.requestRender();
-                                });
-                            }
-                        });
-                });
+            const stylePromise = createStylePromise(newOptions, map);
+            if (newOptions.tiled !== false) {
+                layer.setStylePromise(stylePromise);
+            } else {
+                stylePromise(layer.dataSource);
+            }
         }
         return null;
     }

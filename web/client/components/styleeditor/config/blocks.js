@@ -64,6 +64,40 @@ const point3dStyleOptions = {
 const polygon3dStyleOptions = {
     msClassificationType: property.msClassificationType({
         label: 'styleeditor.classificationtype'
+    }),
+    msHeight: property.multiInput({
+        label: "styleeditor.height",
+        key: "msHeight",
+        isDisabled: (value, properties) => properties?.msHeightReference === 'clamp',
+        initialOptionValue: INITIAL_OPTION_VALUE,
+        getSelectOptions: ({ attributes }) => {
+            const numberAttributes = attributes
+                .map(({ label, attribute, type }) =>
+                    type === "number" ? { label, value: attribute } : null
+                )
+                .filter((x) => !!x);
+            return [
+                { labelId: 'styleeditor.pointHeight', value: INITIAL_OPTION_VALUE },
+                ...numberAttributes
+            ];
+        }
+    }),
+    msExtrudedHeight: property.multiInput({
+        label: "Extruded Height",
+        key: "msExtrudedHeight",
+        isDisabled: (value, properties) => properties?.msHeightReference === 'clamp',
+        initialOptionValue: INITIAL_OPTION_VALUE,
+        getSelectOptions: ({ attributes }) => {
+            const numberAttributes = attributes
+                .map(({ label, attribute, type }) =>
+                    type === "number" ? { label, value: attribute } : null
+                )
+                .filter((x) => !!x);
+            return [
+                { labelId: 'styleeditor.pointHeight', value: INITIAL_OPTION_VALUE },
+                ...numberAttributes
+            ];
+        }
     })
 };
 
@@ -220,7 +254,7 @@ const getBlocks = ({
                 opacity: 1,
                 cap: 'round',
                 join: 'round',
-                msClampToGround: true
+                msClampToGround: false
             }
         },
         Fill: {
@@ -267,8 +301,8 @@ const getBlocks = ({
                 fillOpacity: 1,
                 outlineColor: '#777777',
                 outlineWidth: 1,
-                msClassificationType: 'both',
-                msClampToGround: true
+                msClassificationType: 'none',
+                msClampToGround: false
             }
         },
         PointCloud: {

@@ -436,21 +436,35 @@ const getGraphics = ({
         });
     }
     if (symbolizer.kind === 'Fill') {
+
         const polygon = new Cesium.PolygonGraphics({
-            material: getCesiumColor({
-                color: symbolizer.color,
-                opacity: symbolizer.fillOpacity * globalOpacity
-            }),
-            hierarchy: entity._msStoredCoordinates.polygon,
-            // height should be introduced with concept of extrusion
-            // height: 0,
-            classificationType: symbolizer.msClassificationType === 'terrain' ?
+            hierarchy: entity._msStoredCoordinates.polygon
+        });
+        polygon.material = getCesiumColor({
+            color: symbolizer.color,
+            opacity: symbolizer.fillOpacity * globalOpacity
+        });
+
+        if (!symbolizer.msClassificationType || symbolizer.msClassificationType === 'none') {
+            const height = getNumberAttributeValue(symbolizer.msHeight, properties);
+            if (height !== null) {
+                polygon.height = height;
+                // polygon.heightReference = Cesium.HeightReference[HEIGHT_REFERENCE_CONSTANTS_MAP[symbolizer.msHeightReference] || 'NONE'];
+            }
+
+            const extrudedHeight = getNumberAttributeValue(symbolizer.msExtrudedHeight, properties);
+            if (extrudedHeight !== null) {
+                polygon.extrudedHeight = extrudedHeight;
+                // polygon.extrudedHeightReference = Cesium.HeightReference[HEIGHT_REFERENCE_CONSTANTS_MAP[symbolizer.msExtrudedHeightReference] || 'NONE'];
+            }
+            polygon.classificationType = undefined;
+        } else {
+            polygon.classificationType = symbolizer.msClassificationType === 'terrain' ?
                 Cesium.ClassificationType.TERRAIN :
                 symbolizer.msClassificationType === '3d' ?
                     Cesium.ClassificationType.CESIUM_3D_TILE :
-                    Cesium.ClassificationType.BOTH
-        });
-
+                    Cesium.ClassificationType.BOTH;
+        }
         let polyline;
         // outline properties is not working in some browser see https://github.com/CesiumGS/cesium/issues/40
         // this is a workaround to visualize the outline with the correct side

@@ -55,7 +55,7 @@ const ConnectedVectorStyleEditor = connect(
 )(VectorStyleEditor);
 
 const isLayerNode = ({settings = {}} = {}) => settings.nodeType === 'layers';
-const isVectorStylableLayer = ({element = {}} = {}) => element.type === "wfs" || element.type === "3dtiles" || element.type === "vector" && element.id !== "annotations";
+const isVectorStylableLayer = ({element = {}} = {}) => ['wfs', '3dtiles', 'vector', 'vector-tile'].includes(element.type) && element.id !== "annotations";
 const isWMS = ({element = {}} = {}) => element.type === "wms";
 const isWFS = ({element = {}} = {}) => element.type === "wfs";
 

@@ -240,6 +240,9 @@ class CesiumLayer extends React.Component {
     removeLayer = (provider) => {
         const toRemove = provider || this.provider;
         if (toRemove) {
+            if (this.layer.destroy) {
+                this.layer.destroy();
+            }
             this.props.map.imageryLayers.remove(toRemove);
         }
         // detached layers are layers that do not work through a provider

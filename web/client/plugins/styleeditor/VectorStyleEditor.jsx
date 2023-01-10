@@ -26,6 +26,7 @@ import {
 } from '../../utils/VectorStyleUtils';
 import { getCapabilities } from '../../api/ThreeDTiles';
 import { describeFeatureType } from '../../api/WFS';
+import axios from '../../libs/ajax';
 
 const editors = {
     visual: VisualStyleEditor,
@@ -33,6 +34,22 @@ const editors = {
 };
 
 const capabilitiesRequest = {
+    'vector-tile': (layer) => axios.get(layer.url)
+        .then(({ data }) => {
+            const { vector_layers: vectorLayers } = data || {};
+            const properties = vectorLayers.reduce((acc, lyr) => {
+                return {
+                    ...acc,
+                    ...lyr?.fields
+                };
+            }, {});
+            const geometryType = 'vector';
+            return {
+                properties,
+                geometryType
+            };
+        })
+        .catch(() => ({})),
     '3dtiles': (layer) => getCapabilities(layer.url),
     'vector': ({ features = [] }) => {
         const flatFeatures = flattenFeatures(features);
