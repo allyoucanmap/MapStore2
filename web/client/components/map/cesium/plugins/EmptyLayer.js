@@ -94,7 +94,7 @@ EmptyImageryProvider.prototype.getTileCredits = function() {
 };
 
 EmptyImageryProvider.prototype.requestImage = function() {
-    return this._canvas;
+    return Promise.resolve(this._canvas);
 };
 
 EmptyImageryProvider.prototype.pickFeatures = function() {
