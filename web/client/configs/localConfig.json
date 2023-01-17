@@ -212,7 +212,7 @@
                 "name": "Identify",
                 "showIn": ["Settings"],
                 "cfg": {
-                    "showFullscreen": true,
+                    "showFullscreen": false,
                     "position": "bottom",
                     "disableInfoAlert": true,
                     "disableCoordinatesRow": true,
