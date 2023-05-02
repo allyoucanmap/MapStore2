@@ -2427,7 +2427,8 @@
             "color": "Color",
             "pointHeight": "Point height",
             "leaderLineColor": "Leader line color",
-            "leaderLineWidth": "Leader line width"
+            "leaderLineWidth": "Leader line width",
+            "geometryTransformation": "Geometry transformation"
         },
         "playback": {
             "settings": {

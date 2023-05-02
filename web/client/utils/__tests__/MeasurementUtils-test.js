@@ -7,7 +7,7 @@
 */
 
 import expect from 'expect';
-import {convertMeasuresToGeoJSON, getGeomTypeSelected} from '../MeasurementUtils';
+import {convertMeasuresToAnnotation, getGeomTypeSelected} from '../MeasurementUtils';
 
 const testUom = {
     length: {
@@ -50,35 +50,35 @@ describe('MeasurementUtils', () => {
             ]
         }
     }];
-    it('convertMeasuresToGeoJSON with LineString', () => {
-        const geoJson = convertMeasuresToGeoJSON(features, [], testUom, 'id');
+    it('convertMeasuresToAnnotation with LineString', () => {
+        const geoJson = convertMeasuresToAnnotation(features, [], testUom, 'id');
 
-        expect(geoJson).toExist();
+        expect(geoJson).toBeTruthy();
         expect(geoJson.type).toBe('FeatureCollection');
-        expect(geoJson.properties).toExist();
+        expect(geoJson.properties).toBeTruthy();
         expect(geoJson.properties.id).toBe('id');
         expect(geoJson.properties.title).toBe('Measure Length');
         expect(geoJson.properties.type).toBe('Measure');
         expect(geoJson.properties.iconGlyph).toBe('1-measure-length');
-        expect(geoJson.features).toExist();
+        expect(geoJson.features).toBeTruthy();
         expect(geoJson.features.length).toBe(2);
         expect(geoJson.features[0].type).toBe('Feature');
-        expect(geoJson.features[0].geometry).toExist();
+        expect(geoJson.features[0].geometry).toBeTruthy();
         expect(geoJson.features[0].geometry.type).toBe('LineString');
         expect(geoJson.features[0].geometry.coordinates).toEqual(features[0].geometry.coordinates);
-        expect(geoJson.features[0].properties).toExist();
-        expect(geoJson.features[0].properties.geometryGeodesic).toExist();
-        expect(geoJson.features[0].properties.id).toExist();
+        expect(geoJson.features[0].properties).toBeTruthy();
+        expect(geoJson.features[0].properties.geometryGeodesic).toBeTruthy();
+        expect(geoJson.features[0].properties.id).toBeTruthy();
         expect(geoJson.features[0].properties.id.length).toBe(36);
         expect(geoJson.features[0].properties.useGeodesicLines).toBe(true);
         expect(geoJson.features[0].properties.isValidFeature).toBe(true);
-        expect(geoJson.features[0].style).toExist();
+        expect(geoJson.features[0].style).toBeTruthy();
         expect(geoJson.features[1].type).toBe('Feature');
-        expect(geoJson.features[1].geometry).toExist();
+        expect(geoJson.features[1].geometry).toBeTruthy();
         expect(geoJson.features[1].geometry.type).toBe('Point');
         expect(geoJson.features[1].geometry.coordinates).toEqual(features[0].properties.values[0].position);
-        expect(geoJson.features[1].properties).toExist();
-        expect(geoJson.features[1].properties.id).toExist();
+        expect(geoJson.features[1].properties).toBeTruthy();
+        expect(geoJson.features[1].properties.id).toBeTruthy();
         expect(geoJson.features[1].properties.id.length).toBe(36);
         expect(geoJson.features[1].properties.isText).toBe(true);
         expect(geoJson.features[1].properties.isValidFeature).toBe(true);

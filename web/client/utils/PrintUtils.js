@@ -22,6 +22,7 @@ import { isArray, filter, find, isEmpty, toNumber, castArray, reverse } from 'lo
 import { getFeature } from '../api/WFS';
 import { generateEnvString } from './LayerLocalizationUtils';
 import { ServerTypes } from './LayersUtils';
+import PrintStyleParser from './styleparser/PrintStyleParser';
 import url from 'url';
 
 import { getStore } from "./StateUtils";
@@ -36,6 +37,8 @@ import { getGridGeoJson } from "./grids/MapGridsUtils";
 
 const defaultScales = getGoogleMercatorScales(0, 21);
 let PrintUtils;
+
+const printStyleParser = new PrintStyleParser();
 
 
 // Try to guess geomType, getting the first type available.
@@ -519,6 +522,7 @@ export const getMapfishLayersSpecification = (layers, spec, state, purpose) => {
     return layers.filter((layer) => PrintUtils.specCreators[layer.type] && PrintUtils.specCreators[layer.type][purpose])
         .map((layer) => PrintUtils.specCreators[layer.type][purpose](layer, spec, state));
 };
+
 export const specCreators = {
     wms: {
         map: (layer, spec) => ({
@@ -591,8 +595,11 @@ export const specCreators = {
             },
             geoJson: reprojectGeoJson({
                 type: "FeatureCollection",
-                features: (isAnnotationLayer(layer) || !layer.style) ? annotationsToPrint(layer.features)
-                    : layer.features.map( f => ({...f, properties: {...f.properties, ms_style: f && f.geometry && f.geometry.type && f.geometry.type.replace("Multi", "") || 1}}))
+                features: (isAnnotationLayer(layer) || !layer.style)
+                    ? annotationsToPrint(layer.features)
+                    : layer?.style?.format === 'geostyler'
+                        ? printStyleParser.writeStyle(layer?.style?.body, true)({ layer, spec })
+                        : layer.features.map( f => ({...f, properties: {...f.properties, ms_style: f && f.geometry && f.geometry.type && f.geometry.type.replace("Multi", "") || 1}}))
             },
             "EPSG:4326",
             spec.projection)
@@ -952,7 +959,7 @@ export const toOpenLayers2TextStyle = function(layer, style, styleType) {
  * @memberof utils.PrintUtils
  */
 export const toOpenLayers2Style = function(layer, style, styleType) {
-    if (!style || layer.styleName === "marker") {
+    if (!style || layer.styleName === "marker" || style.format) {
         return PrintUtils.getOlDefaultStyle(layer, styleType);
     }
     // TODO: add support for grid labels (x and y)
