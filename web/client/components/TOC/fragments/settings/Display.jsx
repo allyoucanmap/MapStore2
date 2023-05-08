@@ -9,7 +9,7 @@
 import { clamp, isNil, isNumber } from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {Checkbox, Col, ControlLabel, FormGroup, Glyphicon, Grid, Row, Button as ButtonRB} from 'react-bootstrap';
+import {Checkbox, Col, ControlLabel, FormGroup, Glyphicon, Grid, Row, Button as ButtonRB, FormControl, Alert} from 'react-bootstrap';
 import tooltip from '../../../misc/enhancers/buttonTooltip';
 const Button = tooltip(ButtonRB);
 import IntlNumberFormControl from '../../../I18N/IntlNumberFormControl';
@@ -20,6 +20,8 @@ import VisibilityLimitsForm from './VisibilityLimitsForm';
 import { ServerTypes } from '../../../../utils/LayersUtils';
 import Select from 'react-select';
 import { getSupportedFormat } from '../../../../api/WMS';
+import { getLayerTileMatrixSetsInfo } from '../../../../api/WMTS';
+import { generateGeoServerWMTSUrl } from '../../../../utils/WMTSUtils';
 export default class extends React.Component {
     static propTypes = {
         opacityText: PropTypes.node,
@@ -106,6 +108,19 @@ export default class extends React.Component {
             this.props.onChange("imageFormats", imageFormats);
             this.setState({formatLoading: false});
         });
+    }
+    onTileMatrixSetsFetch = (options) => {
+        this.setState({ tileMatrixLoading: true, tileGridsUrlError: null });
+        const wmtsUrl = options.tileGridsUrl || generateGeoServerWMTSUrl(options);
+        return getLayerTileMatrixSetsInfo(wmtsUrl, options)
+            .then(({ tileMatrixSets: availableTileMatrixSets }) => {
+                this.props.onChange('availableTileMatrixSets', availableTileMatrixSets);
+                return availableTileMatrixSets;
+            })
+            .catch(() => {
+                this.setState({ tileGridsUrlError: wmtsUrl });
+            })
+            .finally(() => this.setState({ tileMatrixLoading: false }));
     }
 
     getValidationState = (name) =>{
@@ -225,13 +240,6 @@ export default class extends React.Component {
                         <FormGroup>
                             <Checkbox key="transparent" checked={this.props.element && (this.props.element.transparent === undefined ? true : this.props.element.transparent)} onChange={(event) => {this.props.onChange("transparent", event.target.checked); }}>
                                 <Message msgId="layerProperties.transparent"/></Checkbox>
-                            {(this.props.element?.serverType !== ServerTypes.NO_VENDOR && (
-                                <Checkbox value="tiled" key="tiled"
-                                    disabled={!!this.props.element.singleTile}
-                                    onChange={(e) => this.props.onChange("tiled", e.target.checked)}
-                                    checked={this.props.element && this.props.element.tiled !== undefined ? this.props.element.tiled : true} >
-                                    <Message msgId="layerProperties.cached"/>
-                                </Checkbox>))}
                             <Checkbox key="singleTile" value="singleTile"
                                 checked={this.props.element && (this.props.element.singleTile !== undefined ? this.props.element.singleTile : false )}
                                 onChange={(e) => this.props.onChange("singleTile", e.target.checked)}>
@@ -254,6 +262,118 @@ export default class extends React.Component {
                             </Checkbox>)}
                         </FormGroup>
                     </Col>
+                    {(this.props.element?.serverType !== ServerTypes.NO_VENDOR && (
+                        <Col xs={12}>
+                            <hr/>
+                            <FormGroup>
+                                <Checkbox value="tiled" key="tiled"
+                                    disabled={!!this.props.element.singleTile}
+                                    onChange={(e) => this.props.onChange("tiled", e.target.checked)}
+                                    checked={this.props.element && this.props.element.tiled !== undefined ? this.props.element.tiled : true} >
+                                    <Message msgId="layerProperties.cached"/>
+                                </Checkbox>
+                            </FormGroup>
+                            <FormGroup>
+                                <ControlLabel style={{ fontWeight: 'normal' }}><Message msgId="Grid set type" /></ControlLabel>
+                                <Select
+                                    disabled={!!this.props.element.singleTile || !(this.props.element && this.props.element.tiled !== undefined ? this.props.element.tiled : true)}
+                                    key="wsm-cache-strategy"
+                                    isLoading={!!this.state.tileMatrixLoading}
+                                    clearable={false}
+                                    options={[
+                                        { value: 'map', label: 'Grid set based on map resolutions' },
+                                        { value: 'projection', label: 'Grid set based on projection resolutions' },
+                                        { value: 'matrix', label: 'Request of grid sets configured server side' }
+                                    ]}
+                                    value={this.props.element && this.props.element.tileGridStrategy || 'map'}
+                                    onChange={({ value }) => {
+                                        if (value === 'matrix') {
+                                            this.onTileMatrixSetsFetch(this.props.element)
+                                                .then(() => {
+                                                    this.props.onChange("tileGridStrategy", value);
+                                                });
+                                        } else {
+                                            this.props.onChange("tileGridStrategy", value);
+                                        }
+                                    }}/>
+                            </FormGroup>
+                            {this.props.element.tileGridStrategy === 'matrix' && <>
+                                <FormGroup>
+                                    <ControlLabel style={{ fontWeight: 'normal' }}><Message msgId="Prioritized grid sets (optional)" /></ControlLabel>
+                                    <div className={'ms-format-container'}>
+                                        <Select
+                                            className={'format-select'}
+                                            key="matrix-dropdown"
+                                            clearable
+                                            multi
+                                            isLoading={!!this.state.tileMatrixLoading}
+                                            disabled={!!this.props.element.singleTile || !(this.props.element && this.props.element.tiled !== undefined ? this.props.element.tiled : true)}
+                                            options={this.state.tileMatrixLoading
+                                                ? []
+                                                : (this.props.element?.availableTileMatrixSets || [])
+                                                    .map((tileMatrixSet) => ({ value: tileMatrixSet['ows:Identifier'], label: tileMatrixSet['ows:Identifier'] }))
+                                            }
+                                            value={this.props.element?.prioritizedTileMatrixSets}
+                                            onOpen={() => {
+                                                if ((this.props.element?.availableTileMatrixSets?.length || 0) === 0) {
+                                                    this.onTileMatrixSetsFetch(this.props.element);
+                                                }
+                                            }}
+                                            onChange={(event) => {
+                                                this.props.onChange('prioritizedTileMatrixSets', (event || []).map(({ value }) => value));
+                                            }}/>
+                                        <Button
+                                            disabled={!!this.state.tileMatrixLoading}
+                                            tooltipId="Refresh available tile matrix sets"
+                                            className="square-button-md no-border matrix-refresh"
+                                            onClick={() => this.onTileMatrixSetsFetch(this.props.element)}
+                                            key="matrix-refresh">
+                                            <Glyphicon glyph="refresh" />
+                                        </Button>
+                                    </div>
+                                    {this.props.element?.availableTileMatrixSets?.length === 0
+                                        ? <Alert bsStyle="warning" style={{ fontSize: 12 }}>
+                                            The WMS layer has not tile matrix sets configured so the requests could not HIT the cache.
+                                            Please check if the associated WMTS service (default or custom) is working
+                                            or ensure the grid sets are correctly configured server side
+                                        </Alert>
+                                        : <Alert bsStyle="info" style={{ fontSize: 12 }}>
+                                            The grid set to apply to WMS layer will be selected based on the map projection and on the following checks ordered by priority:
+                                            <ul>
+                                                <li>the first available prioritized grid set (if selected)</li>
+                                                <li>or the first grid set that contains the selected tile size</li>
+                                                <li>if none of above match the first available grid set suitable for the projection will be used</li>
+                                            </ul>
+                                        </Alert>}
+                                </FormGroup>
+                                <FormGroup>
+                                    <ControlLabel style={{ fontWeight: 'normal' }}><Message msgId="Associated WMTS service (optional)" /></ControlLabel>
+                                    <FormControl
+                                        value={this.props.element.tileGridsUrl}
+                                        key="name"
+                                        type="text"
+                                        placeholder={`Enter custom wmts url associated with this wms layer`}
+                                        disabled={!!this.props.element.singleTile || !(this.props.element && this.props.element.tiled !== undefined ? this.props.element.tiled : true)}
+                                        onChange={evt => {
+                                            const tileGridsUrl = evt?.target?.value;
+                                            this.onTileMatrixSetsFetch({ ...this.props.element, tileGridsUrl })
+                                                .then(() => {
+                                                    this.props.onChange('tileGridsUrl', tileGridsUrl || undefined);
+                                                });
+                                        }}
+                                    />
+                                    {this.state.tileGridsUrlError
+                                        ? <Alert bsStyle="danger" bsSize="small" style={{ fontSize: 12 }}>
+                                            The {this.state.tileGridsUrlError} endpoint does not work. Please change the custom url or clear the associated WMTS field to use the default service
+                                        </Alert>
+                                        : !this.props.element.tileGridsUrl ? <Alert bsStyle="info" bsSize="small" style={{ fontSize: 12 }}>
+                                            This url is used to get the available grid sets. A WMTS url will be generated by default if the custom url is not defined: {generateGeoServerWMTSUrl(this.props.element)}
+                                        </Alert> : null}
+                                </FormGroup>
+                            </>}
+                            <hr/>
+                        </Col>
+                    ))}
                     <div className={"legend-options"}>
                         <Col xs={12} className={"legend-label"}>
                             <label key="legend-options-title" className="control-label"><Message msgId="layerProperties.legendOptions.title" /></label>

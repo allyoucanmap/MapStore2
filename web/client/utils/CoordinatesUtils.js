@@ -1042,7 +1042,7 @@ export const getPolygonFromCircle = (center, radius, units = "degrees", steps = 
  * @return {array} of projection Definitions [{code, extent}]
  */
 export const getProjections = () => {
-    const projections = (getConfigProp('projectionDefs') || []).concat([{code: "EPSG:3857", extent: [-20026376.39, -20048966.10, 20026376.39, 20048966.10]},
+    const projections = (getConfigProp('projectionDefs') || []).concat([{code: "EPSG:3857", extent: [-20037508.34, -20037508.34, 20037508.34, 20037508.34]},
         {code: "EPSG:4326", extent: [-180, -90, 180, 90]}
     ]);
     return projections;

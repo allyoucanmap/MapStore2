@@ -121,4 +121,16 @@ const Api = {
     }
 };
 
+export const getLayerTileMatrixSetsInfo = (url, options) => {
+    return Api.getCapabilities(url)
+        .then((response) => {
+            const layerParts = options.name.split(':');
+            const layers = castArray(response?.Capabilities?.Contents?.Layer || []);
+            const wmtsLayer = layers.find((layer) => layer['ows:Identifier'] === layerParts[1] || layer['ows:Identifier'] === options.name);
+            const tileMatrixSetLinks = castArray(wmtsLayer?.TileMatrixSetLink || []).map(({ TileMatrixSet }) => TileMatrixSet);
+            const tileMatrixSets = castArray(response?.Capabilities?.Contents?.TileMatrixSet || []).filter((tileMatrixSet) => tileMatrixSetLinks.includes(tileMatrixSet['ows:Identifier']));
+            return { tileMatrixSets, tileMatrixSetLinks };
+        });
+};
+
 export default Api;

@@ -16,7 +16,7 @@ import {
 import * as WMTSUtils from '../../../../utils/WMTSUtils';
 import { getAuthenticationParam, getURLs } from '../../../../utils/LayersUtils';
 import assign from 'object-assign';
-import { isObject, isArray, slice, get, head} from 'lodash';
+import { isObject, isArray, slice, get, head } from 'lodash';
 import urlParser from 'url';
 import { isVectorFormat } from '../../../../utils/VectorTileUtils';
 
@@ -30,7 +30,7 @@ function splitUrl(originalUrl) {
         }
         queryString = originalUrl.substring(originalUrl.indexOf('?') + 1);
     }
-    return {url, queryString};
+    return { url, queryString };
 }
 
 function WMTSProxy(proxy) {
@@ -40,21 +40,21 @@ function WMTSProxy(proxy) {
 const isValidTile = (tileMatrixSet) => (x, y, level) =>
     tileMatrixSet && tileMatrixSet[level] && !tileMatrixSet[level].ranges ||
     (x <= parseInt(get(tileMatrixSet[level], "ranges.cols.max"), 10) &&
-    x >= parseInt(get(tileMatrixSet[level], "ranges.cols.min"), 10) &&
-    y <= parseInt(get(tileMatrixSet[level], "ranges.rows.max"), 10) &&
-    y >= parseInt(get(tileMatrixSet[level], "ranges.rows.min"), 10));
+        x >= parseInt(get(tileMatrixSet[level], "ranges.cols.min"), 10) &&
+        y <= parseInt(get(tileMatrixSet[level], "ranges.rows.max"), 10) &&
+        y >= parseInt(get(tileMatrixSet[level], "ranges.rows.min"), 10));
 
 
-WMTSProxy.prototype.getURL = function(resource) {
-    let {url, queryString} = splitUrl(resource);
+WMTSProxy.prototype.getURL = function (resource) {
+    let { url, queryString } = splitUrl(resource);
     return getProxyUrl() + encodeURIComponent(url + queryString);
 };
 
 function NoProxy() {
 }
 
-NoProxy.prototype.getURL = function(resource) {
-    let {url, queryString} = splitUrl(resource);
+NoProxy.prototype.getURL = function (resource) {
+    let { url, queryString } = splitUrl(resource);
     return url + queryString;
 };
 function getMatrixIds(matrix = [], setId) {
@@ -92,13 +92,13 @@ const getTilingSchema = (srs) => {
 const getMatrixOptions = (options, srs) => {
     const tileMatrixSet = WMTSUtils.getTileMatrixSet(options.tileMatrixSet, srs, options.allowedSRS, options.matrixIds);
     const matrixIds = limitMatrix(options.matrixIds && getMatrixIds(options.matrixIds, tileMatrixSet) || getDefaultMatrixId(options));
-    return {tileMatrixSet, matrixIds};
+    return { tileMatrixSet, matrixIds };
 };
 
 function wmtsToCesiumOptions(_options) {
     const options = WMTSUtils.parseTileMatrixSetOption(_options);
     let srs = 'EPSG:4326';
-    let { tileMatrixSet: tileMatrixSetID, matrixIds} = getMatrixOptions(options, srs);
+    let { tileMatrixSet: tileMatrixSetID, matrixIds } = getMatrixOptions(options, srs);
     if (matrixIds.length === 0) {
         srs = 'EPSG:3857';
         const matrixOptions = getMatrixOptions(options, srs);
@@ -113,7 +113,7 @@ function wmtsToCesiumOptions(_options) {
         proxy = needProxy(options.url) && proxyUrl;
     }
     const isValid = isValidTile(options.matrixIds && options.matrixIds[tileMatrixSetID]);
-    const queryParametersString = urlParser.format({ query: {...getAuthenticationParam(options)}});
+    const queryParametersString = urlParser.format({ query: { ...getAuthenticationParam(options) } });
     const cr = options.credits;
     const credit = cr ? new Cesium.Credit(cr.text || cr.title, cr.imageUrl, cr.link) : '';
     return assign({
@@ -139,7 +139,7 @@ function wmtsToCesiumOptions(_options) {
         tileHeight: options.tileHeight || options.tileSize || 256,
         tileMatrixSetID: tileMatrixSetID,
         maximumLevel: 30,
-        parameters: {...getAuthenticationParam(options)}
+        parameters: { ...getAuthenticationParam(options) }
     });
 }
 
@@ -148,7 +148,7 @@ const createLayer = options => {
     const cesiumOptions = wmtsToCesiumOptions(options);
     layer = new Cesium.WebMapTileServiceImageryProvider(cesiumOptions);
     const orig = layer.requestImage;
-    layer.requestImage = (x, y, level) => cesiumOptions.isValid(x, y, level) ? orig.bind(layer)( x, y, level) : new Promise( () => undefined);
+    layer.requestImage = (x, y, level) => cesiumOptions.isValid(x, y, level) ? orig.bind(layer)(x, y, level) : new Promise(() => undefined);
     layer.updateParams = (params) => {
         const newOptions = assign({}, options, {
             params: assign({}, options.params || {}, params)
@@ -160,11 +160,11 @@ const createLayer = options => {
 
 const updateLayer = (layer, newOptions, oldOptions) => {
     if (newOptions.securityToken !== oldOptions.securityToken
-    || oldOptions.format !== newOptions.format
-    || oldOptions.credits !== newOptions.credits) {
+        || oldOptions.format !== newOptions.format
+        || oldOptions.credits !== newOptions.credits) {
         return createLayer(newOptions);
     }
     return null;
 };
 
-Layers.registerType('wmts', {create: createLayer, update: updateLayer});
+Layers.registerType('wmts', { create: createLayer, update: updateLayer });

@@ -14,7 +14,8 @@
           "https://gs-stable.geosolutionsgroup.com/geoserver",
           "https://gs-stable.geosolutionsgroup.com:443/geoserver",
           "http://gs-stable.geosolutionsgroup.com/geoserver",
-          "http://gs-stable.geosolutionsgroup.com:443/geoserver"
+          "http://gs-stable.geosolutionsgroup.com:443/geoserver",
+          "http://localhost:8080/geoserver"
         ]
     },
     "geoStoreUrl": "rest/geostore/",
@@ -61,7 +62,38 @@
     "userSessions": {
       "enabled": true
     },
-    "projectionDefs": [],
+    "projectionDefs": [{
+      "code": "EPSG:3734",
+      "def": "+proj=lcc +lat_1=41.7 +lat_2=40.43333333333333 +lat_0=39.66666666666666 +lon_0=-82.5 +x_0=600000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=ft +no_defs",
+      "extent": [
+          1322292.0096,
+          164166.1532,
+          2522409.7458,
+          975042.0151
+      ],
+      "worldExtent": [
+          -84.8100,
+          40.1000,
+          -80.5200,
+          42.3200
+      ]
+    }, 
+    {
+      "code": "EPSG:32122",
+      "def": "+proj=lcc +lat_1=41.7 +lat_2=40.43333333333333 +lat_0=39.66666666666666 +lon_0=-82.5 +x_0=600000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+      "extent": [
+        403035.4105968763,
+        48133.91598795739,
+        769684.5675940284,
+        298304.0075010298
+      ],
+      "worldExtent": [
+        -84.8100,
+        40.1000,
+        -80.5200,
+        42.3200
+      ]
+    }],
     "initialState": {
       "defaultState": {
         "annotations": {
@@ -420,11 +452,14 @@
               "name": "CRSSelector",
               "cfg": {
                 "additionalCRS": {
-
+                  "EPSG:3734": { "label": "EPSG:3734" },
+                  "EPSG:32122": { "label": "EPSG:32122" }
                 },
                 "filterAllowedCRS": [
                   "EPSG:4326",
-                  "EPSG:3857"
+                  "EPSG:3857",
+                  "EPSG:3734",
+                  "EPSG:32122"
                 ],
                 "allowedRoles": [
                   "ADMIN"

@@ -22,7 +22,7 @@ import {optionsToVendorParams} from '../../../../utils/VendorParamsUtils';
 import {addAuthenticationToSLD, addAuthenticationParameter, getAuthenticationHeaders} from '../../../../utils/SecurityUtils';
 import { creditsToAttribution, getWMSVendorParams } from '../../../../utils/LayersUtils';
 
-import MapUtils from '../../../../utils/MapUtils';
+import MapUtils, { getResolutionsForProjection } from '../../../../utils/MapUtils';
 import  {loadTile, getElevation as getElevationFunc} from '../../../../utils/ElevationUtils';
 
 import ImageLayer from 'ol/layer/Image';
@@ -38,6 +38,73 @@ import VectorTileLayer from 'ol/layer/VectorTile';
 import { isVectorFormat } from '../../../../utils/VectorTileUtils';
 import { OL_VECTOR_FORMATS, applyStyle } from '../../../../utils/openlayers/VectorTileUtils';
 import { generateEnvString } from '../../../../utils/LayerLocalizationUtils';
+import { getLayerTileMatrixSetsInfo } from '../../../../api/WMTS';
+import { generateGeoServerWMTSUrl } from '../../../../utils/WMTSUtils';
+
+const updateTileGrid = (options) => {
+    const normalizedSrs = CoordinatesUtils.normalizeSRS(options.srs || 'EPSG:3857', options.allowedSRS);
+    const extent = get(normalizedSrs).getExtent() || CoordinatesUtils.getExtentForProjection(normalizedSrs).extent;
+    const tileSize = options.tileSize ? options.tileSize : 256;
+    const fallback = () => {
+        if (options.tileGridStrategy === 'projection') {
+            return new TileGrid({
+                extent,
+                resolutions: getResolutionsForProjection(normalizedSrs),
+                tileSize,
+                origin: [extent[0], extent[1]]
+            });
+        }
+        return new TileGrid({
+            extent,
+            resolutions: options.resolutions || MapUtils.getResolutions(),
+            tileSize,
+            origin: options.origin ? options.origin : [extent[0], extent[1]]
+        });
+    };
+    const { TILED } = getWMSVendorParams(options);
+    if (!!TILED && options.tileGridStrategy === 'matrix') {
+        const wmtsCapabilitiesUrl = options.tileGridsUrl || generateGeoServerWMTSUrl(options);
+        if (!wmtsCapabilitiesUrl) {
+            return Promise.resolve(fallback());
+        }
+        return getLayerTileMatrixSetsInfo(wmtsCapabilitiesUrl, options)
+            .then(({ tileMatrixSets }) => {
+                const filteredTileMatrixSets = tileMatrixSets
+                    .filter((tileMatrixSet) => CoordinatesUtils.normalizeSRS(CoordinatesUtils.getEPSGCode(tileMatrixSet['ows:SupportedCRS'])) === normalizedSrs);
+                if (filteredTileMatrixSets.length === 0) {
+                    return fallback();
+                }
+                const projection = get(normalizedSrs);
+                const metersPerUnit = projection.getMetersPerUnit();
+                const scaleToResolution = s => s * 0.28E-3 / metersPerUnit;
+                const selectedTileMatrixSet = (
+                    options.prioritizedTileMatrixSets && [...filteredTileMatrixSets]
+                        .sort((a, b) =>
+                            options.prioritizedTileMatrixSets.indexOf(a['ows:Identifier']) - options.prioritizedTileMatrixSets.indexOf(b['ows:Identifier'])
+                        )
+                        .find(tileMatrixSet => options.prioritizedTileMatrixSets.includes(tileMatrixSet['ows:Identifier']))
+                )
+                    || filteredTileMatrixSets.find(({ TileMatrix }) =>
+                        TileMatrix.find(tileMatrixLevel =>
+                            parseFloat(tileMatrixLevel.TileWidth) === tileSize
+                            && parseFloat(tileMatrixLevel.TileHeight) === tileSize
+                        )
+                    ) || filteredTileMatrixSets[0];
+                const resolutions = selectedTileMatrixSet?.TileMatrix.map((tileMatrixLevel) => scaleToResolution(parseFloat(tileMatrixLevel.ScaleDenominator)));
+                const origins = selectedTileMatrixSet?.TileMatrix.map((tileMatrixLevel) => tileMatrixLevel.TopLeftCorner.split(' ').map(parseFloat));
+                const tileSizes = selectedTileMatrixSet?.TileMatrix.map((tileMatrixLevel) => [parseFloat(tileMatrixLevel.TileWidth), parseFloat(tileMatrixLevel.TileHeight)]);
+                return new TileGrid({
+                    extent,
+                    resolutions,
+                    tileSizes,
+                    origins
+                });
+            })
+            .catch(fallback());
+    }
+    return Promise.resolve(fallback());
+};
+
 
 /**
  * Check source and apply proxy
@@ -271,6 +338,13 @@ const createLayer = (options, map) => {
         layer.set('littleEndian', options.littleendian ?? false);
         layer.set('getElevation', getElevation.bind(layer));
     }
+
+    layer.setVisible(false);
+    updateTileGrid(options)
+        .then((tileGrid) => {
+            layer.getSource().tileGrid = tileGrid;
+            layer.setVisible(options.visibility !== false);
+        });
     return layer;
 };
 
@@ -285,6 +359,10 @@ const mustCreateNewLayer = (oldOptions, newOptions) => {
         || oldOptions.localizedLayerStyles !== newOptions.localizedLayerStyles
         || oldOptions.tileSize !== newOptions.tileSize
         || oldOptions.forceProxy !== newOptions.forceProxy
+        || oldOptions.tileGridStrategy !== newOptions.tileGridStrategy
+        || oldOptions.srs !== newOptions.srs
+        || oldOptions.tileGridsUrl !== newOptions.tileGridsUrl
+        || !isEqual(oldOptions.prioritizedTileMatrixSets, newOptions.prioritizedTileMatrixSets)
     );
 };
 
@@ -306,7 +384,7 @@ Layers.registerType('wms', {
         const wmsSource = layer.get('wmsSource') || layer.getSource();
         const vectorSource = newIsVector ? layer.getSource() : null;
 
-        if (oldOptions.srs !== newOptions.srs) {
+        /* if (oldOptions.srs !== newOptions.srs) {
             const normalizedSrs = CoordinatesUtils.normalizeSRS(newOptions.srs, newOptions.allowedSRS);
             const extent = get(normalizedSrs).getExtent() || CoordinatesUtils.getExtentForProjection(normalizedSrs).extent;
             if (newOptions.singleTile && !newIsVector) {
@@ -324,7 +402,7 @@ Layers.registerType('wms', {
                 }
             }
             needsRefresh = true;
-        }
+        }*/
 
         if (oldOptions.credits !== newOptions.credits && newOptions.credits) {
             wmsSource.setAttributions(toOLAttributions(newOptions.credits));

@@ -16,6 +16,7 @@ import isMobile from 'ismobilejs';
 import {mergeConfigsPatch} from "@mapstore/patcher";
 
 const epsg4326 = Proj4js ? new Proj4js.Proj('EPSG:4326') : null;
+console.log(new Proj4js.Proj('EPSG:3857'));
 const centerPropType = PropTypes.shape({
     x: PropTypes.number.isRequired,
     y: PropTypes.number.isRequired,
