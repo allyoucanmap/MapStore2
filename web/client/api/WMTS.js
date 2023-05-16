@@ -121,4 +121,33 @@ const Api = {
     }
 };
 
+export const getLayerTileMatrixSetsInfo = (url, options) => {
+    return Api.getCapabilities(url)
+        .then((response) => {
+            const layerParts = options.name.split(':');
+            const layers = castArray(response?.Capabilities?.Contents?.Layer || []);
+            const wmtsLayer = layers.find((layer) => layer['ows:Identifier'] === layerParts[1] || layer['ows:Identifier'] === options.name);
+            const tileMatrixSetLinks = castArray(wmtsLayer?.TileMatrixSetLink || []).map(({ TileMatrixSet }) => TileMatrixSet);
+            const tileMatrixSets = castArray(response?.Capabilities?.Contents?.TileMatrixSet || []).filter((tileMatrixSet) => tileMatrixSetLinks.includes(tileMatrixSet['ows:Identifier']));
+            const tileGrids = tileMatrixSets.map((tileMatrixSet) => {
+                const origins = tileMatrixSet.TileMatrix.map((tileMatrixLevel) => tileMatrixLevel.TopLeftCorner.split(' ').map(parseFloat));
+                const tileSizes = tileMatrixSet.TileMatrix.map((tileMatrixLevel) => [parseFloat(tileMatrixLevel.TileWidth), parseFloat(tileMatrixLevel.TileHeight)]);
+                const isSingleOrigin = origins.every(entry => origins[0][0] === entry[0] && origins[0][1] === entry[1]);
+                const isSingleTileSize = tileSizes.every(entry => tileSizes[0][0] === entry[0] && tileSizes[0][1] === entry[1]);
+                return {
+                    id: tileMatrixSet['ows:Identifier'],
+                    crs: getEPSGCode(tileMatrixSet['ows:SupportedCRS']),
+                    scales: tileMatrixSet.TileMatrix.map((tileMatrixLevel) => parseFloat(tileMatrixLevel.ScaleDenominator)),
+                    ...(isSingleOrigin ? { origin: origins[0] } : { origins }),
+                    ...(isSingleTileSize ? { tileSize: tileSizes[0] } : { tileSizes })
+                };
+            });
+            return {
+                tileMatrixSets,
+                tileMatrixSetLinks,
+                tileGrids
+            };
+        });
+};
+
 export default Api;

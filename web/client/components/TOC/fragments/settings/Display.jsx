@@ -20,6 +20,8 @@ import VisibilityLimitsForm from './VisibilityLimitsForm';
 import { ServerTypes } from '../../../../utils/LayersUtils';
 import Select from 'react-select';
 import { getSupportedFormat } from '../../../../api/WMS';
+import { getLayerTileMatrixSetsInfo } from '../../../../api/WMTS';
+import { generateGeoServerWMTSUrl } from '../../../../utils/WMTSUtils';
 export default class extends React.Component {
     static propTypes = {
         opacityText: PropTypes.node,
@@ -108,6 +110,45 @@ export default class extends React.Component {
         });
     }
 
+    onTileMatrixSetsFetch = (options) => {
+        const requestUrl = generateGeoServerWMTSUrl(options);
+        if (!requestUrl) {
+            this.setState({
+                tileGridLoading: false,
+                tileGridsErrorMsgId: 'layerProperties.notPossibleToGenerateWMTSUrl'
+            });
+            this.props.onChange('tileGrids', undefined);
+            return Promise.resolve(null);
+        }
+        this.setState({
+            tileGridLoading: true,
+            tileGridsErrorMsgId: null,
+            tileGridsErrorMsgValues: null
+        });
+        return getLayerTileMatrixSetsInfo(requestUrl, options)
+            .then(({ tileGrids }) => {
+                let tileGridsErrorMsgId = null;
+                if (tileGrids?.length === 0) {
+                    tileGridsErrorMsgId = 'layerProperties.noConfiguredGridSet';
+                }
+                this.setState({
+                    tileGridLoading: false,
+                    tileGridsErrorMsgId
+                });
+                this.props.onChange('tileGrids', tileGrids);
+                return tileGrids;
+            })
+            .catch(() => {
+                this.setState({
+                    tileGridLoading: false,
+                    tileGridsErrorMsgId: 'layerProperties.notPossibleToWMTSUrl',
+                    tileGridsErrorMsgValues: { requestUrl }
+                });
+                this.props.onChange('tileGrids', undefined);
+                return null;
+            });
+    }
+
     getValidationState = (name) =>{
         if (this.state.legendOptions && this.state.legendOptions[name]) {
             return parseInt(this.state.legendOptions[name], 10) < 12 && "error";
@@ -171,6 +212,41 @@ export default class extends React.Component {
                                 onChange={({ value }) => {
                                     this.props.onChange("tileSize", value);
                                 }}/>
+                        </FormGroup>
+                    </Col>
+                    <Col xs={12}>
+                        <FormGroup>
+                            <ControlLabel><Message msgId="Tile grid strategy" /></ControlLabel>
+                            <div className={'ms-format-container'}>
+                                <Select
+                                    className={'format-select'}
+                                    key="format-dropdown"
+                                    clearable={false}
+                                    isLoading={!!this.state.tileGridLoading}
+                                    options={[
+                                        { value: 'default', label: 'Based on selected projection (default)'  },
+                                        { value: 'custom', label: 'Based on grid sets configured sever side (custom)'  }
+                                    ]}
+                                    value={this.props.element?.tileGridStrategy === 'custom' ? 'custom' : 'default'}
+                                    onChange={({ value }) => {
+                                        if (value === 'custom' && !this.props.element?.tileGrids
+                                        || this.props.element?.tileGrids?.length === 0) {
+                                            return this.onTileMatrixSetsFetch(this.props.element)
+                                                .then((tileGrids) => {
+                                                    this.props.onChange('tileGridStrategy', tileGrids !== null ? 'custom' : undefined);
+                                                });
+                                        }
+                                        return this.props.onChange('tileGridStrategy', value === 'custom' ? 'custom' : undefined);
+                                    }}/>
+                                <Button
+                                    disabled={!!this.state.tileGridLoading}
+                                    tooltipId="layerProperties.format.refresh"
+                                    className="square-button-md no-border format-refresh"
+                                    onClick={() => { this.onTileMatrixSetsFetch(this.props.element); }}
+                                    key="format-refresh">
+                                    <Glyphicon glyph="refresh" />
+                                </Button>
+                            </div>
                         </FormGroup>
                     </Col>
                 </Row>}
