@@ -7,6 +7,7 @@
  */
 const url = require('url');
 const isObject = require('lodash/isObject');
+const isString = require('lodash/isString');
 const {addLocaleData} = require('react-intl');
 
 const en = require('react-intl/locale-data/en');
@@ -159,8 +160,11 @@ export const getDateFormat = (locale) => {
     return DATE_FORMATS[locale] || DATE_FORMATS.default;
 };
 export const getMessageById = function(messages, msgId) {
-    var message = messages;
-    msgId.split('.').forEach(part => {
+    if (!isString(msgId)) {
+        return '';
+    }
+    let message = messages;
+    (msgId).split('.').forEach(part => {
         message = message ? message[part] : null;
     });
     return message || msgId;

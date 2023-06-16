@@ -19,5 +19,6 @@ import './ThreeDTilesLayer';
 import './VectorLayer';
 import './WFSLayer';
 import './TerrainLayer';
+import './ArcGISLayer';
 
 export default {};

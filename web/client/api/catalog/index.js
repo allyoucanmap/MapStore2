@@ -14,6 +14,7 @@ import * as tms from './TMS';
 import * as wfs from './WFS';
 import * as backgrounds from './backgrounds';
 import * as threeDTiles from './ThreeDTiles';
+import * as arcGIS from './ArcGIS';
 
 /**
  * APIs collection for catalog.
@@ -47,5 +48,6 @@ export default {
     'tms': tms,
     'wmts': wmts,
     'backgrounds': backgrounds,
-    '3dtiles': threeDTiles
+    '3dtiles': threeDTiles,
+    'arcgis': arcGIS
 };

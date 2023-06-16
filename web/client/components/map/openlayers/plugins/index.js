@@ -19,5 +19,6 @@ export default {
     WFSLayer: require('./WFSLayer').default,
     WFS3Layer: require('./WFS3Layer').default,
     WMSLayer: require('./WMSLayer').default,
-    WMTSLayer: require('./WMTSLayer').default
+    WMTSLayer: require('./WMTSLayer').default,
+    ArcGISLayer: require('./ArcGISLayer').default
 };

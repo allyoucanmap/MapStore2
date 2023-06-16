@@ -19,6 +19,7 @@ import wms from './mapinfo/wms';
 import wmts from './mapinfo/wmts';
 import vector from './mapinfo/vector';
 import threeDTiles from './mapinfo/threeDTiles';
+import arcgis from './mapinfo/arcgis';
 
 let MapInfoUtils;
 /**
@@ -237,7 +238,8 @@ export const services = {
     'wms': wms,
     'wmts': wmts,
     'vector': vector,
-    '3dtiles': threeDTiles
+    '3dtiles': threeDTiles,
+    'arcgis': arcgis
 };
 /**
  * To get the custom viewer with the given type

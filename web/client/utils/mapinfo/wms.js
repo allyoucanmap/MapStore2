@@ -59,7 +59,7 @@ export default {
                 service: 'WMS',
                 version: '1.1.1',
                 request: 'GetFeatureInfo',
-                exceptions: 'application/json',
+                // exceptions: 'application/json',
                 id: layer.id,
                 layers: layer.name,
                 query_layers: queryLayers,
