@@ -7,6 +7,7 @@ import {get} from 'lodash';
 import {Observable} from 'rxjs';
 import {describeFeatureType} from '../../../observables/wfs';
 import pingAggregateProcess from '../../../observables/widgets/pingAggregateProcess';
+import axios from '../../../libs/ajax';
 
 import {Message, HTML} from "../../I18N/I18N";
 const TYPES = "ALL";
@@ -19,6 +20,66 @@ const setGeomProp = ({onEditorChange, geomProp, editorData} = {}) => {
     }
     return onEditorChange(key, geomProp);
 };
+
+const parseEsriFieldTypes = (fieldType) => {
+    const type = fieldType.replace('esriFieldType', '');
+    if (['BigInteger', 'Double', 'Integer', 'OID', 'Single', 'SmallInteger'].includes(type)) {
+        return 'number';
+    }
+    return type.toLowerCase();
+};
+
+const describe = {
+    wfs: ({ layer, editorData, needsWPS, onEditorChange }) => Observable.forkJoin(
+        describeFeatureType({ layer }),
+        // if the builder needWPS service, then if missing it emits an exception
+        // otherwise, it simply sets the flag to false
+        ...(needsWPS ? [pingAggregateProcess(layer)] : [pingAggregateProcess(layer).catch( () => Observable.of(false))]))
+        .do(([result]) => {
+            const geomProp = get(findGeometryProperty(result.data || {}), "name");
+            if (geomProp) {
+            // set the geometry property (needed for synchronization with a map or any other sort of spatial filter)
+                setGeomProp({onEditorChange, editorData, geomProp});
+            }
+        })
+        .map(([result, hasAggregateProcess]) => {
+            return {
+                hasAggregateProcess: !!hasAggregateProcess,
+                loading: false,
+                types: TYPES,
+                featureTypeProperties: get(result, "data.featureTypes[0].properties") || []
+            };
+        }),
+    arcgis: ({ layer }) => Observable.defer(() => axios.get(`${layer.search.url}/${layer.name}`, { params: { f: 'json' } }).then(({ data }) => data))
+        .map((result) => {
+            return {
+                hasAggregateProcess: !!result.supportsStatistics,
+                loading: false,
+                types: TYPES,
+                featureTypeProperties: (result?.fields || []).map((field) => {
+                    if (field.name === result?.geometryField?.name) {
+                        return {
+                            name: field.name,
+                            // maxOccurs: 1,
+                            // minOccurs: 0,
+                            // nillable: true,
+                            type: field.type,
+                            localType: result.geometryType.replace('esriGeometry', '')
+                        };
+                    }
+                    return {
+                        name: field.name,
+                        // maxOccurs: 1,
+                        // minOccurs: 0,
+                        // nillable: true,
+                        type: field.type,
+                        localType: parseEsriFieldTypes(field.type)
+                    };
+                })
+            };
+        })
+};
+
 /**
  * Enhancer that retrieves information about the featureType attributes and the aggregate process
  * to find out proper information
@@ -29,25 +90,7 @@ export default ({needsWPS} = {}) => compose(
         dataStreamFactory: ($props, {onEditorChange = () => {}, onConfigurationError = () => {}} = {}) =>
             $props
                 .distinctUntilChanged( ({layer = {}} = {}, {layer: newLayer} = {})=> layer.name === newLayer.name)
-                .switchMap(({ layer, editorData } = {}) => Observable.forkJoin(
-                    describeFeatureType({ layer }),
-                    // if the builder needWPS service, then if missing it emits an exception
-                    // otherwise, it simply sets the flag to false
-                    ...(needsWPS ? [pingAggregateProcess(layer)] : [pingAggregateProcess(layer).catch( () => Observable.of(false))]))
-                    .do(([result]) => {
-                        const geomProp = get(findGeometryProperty(result.data || {}), "name");
-                        if (geomProp) {
-                        // set the geometry property (needed for synchronization with a map or any other sort of spatial filter)
-                            setGeomProp({onEditorChange, editorData, geomProp});
-                        }
-                    })
-                    .map(([result, hasAggregateProcess]) => ({
-                        hasAggregateProcess: !!hasAggregateProcess,
-                        loading: false,
-                        types: TYPES,
-                        featureTypeProperties: get(result, "data.featureTypes[0].properties") || []
-                    })
-                    ))
+                .switchMap(({ layer, editorData } = {}) => describe[layer.search.type]({ layer, editorData, needsWPS, onEditorChange }))
                 .catch( e => {
                     onConfigurationError(e);
                     return Observable.of({

@@ -52,6 +52,7 @@ export default {
         return Observable.defer(() => axios.post(`${layer.url}/${layer.name}/query`, null, {
             params: {
                 f: 'geojson',
+                outFields: '*',
                 geometry: `${bounds.minx},${bounds.miny},${bounds.maxx},${bounds.maxy}`,
                 inSR: map.projection
             }

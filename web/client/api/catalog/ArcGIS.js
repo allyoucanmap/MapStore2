@@ -18,16 +18,28 @@ function validateUrl(serviceUrl) {
     return true;
 }
 
-const recordToLayer = (record) => {
+const recordToLayer = (record, { map }) => {
     if (!record) {
         return null;
     }
+    /*
+    if (autoSetVisibilityLimits && !isEmpty(map) && (maxScaleDenominator || minScaleDenominator)) {
+        const {resolution: minResolution} = !isNil(minScaleDenominator)
+        && getResolutionObject(minScaleDenominator, 'scale', map) || {};
+        const {resolution: maxResolution} = !isNil(maxScaleDenominator)
+        && getResolutionObject(maxScaleDenominator, 'scale', map) || {};
+        layer = {...layer, minResolution, maxResolution};
+    }*/
     return {
         type: 'arcgis',
         url: record.url,
         name: record.name,
         title: record.title,
-        visibility: true
+        visibility: true,
+        search: {
+            type: 'arcgis',
+            url: record.url
+        }
     };
 };
 
