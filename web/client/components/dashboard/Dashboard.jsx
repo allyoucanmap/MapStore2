@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { compose, defaultProps, pure, withProps } from 'recompose';
-
+// comment
 import Message from '../I18N/Message';
 import { widthProvider } from '../layout/enhancers/gridLayout';
 import emptyState from '../misc/enhancers/emptyState';
