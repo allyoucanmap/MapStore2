@@ -17,10 +17,12 @@ import {
     cloneDeep,
     omit,
     castArray,
-    pick
+    pick,
+    isString,
+    uniq
 } from 'lodash';
 import set from "lodash/fp/set";
-import { CHARTS_REGEX, MAPS_REGEX, WIDGETS_MAPS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
+import { CHARTS_REGEX, TRACES_REGEX, MAPS_REGEX, WIDGETS_MAPS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
 import { findGroups } from './GraphUtils';
 import { sameToneRangeColors } from './ColorUtils';
 import uuidv1 from "uuid/v1";
@@ -140,7 +142,182 @@ export const getDefaultAggregationOperations = () => {
     ];
 };
 
-export const CHART_PROPS = ["selectedChartId", "id", "mapSync", "widgetType", "charts", "dependenciesMap", "dataGrid", "title", "description"];
+export const CHART_PROPS = ["selectedChartId", "selectedTraceId", "id", "mapSync", "widgetType", "charts", "dependenciesMap", "dataGrid", "title", "description"];
+
+
+const legacyColorsMap = {
+    'global.colors.blue': '#0888A1',
+    'global.colors.red': '#CD4A29',
+    'global.colors.green': '#29CD2E',
+    'global.colors.brown': '#CD8029',
+    'global.colors.purple': '#CD29C7'
+};
+const legacyColorsToRamps = {
+    'global.colors.blue': 'blues',
+    'global.colors.red': 'reds',
+    'global.colors.green': 'greens',
+    'global.colors.brown': 'ylorbr',
+    'global.colors.purple': 'purples',
+    'global.colors.random': 'random'
+};
+
+export const defaultChartStyle = (type, {
+    color = legacyColorsMap['global.colors.blue'],
+    ramp = 'blues'
+} = {}) => {
+    if (type === 'pie') {
+        return {
+            msClassification: {
+                method: 'uniqueInterval',
+                intervals: 5,
+                reverse: false,
+                ramp
+            }
+        };
+    }
+    if (type === 'bar') {
+        return {
+            msMode: 'simple',
+            line: {
+                color: 'rgb(0, 0, 0)',
+                width: 0
+            },
+            marker: {
+                color
+            }
+        };
+    }
+    return {
+        line: {
+            color,
+            width: 2
+        },
+        marker: {
+            color,
+            size: 6
+        }
+    };
+};
+
+const applyDefaultStyle = ({ autoColorOptions, options, type }) => {
+    if (!autoColorOptions) {
+        return { style: defaultChartStyle(type) };
+    }
+    const method = options?.classificationAttributeType === 'number' ? 'equalInterval' : 'uniqueInterval';
+    if (autoColorOptions?.name === 'global.colors.custom') {
+        return {
+            style: {
+                ...(type === 'bar' && { msMode: 'classification' }),
+                msClassification: {
+                    method,
+                    intervals: 5,
+                    reverse: false,
+                    ramp: 'viridis',
+                    classes: (method === 'uniqueInterval'
+                        ? autoColorOptions.classification
+                        : autoColorOptions.rangeClassification) || []
+                }
+            }
+        };
+    }
+    if (type === 'pie') {
+        return {
+            style: {
+                msClassification: {
+                    method,
+                    intervals: 5,
+                    reverse: false,
+                    ramp: legacyColorsToRamps[autoColorOptions.name]
+                }
+            }
+        };
+    }
+    const color = legacyColorsMap[autoColorOptions.name];
+    return { style: defaultChartStyle(type, { color }) };
+};
+
+export const getAggregationAttributeDataKey = (options) => {
+    return !options.aggregateFunction || options.aggregateFunction === 'None'
+        ? options.aggregationAttribute
+        : `${options.aggregateFunction}(${options.aggregationAttribute})`;
+};
+
+export const generateNewTrace = (options) => {
+    const type = options?.type || 'bar';
+    return {
+        id: uuidv1(),
+        type,
+        layer: options?.layer,
+        geomProp: options?.geomProp,
+        options: {},
+        style: defaultChartStyle(type, { color: options.color })
+    };
+};
+
+export const legacyChartToChartWithTraces = ({
+    yAxis,
+    xAxisAngle,
+    type,
+    options: chartOptions,
+    autoColorOptions,
+    legend,
+    cartesian,
+    chartId,
+    xAxisOpts,
+    yAxisOpts: yAxisOptsProp,
+    yAxisLabel,
+    tickPrefix,
+    format,
+    tickSuffix,
+    formula,
+    name,
+    geomProp,
+    layer,
+    barChartType
+} = {}) => {
+    const { classificationAttributeType, ...options } = chartOptions;
+    const {
+        textinfo,
+        includeLegendPercent,
+        ...yAxisOpts
+    } = yAxisOptsProp || {};
+    return {
+        name,
+        legend,
+        cartesian,
+        chartId,
+        barChartType,
+        xAxisOpts: [{
+            ...xAxisOpts,
+            angle: xAxisAngle,
+            id: 0
+        }],
+        yAxisOpts: [{
+            ...yAxisOpts,
+            hide: yAxis === false,
+            id: 0
+        }],
+        traces: [{
+            id: `trace-${chartId}`,
+            name: yAxisLabel,
+            type,
+            options,
+            ...applyDefaultStyle({
+                autoColorOptions,
+                options,
+                type
+            }),
+            textinfo,
+            tickPrefix,
+            format,
+            tickSuffix,
+            formula,
+            geomProp,
+            layer,
+            includeLegendPercent
+        }]
+    };
+};
 
 /**
  * Convert the dependenciesMapping to support maplist
@@ -171,6 +348,14 @@ export const convertDependenciesMappingForCompatibility = (data) => {
                     selectedChartId: chartId,
                     charts: castArray({...chartData, layer: w.layer, name: 'Chart-1', chartId })
                 };
+            }
+            if (w.widgetType === 'chart' && widget?.charts?.find(chart => !chart.traces)) {
+                widget.charts = widget.charts.map((chart) => {
+                    if (chart.traces) {
+                        return chart;
+                    }
+                    return legacyChartToChartWithTraces(chart);
+                });
             }
             if (!isEmpty(widget.dependenciesMap)) {
                 const widgetPath = Object.values(widget.dependenciesMap)[0];
@@ -264,24 +449,94 @@ export const editorChangeProps = (action) => {
  * @param {object} editorData
  * @param {string} key
  * @param {any} value
- * @param {object} state
  * @returns {*}
  */
-const chartWidgetOperation = ({editorData, key, value}, state) => {
-    const chartData = omit(editorData, CHART_PROPS) || {};
+const chartWidgetOperation = ({ editorData, key, value }) => {
+
     const editorProp = pick(editorData, CHART_PROPS) || {};
-    let datas = [];
-    let selectedChartId = null;
-    if (key.includes('layers')) {
-        datas = value?.map((v, i) => ({...chartData, name: `Chart-${i + 1}`, chartId: uuidv1(), type: 'bar', layer: v }));
-    } else if (key.includes('delete')) {
-        datas = value;
-    } else {
-        const multiData = value?.map(v => ({...chartData, chartId: uuidv1(), type: 'bar', layer: v }));
-        datas = editorProp?.charts?.concat(multiData)?.map((c, i) => ({...c, name: isEmpty(c.name) ? `Chart-${i + 1}` : c.name}));
-        selectedChartId = multiData?.[0]?.chartId;
+
+    if (key === 'chart-layers') {
+        const charts = value?.map((v) => ({
+            chartId: uuidv1(),
+            traces: [generateNewTrace({
+                layer: v
+            })]
+        }));
+        return {
+            ...editorProp,
+            charts,
+            selectedChartId: charts?.[0]?.chartId,
+            selectedTraceId: charts?.[0]?.traces?.[0]?.id
+        };
     }
-    return set('builder.editor', {...editorProp, charts: datas, selectedChartId: selectedChartId || datas?.[0]?.chartId }, state);
+    if (key === 'chart-delete') {
+        const charts = value;
+        return {
+            ...editorProp,
+            charts,
+            selectedChartId: charts?.[0]?.chartId,
+            selectedTraceId: charts?.[0]?.traces?.[0]?.id
+        };
+    }
+    if (key === 'chart-add') {
+        const newCharts = value?.map(v => ({
+            chartId: uuidv1(),
+            traces: [generateNewTrace({
+                layer: v
+            })]
+        }));
+        const charts = [ ...(editorProp?.charts || []), ...newCharts ];
+        return {
+            ...editorProp,
+            charts,
+            selectedChartId: newCharts?.[0]?.chartId || charts?.[0]?.chartId,
+            selectedTraceId: newCharts?.[0]?.traces?.[0]?.id || charts?.[0]?.traces?.[0]?.id
+        };
+    }
+    if (key === 'chart-layer-replace') {
+        const layer = value.layer[0];
+        const charts = (editorProp.charts || []).map((chart) => {
+            if (chart.chartId === value.chartId) {
+                return {
+                    ...chart,
+                    traces: (chart?.traces || []).map((trace) => {
+                        if (trace.id === value.traceId) {
+                            return { ...trace, layer, options: {} };
+                        }
+                        return trace;
+                    })
+                };
+            }
+            return chart;
+        });
+        return {
+            ...editorProp,
+            charts
+        };
+    }
+
+    return editorProp;
+};
+
+const insertTracesOnEditorChange = ({
+    identifier,
+    id,
+    charts,
+    pathToUpdate,
+    value
+}) => {
+    if (pathToUpdate.includes('traces[')) {
+        const currentChart = charts.find(m => m[identifier] === id);
+        const traces = get(currentChart, 'traces', []);
+        const [, traceId, tracePathToUpdate] = TRACES_REGEX.exec(pathToUpdate) || [];
+        const tracesIds = traces.map((trace) => trace.id);
+        const traceIndex = tracesIds.indexOf(traceId);
+        if (traceIndex > -1) {
+            const newTraces = traces.map((trace) => trace.id === traceId ? set(tracePathToUpdate, value, trace) : trace);
+            return set('traces', newTraces, charts.find(m => m[identifier] === id));
+        }
+    }
+    return set(pathToUpdate, value, charts.find(m => m[identifier] === id));
 };
 
 /**
@@ -301,7 +556,13 @@ export const editorChange = (action, state) => {
         let updatedValue = value;
         if (id) {
             const editorArray = get(state, path, []);
-            updatedValue = set(pathToUpdate, value, editorArray.find(m => m[identifier] === id));
+            updatedValue = insertTracesOnEditorChange({
+                identifier,
+                id,
+                charts: editorArray,
+                pathToUpdate,
+                value
+            });
         }
         return arrayUpsert(path, updatedValue, {[identifier]: id || value?.[identifier]}, state);
     }
@@ -309,7 +570,7 @@ export const editorChange = (action, state) => {
     // Widget specific editor changes
     if (key.includes(`chart-`)) {
         // TODO Allow to support all widget types that might support multi widget feature
-        return chartWidgetOperation({key, value, editorData}, state);
+        return set('builder.editor', chartWidgetOperation({key, value, editorData}), state);
     }
     return set(path, value, state);
 };
@@ -317,6 +578,12 @@ export const editorChange = (action, state) => {
 export const getDependantWidget = ({widgets = [], dependenciesMap = {}}) =>
     widgets?.find(w => w.id === (WIDGETS_REGEX.exec(Object.values(dependenciesMap)?.[0]) || [])[1]) || {};
 
+
+export const extractTraceData = ({ selectedChartId, selectedTraceId, charts }) => {
+    const selectedChart = (charts || []).find(chart => chart.chartId === selectedChartId);
+    const selectedTrace = (selectedChart?.traces || []).find(trace => trace.id === selectedTraceId);
+    return selectedTrace || selectedChart?.traces?.[0];
+};
 /**
  * Get editing widget from widget data with multi support
  * @param {object} widget editing widget
@@ -324,7 +591,8 @@ export const getDependantWidget = ({widgets = [], dependenciesMap = {}}) =>
  */
 export const getSelectedWidgetData = (widget = {}) => {
     if (widget.widgetType === 'chart' || widget.charts) {
-        return widget?.charts?.find(c => c.chartId === widget?.selectedChartId) || {};
+        const widgetData = extractTraceData(widget);
+        return widgetData;
     }
     if (widget.widgetType === 'map' || widget.maps) {
         return widget?.maps?.find(c => c.mapId === widget?.selectedMapId) || {};
@@ -387,4 +655,165 @@ export const DEFAULT_MAP_SETTINGS = {
         0.00029158412279196264,
         0.00014579206139598132
     ]
+};
+
+const parseClasses = (classes, {
+    groupByValue,
+    legendValue
+} = {}) => {
+    return classes.map((entry, idx, arr) => ({
+        ...entry,
+        index: idx,
+        ...(entry.unique
+            ? {
+                label: entry.title || entry.unique,
+                insideClass: (value) => value === entry.unique
+            }
+            : {
+                label: (entry.title || (
+                    idx < arr.length - 1
+                        ? `>= ${entry.min}<br>< ${entry.max}`
+                        : `>= ${entry.min}<br><= ${entry.max}`
+                )),
+                insideClass: (value) => idx < arr.length - 1
+                    ? value >= entry.min && value < entry.max
+                    : value >= entry.min && value <= entry.max
+            })
+    })).map((entry) => ({
+        ...entry,
+        label: `${entry.label || ''}`
+            .replace('${minValue}', entry.min ?? '')
+            .replace('${maxValue}', entry.max ?? '')
+            .replace('${legendValue}', legendValue || '')
+            .replace('${groupByValue}', groupByValue || '')
+    }));
+};
+
+const getSortingKeys = ({ type, options, sortBy }) => {
+    if (type === 'bar') {
+        const xDataKey = options?.groupByAttributes;
+        const classificationDataKey = options?.classificationAttribute;
+        const yDataKey = getAggregationAttributeDataKey(options);
+        const sorByKey = sortBy !== 'aggregation' ?  xDataKey : yDataKey;
+        const sortKey = classificationDataKey === xDataKey
+            ? sorByKey
+            : classificationDataKey;
+        return { sortKey, sorByKey, classificationDataKey };
+    }
+    if (type === 'pie') {
+        const labelDataKey = options?.groupByAttributes;
+        const valueDataKey = getAggregationAttributeDataKey(options);
+        const classificationDataKey = options?.classificationAttribute;
+        const sorByKey = sortBy !== 'groupBy' ?  valueDataKey : labelDataKey;
+        const isNestedPieChart = !(classificationDataKey === labelDataKey);
+        const sortKey = isNestedPieChart ? classificationDataKey : sorByKey;
+        const sortFunc = sorByKey === valueDataKey
+            ? (a, b) => a.index > b.index ? -1 : 1
+            : (a, b) => a.index > b.index ? 1 : -1;
+        return {
+            sortKey,
+            sorByKey,
+            classificationDataKey,
+            customSortFunc: !isNestedPieChart && sortFunc
+        };
+    }
+    return {};
+};
+
+export const generateClassifiedData = ({
+    type,
+    data,
+    sortBy,
+    options,
+    msClassification,
+    groupByValue,
+    legendValue,
+    classifyGeoJSON,
+    excludeOthers,
+    applyCustomSortFunctionOnClasses
+}) => {
+    const {
+        ramp = 'viridis',
+        intervals = 5,
+        reverse,
+        method: methodStyle = 'uniqueInterval',
+        classes: classesStyle,
+        defaultColor = '#ffff00',
+        defaultLabel = 'Others'
+    } = msClassification || {};
+
+    const { customSortFunc, sortKey, sorByKey, classificationDataKey } = getSortingKeys({ type, options, sortBy });
+
+    const customClasses = classesStyle && parseClasses(classesStyle, {
+        groupByValue,
+        legendValue
+    });
+    const isStringData = isString(data?.[0]?.[classificationDataKey]);
+    const sortFunc = data.type === 'pie'
+        ? (a, b) => a[sortKey] > b[sortKey] ? -1 : 1
+        : (a, b) => a[sortKey] > b[sortKey] ? 1 : -1;
+    const initialSortedData = [...data].sort(sortFunc);
+    const method = isStringData
+        ? 'uniqueInterval'
+        : methodStyle;
+    const computedClasses = (customClasses || parseClasses(
+        classifyGeoJSON({
+            type: 'FeatureCollection',
+            features: initialSortedData.map((properties) => ({ properties, type: 'Feature', geometry: null }))
+        }, {
+            attribute: classificationDataKey,
+            method,
+            ramp,
+            reverse,
+            intervals,
+            sort: false
+        })
+    ));
+    const othersClass = {
+        color: defaultColor,
+        label: (defaultLabel || '')
+            .replace('${groupByValue}', groupByValue || '')
+            .replace('${legendValue}', legendValue || ''),
+        index: computedClasses.length
+    };
+    const classifiedData = initialSortedData.map((properties) => {
+        const entry = computedClasses.find(({ insideClass }) => insideClass(properties[classificationDataKey]));
+        return {
+            ...(entry ? entry : othersClass),
+            properties
+        };
+    });
+    const classes = excludeOthers
+        ? computedClasses
+        : [...computedClasses, othersClass];
+    return {
+        sorByKey,
+        classes: applyCustomSortFunctionOnClasses
+            ? classes.sort(customSortFunc)
+            : classes,
+        classifiedData: customSortFunc
+            ? classifiedData.sort(customSortFunc)
+            : classifiedData
+    };
+};
+
+export const parseNumber = (num) => isNumber(num) && !isNaN(num) ? num : 0;
+
+// we need to sum value with the same label property
+// if the aggregation is missing
+// this is needed to get correct number of slices
+export const parsePieNoAggregationFunctionData = (data, options = {}) => {
+    if (options.parse) {
+        const labelDataKey = options?.labelDataKey;
+        const valueDataKey = options?.valueDataKey;
+        const labelProperties = uniq(data.map((properties) => properties[labelDataKey]));
+        return labelProperties.map((labelProperty) => {
+            const filteredData = data.filter(properties => properties[labelDataKey] === labelProperty);
+            return {
+                [labelDataKey]: labelProperty,
+                [valueDataKey]: filteredData.reduce((sum, properties) => sum + parseNumber(properties[valueDataKey]), 0)
+            };
+        });
+    }
+    return data;
 };

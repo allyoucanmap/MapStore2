@@ -2143,6 +2143,8 @@
               "barChartType": "Bar Chart Type",
               "groupedBarChart": "Grouped",
               "stackedBarChart": "Stacked",
+              "valueFormatting": "Value formatting",
+              "yAxisValueFormatting": "Y axis value formatting",
               "axisTypes": {
                 "auto": "Auto",
                 "linear": "Linear",

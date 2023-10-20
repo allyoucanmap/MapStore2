@@ -68,7 +68,7 @@ export const initEditorOnNewChart = (action$, {getState = () => {}} = {}) => act
                 widgetType: 'chart',
                 charts: [
                     {
-                        name: 'Chart-1',
+                        name: 'Chart 1',
                         chartId,
                         type: 'bar',
                         legend: false,
