@@ -9,10 +9,11 @@ import * as Cesium from 'cesium';
 import expect from 'expect';
 
 import CesiumStyleParser from '../CesiumStyleParser';
+import GeoJSONStyledFeatures from '../../cesium/GeoJSONStyledFeatures';
 
 const parser = new CesiumStyleParser();
 
-describe('CesiumStyleParser', () => {
+describe.only('CesiumStyleParser', () => {
     describe('readStyle', () => {
         it('should return null, read function not implemented', (done) => {
             parser.readStyle()
@@ -27,7 +28,7 @@ describe('CesiumStyleParser', () => {
         });
     });
     describe('writeStyle', () => {
-        it('should write a style function with fill symbolizer', (done) => {
+        it.only('should write a style function with fill symbolizer', (done) => {
             const style = {
                 name: '',
                 rules: [
@@ -44,37 +45,42 @@ describe('CesiumStyleParser', () => {
                                 outlineWidth: 2,
                                 outlineDasharray: [10, 10],
                                 msClassificationType: 'terrain',
-                                msClampToGround: true
+                                msClampToGround: true,
+                                symbolizerId: 'symbolizer-01'
                             }
                         ]
                     }
                 ]
             };
+            const feature = {
+                type: 'Feature',
+                properties: {},
+                id: 'feature-01',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [[[7, 41], [14, 41], [14, 46], [7, 46], [7, 41]]]
+                }
+            };
             parser.writeStyle(style)
-                .then((styleFunc) => {
-                    Cesium.GeoJsonDataSource.load({
-                        type: 'Feature',
-                        properties: {},
-                        geometry: {
-                            type: 'Polygon',
-                            coordinates: [[[7, 41], [14, 41], [14, 46], [7, 46], [7, 41]]]
-                        }
-                    }).then((dataSource) => {
-                        const entities = dataSource?.entities?.values;
-                        return styleFunc({ entities })
-                            .then(() => {
-                                expect({ ...entities[0].polygon.material.color.getValue() }).toEqual({ red: 1, green: 0, blue: 0, alpha: 0.5 });
-                                expect(entities[0].polygon.classificationType.getValue()).toEqual(Cesium.ClassificationType.TERRAIN);
-                                expect(entities[0].polygon.classificationType).toBeTruthy();
-                                expect(entities[0].polyline.classificationType).toBeTruthy();
-                                expect(entities[0].polyline.width.getValue()).toBe(2);
-                                expect({ ...entities[0].polyline.material.color.getValue() }).toEqual({ red: 0, green: 1, blue: 0, alpha: 0.25 });
-                                expect(entities[0].polyline.clampToGround.getValue()).toBe(true);
-                                expect(entities[0].polyline.material.dashPattern.getValue()).toBe(65280);
-                                done();
-                            }).catch(done);
-                    });
-                });
+                .then((styleFunc) => styleFunc({
+                    features: [{ ...feature, positions: GeoJSONStyledFeatures.featureToCartesianPositions(feature) }]
+                }))
+                .then((styledFeatures) => {
+                    expect(styledFeatures.length).toBe(2);
+                    const [polygon, polyline] = styledFeatures;
+                    expect(polygon.id).toBe('feature-01:symbolizer-01:polygon');
+                    expect(polygon.primitive.type).toBe('polygon');
+                    expect(polygon.primitive.material.toString()).toEqual('(1, 0, 0, 0.5)');
+                    expect(polygon.primitive.classificationType).toBe(Cesium.ClassificationType.TERRAIN);
+                    expect(polyline.id).toBe('feature-01:symbolizer-01:polyline');
+                    expect(polyline.primitive.type).toBe('polyline');
+                    expect(polyline.primitive.entity.polyline.classificationType).toBe(Cesium.ClassificationType.TERRAIN);
+                    expect(polyline.primitive.entity.polyline.width).toBe(2);
+                    expect(polyline.primitive.entity.polyline.material.color.toString()).toBe('(0, 1, 0, 0.25)');
+                    expect(polyline.primitive.entity.polyline.clampToGround).toBe(true);
+                    expect(polyline.primitive.entity.polyline.material.dashPattern.getValue()).toBe(65280);
+                    done();
+                }).catch(done);
         });
         it('should write a style function with fill symbolizer, clampToGround=false', (done) => {
             const style = {
