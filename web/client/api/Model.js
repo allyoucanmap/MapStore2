@@ -38,7 +38,10 @@ const applyMatrix = (matrix, coords) => {
 };
 
 export const ifcDataToJSON = ({ data, ifcApi }) => {
-    const settings = {};
+    const settings = {
+        COORDINATE_TO_ORIGIN: true,
+        USE_FAST_BOOLS: true
+    };
     let rawFileData = new Uint8Array(data);
     const modelID = ifcApi.OpenModel(rawFileData, settings); // eslint-disable-line
     ifcApi.LoadAllGeometry(modelID); // eslint-disable-line
@@ -61,6 +64,7 @@ export const ifcDataToJSON = ({ data, ifcApi }) => {
             const positions = new Float64Array(ifcVertices.length / 2);
             const normals = new Float32Array(ifcVertices.length / 2);
             for (let j = 0; j < ifcVertices.length; j += 6) {
+                /*
                 const [x, y, z] = applyMatrix(
                     coordinationMatrix,
                     applyMatrix(placedGeometry.flatTransformation, [
@@ -69,6 +73,20 @@ export const ifcDataToJSON = ({ data, ifcApi }) => {
                         ifcVertices[j + 2]
                     ], Cesium), Cesium
                 );
+
+
+                const [x, y, z] = applyMatrix(
+                    coordinationMatrix,
+                    applyMatrix(placedGeometry.flatTransformation, [
+                        ifcVertices[j],
+                        ifcVertices[j + 1],
+                        ifcVertices[j + 2]
+                    ], Cesium), Cesium
+                );
+                */
+                const x = ifcVertices[j];
+                const y = ifcVertices[j + 1];
+                const z = ifcVertices[j + 2];
                 if (x < minx) { minx = x; }
                 if (y < miny) { miny = y; }
                 if (z < minz) { minz = z; }
@@ -86,7 +104,8 @@ export const ifcDataToJSON = ({ data, ifcApi }) => {
                 color: placedGeometry.color,
                 positions,
                 normals,
-                indices: Array.from(ifcIndices)
+                indices: Array.from(ifcIndices),
+                flatTransformation: placedGeometry.flatTransformation
             });
             ifcGeometry.delete();
         }

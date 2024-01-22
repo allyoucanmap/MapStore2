@@ -1,21 +1,43 @@
 {
-  "version": 2,
-	"map": {
-    "projection": "EPSG:900913",
-		"units": "m",
-		"center": {"x": 1250000.000000, "y": 5370000.000000, "crs": "EPSG:900913"},
-    "zoom":5,
-		"maxExtent": [
-			-20037508.34, -20037508.34,
-			20037508.34, 20037508.34
-		],
-		"layers": [{
+    "version": 2,
+    "map": {
+        "center": {
+            "x": -0.7942725789365159,
+            "y": -0.40881857002246985,
+            "crs": "EPSG:4326"
+        },
+        "maxExtent": [
+            -20037508.34,
+            -20037508.34,
+            20037508.34,
+            20037508.34
+        ],
+        "projection": "EPSG:900913",
+        "units": "m",
+        "zoom": 21.45369135235291,
+        "mapOptions": {},
+        "visualizationMode": "3D",
+        "viewerOptions": {
+            "cameraPosition": {
+                "longitude": 0.004232233725240241,
+                "latitude": 0.0013595486668080076,
+                "height": 55.7077179244013
+            },
+            "orientation": {
+                "heading": 4.240557560344497,
+                "pitch": 0.0494956216101623,
+                "roll": 0.000011120657384289245
+            }
+        },
+        "layers": [
+            {
+                "id": "osm:osm_simple_light__0",
                 "format": "image/jpeg",
+                "thumbURL": "product/assets/img/osm-simple-light.jpg",
                 "group": "background",
                 "name": "osm:osm_simple_light",
                 "opacity": 1,
                 "title": "OSM Simple Light",
-                "thumbURL": "product/assets/img/osm-simple-light.jpg",
                 "type": "wms",
                 "url": [
                     "https://maps1.geosolutionsgroup.com/geoserver/wms",
@@ -27,16 +49,24 @@
                 ],
                 "visibility": false,
                 "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false,
+                "expanded": false,
                 "credits": {
                     "title": "OSM Simple Light | Rendering <a href=\"https://www.geo-solutions.it/\">GeoSolutions</a> | Data © <a href=\"http://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"http://www.openstreetmap.org/copyright\">ODbL</a>"
                 }
-            }, {
+            },
+            {
+                "id": "osm:osm_simple_dark__1",
                 "format": "image/jpeg",
+                "thumbURL": "product/assets/img/osm-simple-dark.jpg",
                 "group": "background",
                 "name": "osm:osm_simple_dark",
                 "opacity": 1,
                 "title": "OSM Simple Dark",
-                "thumbURL": "product/assets/img/osm-simple-dark.jpg",
                 "type": "wms",
                 "url": [
                     "https://maps6.geosolutionsgroup.com/geoserver/wms",
@@ -48,16 +78,24 @@
                 ],
                 "visibility": false,
                 "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false,
+                "expanded": false,
                 "credits": {
                     "title": "OSM Simple Dark | Rendering <a href=\"https://www.geo-solutions.it/\">GeoSolutions</a> | Data © <a href=\"http://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"http://www.openstreetmap.org/copyright\">ODbL</a>"
                 }
-            }, {
+            },
+            {
+                "id": "osm:osm__2",
                 "format": "image/jpeg",
+                "thumbURL": "product/assets/img/osm-bright.jpg",
                 "group": "background",
                 "name": "osm:osm",
                 "opacity": 1,
                 "title": "OSM Bright",
-                "thumbURL": "product/assets/img/osm-bright.jpg",
                 "type": "wms",
                 "url": [
                     "https://maps1.geosolutionsgroup.com/geoserver/wms",
@@ -69,16 +107,24 @@
                 ],
                 "visibility": true,
                 "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false,
+                "expanded": false,
                 "credits": {
                     "title": "OSM Bright | Rendering <a href=\"https://www.geo-solutions.it/\">GeoSolutions</a> | Data © <a href=\"http://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"http://www.openstreetmap.org/copyright\">ODbL</a>"
                 }
-            }, {
+            },
+            {
+                "id": "ne:ne-political__3",
                 "format": "image/jpeg",
+                "thumbURL": "product/assets/img/ne-political.jpg",
                 "group": "background",
                 "name": "ne:ne-political",
                 "opacity": 1,
                 "title": "NE Political",
-                "thumbURL": "product/assets/img/ne-political.jpg",
                 "type": "wms",
                 "url": [
                     "https://maps1.geosolutionsgroup.com/geoserver/wms",
@@ -90,12 +136,21 @@
                 ],
                 "visibility": false,
                 "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false,
+                "expanded": false,
                 "credits": {
                     "title": "<p></p>\n"
                 }
-            }, {
+            },
+            {
+                "id": "s2cloudless:s2cloudless__4",
                 "format": "image/jpeg",
                 "group": "background",
+                "source": "s2cloudless",
                 "name": "s2cloudless:s2cloudless",
                 "opacity": 1,
                 "title": "Sentinel 2 Cloudless",
@@ -108,43 +163,110 @@
                     "https://maps5.geosolutionsgroup.com/geoserver/wms",
                     "https://maps6.geosolutionsgroup.com/geoserver/wms"
                 ],
-                "source": "s2cloudless",
+                "visibility": false,
                 "singleTile": false,
-                "visibility": false
-            }, {
-                "type": "osm",
-                "title": "Open Street Map",
-                "name": "mapnik",
-                "source": "osm",
-                "group": "background",
-                "visibility": false
-            }, {
-                "source": "ol",
-                "group": "background",
-                "title": "Empty Background",
-                "fixed": true,
-                "type": "empty",
-                "visibility": false
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false,
+                "expanded": false
             },
             {
-                "id": "model-01",
-                "type": "model",
-                "url": " https://threejs.org/examples/models/ifc/rac_advanced_sample_project.ifc",
-                "name": "Model",
-                "title": "Model",
-                "center": [0, 0, 0],
-                "visibility": true
+                "id": "mapnik__5",
+                "group": "background",
+                "source": "osm",
+                "name": "mapnik",
+                "title": "Open Street Map",
+                "type": "osm",
+                "visibility": false,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false,
+                "expanded": false
+            },
+            {
+                "id": "undefined__6",
+                "group": "background",
+                "source": "ol",
+                "title": "Empty Background",
+                "type": "empty",
+                "visibility": false,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false,
+                "expanded": false
             },
             {
                 "id": "model-02",
-                "type": "model",
-                "url": "https://www.steptools.com/docs/stpfiles/ifc/AC20-Institute-Var-2.ifc",
                 "name": "Model2",
                 "title": "Model2",
-                "center": [30.044583340501617,
-                31.30455288820029, 0],
-                "visibility": true
+                "type": "model",
+                "url": "https://raw.githubusercontent.com/IFCjs/web-ifc/main/tests/ifcfiles/public/example.ifc",
+                "visibility": true,
+                "singleTile": false,
+                "dimensions": [],
+                "hideLoading": false,
+                "handleClickOnLayer": false,
+                "useForElevation": false,
+                "hidden": false,
+                "expanded": false
             }
-        ]
-	}
+        ],
+        "groups": [
+            {
+                "id": "Default",
+                "title": "Default",
+                "expanded": true
+            }
+        ],
+        "backgrounds": [],
+        "bookmark_search_config": {}
+    },
+    "catalogServices": {
+        "services": {
+            "gs_stable_csw": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/csw",
+                "type": "csw",
+                "title": "GeoSolutions GeoServer CSW",
+                "autoload": true
+            },
+            "gs_stable_wms": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+                "type": "wms",
+                "title": "GeoSolutions GeoServer WMS",
+                "autoload": false
+            },
+            "gs_stable_wmts": {
+                "url": "https://gs-stable.geo-solutions.it/geoserver/gwc/service/wmts",
+                "type": "wmts",
+                "title": "GeoSolutions GeoServer WMTS",
+                "autoload": false
+            }
+        },
+        "selectedService": "gs_stable_csw"
+    },
+    "widgetsConfig": {
+        "layouts": {
+            "md": []
+        }
+    },
+    "mapInfoConfiguration": {
+        "trigger": "click"
+    },
+    "dimensionData": {},
+    "timelineData": {
+        "snapRadioButtonEnabled": false
+    },
+    "featureGrid": {},
+    "mapViews": {
+        "active": false,
+        "selectedId": false
+    }
 }
