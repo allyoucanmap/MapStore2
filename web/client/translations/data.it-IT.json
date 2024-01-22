@@ -721,8 +721,10 @@
             "legend": {
                 "font": "Config. Etichette:",
                 "forceLabels": "Forza etichette:",
-                "antiAliasing": "Font Anti Aliasing:",
-                "iconsSize": "Dimensione icone:",
+                "antiAliasing": "Font Anti Aliasing",
+                "forceIconsSize": "Sostituisci la dimensione delle icone",
+                "iconsWidth": "Larghezza delle icone:",
+                "iconsHeight": "Altezza delle icone:",
                 "dpi": "Dpi:"
             },
             "rotation": "Rotation",
@@ -2465,8 +2467,8 @@
             "fontStyleItalic": "Corsivo",
             "fontWeightNormal": "Normale",
             "fontWeightBold": "Grassetto",
-            "boolTrue": "Si",
-            "boolFalse": "No",
+            "boolTrue": "Attivo",
+            "boolFalse": "Non attivo",
             "colorMapType": {
               "label": "Tipo di mappa dei colori",
               "ramp": "Rampa",
@@ -2598,7 +2600,13 @@
             "colorPropertyInfoMessage": "Il valore della proprietà colore deve essere una stringa esadecimale. Esempio: \"#ffffff\"",
             "pointCloudSizeInfo": "Il raggio della nuvola di punti viene applicato solo quando le opzioni di attenuazione sono disabilitate. L'opzione di attenuazione ha la precedenza su questa proprietà.",
             "msTranslateX": "Offset x",
-            "msTranslateY": "Offset y"
+            "msTranslateY": "Offset y",
+            "geometryHeight": "Altezza della geometria",
+            "msExtrusionRelativeToGeometry": "Estrusione relativa alla geometria",
+            "msExtrudedHeight": "Altezza estrusa",
+            "msExtrusionColor": "Colore estrusione",
+            "msExtrusionType": "Tipo estrusione",
+            "wall": "Muro"
         },
         "playback": {
             "settings": {
@@ -3062,7 +3070,7 @@
             "title": "Titolo",
             "titlePlaceholder": "Inserisci il nome visualizzato",
             "add": "Inserisci",
-            "thumbnailMessage": "Le dimensioni delle immagini devono essere quadrate di 98 px x 98 px o 128 px x 128 px, max 500kb",
+            "thumbnailMessage": "Carica immagine quadrata di 128px x 128px, max 500kb",
             "imageUploadMessage": "Fare clic o trascinare e rilasciare per aggiungere un'immagine",
             "additionalParameters": "Parametri aggiuntivi",
             "addAdditionalParameterTooltip": "Aggiungi parametro",
@@ -3881,7 +3889,25 @@
           "messages": {
             "noDataForPosition": "Non ci sono dati Street View per questa posizione",
             "unknownError": "Errore sconosciuto"
-          }
+          },
+            "loadingAPI": "Caricamento API...",
+            "cyclomedia": {
+              "initializing": "Inizializzazione Street Smart API...",
+              "loadingAPI": "Caricamento Street Smart API...",
+              "changeCredentials": "Cambia credenziali Street Smart",
+              "insertCredentials": "Inserisci le tue credenziali Street Smart",
+              "emptyDescription": "Clicca su uno dei punti blu sulla mappa per visualizzare le immagini",
+              "username": "Nome utente",
+              "password": "Password",
+              "submit": "Invia",
+              "zoomIn": "Effettua un ulteriore zoom sulla mappa per visualizzare dove sono disponibili le immagini",
+              "errorOccurred": "Si è verificato un errore: ",
+              "errors": {
+                "invalidCredentials": "Credenziali non valide",
+                "projectionNotAvailable": "La proiezione {srs} configurata non è disponibile. Contattare l'amministratore."
+              },
+              "reloadAPI": "Ricarica API"
+            }
         },
         "sidebarMenu": {
           "showMoreItems": "Mostra più elementi"
@@ -3905,6 +3931,9 @@
           "fileSelected": "File selezionato: ",
           "uomMeters": "metri",
           "source": "Sorgente",
+          "export": "Esporta",
+          "downloadGeoJSON": "GeoJSON",
+          "downloadDXF": "DXF",
           "downloadCSV": "CSV",
           "downloadPNG": "PNG",
           "downloadPDF": "PDF",

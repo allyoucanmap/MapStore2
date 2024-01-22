@@ -720,9 +720,11 @@
             },
             "legend": {
                 "font": "Labels Config:",
-                "forceLabels": "Force Labels:",
-                "antiAliasing": "Font Anti Aliasing:",
-                "iconsSize": "Icons size:",
+                "forceLabels": "Force Labels",
+                "antiAliasing": "Font Anti Aliasing",
+                "forceIconsSize": "Override icons size",
+                "iconsWidth": "Icons width:",
+                "iconsHeight": "Icons height:",
                 "dpi": "Dpi:"
             },
             "rotation": "Rotation",
@@ -2466,8 +2468,8 @@
             "fontStyleItalic": "Italic",
             "fontWeightNormal": "Normal",
             "fontWeightBold": "Bold",
-            "boolTrue": "True",
-            "boolFalse": "False",
+            "boolTrue": "Active",
+            "boolFalse": "Inactive",
 
             "colorMapType": {
                 "label": "Color map type",
@@ -2607,7 +2609,13 @@
             "colorPropertyInfoMessage": "The color property value must be an hexadecimal string. Example: \"#ffffff\"",
             "pointCloudSizeInfo": "The point cloud radius is applied only when the attenuation options is disabled. The attenuation option takes precedence over this property.",
             "msTranslateX": "Translate x",
-            "msTranslateY": "Translate y"
+            "msTranslateY": "Translate y",
+            "geometryHeight": "Geometry height",
+            "msExtrusionRelativeToGeometry": "Extrusion relative to geometry",
+            "msExtrudedHeight": "Extruded height",
+            "msExtrusionColor": "Extrusion color",
+            "msExtrusionType": "Extrusion type",
+            "wall": "Wall"
         },
         "playback": {
             "settings": {
@@ -3072,7 +3080,7 @@
             "title": "Title",
             "titlePlaceholder": "Enter displayed name",
             "add": "Add",
-            "thumbnailMessage": "Size of images should be a square of 98px x 98px or 128px x 128px, max 500kb",
+            "thumbnailMessage": "Size of images should be a square of 128px x 128px, max 500kb",
             "imageUploadMessage": "Click, or drag and drop to add an image",
             "additionalParameters": "Additional Parameters",
             "addAdditionalParameterTooltip": "Add parameter",
@@ -3892,6 +3900,24 @@
           "messages": {
             "noDataForPosition": "no street-view data for this position",
             "unknownError": "unknown error, see console"
+          },
+          "loadingAPI": "Loading API...",
+          "cyclomedia": {
+            "initializing": "Initializing Street Smart API...",
+            "loadingAPI": "Loading Street Smart API...",
+            "changeCredentials": "Change Street Smart credentials",
+            "insertCredentials": "Insert your Street Smart credentials",
+            "emptyDescription": "Click on one of the blue points on the map to start browsing the images of street view",
+            "username": "Username",
+            "password": "Password",
+            "submit": "Submit",
+            "zoomIn": "Please zoom in the map to see the street view coverage",
+            "errorOccurred": "Error occurred: ",
+            "errors": {
+              "invalidCredentials": "Invalid credentials",
+              "projectionNotAvailable": "The projection {srs} configured is not available. Please contact the administrator."
+            },
+            "reloadAPI": "Reload API"
           }
         },
         "sidebarMenu": {
@@ -3916,6 +3942,9 @@
           "fileSelected": "File selected: ",
           "uomMeters": "meters",
           "source": "Source",
+          "export": "Export",
+          "downloadGeoJSON": "GeoJSON",
+          "downloadDXF": "DXF",
           "downloadCSV": "CSV",
           "downloadPNG": "PNG",
           "downloadPDF": "PDF",
