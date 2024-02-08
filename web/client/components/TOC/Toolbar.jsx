@@ -199,36 +199,6 @@ class Toolbar extends React.Component {
             layerMetadataPanelTitle={this.props.text.layerMetadataPanelTitle} />);
         return this.props.activateTool.activateToolsContainer ? (
             <ButtonGroup>
-                {this.props.activateTool.activateLayerInfoTool && status === 'DESELECT' ?
-                    <OverlayTrigger
-                        key="layerInfo"
-                        placement="top"
-                        overlay={<Tooltip id="toc-tooltip-layerInfo">{this.props.text.layerInfoTooltip}</Tooltip>}>
-                        <Button key="layerInfo" bsStyle="primary" className="square-button-md" onClick={this.props.onToolsActions.onLayerInfo}>
-                            <Glyphicon glyph="layer-info" />
-                        </Button>
-                    </OverlayTrigger>
-                    : null}
-                {this.props.activateTool.activateAddLayer && (status === 'DESELECT' || status === 'GROUP') ?
-                    <OverlayTrigger
-                        key="addLayer"
-                        placement="top"
-                        overlay={<Tooltip id="toc-tooltip-addLayer">{status === 'GROUP' ? this.props.text.addLayerToGroupTooltip : this.props.text.addLayerTooltip}</Tooltip>}>
-                        <Button key="addLayer" bsStyle="primary" className="square-button-md" onClick={this.addLayer}>
-                            <Glyphicon glyph="add-layer" />
-                        </Button>
-                    </OverlayTrigger>
-                    : null}
-                {this.props.activateTool.activateAddGroup && (status === 'DESELECT' || status === 'GROUP') && this.getSelectedNodeDepth() <= this.props.maxDepth ?
-                    <OverlayTrigger
-                        key="addGroup"
-                        placement="top"
-                        overlay={<Tooltip id="toc-tooltip-addGroup">{status === 'GROUP' ? this.props.text.addSubGroupTooltip : this.props.text.addGroupTooltip}</Tooltip>}>
-                        <Button key="addGroup" bsStyle="primary" className="square-button-md" onClick={this.addGroup}>
-                            <Glyphicon glyph="add-folder" />
-                        </Button>
-                    </OverlayTrigger>
-                    : null}
                 {this.props.activateTool.activateZoomTool && (status === 'LAYER' || status === 'GROUP' || status === 'LAYERS' || status === 'GROUPS') && currentEPSG ?
                     <OverlayTrigger
                         key="zoomTo"
@@ -243,36 +213,6 @@ class Toolbar extends React.Component {
                             style={epsgIsSupported ? {opacity: 1.0, cursor: 'pointer'} : {opacity: 0.5, cursor: 'default'}}
                             onClick={epsgIsSupported ? this.zoomTo : () => {}}>
                             <Glyphicon glyph="zoom-to" />
-                        </Button>
-                    </OverlayTrigger>
-                    : null}
-                {this.props.activateTool.activateSettingsTool && (status === 'LAYER' || status === 'GROUP' || status === 'LAYER_LOAD_ERROR') && !this.props.layerMetadata.expanded && !this.props.layerdownload.expanded ?
-                    <OverlayTrigger
-                        key="settings"
-                        placement="top"
-                        overlay={<Tooltip id="toc-tooltip-settings">{this.props.text.settingsTooltip[status === 'LAYER_LOAD_ERROR' ? 'LAYER' : status]}</Tooltip>}>
-                        <Button active={this.props.settings.expanded} bsStyle={this.props.settings.expanded ? 'success' : 'primary'} className="square-button-md" onClick={() => { this.showSettings(status); }}>
-                            <Glyphicon glyph="wrench"/>
-                        </Button>
-                    </OverlayTrigger>
-                    : null}
-                {this.props.activateTool.activateLayerFilterTool && (status === 'LAYER' || status === 'LAYER_LOAD_ERROR') && this.props.selectedLayers[0].search && !this.props.settings.expanded && !this.props.layerMetadata.expanded && !this.props.layerdownload.expanded ?
-                    <OverlayTrigger
-                        key="queryPanel"
-                        placement="top"
-                        overlay={<Tooltip id="toc-tooltip-layerFilter">{this.props.text.layerFilterTooltip}</Tooltip>}>
-                        <Button bsStyle="primary" className="square-button-md" onClick={this.props.onToolsActions.onQueryBuilder}>
-                            <Glyphicon glyph="filter-layer" />
-                        </Button>
-                    </OverlayTrigger>
-                    : null}
-                {this.props.activateTool.activateQueryTool && status === 'LAYER' && this.props.selectedLayers[0].search && !this.props.settings.expanded && !this.props.layerMetadata.expanded && !this.props.layerdownload.expanded ?
-                    <OverlayTrigger
-                        key="featuresGrid"
-                        placement="top"
-                        overlay={<Tooltip id="toc-tooltip-featuresGrid">{this.props.text.featuresGridTooltip}</Tooltip>}>
-                        <Button bsStyle="primary" className="square-button-md" onClick={this.browseData}>
-                            <Glyphicon glyph="features-grid" />
                         </Button>
                     </OverlayTrigger>
                     : null}
@@ -295,26 +235,6 @@ class Toolbar extends React.Component {
                         overlay={<Tooltip id="toc-tooltip-reload">{this.props.text.reloadTooltip[this.props.selectedLayers.length > 1 ? 'LAYERS' : 'LAYER']}</Tooltip>}>
                         <Button bsStyle="primary" className="square-button-md" onClick={this.reload}>
                             <Glyphicon glyph="refresh" />
-                        </Button>
-                    </OverlayTrigger>
-                    : null}
-                {this.props.activateTool.activateWidgetTool && (status === 'LAYER') && this.props.selectedLayers.length === 1 && this.props.selectedLayers[0].search && this.props.selectedLayers[0].search !== 'vector' && !this.props.settings.expanded && !this.props.layerMetadata.expanded && !this.props.layerdownload.expanded ?
-                    <OverlayTrigger
-                        key="widgets"
-                        placement="top"
-                        overlay={<Tooltip id="toc-tooltip-widgets">{this.props.text.createWidgetTooltip}</Tooltip>}>
-                        <Button bsStyle="primary" className="square-button-md" onClick={this.props.onToolsActions.onNewWidget}>
-                            <Glyphicon glyph="stats" />
-                        </Button>
-                    </OverlayTrigger>
-                    : null}
-                {this.props.activateTool.activateDownloadTool && status === 'LAYER' && (this.props.selectedLayers[0].type === 'wms' || this.props.selectedLayers[0].search) && !this.props.settings.expanded && !this.props.layerMetadata.expanded ?
-                    <OverlayTrigger
-                        key="downloadTool"
-                        placement="top"
-                        overlay={<Tooltip id="toc-tooltip-downloadTool">{this.props.text.downloadToolTooltip}</Tooltip>}>
-                        <Button bsStyle={this.props.layerdownload.expanded ? "success" : "primary"} className="square-button-md" onClick={this.download}>
-                            <Glyphicon glyph="download" />
                         </Button>
                     </OverlayTrigger>
                     : null}
@@ -385,17 +305,7 @@ class Toolbar extends React.Component {
         this.props.onToolsActions.onZoom(bbox.bounds, bbox.crs);
     }
 
-    showSettings = (status) => {
-        if (!this.props.settings.expanded) {
-            if (status === 'LAYER' || status === 'LAYER_LOAD_ERROR') {
-                this.props.onToolsActions.onSettings( this.props.selectedLayers[0].id, 'layers', {opacity: parseFloat(this.props.selectedLayers[0].opacity !== undefined ? this.props.selectedLayers[0].opacity : 1)});
-            } else if (status === 'GROUP') {
-                this.props.onToolsActions.onSettings(this.props.selectedGroups[this.props.selectedGroups.length - 1].id, 'groups', {});
-            }
-        } else {
-            this.props.onToolsActions.onHideSettings();
-        }
-    }
+    
 
     showMetadata = () => {
         if (!this.props.layerMetadata.expanded) {

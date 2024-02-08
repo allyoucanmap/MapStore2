@@ -1,954 +1,1172 @@
 /*
- * Copyright 2016, GeoSolutions Sas.
+ * Copyright 2022, GeoSolutions Sas.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
- */
-import PropTypes from 'prop-types';
+*/
 
-import React from 'react';
+import React, { cloneElement, useState, useLayoutEffect, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { Glyphicon, Button as ButtonRB, FormControl, FormGroup } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { compose, branch, withPropsOnChange } from 'recompose';
-import { Glyphicon } from 'react-bootstrap';
-
+import { createSelector } from 'reselect';
+import { DragSource as dragSource, DropTarget as dropTarget } from 'react-dnd';
 import {
-    changeLayerProperties,
-    changeGroupProperties,
-    toggleNode,
-    contextNode,
     moveNode,
-    showSettings,
-    hideSettings,
-    updateSettings,
     updateNode,
+    changeGroupProperties,
     removeNode,
-    browseData,
-    selectNode,
-    filterLayers,
-    refreshLayerVersion,
-    hideLayerMetadata,
-    download
+    selectNode
 } from '../actions/layers';
-
-import { openQueryBuilder } from '../actions/layerFilter';
-import { getLayerCapabilities } from '../actions/layerCapabilities';
-import { zoomToExtent } from '../actions/map';
-import { error } from '../actions/notifications';
-import { getSelectedAnnotationLayer  } from './Annotations/selectors/annotations';
 import {
-    groupsSelector,
     layersSelector,
-    selectedNodesSelector,
-    layerFilterSelector,
-    layerSettingSelector,
-    layerMetadataSelector,
-    wfsDownloadSelector
+    groupsSelector,
+    selectedNodesSelector
 } from '../selectors/layers';
-
-import { layerSwipeSettingsSelector } from '../selectors/swipe';
-import { mapSelector, mapNameSelector } from '../selectors/map';
-import { currentLocaleSelector, currentLocaleLanguageSelector } from '../selectors/locale';
-import { widgetBuilderAvailable } from '../selectors/controls';
-import { generalInfoFormatSelector } from '../selectors/mapInfo';
-import { userSelector } from '../selectors/security';
-import { isLocalizedLayerStylesEnabledSelector } from '../selectors/localizedLayerStyles';
-import { getNode, toggleByType } from '../utils/LayersUtils';
-import { getScales, getResolutions } from '../utils/MapUtils';
-import { getMessageById } from '../utils/LocaleUtils';
-import Message from '../components/I18N/Message';
-import assign from 'object-assign';
-import layersIcon from './toolbar/assets/img/layers.png';
-import { isObject, head, find, round } from 'lodash';
-import { setControlProperties, setControlProperty } from '../actions/controls';
-import { createWidget } from '../actions/widgets';
-import { getMetadataRecordById } from '../actions/catalog';
-import { isActiveSelector } from '../selectors/catalog';
-import { isCesium } from '../selectors/maptype';
+import { createPlugin } from '../utils/PluginsUtils';
 import { createShallowSelectorCreator } from '../utils/ReselectUtils';
 import isEqual from 'lodash/isEqual';
+import Message from '../components/I18N/Message';
+import DefaultLayerOrGroup from '../components/TOC/DefaultLayerOrGroup';
+import { sortGroups } from '../reducers/layers';
+import { getLayerTypeGlyph } from '../utils/LayersUtils';
+import { getTitleAndTooltip } from '../utils/TOCUtils';
+import WMSLegend from '../components/TOC/fragments/WMSLegend';
+import OpacitySlider from '../components/TOC/fragments/OpacitySlider';
+import StyleBasedLegend from '../components/TOC/fragments/StyleBasedLegend';
+import ConfirmModal from '../components/maps/modals/ConfirmModal';
+import usePluginItems from '../hooks/usePluginItems';
+import { zoomToExtent } from '../actions/map';
+import { getConfigProp } from '../utils/ConfigUtils';
+import isFunction from 'lodash/isFunction';
+import tooltip from '../components/misc/enhancers/tooltip';
 
-const addFilteredAttributesGroups = (nodes, filters) => {
-    return nodes.reduce((newNodes, currentNode) => {
-        let node = assign({}, currentNode);
-        if (node.nodes) {
-            node = assign({}, node, {nodes: addFilteredAttributesGroups(node.nodes, filters)});
-        }
-        filters.forEach(filter => {
-            if (filter.func(node)) {
-                node = assign({}, node, filter.options);
-            } else {
-                node = assign({}, node);
+const Button = tooltip(ButtonRB);
+
+const NodeTypes = {
+    LAYER: 'layers',
+    GROUP: 'groups'
+};
+
+const ROOT_FOLDER_ID = 'root';
+
+const ITEM_KEY = 'node';
+
+const formatDataId = (_id, position, lastId) => {
+    let id = _id;
+    if (lastId) {
+        // ensure to get the latest id from groups
+        const parts = _id.split('.');
+        id = parts[parts.length - 1];
+    }
+    return `node-${id.replace(/\.|\:| /g, '-')}${position ? `-${position}` : ''}`;
+};
+
+
+const drag = dragSource(ITEM_KEY,
+    {
+        beginDrag: ({ node, parentId, index, sort, containerNode }) => {
+
+            if (sort.beginDrag) {
+                sort.beginDrag(node.id);
             }
-        });
-        newNodes.push(node);
-        return newNodes;
-    }, []);
+
+            return {
+                id: node.id,
+                parentId,
+                index,
+                nodeType: node?.nodes ? NodeTypes.GROUP : NodeTypes.LAYER,
+                containerNode
+            };
+        }
+    },
+    (_connect, monitor) => ({
+        connectDragSource: _connect.dragSource(),
+        connectDragPreview: _connect.dragPreview(),
+        isDragging: monitor.isDragging()
+    })
+);
+
+const computeSorting = (props, monitor) => {
+    const dragItem = monitor.getItem();
+    const { id, parentId, index, position } = props;
+    const containerNode = dragItem.containerNode;
+    // Don't replace items with themselves
+    if (id === dragItem.id || !containerNode) {
+        return null;
+    }
+    const rootParentId = containerNode.getAttribute('data-root-parent-id');
+    const hoverNode = containerNode.querySelector(`[data-id=${formatDataId(id || rootParentId, position, true)}]`);
+    const dragNode = containerNode.querySelector(`[data-id=${formatDataId(dragItem.id || rootParentId, dragItem.position, true)}]`);
+
+    if (!hoverNode?.getBoundingClientRect || !dragNode?.getBoundingClientRect) {
+        return null;
+    }
+
+    const hoverNodeType = props?.nodeType;
+
+    const hoverNodeId = hoverNode.getAttribute('data-node-id');
+    const dragNodeId = dragNode.getAttribute('data-node-id');
+    const dragParentNodeId = dragNode.getAttribute('data-parent-node-id');
+    // Note: we're mutating the monitor item here!
+    // Generally it's better to avoid mutations,
+    // but it's good here for the sake of performance
+    // to avoid expensive index searches.
+    // ---
+    // the id of group is dynamic based on the parent id
+    // eg: parentGroupId.childGroupId
+    // the dragItem is not updated until we drop
+    // but while dragging we are also updating the nodes structure
+    // this is needed to sync the correct id
+    dragItem.id = dragNodeId;
+    dragItem.parentId = dragParentNodeId;
+    // Don't replace items with themselves
+    if (hoverNodeId === dragNodeId) {
+        return null;
+    }
+
+    const hoverBoundingRect = hoverNode.getBoundingClientRect();
+    const dragBoundingRect = dragNode.getBoundingClientRect();
+    const dragY = hoverBoundingRect.top;
+    const hoverY = dragBoundingRect.top;
+    const hoverIndex = index;
+    // Determine rectangle on screen
+    // Get vertical middle
+    const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+    // Determine mouse position
+    const clientOffset = monitor.getClientOffset();
+    // Get pixels to the top
+    const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+    // Only perform the move when the mouse has crossed half of the items height
+    // When dragging downwards, only move when the cursor is below 50%
+    // When dragging upwards, only move when the cursor is above 50%
+
+    if (position === 'before') {
+        return [dragItem.id, id || rootParentId, 0];
+    }
+
+    if (position === 'after' && dragY > hoverY) {
+        return [dragItem.id, parentId || rootParentId, hoverIndex];
+    }
+
+    if (position === 'after') {
+        return null;
+    }
+
+    if (hoverNodeType === NodeTypes.GROUP && dragY > hoverY) {
+        return null;
+    }
+
+    if (dragY < hoverY && hoverClientY > hoverMiddleY) {
+        return null;
+    }
+    if (dragY > hoverY && hoverClientY < hoverMiddleY) {
+        return null;
+    }
+
+    return [dragItem.id, parentId || rootParentId, hoverIndex];
 };
 
-const filterLayersByTitle = (layer, filterText, currentLocale) => {
-    const translation = isObject(layer.title) ? layer.title[currentLocale] || layer.title.default : layer.title;
-    const title = translation || layer.name;
-    return (title || '').toLowerCase().indexOf(filterText.toLowerCase()) !== -1;
+const drop = dropTarget(ITEM_KEY,
+    {
+        drop: (props) => {
+            const { sort = {} } = props;
+            if (sort?.drop) {
+                sort.drop();
+            }
+        },
+        hover: (props, monitor) => {
+            const { sort = {} } = props;
+            const payload = computeSorting(props, monitor);
+            if (payload && sort?.hover) {
+                const [ id, groupId, index ] = payload;
+                sort.hover(id, groupId, index);
+            }
+        }
+    },
+    (_connect, monitor) => ({
+        connectDropTarget: _connect.dropTarget(),
+        isOver: monitor.isOver({ shallow: false })
+    })
+);
+
+const DropNode = drop(({
+    id,
+    parentId,
+    position,
+    style,
+    children,
+    connectDropTarget,
+    isOver,
+    nodeType,
+    draggable
+}) => {
+
+    if (!draggable) {
+        return children;
+    }
+    return connectDropTarget(
+        <div
+            data-id={formatDataId(id, position, true)}
+            data-node-id={id}
+            data-parent-node-id={parentId}
+            style={{ ...style, ...(isOver ? { background: 'green' } : position === 'after' ? { background: 'yellow' } : position === 'before' ? { background: 'orange' } : nodeType === 'group' ? { background: 'pink' } : {}) }}
+        >
+            {children}
+        </div>
+    );
+});
+
+const Title = ({
+    node,
+    filterText = '',
+    currentLocale
+}) => {
+    const { title: value } = getTitleAndTooltip({ node, currentLocale });
+    if (!filterText) {
+        return (<div className="node-title">{value}</div>);
+    }
+    const regularExpression = new RegExp(filterText.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'gi');
+    const matches = value.match(regularExpression);
+    if (!matches) {
+        return (<div className="node-title">{value}</div>);
+    }
+    return (<div className="node-title">
+        {value.split(regularExpression)
+            .map((split, idx) => {
+                if (idx < matches.length) {
+                    return (<React.Fragment key={idx}>
+                        {split}
+                        <mark >{matches[idx]}</mark>
+                    </React.Fragment>);
+                }
+                return (<React.Fragment key={idx}>{split}</React.Fragment>);
+            })}
+    </div>);
 };
+
+const VisibilityCheck = ({
+    value,
+    onChange,
+    exclusive
+}) => {
+    const ref = useRef();
+
+    useEffect(() => {
+        ref.current.indeterminate = value === null;
+    }, [value]);
+
+    return (
+        <input
+            key={`${value}`}
+            type={exclusive ? 'radio' : "checkbox"}
+            ref={ref}
+            checked={!!value}
+            onClick={(event) => {
+                event.stopPropagation();
+                onChange(value === null ? true : !value);
+            }}
+            onContextMenu={(event) => {
+                event.stopPropagation();
+            }}
+        />
+    );
+};
+
+const TreeNodeHeader = ({
+    node,
+    filterText,
+    currentLocale,
+    beforeTitle,
+    afterTitle
+}) => {
+    return (
+        <>
+            <div className="ms-tree-node" style={{ display: 'flex' }}>
+                {beforeTitle}
+                <Title node={node} filterText={filterText} currentLocale={currentLocale}/>
+                {afterTitle}
+            </div>
+        </>
+    );
+};
+
+const DefaultGroup = drag(({
+    node: nodeProp,
+    parentId,
+    children,
+    connectDragPreview: connectDragPreviewProp,
+    connectDragSource,
+    ...props
+}) => {
+
+    const {
+        sort,
+        index,
+        filter = () => true,
+        replaceNodeOptions = (node) => node,
+        filterText,
+        onChange = () => {},
+        onChangeGroupProperties = () => {},
+        onContextMenu = () => {},
+        onSelect = () => {},
+        getNodeStyle = () => {}
+    } = props;
+
+    const node = replaceNodeOptions(nodeProp, NodeTypes.GROUP);
+
+    function handleOnChange(options) {
+        onChange(node.id, NodeTypes.GROUP, options);
+    }
+
+    function handleOnChangeGroupProperties(options) {
+        onChangeGroupProperties(node.id, options);
+    }
+
+    function handleOnContextMenu(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        onContextMenu(event, nodeProp, NodeTypes.GROUP, parentId);
+    }
+
+    function handleOnSelect(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        onSelect(event, nodeProp, NodeTypes.GROUP, parentId);
+    }
+
+    if (!filter(node, NodeTypes.GROUP)) {
+        return null;
+    }
+
+    const isDraggable = !(node?.sortable === false);
+    const expanded = node?.expanded;
+
+    const connectDragPreview = isDraggable
+        ? connectDragPreviewProp
+        : cmp => cmp;
+
+    const style = getNodeStyle(nodeProp, NodeTypes.LAYER);
+    return (
+        connectDragPreview(
+            <li style={{ ...style, border: '1px solid #ddd' }} onContextMenu={handleOnContextMenu} onClick={handleOnSelect}>
+                <DropNode
+                    nodeType={NodeTypes.GROUP}
+                    index={index}
+                    id={node.id}
+                    parentId={parentId}
+                    sort={sort}
+                    draggable={isDraggable}
+                >
+                    <TreeNodeHeader
+                        node={node}
+                        beforeTitle={<>
+                            {isDraggable ? connectDragSource(
+                                <div className="grab-handle" onClick={(event) => event.stopPropagation()}>
+                                    <Glyphicon glyph="grab-handle" />
+                                </div>
+                            ) : null}
+                            {<button
+                                onClick={() => handleOnChange({ expanded: !expanded })}
+                                style={expanded ? { transform: 'rotate(90deg)' } : {}}
+                                disabled={!!filterText}
+                            >
+                                <Glyphicon glyph="next"/>
+                            </button>}
+                            <Glyphicon glyph={expanded ? 'folder-open' : 'folder-close'} />
+                            {!node?.exclusive && <VisibilityCheck
+                                value={node?.visibility}
+                                onChange={(visibility) => {
+                                    handleOnChangeGroupProperties({ visibility });
+                                }}
+                            />}
+                        </>}
+                    />
+                </DropNode>
+                {expanded ? <ul>
+                    <DropNode
+                        draggable={isDraggable}
+                        sort={sort}
+                        nodeType={NodeTypes.GROUP}
+                        index={index}
+                        id={node.id}
+                        position="before"
+                        parentId={parentId}
+                    >
+                        <div style={{ display: 'flex', height: 8 }}></div>
+                    </DropNode>
+                    {node?.nodes?.map?.((childNode, _index) => cloneElement(children, {
+                        ...props,
+                        key: childNode.id,
+                        node: childNode,
+                        parentId: node.id,
+                        index: _index,
+                        parentExclusive: node?.exclusive,
+                        onChange: (nodeId, nodeType, options, nodeParentId) => {
+                            if (nodeParentId === node?.id && options?.visibility !== undefined && node?.exclusive) {
+                                node.nodes.forEach((cNode) => {
+                                    if (cNode.id !== nodeId) {
+                                        onChange(cNode.id, cNode?.nodes ? NodeTypes.GROUP : NodeTypes.LAYER, {
+                                            visibility: false
+                                        });
+                                    }
+                                });
+                                return onChange(nodeId, nodeType, { ...options, visibility: true });
+                            }
+                            return onChange(nodeId, nodeType, options);
+                        }
+                    }))}
+                </ul> : null}
+                <DropNode
+                    draggable={isDraggable}
+                    sort={sort}
+                    nodeType={NodeTypes.GROUP}
+                    index={index}
+                    id={node.id}
+                    position="after"
+                    parentId={parentId}
+                >
+                    <div style={{ display: 'flex', height: 8 }}></div>
+                </DropNode>
+            </li>
+        )
+    );
+});
+
+const DefaultLayerTypeNode = ({
+    node,
+    filterText,
+    currentLocale,
+    onChange,
+    sortHandler,
+    exclusive
+}) => {
+
+    const icon = getLayerTypeGlyph(node);
+
+    if (['wms'].includes(node?.type)) {
+        return (
+            <>
+                <TreeNodeHeader
+                    node={node}
+                    filterText={filterText}
+                    currentLocale={currentLocale}
+                    beforeTitle={
+                        <>
+                            {sortHandler}
+                            <button
+                                onClick={() => onChange({ expanded: !node?.expanded })}
+                                style={node?.expanded ? { transform: 'rotate(90deg)' } : {}}
+                            >
+                                <Glyphicon glyph="next"/>
+                            </button>
+                            <Glyphicon glyph={icon} />
+                            <VisibilityCheck
+                                exclusive={exclusive}
+                                value={!!node?.visibility}
+                                onChange={(visibility) => {
+                                    onChange({ visibility });
+                                }}
+                            />
+                        </>
+                    }
+                />
+                {node?.expanded ? <div>
+                    <WMSLegend
+                        node={node}
+                        // currentZoomLvl={currentZoomLvl}
+                        // scales={scales}
+                        // language={language}
+                        // {...legendOptions}
+                    />
+                </div> : null}
+                <OpacitySlider
+                    opacity={node?.opacity}
+                    disabled={!node.visibility}
+                    // hideTooltip={hideOpacityTooltip}
+                    onChange={opacity => onChange({ opacity })}
+                />
+            </>
+        );
+    }
+
+    if (['wfs', 'vector'].includes(node?.type)) {
+
+        const expandable = node?.style?.format === 'geostyler' && node?.style?.body?.rules?.length > 0;
+
+        return (
+            <>
+                <TreeNodeHeader
+                    node={node}
+                    filterText={filterText}
+                    currentLocale={currentLocale}
+                    beforeTitle={
+                        <>
+                            {sortHandler}
+                            {expandable ? <button
+                                onClick={() => onChange({ expanded: !node?.expanded })}
+                                style={node?.expanded ? { transform: 'rotate(90deg)' } : {}}
+                            >
+                                <Glyphicon glyph="next"/>
+                            </button> : null}
+                            <Glyphicon glyph={icon} />
+                            <VisibilityCheck
+                                exclusive={exclusive}
+                                value={!!node?.visibility}
+                                onChange={(visibility) => {
+                                    onChange({ visibility });
+                                }}
+                            />
+                        </>
+                    }
+                />
+                {expandable && node?.expanded ? <div>
+                    <StyleBasedLegend
+                        node={node}
+                        style={node?.style}
+                    />
+                </div> : null}
+                <OpacitySlider
+                    opacity={node?.opacity}
+                    disabled={!node.visibility}
+                    // hideTooltip={hideOpacityTooltip}
+                    onChange={opacity => onChange({ opacity })}
+                />
+            </>
+        );
+    }
+
+    if (['3dtiles'].includes(node?.type)) {
+        return (
+            <>
+                <TreeNodeHeader
+                    node={node}
+                    filterText={filterText}
+                    currentLocale={currentLocale}
+                    beforeTitle={
+                        <>
+                            {sortHandler}
+                            <Glyphicon glyph={icon} />
+                            <VisibilityCheck
+                                exclusive={exclusive}
+                                value={!!node?.visibility}
+                                onChange={(visibility) => {
+                                    onChange({ visibility });
+                                }}
+                            />
+                        </>
+                    }
+                />
+            </>
+        );
+    }
+
+    return (
+        <>
+            <TreeNodeHeader
+                node={node}
+                filterText={filterText}
+                currentLocale={currentLocale}
+                beforeTitle={
+                    <>
+                        {sortHandler}
+                        <Glyphicon glyph="1-layer" />
+                        <VisibilityCheck
+                            exclusive={exclusive}
+                            value={!!node?.visibility}
+                            onChange={(visibility) => {
+                                onChange({ visibility });
+                            }}
+                        />
+                    </>
+                }
+            />
+            <OpacitySlider
+                opacity={node?.opacity}
+                disabled={!node.visibility}
+                // hideTooltip={hideOpacityTooltip}
+                onChange={opacity => onChange({ opacity })}
+            />
+        </>
+    );
+};
+
+const DefaultLayer = drag(({
+    node: nodeProp,
+    parentId,
+    connectDragPreview: connectDragPreviewProp,
+    connectDragSource,
+    index,
+    sort,
+    filter = () => true,
+    filterText,
+    currentLocale,
+    replaceNodeOptions = node => node,
+    onChange = () => {},
+    onContextMenu = () => {},
+    onSelect = () => {},
+    getNodeStyle = () => {},
+    parentExclusive
+}) => {
+
+    const node = replaceNodeOptions(nodeProp, NodeTypes.LAYER);
+
+    function handleOnChange(options) {
+        onChange(node.id, NodeTypes.LAYER, options, parentId);
+    }
+
+    function handleOnContextMenu(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        onContextMenu(event, nodeProp, NodeTypes.LAYER, parentId);
+    }
+
+    function handleOnSelect(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        onSelect(event, nodeProp, NodeTypes.LAYER, parentId);
+    }
+
+    if (!filter(node, NodeTypes.LAYER)) {
+        return null;
+    }
+
+    const isDraggable = !(node?.sortable === false);
+
+    const connectDragPreview = isDraggable
+        ? connectDragPreviewProp
+        : cmp => cmp;
+
+    const style = getNodeStyle(nodeProp, NodeTypes.LAYER);
+    return (
+        connectDragPreview(
+            <li style={{ ...style, border: '1px solid #ddd' }} onContextMenu={handleOnContextMenu} onClick={handleOnSelect}>
+                <DropNode
+                    draggable={isDraggable}
+                    sort={sort}
+                    nodeType={NodeTypes.LAYER}
+                    index={index}
+                    id={node.id}
+                    parentId={parentId}
+                >
+                    <DefaultLayerTypeNode
+                        node={node}
+                        filterText={filterText}
+                        currentLocale={currentLocale}
+                        onChange={handleOnChange}
+                        exclusive={parentExclusive}
+                        sortHandler={
+                            isDraggable ? connectDragSource(
+                                <div className="grab-handle" onClick={(event) => event.stopPropagation()}>
+                                    <Glyphicon glyph="grab-handle" />
+                                </div>
+                            ) : null
+                        }
+                    />
+                </DropNode>
+            </li>
+        )
+    );
+});
+
+const filterTitle = ({
+    node,
+    filterText,
+    currentLocale
+}) => {
+    const { title: currentTitle } = getTitleAndTooltip({ node, currentLocale });
+    return currentTitle.toLowerCase().includes(filterText.toLocaleLowerCase());
+};
+
+const loopFilter = ({ node: groupNode, filterText, currentLocale }) => {
+    return !!groupNode?.nodes?.find((node) => {
+        if (node?.nodes) {
+            return loopFilter({ node, filterText, currentLocale });
+        }
+        return filterTitle({
+            node,
+            filterText,
+            currentLocale
+        });
+    });
+};
+
+const LayersTree = ({
+    tree,
+    filterText,
+    currentLocale,
+    onSort = () => {},
+    onChange = () => {},
+    onChangeGroupProperties = () => {},
+    groupNodeComponent = DefaultGroup,
+    layerNodeComponent = DefaultLayer,
+    onContextMenu = () => {},
+    onSelect = () => {},
+    contextMenu,
+    selectedNodes = []
+}) => {
+
+    const containerNode = useRef();
+    const isSingleDefaultGroup = tree?.length === 1 && tree?.[0]?.nodes && tree?.[0]?.id === 'Default';
+    const root = isSingleDefaultGroup ? tree[0].nodes : tree;
+    const rootParentId = isSingleDefaultGroup ? 'Default' : ROOT_FOLDER_ID;
+
+    const [isContainerEmpty, setIsContainerEmpty] = useState(false);
+    useLayoutEffect(() => {
+        setIsContainerEmpty(containerNode?.current?.children?.length === 0);
+    });
+
+    const getGroup = () => {
+        const Group = groupNodeComponent;
+        return (<Group />);
+    };
+
+    const getLayer = () => {
+        const Layer = layerNodeComponent;
+        return (<Layer />);
+    };
+
+    const getNodeStyle = (currentNode, nodeType) => {
+        const selected = selectedNodes.find((selectedNode) => currentNode.id === selectedNode.id);
+        const contextMenuHighlight = contextMenu?.id === currentNode.id;
+        return {
+            ...(contextMenuHighlight && { outline: '1px solid red' }),
+            ...(selected && { backgroundColor: 'pink' })
+        };
+    };
+
+    const getNodeClassName = (currentNode, nodeType) => {
+        return {};
+    };
+
+    return (
+        <ul
+            ref={containerNode}
+            data-root-parent-id={rootParentId}
+            className="ms-layer-tree"
+            onContextMenu={(event) => {
+                event.preventDefault();
+            }}
+        >
+            {(root || []).map((node, index) => {
+                return (
+                    <DefaultLayerOrGroup
+                        containerNode={containerNode.current}
+                        key={node.id}
+                        index={index}
+                        node={node}
+                        groupElement={getGroup()}
+                        layerElement={getLayer()}
+                        replaceNodeOptions={(currentNode, nodeType) => ({
+                            ...currentNode,
+                            ...(filterText && { sortable: false }),
+                            ...(nodeType === NodeTypes.GROUP && filterText && { expanded: true }),
+                            ...(nodeType === NodeTypes.GROUP && currentNode?.id === 'Default' && { sortable: false })
+                        })}
+                        getNodeStyle={getNodeStyle}
+                        getNodeClassName={getNodeClassName}
+                        currentLocale={currentLocale}
+                        filterText={filterText}
+                        filter={(currentNode, nodeType) => {
+                            if (nodeType === NodeTypes.GROUP && filterText) {
+                                return loopFilter({ node: currentNode, filterText });
+                            }
+                            if (nodeType === NodeTypes.LAYER && filterText) {
+                                return filterTitle({
+                                    node: currentNode,
+                                    filterText,
+                                    currentLocale
+                                });
+                            }
+                            return true;
+                        }}
+                        sort={{
+                            hover: (id, groupId, newIndex) => {
+                                onSort(id, groupId, newIndex);
+                            }
+                        }}
+                        onChange={onChange}
+                        onChangeGroupProperties={onChangeGroupProperties}
+                        onContextMenu={onContextMenu}
+                        onSelect={onSelect}
+                    />
+                );
+            })}
+            {isContainerEmpty ? 'no filter match' : null}
+        </ul>
+    );
+};
+
+const getRemoveNodes = (node) => {
+    return [
+        { id: node.id, type: node?.nodes ? NodeTypes.GROUP : NodeTypes.LAYER },
+        ...(node?.nodes || []).map(getRemoveNodes).flat()
+    ];
+};
+
+const getGroupLayers = (node) => {
+    if (!node?.nodes) {
+        return node;
+    }
+    return [
+        ...(node?.nodes || []).map(getGroupLayers).flat()
+    ];
+};
+
+function TableOfContentItemButton({
+    contextMenu,
+    onClick,
+    label,
+    labelId,
+    glyph,
+    buttonProps,
+    tooltipId
+}) {
+    if (contextMenu) {
+        return (
+            <Button onClick={onClick}>
+                {labelId ?  <Message msgId={labelId}/> : label}
+            </Button>
+        );
+    }
+    return (
+        <Button
+            {...buttonProps}
+            tooltipId={tooltipId}
+            onClick={onClick}>
+            <Glyphicon glyph={glyph} />
+        </Button>
+    );
+}
+
+const StatusTypes = {
+    DESELECT: 'DESELECT',
+    GROUP: 'GROUP',
+    LAYER: 'LAYER',
+    BOTH: 'BOTH',
+    GROUPS: 'GROUPS',
+    LAYERS: 'LAYERS'
+};
+
+function TableOfContentToolbar({
+    items = [],
+    selectedNodes,
+    buttonProps = {
+        className: 'square-button-md',
+        bsStyle: 'primary'
+    }
+}) {
+    const selectedGroups = selectedNodes.filter((node) => node.type === NodeTypes.GROUP).map(({ node }) => node);
+    const selectedLayers = selectedNodes.filter((node) => node.type === NodeTypes.LAYER).map(({ node }) => node);
+    function getSelectedNodesStatus() {
+        if (!selectedNodes?.length) {
+            return StatusTypes.DESELECT;
+        }
+        if (selectedNodes?.length === 1) {
+            return selectedGroups?.length === 1 ? StatusTypes.GROUP : StatusTypes.LAYER;
+        }
+        if (!!selectedGroups?.length && !!selectedLayers?.length) {
+            return StatusTypes.BOTH;
+        }
+        return !!selectedGroups?.length ? StatusTypes.GROUPS : StatusTypes.LAYERS;
+        // status = this.props.selectedLayers.length > 0 && this.props.selectedLayers.filter(l => l.loadingError === 'Error').length === this.props.selectedLayers.length ? `${status}_LOAD_ERROR` : status;
+    }
+
+    const status = getSelectedNodesStatus();
+
+    return (
+        <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+            {items
+                .filter(({ selector = () => true }) => selector({
+                    status,
+                    selectedLayers,
+                    selectedGroups,
+                    selectedNodes,
+                    statusTypes: StatusTypes
+                })) // filter items that should not show
+                .map(({ Component, name }, i) => {
+                    return (
+                        <Component
+                            key={name ?? `item-${i}`}
+                            buttonProps={buttonProps}
+                            selectedLayers={selectedLayers}
+                            selectedGroups={selectedGroups}
+                            selectedNodes={selectedNodes}
+                            status={status}
+                            statusTypes={StatusTypes}
+                            nodeTypes={NodeTypes}
+                            rootFolderId={ROOT_FOLDER_ID}
+                            itemComponent={TableOfContentItemButton}
+                        />
+                    );
+                })}
+        </div>
+    );
+}
+
+function ContextMenu({
+    children,
+    onClick = () => {},
+    onClose = () => {},
+    show,
+    position,
+    containerNode: containerNodeProp = () => document.querySelector('.' + (getConfigProp('themePrefix') || 'ms2') + " > div") || document.body
+}) {
+
+    const containerNode = isFunction(containerNodeProp) ? containerNodeProp() : containerNodeProp;
+    const ref = useRef();
+    const [style, setStyle] = useState({});
+
+    useEffect(() => {
+        function handlePointerDownOut(event) {
+            const nodeContains = ref?.current?.contains;
+            if (nodeContains && !ref.current.contains(event.target)) {
+                onClose();
+            }
+        }
+        window.addEventListener('pointerdown', handlePointerDownOut);
+        return () => {
+            window.removeEventListener('pointerdown', handlePointerDownOut);
+        };
+    }, [ ref ]);
+
+    useLayoutEffect(() => {
+        if (position) {
+            const [left, top] = position;
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const { height, width } = ref?.current?.getBoundingClientRect();
+            const translateY = (top + height) > windowHeight ? '-100%' : '0';
+            const translateX = (left + width) > windowWidth ? '-100%' : '0';
+            setStyle({
+                transform: `translate(${translateX}, ${translateY})`,
+                top,
+                left
+            });
+        }
+    }, [position]);
+
+    return show ? createPortal(
+        <div
+            ref={ref}
+            className="shadow-soft"
+            style={{
+                ...style,
+                position: 'fixed',
+                display: 'flex',
+                flexDirection: 'column',
+                zIndex: 10
+            }}
+            onClick={onClick}
+        >
+            {children}
+        </div>,
+        containerNode
+    ) : null;
+}
+
+function TOC({
+    tree,
+    onSort = () => {},
+    onChange = () => {},
+    onChangeGroupProperties = () => {},
+    onRemove = () => {},
+    onZoomTo = () => {},
+    onSelectNode = () => {},
+    groupNodeComponent,
+    layerNodeComponent,
+    items,
+    selectedNodes
+}, context) {
+
+    const { loadedPlugins } = context;
+    const configuredItems = usePluginItems({ items, loadedPlugins });
+    const contextMenuItems = configuredItems.filter(item => item.target === 'context-menu');
+    const toolbarMenuItems = configuredItems.filter(item => item.target === 'toolbar');
+    const [filterText, setFilterText] = useState('');
+    const [contextMenu, setContextMenu] = useState(null);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(null);
+
+    function handleRemoveNodes() {
+        const nodesToRemove = getRemoveNodes(showDeleteDialog?.node);
+        nodesToRemove.forEach((node) => {
+            onRemove(node.id, node.type);
+        });
+        setShowDeleteDialog(null);
+    }
+
+    function handleOnZoomTo(bbox) {
+        onZoomTo(bbox.bounds, bbox.crs);
+    }
+
+    function computeBoundingBoxFromLayers(layers) {
+        const layersBbox = layers
+            .filter(l => l.bbox)
+            .map(l => ({
+                ...l.bbox,
+                bounds: {
+                    minx: parseFloat(l.bbox.bounds.minx),
+                    miny: parseFloat(l.bbox.bounds.miny),
+                    maxx: parseFloat(l.bbox.bounds.maxx),
+                    maxy: parseFloat(l.bbox.bounds.maxy)
+                }
+            }));
+        const bbox = layersBbox.length > 1 ? layersBbox.reduce((a, b) => {
+            return {
+                bounds: {
+                    maxx: a.bounds.maxx > b.bounds.maxx ? a.bounds.maxx : b.bounds.maxx,
+                    maxy: a.bounds.maxy > b.bounds.maxy ? a.bounds.maxy : b.bounds.maxy,
+                    minx: a.bounds.minx < b.bounds.minx ? a.bounds.minx : b.bounds.minx,
+                    miny: a.bounds.miny < b.bounds.miny ? a.bounds.miny : b.bounds.miny
+                }, crs: b.crs};
+        }, layersBbox[0]) : layersBbox[0];
+        return bbox;
+    }
+
+    function getZoomBoundingBox(selected) {
+        if (!selected) {
+            return null;
+        }
+        if (selected?.type === NodeTypes.LAYER && selected?.node?.bbox) {
+            return computeBoundingBoxFromLayers([selected.node]);
+        }
+        const layers = selected?.type === NodeTypes.GROUP
+            ? getGroupLayers(selected?.node).filter(layer => layer?.bbox)
+            : [];
+        return layers.length ? computeBoundingBoxFromLayers(layers) : null;
+    }
+
+    const boundingBox = getZoomBoundingBox(contextMenu);
+
+    return (
+        <div
+            style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                overflow: 'auto'
+            }}
+        >
+            <FormGroup>
+                <FormControl
+                    value={filterText}
+                    onChange={(event) => setFilterText(event?.target?.value)}
+                />
+            </FormGroup>
+            <TableOfContentToolbar
+                items={toolbarMenuItems}
+                selectedNodes={selectedNodes}
+            />
+            <LayersTree
+                tree={tree}
+                filterText={filterText}
+                onSort={onSort}
+                onChange={onChange}
+                onChangeGroupProperties={onChangeGroupProperties}
+                groupNodeComponent={groupNodeComponent}
+                layerNodeComponent={layerNodeComponent}
+                contextMenu={contextMenu}
+                onContextMenu={(event, currentNode, nodeType, parentId) => {
+                    setContextMenu({
+                        id: currentNode?.id,
+                        node: currentNode,
+                        type: nodeType,
+                        parentId,
+                        position: [event.clientX, event.clientY]
+                    });
+                }}
+                selectedNodes={selectedNodes}
+                onSelect={(event, currentNode, nodeType) => {
+                    onSelectNode(currentNode.id, nodeType === 'groups' ? 'group' : 'layer', event?.ctrlKey);
+                }}
+            />
+            <ContextMenu
+                show={!!contextMenu}
+                position={contextMenu?.position}
+                onClick={() => setContextMenu(null)}
+                onClose={() => setContextMenu(null)}
+            >
+                <button onClick={() => setShowDeleteDialog(contextMenu)}>Remove layer</button>
+                {contextMenu?.type === NodeTypes.GROUP
+                    ? <button onClick={() => onChange(contextMenu?.id, contextMenu?.type, {
+                        exclusive: !contextMenu?.node?.exclusive
+                    })}>Toggle</button>
+                    : null}
+                {boundingBox
+                    ? <button onClick={() => handleOnZoomTo(boundingBox)}>Zoom to layer</button>
+                    : null}
+                {contextMenuItems.map(({ name, Component }) => {
+                    return (
+                        <Component
+                            key={name}
+                            selectedNodes={[contextMenu]}
+                            contextMenu
+                            itemComponent={TableOfContentItemButton}
+                            statusTypes={StatusTypes}
+                            nodeTypes={NodeTypes}
+                            rootFolderId={ROOT_FOLDER_ID}
+                        />);
+                })}
+            </ContextMenu>
+            <ConfirmModal
+                options={{
+                    animation: false,
+                    className: "modal-fixed"
+                }}
+                show= {!!showDeleteDialog}
+                onHide={() => setShowDeleteDialog(null)}
+                onClose={() => setShowDeleteDialog(null)}
+                onConfirm={handleRemoveNodes}
+                // titleText={this.props.selectedGroups && this.props.selectedGroups.length ? this.props.text.confirmDeleteLayerGroupText : this.props.text.confirmDeleteText}
+                // confirmText={this.props.text.confirmDeleteConfirmText}
+                // cancelText={this.props.text.confirmDeleteCancelText}
+                // body={this.props.selectedGroups && this.props.selectedGroups.length ? this.props.text.confirmDeleteLayerGroupMessage : this.props.text.confirmDeleteMessage}
+            />
+        </div>
+    );
+}
 
 const tocSelector = createShallowSelectorCreator(isEqual)(
     (state) => state.controls && state.controls.toolbar && state.controls.toolbar.active === 'toc',
     groupsSelector,
-    layerSettingSelector,
-    layerSwipeSettingsSelector,
-    layerMetadataSelector,
-    wfsDownloadSelector,
-    mapSelector,
-    currentLocaleSelector,
-    currentLocaleLanguageSelector,
-    selectedNodesSelector,
-    layerFilterSelector,
     layersSelector,
-    mapNameSelector,
-    isActiveSelector,
-    widgetBuilderAvailable,
-    generalInfoFormatSelector,
-    isCesium,
-    userSelector,
-    isLocalizedLayerStylesEnabledSelector,
-    getSelectedAnnotationLayer,
-    (enabled, groups, settings, swipeSettings, layerMetadata, layerdownload, map, currentLocale, currentLocaleLanguage, selectedNodes, filterText, layers, mapName, catalogActive, activateWidgetTool, generalInfoFormat, isCesiumActive, user, isLocalizedLayerStylesEnabled, selectedAnnotationLayer) => ({
+    selectedNodesSelector,
+    (enabled, tree, layers, selectedNodes) => ({
         enabled,
-        groups,
-        settings,
-        swipeSettings,
-        layerMetadata,
-        layerdownload,
-        currentZoomLvl: map && map.zoom,
-        scales: getScales(
-            map && map.projection || 'EPSG:3857',
-            map && map.mapOptions && map.mapOptions.view && map.mapOptions.view.DPI || null
-        ),
-        currentLocale,
-        currentLocaleLanguage,
-        selectedNodes,
-        filterText,
-        generalInfoFormat,
+        tree,
         layers,
-        selectedLayers: layers.filter((l) => head(selectedNodes.filter(s => s === l.id))),
-        noFilterResults: layers.filter((l) => filterLayersByTitle(l, filterText, currentLocale)).length === 0,
-        updatableLayersCount: layers.filter(l => l.group !== 'background' && (l.type === 'wms' || l.type === 'wmts')).length,
-        selectedGroups: selectedNodes.map(n => getNode(groups, n)).filter(n => n && n.nodes),
-        mapName,
-        filteredGroups: addFilteredAttributesGroups(groups, [
-            {
-                options: {showComponent: true},
-                func: () => !filterText
-            },
-            {
-                options: {loadingError: true},
-                func: (node) => head((node.nodes || []).filter(n => n.loadingError && n.loadingError !== 'Warning'))
-            },
-            {
-                options: {expanded: true, showComponent: true},
-                func: (node) => filterText && head((node.nodes || []).filter(l => filterLayersByTitle(l, filterText, currentLocale) || l.nodes && head(node.nodes.filter(g => g.showComponent))))
-            },
-            {
-                options: { showComponent: false },
-                func: (node) => head((node.nodes || []).filter(l => l.hidden)) && node.nodes.length === 1
-            },
-            {
-                options: { exclusiveMapType: true },
-                func: (node) => (node.type === "3dtiles" && !isCesiumActive) || (node.type === "cog" && isCesiumActive)
+        selectedNodes: selectedNodes.map(nodeId => {
+            const layer = layers.find(({ id }) => nodeId === id);
+            if (layer) {
+                return { id: nodeId, node: layer, type: NodeTypes.LAYER };
             }
-        ]),
-        catalogActive,
-        activateWidgetTool,
-        user,
-        isLocalizedLayerStylesEnabled,
-        selectedAnnotationLayer
+            return { id: nodeId, node: {}, type: NodeTypes.GROUP };
+        })
     })
 );
 
-import TOC from '../components/TOC/TOC';
-import Header from '../components/TOC/Header';
-import Toolbar from '../components/TOC/Toolbar';
-import DefaultGroup from '../components/TOC/DefaultGroup';
-import DefaultLayer from '../components/TOC/DefaultLayer';
-import DefaultLayerOrGroup from '../components/TOC/DefaultLayerOrGroup';
-
-class LayerTree extends React.Component {
-    static propTypes = {
-        id: PropTypes.number,
-        items: PropTypes.array,
-        layers: PropTypes.array,
-        buttonContent: PropTypes.node,
-        groups: PropTypes.array,
-        settings: PropTypes.object,
-        swipeSettings: PropTypes.object,
-        layerMetadata: PropTypes.object,
-        layerdownload: PropTypes.object,
-        metadataTemplate: PropTypes.oneOfType([PropTypes.string, PropTypes.array, PropTypes.object, PropTypes.func]),
-        refreshMapEnabled: PropTypes.bool,
-        groupStyle: PropTypes.object,
-        groupPropertiesChangeHandler: PropTypes.func,
-        layerPropertiesChangeHandler: PropTypes.func,
-        onToggleGroup: PropTypes.func,
-        onToggleLayer: PropTypes.func,
-        onContextMenu: PropTypes.func,
-        onBrowseData: PropTypes.func,
-        onQueryBuilder: PropTypes.func,
-        onDownload: PropTypes.func,
-        onSelectNode: PropTypes.func,
-        selectedNodes: PropTypes.array,
-        onZoomToExtent: PropTypes.func,
-        retrieveLayerData: PropTypes.func,
-        onSort: PropTypes.func,
-        onSettings: PropTypes.func,
-        onRefreshLayer: PropTypes.func,
-        onNewWidget: PropTypes.func,
-        hideSettings: PropTypes.func,
-        updateSettings: PropTypes.func,
-        updateNode: PropTypes.func,
-        removeNode: PropTypes.func,
-        activateTitleTooltip: PropTypes.bool,
-        showFullTitleOnExpand: PropTypes.bool,
-        activateOpacityTool: PropTypes.bool,
-        activateSortLayer: PropTypes.bool,
-        activateFilterLayer: PropTypes.bool,
-        activateMapTitle: PropTypes.bool,
-        activateToolsContainer: PropTypes.bool,
-        activateRemoveLayer: PropTypes.bool,
-        activateRemoveGroup: PropTypes.bool,
-        activateLegendTool: PropTypes.bool,
-        activateZoomTool: PropTypes.bool,
-        activateQueryTool: PropTypes.bool,
-        activateDownloadTool: PropTypes.bool,
-        activateSettingsTool: PropTypes.bool,
-        activateMetedataTool: PropTypes.bool,
-        activateWidgetTool: PropTypes.bool,
-        activateLayerInfoTool: PropTypes.bool,
-        maxDepth: PropTypes.number,
-        visibilityCheckType: PropTypes.string,
-        settingsOptions: PropTypes.object,
-        chartStyle: PropTypes.object,
-        currentZoomLvl: PropTypes.number,
-        scales: PropTypes.array,
-        layerOptions: PropTypes.object,
-        metadataOptions: PropTypes.object,
-        spatialOperations: PropTypes.array,
-        spatialMethodOptions: PropTypes.array,
-        groupOptions: PropTypes.object,
-        currentLocale: PropTypes.string,
-        currentLocaleLanguage: PropTypes.string,
-        onFilter: PropTypes.func,
-        filterText: PropTypes.string,
-        generalInfoFormat: PropTypes.string,
-        selectedLayers: PropTypes.array,
-        selectedGroups: PropTypes.array,
-        mapName: PropTypes.string,
-        filteredGroups: PropTypes.array,
-        noFilterResults: PropTypes.bool,
-        onAddLayer: PropTypes.func,
-        onAddGroup: PropTypes.func,
-        onError: PropTypes.func,
-        onGetMetadataRecord: PropTypes.func,
-        hideLayerMetadata: PropTypes.func,
-        activateAddLayerButton: PropTypes.bool,
-        activateAddGroupButton: PropTypes.bool,
-        activateLayerFilterTool: PropTypes.bool,
-        catalogActive: PropTypes.bool,
-        refreshLayerVersion: PropTypes.func,
-        hideOpacityTooltip: PropTypes.bool,
-        layerNodeComponent: PropTypes.func,
-        groupNodeComponent: PropTypes.func,
-        isLocalizedLayerStylesEnabled: PropTypes.bool,
-        onLayerInfo: PropTypes.func,
-        onSetSwipeActive: PropTypes.func,
-        updatableLayersCount: PropTypes.number,
-        onSetSwipeMode: PropTypes.func,
-        resolutions: PropTypes.func
-    };
-
-    static contextTypes = {
-        messages: PropTypes.object
-    };
-
-    static defaultProps = {
-        items: [],
-        layers: [],
-        groupPropertiesChangeHandler: () => {},
-        layerPropertiesChangeHandler: () => {},
-        retrieveLayerData: () => {},
-        onToggleGroup: () => {},
-        onToggleLayer: () => {},
-        onContextMenu: () => {},
-        onToggleQuery: () => {},
-        onZoomToExtent: () => {},
-        onSettings: () => {},
-        onRefreshLayer: () => {},
-        onNewWidget: () => {},
-        updateNode: () => {},
-        removeNode: () => {},
-        onSelectNode: () => {},
-        selectedNodes: [],
-        activateOpacityTool: true,
-        activateTitleTooltip: true,
-        showFullTitleOnExpand: false,
-        activateSortLayer: true,
-        activateFilterLayer: true,
-        activateMapTitle: true,
-        activateToolsContainer: true,
-        activateLegendTool: true,
-        activateZoomTool: true,
-        activateSettingsTool: true,
-        activateMetedataTool: true,
-        activateRemoveLayer: true,
-        activateRemoveGroup: true,
-        activateQueryTool: true,
-        activateDownloadTool: true,
-        activateWidgetTool: false,
-        activateLayerFilterTool: false,
-        activateLayerInfoTool: true,
-        maxDepth: 3,
-        visibilityCheckType: "glyph",
-        settingsOptions: {
-            includeCloseButton: false,
-            closeGlyph: "1-close",
-            buttonSize: "small",
-            showFeatureInfoTab: true
-        },
-        layerOptions: {},
-        metadataOptions: {},
-        groupOptions: {},
-        spatialOperations: [
-            {"id": "INTERSECTS", "name": "queryform.spatialfilter.operations.intersects"},
-            {"id": "BBOX", "name": "queryform.spatialfilter.operations.bbox"},
-            {"id": "CONTAINS", "name": "queryform.spatialfilter.operations.contains"},
-            {"id": "WITHIN", "name": "queryform.spatialfilter.operations.within"}
-        ],
-        spatialMethodOptions: [
-            {"id": "Viewport", "name": "queryform.spatialfilter.methods.viewport"},
-            {"id": "BBOX", "name": "queryform.spatialfilter.methods.box"},
-            {"id": "Circle", "name": "queryform.spatialfilter.methods.circle"},
-            {"id": "Polygon", "name": "queryform.spatialfilter.methods.poly"}
-        ],
-        currentLocale: 'en-US',
-        filterText: '',
-        selectedLayers: [],
-        selectedGroups: [],
-        mapName: '',
-        filteredGroups: [],
-        noFilterResults: false,
-        onAddLayer: () => {},
-        onAddGroup: () => {},
-        onError: () => {},
-        onGetMetadataRecord: () => {},
-        hideLayerMetadata: () => {},
-        activateAddLayerButton: false,
-        activateAddGroupButton: false,
-        catalogActive: false,
-        refreshLayerVersion: () => {},
-        metadataTemplate: null,
-        onLayerInfo: () => {},
-        onSetSwipeMode: () => {}
-    };
-
-    getNoBackgroundLayers = (group) => {
-        return group.name !== 'background';
-    };
-
-    getDefaultGroup = () => {
-        const GroupNode = this.props.groupNodeComponent || DefaultGroup;
-        return (
-            <GroupNode
-                onSort={!this.props.filterText && this.props.activateSortLayer ? this.props.onSort : null}
-                {...this.props.groupOptions}
-                titleTooltip={this.props.activateTitleTooltip}
-                propertiesChangeHandler={this.props.groupPropertiesChangeHandler}
-                onToggle={this.props.onToggleGroup}
-                style={this.props.groupStyle}
-                groupVisibilityCheckbox
-                visibilityCheckType={this.props.visibilityCheckType}
-                currentLocale={this.props.currentLocale}
-                selectedNodes={this.props.selectedNodes}
-                onSelect={this.props.activateToolsContainer ? this.props.onSelectNode : null}/>);
-    }
-    getDefaultLayer = () => {
-        const LayerNode = this.props.layerNodeComponent || DefaultLayer;
-        const resolutions = this.props.resolutions || getResolutions();
-        const resolution = resolutions[round(this.props.currentZoomLvl)];
-        return (
-            <LayerNode
-                {...this.props.layerOptions}
-                titleTooltip={this.props.activateTitleTooltip}
-                showFullTitleOnExpand={this.props.showFullTitleOnExpand}
-                onToggle={this.props.onToggleLayer}
-                activateOpacityTool={this.props.activateOpacityTool}
-                onContextMenu={this.props.onContextMenu}
-                propertiesChangeHandler={this.props.layerPropertiesChangeHandler}
-                onSelect={this.props.activateToolsContainer ? this.props.onSelectNode : null}
-                visibilityCheckType={this.props.visibilityCheckType}
-                activateLegendTool={this.props.activateLegendTool}
-                currentZoomLvl={this.props.currentZoomLvl}
-                scales={this.props.scales}
-                currentLocale={this.props.currentLocale}
-                selectedNodes={this.props.selectedNodes}
-                filterText={this.props.filterText}
-                onUpdateNode={this.props.updateNode}
-                hideOpacityTooltip={this.props.hideOpacityTooltip}
-                language={this.props.isLocalizedLayerStylesEnabled ? this.props.currentLocaleLanguage : null}
-                resolution={resolution}
-            />
-        );
-    }
-
-    renderTOC = () => {
-        const Group = this.getDefaultGroup();
-        const Layer = this.getDefaultLayer();
-        const sections = [this.props.activateToolsContainer, this.props.activateFilterLayer, this.props.activateMapTitle].filter(s => s);
-        const bodyClass = sections.length > 0 ? ' toc-body-sections-' + sections.length : ' toc-body-sections';
-        return (
-            <div>
-                <Header
-                    title={this.props.mapName}
-                    showTitle={this.props.activateMapTitle}
-                    showFilter={this.props.activateFilterLayer && (this.props.groups.filter(g => (g.nodes || []).length) || []).length}
-                    showTools={this.props.activateToolsContainer}
-                    onClear={() => { this.props.onSelectNode(); }}
-                    onFilter={this.props.onFilter}
-                    filterTooltipClear={<Message msgId="toc.clearFilter" />}
-                    filterPlaceholder={getMessageById(this.context.messages, "toc.filterPlaceholder")}
-                    filterText={this.props.filterText}
-                    toolbar={
-                        <Toolbar
-                            items={this.props.items.filter(({ target }) => target === "toolbar")}
-                            groups={this.props.groups}
-                            layers={this.props.layers}
-                            selectedLayers={this.props.selectedLayers}
-                            selectedGroups={this.props.selectedGroups}
-                            generalInfoFormat={this.props.generalInfoFormat}
-                            settings={this.props.settings}
-                            swipeSettings={this.props.swipeSettings}
-                            layerMetadata={this.props.layerMetadata}
-                            layerdownload={this.props.layerdownload}
-                            metadataTemplate={this.props.metadataTemplate}
-                            maxDepth={this.props.maxDepth}
-                            activateTool={{
-                                activateToolsContainer: this.props.activateToolsContainer,
-                                activateRemoveLayer: this.props.activateRemoveLayer,
-                                activateRemoveGroup: this.props.activateRemoveGroup,
-                                activateZoomTool: this.props.activateZoomTool,
-                                activateQueryTool: this.props.activateQueryTool,
-                                activateDownloadTool: this.props.activateDownloadTool,
-                                activateSettingsTool: this.props.activateSettingsTool,
-                                activateAddLayer: this.props.activateAddLayerButton && !this.props.catalogActive,
-                                activateAddGroup: this.props.activateAddGroupButton,
-                                includeDeleteButtonInSettings: false,
-                                activateMetedataTool: this.props.activateMetedataTool,
-                                activateWidgetTool: this.props.activateWidgetTool,
-                                activateLayerFilterTool: this.props.activateLayerFilterTool,
-                                activateLayerInfoTool: this.props.updatableLayersCount > 0 && this.props.activateLayerInfoTool
-                            }}
-                            options={{
-                                modalOptions: {},
-                                metadataOptions: this.props.metadataOptions,
-                                settingsOptions: this.props.settingsOptions
-                            }}
-                            style={{
-                                chartStyle: this.props.chartStyle
-                            }}
-                            text={{
-                                settingsText: <Message msgId="layerProperties.windowTitle"/>,
-                                opacityText: <Message msgId="opacity"/>,
-                                elevationText: <Message msgId="elevation"/>,
-                                saveText: <Message msgId="save"/>,
-                                closeText: <Message msgId="close"/>,
-                                confirmDeleteText: <Message msgId="layerProperties.deleteLayer" />,
-                                confirmDeleteMessage: <Message msgId="layerProperties.deleteLayerMessage" />,
-                                confirmDeleteLayerGroupText: <Message msgId="layerProperties.deleteLayerGroup" />,
-                                confirmDeleteLayerGroupMessage: <Message msgId="layerProperties.deleteLayerGroupMessage" />,
-                                confirmDeleteConfirmText: <Message msgId="layerProperties.delete"/>,
-                                confirmDeleteCancelText: <Message msgId="cancel"/>,
-                                addLayer: <Message msgId="toc.addLayer"/>,
-                                addLayerTooltip: <Message msgId="toc.addLayer" />,
-                                addLayerToGroupTooltip: <Message msgId="toc.addLayerToGroup" />,
-                                addGroupTooltip: <Message msgId="toc.addGroup" />,
-                                addSubGroupTooltip: <Message msgId="toc.addSubGroup" />,
-                                createWidgetTooltip: <Message msgId="toc.createWidget"/>,
-                                zoomToTooltip: {
-                                    LAYER: <Message msgId="toc.toolZoomToLayerTooltip"/>,
-                                    LAYERS: <Message msgId="toc.toolZoomToLayersTooltip"/>
-                                },
-                                settingsTooltip: {
-                                    LAYER: <Message msgId="toc.toolLayerSettingsTooltip"/>,
-                                    GROUP: <Message msgId="toc.toolGroupSettingsTooltip"/>
-                                },
-                                featuresGridTooltip: <Message msgId="toc.toolFeaturesGridTooltip"/>,
-                                downloadToolTooltip: <Message msgId="toc.toolDownloadTooltip" />,
-                                trashTooltip: {
-                                    LAYER: <Message msgId="toc.toolTrashLayerTooltip"/>,
-                                    LAYERS: <Message msgId="toc.toolTrashLayersTooltip"/>,
-                                    GROUP: <Message msgId="toc.toolTrashGroupTooltip"/>
-                                },
-                                reloadTooltip: {
-                                    LAYER: <Message msgId="toc.toolReloadLayerTooltip"/>,
-                                    LAYERS: <Message msgId="toc.toolReloadLayersTooltip"/>
-                                },
-                                layerMetadataTooltip: <Message msgId="toc.layerMetadata.toolLayerMetadataTooltip"/>,
-                                layerMetadataPanelTitle: <Message msgId="toc.layerMetadata.layerMetadataPanelTitle"/>,
-                                layerFilterTooltip: <Message msgId="toc.layerFilterTooltip"/>,
-                                layerInfoTooltip: <Message msgId="toc.layerInfoTooltip"/>
-                            }}
-                            onToolsActions={{
-                                onZoom: this.props.onZoomToExtent,
-                                onNewWidget: this.props.onNewWidget,
-                                onBrowseData: this.props.onBrowseData,
-                                onQueryBuilder: this.props.onQueryBuilder,
-                                onDownload: this.props.onDownload,
-                                onUpdate: this.props.updateNode,
-                                onRemove: this.props.removeNode,
-                                onClear: this.props.onSelectNode,
-                                onSettings: this.props.onSettings,
-                                onUpdateSettings: this.props.updateSettings,
-                                onRetrieveLayerData: this.props.retrieveLayerData,
-                                onHideSettings: this.props.hideSettings,
-                                onReload: this.props.refreshLayerVersion,
-                                onAddLayer: this.props.onAddLayer,
-                                onAddGroup: this.props.onAddGroup,
-                                onGetMetadataRecord: this.props.onGetMetadataRecord,
-                                onHideLayerMetadata: this.props.hideLayerMetadata,
-                                onShow: this.props.layerPropertiesChangeHandler,
-                                onLayerInfo: this.props.onLayerInfo
-                            }}/>
-                    }/>
-                <div className={'mapstore-toc' + bodyClass}>
-                    {this.props.noFilterResults && this.props.filterText ?
-                        <div>
-                            <div className="toc-filter-no-results"><Message msgId="toc.noFilteredResults" /></div>
-                        </div>
-                        :
-                        <TOC onError={this.props.onError} onSort={!this.props.filterText && this.props.activateSortLayer ? this.props.onSort : null} filter={this.getNoBackgroundLayers} nodes={this.props.filteredGroups}>
-                            <DefaultLayerOrGroup groupElement={Group} layerElement={Layer}/>
-                        </TOC>
-                    }
-                </div>
-            </div>
-        );
-    };
-
-    render() {
-        if (!this.props.groups) {
-            return <div />;
-        }
-        return this.renderTOC();
-    }
-}
-
-/**
- * enhances the TOC to check `Permissions` properties and enable/disable
- * the proper tools.
- * @ignore
- */
-const securityEnhancer = withPropsOnChange(
-    [
-        "user",
-        "addLayersPermissions", "activateAddLayerButton",
-        "removeLayersPermissions", "activateRemoveLayer",
-        "sortingPermission", "activateRemoveLayer",
-        "addGroupsPermissions", "activateAddGroupButton",
-        "removeGroupsPermissions", "activateRemoveGroup",
-        "layerInfoToolPermissions", "activateLayerInfoTool"
-    ],
-    (props) => {
-        const {
-            addLayersPermissions = true,
-            removeLayersPermissions = true,
-            sortingPermissions = true,
-            addGroupsPermissions = true,
-            removeGroupsPermissions = true,
-            layerInfoToolPermissions = false,
-            activateAddLayerButton,
-            activateRemoveLayer,
-            activateSortLayer,
-            activateAddGroupButton,
-            activateRemoveGroup,
-            activateLayerInfoTool,
-            user
-        } = props;
-
-        const activateParameter = (allow, activate) => {
-            const isUserAdmin = user && user.role === 'ADMIN' || false;
-            return (allow || isUserAdmin) ? activate : false;
-        };
-
-        return {
-            activateAddLayerButton: activateParameter(addLayersPermissions, activateAddLayerButton),
-            activateRemoveLayer: activateParameter(removeLayersPermissions, activateRemoveLayer),
-            activateSortLayer: activateParameter(sortingPermissions, activateSortLayer),
-            activateAddGroupButton: activateParameter(addGroupsPermissions, activateAddGroupButton),
-            activateRemoveGroup: activateParameter(removeGroupsPermissions, activateRemoveGroup),
-            activateLayerInfoTool: activateParameter(layerInfoToolPermissions, activateLayerInfoTool)
-        };
-    });
-
-
-/**
- * enhances the TOC to check the presence of TOC plugins to display/add buttons to the toolbar.
- * NOTE: the flags are required because of old configurations about permissions.
- * TODO: delegate button rendering and actions to the plugins (now this is only a check and some plugins are dummy, only to allow plug/unplug). Also permissions should be delegated to the related plugins
- * @ignore
- */
-const checkPluginsEnhancer = branch(
-    ({ checkPlugins = true }) => checkPlugins,
-    withPropsOnChange(
-        [
-            "items",
-            "activateAddLayerButton",
-            "activateAddGroupButton",
-            "activateLayerFilterTool",
-            "activateSettingsTool",
-            "FeatureEditor",
-            "activateLayerInfoTool",
-            "selectedAnnotationLayer"
-        ],
-        ({
-            items = [],
-            activateAddLayerButton = true,
-            activateAddGroupButton = true,
-            activateQueryTool = true,
-            activateSettingsTool = true,
-            activateLayerFilterTool = true,
-            activateWidgetTool = true,
-            activateLayerInfoTool = true,
-            activateDownloadTool = true,
-            // TODO: we should extract the toolbar button that could be injected (eg. TOCItemsSettings)
-            // in this way the logic could be moved in that plugin instead
-            selectedAnnotationLayer
-        }) => ({
-            activateAddLayerButton: activateAddLayerButton && !!find(items, { name: "MetadataExplorer" }) || false, // requires MetadataExplorer (Catalog)
-            activateAddGroupButton: activateAddGroupButton && !!find(items, { name: "AddGroup" }) || false,
-            activateSettingsTool: activateSettingsTool && !selectedAnnotationLayer && !!find(items, { name: "TOCItemsSettings"}) || false,
-            activateQueryTool: activateQueryTool && !!find(items, {name: "FeatureEditor"}) || false,
-            activateLayerFilterTool: activateLayerFilterTool && !!find(items, {name: "FilterLayer"}) || false,
-            // NOTE: activateWidgetTool is already controlled by a selector. TODO: Simplify investigating on the best approach
-            // the button should hide if also widgets plugins is not available. Maybe is a good idea to merge the two plugins
-            activateWidgetTool: activateWidgetTool && !!find(items, { name: "WidgetBuilder" }) && !!find(items, { name: "Widgets" }),
-            activateLayerInfoTool: activateLayerInfoTool && !!find(items, { name: "LayerInfo" }) || false,
-            activateDownloadTool: activateDownloadTool && !!find(items, { name: "LayerDownload" }) || false
-        })
-    )
-);
-
-
-/**
- * Provides Table Of Content visualization. Lists the layers on the map, organized in groups and provides the possibility to select them.
- * Based on current layer(s)/group(s) selection, shows a set of tools for the current selection.
- * This is also a plugin container. Tools injected providing only the name to the container need an internal support (deprecated). Here an example:
- * ```javascript
- * export default createPlugin('AddGroup', {
- *     component: AddGroupPlugin,
- *     containers: {
- *         TOC: {
- *             doNotHide: true,
- *             name: "AddGroup" // this works only if AddGroup is one of the plugins internally supported by TOC.
- *         }
- *     }
- * });
- * ```
- * The new **(recommended)** mode to inject tools in the TOC is by using `target`.
- * This method allows to insert a component in the defined target. Actually `toolbar` is the only target supported for the `target`, and allows to add a button on the toolbar.
- * ```javascript
- * createPlugin(
- *  'MyPlugin',
- *  {
- *      containers: {
- *         TOC: {
- *             name: "TOOLNAME", // a name for the current tool.
- *             target: "toolbar", // the target where to insert the component
- *             //In case of `target: toolbar`, `selector` determine to show or not show the tool (returning `true` or `false`).
- *             // As argument of this function you have several information, that will be passed also to the component.
- *             // - `status`: that can be `LAYER`, `LAYERS`, `GROUP` or `GROUPS`, depending if only one or more than one layer is selected.
- *             // - `selectedGroups`: current list of selected groups
- *             // - `selectedLayers`: current list of selected layers
- *             selector: ({ status }) => status === 'LAYER',
- *             // The component to render. It receives as props the same object passed to the `selector` function.
- *             Component: connect(...)(MyButton)
- *                 createSelector(layerSwipeSettingsSelector, (swipeSettings) => ({swipeSettings})),
- *             // ...
- *         },
- * // ...
- * ```
- * @memberof plugins
- * @name TOC
- * @class
- * @prop {boolean} cfg.activateFilterLayer: activate filter layers tool, default `true`
- * @prop {boolean} cfg.activateMapTitle: show map title, default `true`
- * @prop {boolean} cfg.activateTitleTooltip: show tooltip with full title on layers and groups, default `true`
- * @prop {boolean} cfg.activateOpacityTool: show opacity slider in collapsible panel of layer, default `true`
- * @prop {boolean} cfg.activateToolsContainer: activate layers and group global toolbar, default `true`
- * @prop {boolean} cfg.activateLegendTool: show legend in collapsible panel, default `true`
- * @prop {boolean} cfg.activateZoomTool: activate zoom to extension tool, default `true`
- * @prop {boolean} cfg.activateSettingsTool: activate settings of layers and groups, default `true`
- * @prop {boolean} cfg.activateRemoveLayer: activate remove layer tool, default `true`
- * @prop {boolean} cfg.activateQueryTool: activate query tool options, default `false`
- * @prop {boolean} cfg.activateDownloadTool: activate a button to download layer data through wfs, default `false`
- * @prop {boolean} cfg.activateSortLayer: activate drag and drop to sort layers, default `true`
- * @prop {boolean} cfg.activateMetedataTool activate metadata tool in the toolbar, to retrieve metadata from original catalog (WMS and/or CSW), default `false`
- * @prop {boolean} cfg.checkPlugins if true, check if AddLayer, AddGroup ... plugins are present to auto-configure the toolbar
- * @prop {boolean} cfg.activateAddLayerButton: activate a button to open the catalog, default `true`
- * @prop {boolean} cfg.activateAddGroupButton: activate a button to add a new group, default `true`
- * @prop {boolean} cfg.showFullTitleOnExpand shows full length title in the legend. default `false`.
- * @prop {boolean} cfg.hideOpacityTooltip hide toolip on opacity sliders
- * @prop {boolean} cfg.activateRemoveGroup if set to false, do not show the remove button for layer groups. default `true`
-  * @prop {boolean} [addLayersPermissions=true] if false, only users of role ADMIN can see the "add layers" button. Default true.
-   @prop {boolean} [removeLayersPermissions=true] if false, only users of role ADMIN have the permission to remove layers. Default true.
-   @prop {boolean} [sortingPermissions=true] if false, only users of role ADMIN have the permission to move layers in the TOC. Default true.
-   @prop {boolean} [addGroupsPermissions=true] if false, only users of role ADMIN have the permission to add groups to the TOC. Default true.
-   @prop {boolean} [removeGroupsPermissions=true] if false, only users of role ADMIN can remove groups from the TOC. Default true.
-   @prop {boolean} [layerInfoToolPermissions=false] if false, only users of role ADMIN can see the layer info tool. Default false.
- * @prop {string[]|string|object|function} cfg.metadataTemplate custom template for displaying metadata
- * example :
- * ```
- * {
- * "name": "TOC",
- *      "cfg": {
- *          "metadataTemplate": ["<div id={model.identifier}>",
- *              "<Bootstrap.Table className='responsive'>",
- *                  "<thead>",
- *                  "<tr>",
- *                      "<th>Campo</th><th>Valore</th>",
- *                  "</tr>",
- *                  "</thead>",
- *                  "<tbody>",
- *                      "<tr>",
- *                          "<td>Identifier</td><td>{model.identifier}</td>",
- *                      "</tr>",
- *                      "<tr>",
- *                          "<td>Title</td><td>{model.title}</td>",
- *                      "</tr>",
- *                      "<tr>",
- *                          "<td>Abstract</td><td>{model.abstract}</td>",
- *                      "</tr>",
- *                      "<tr>",
- *                          "<td>Subject</td><td>{Array.isArray(model.subject) ? model.subject.map((value, i) => <ul key={'meta'+i}><li key={i}>{value}</li></ul>) : model.subject}</td>",
- *                      "</tr>",
- *                      "<tr>",
- *                          "<td>Type</td><td>{model.type}</td>",
- *                      "</tr>",
- *                      "<tr>",
- *                          "<td>Creator</td><td>{model.creator}</td>",
- *                      "</tr>",
- *                  "</tbody>",
- *              "</Bootstrap.Table>",
- *          "</div>"]
- *      }
- *  }
- * ```
- *
- * @prop {element} cfg.groupNodeComponent render a custom component for group node
- * @prop {element} cfg.layerNodeComponent render a custom component for layer node
- * @prop {object} cfg.layerOptions: options to pass to the layer.
- * @prop {object} cfg.layerOptions.legendOptions default options for legend
- * Some of the `layerOptions` are: `legendContainerStyle`, `legendStyle`. These 2 allow to customize the legend CSS.
- * this example is to make the legend scrollable horizontally
- * ```
- * "layerOptions": {
- *  "legendOptions": {
- *    "legendContainerStyle": {
- *     "overflowX": "auto"
- *    },
- *    "legendStyle": {
- *      "maxWidth": "250%"
- *    }
- *   }
- *  }
- * ```
- * Other `legendOptions` entries can be:
- * - `WMSLegendOptions` it is styling prop for the wms legend.
- * - `legendWidth`: default `width` in pixel to send to the WMS `GetLegendGraphic`. (Can be customized from `LayerSettings`)
- * - `legendHeight`: default `height` in pixel to send to the WMS `GetLegendGraphic`. (Can be customized from `LayerSettings`)
- * - `scaleDependent`, this option activates / deactivates scale dependency.
- * example:
- * ```
- * "layerOptions": {
- *  "legendOptions": {
- *   "scaleDependent": true,
- *   "WMSLegendOptions": "forceLabels:on",
- *   "legendWidth": 12,
- *   "legendHeight": 12
- *  }
- * }
- * ```
- * @prop {object} cfg.layerOptions.indicators Another `layerOptions` entry can be `indicators`. `indicators` is an array of icons to add to the TOC. They must satisfy a condition to be shown in the TOC.
- * For the moment only indicators of type `dimension` are supported.
- * example :
- * ```
- * "layerOptions" : {
- *   "indicators": [{
- *      "key": "dimension", // key: required id for the entry to render
- *      "type": "dimension", // type: only one supported is dimension
- *      "glyph": "calendar", // glyph to use
- *      "props": { // props to pass to the indicator
- *          "style": {
- *               "color": "#dddddd",
- *               "float": "right"
- *          },
- *          "tooltip": "dateFilter.supportedDateFilter", // tooltip (can be also a localized msgId)
- *          "placement": "bottom" // tooltip position
- *      },
- *      "condition": { // condition (lodash style) to satisfy ( for type dimension, the condition is to match at least one of the "dimensions" )
- *          "name": "time"
- *      }
- *   }]
- * }
- * ```
- * @prop {object} cfg.layerOptions.tooltipOptions Another `layerOptions` entry is `tooltipOptions` which contains options for customizing the tooltip
- * You can customize the max length for the tooltip with `maxLength` (Default is 807)
- * You can change the conjunction string in the "both" case with `separator` (Default is " - ")
- * for example
- * ```
- * "layerOptions" : {
- *   "tooltipOptions": {
- *     "maxLength": 200,
- *     "separator": " : "
- *   }
- * }
- * ```
- * @prop {object} cfg.metadataOptions options to pass to iso19139 xml metadata parser
- * @prop {object} cfg.metadataOptions.xmlNamespaces namespaces that are used in the metadata xml
- * ```
- * "xmlNamespaces": {
- *     "gmd": "http://www.isotc211.org/2005/gmd",
- *     "srv": "http://www.isotc211.org/2005/srv",
- *     "gco": "http://www.isotc211.org/2005/gco",
- *     "gmx": "http://www.isotc211.org/2005/gmx",
- *     "gfc": "http://www.isotc211.org/2005/gfc",
- *     "gts": "http://www.isotc211.org/2005/gts",
- *     "gml": "http://www.opengis.net/gml"
- * }
- * ```
- * @prop {object[]} cfg.metadataOptions.extractors metadata properties extractor definitions
- * ```
- * "extractors": [{
- *     "properties": {
- *         "title": "/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString",
- *         "lastRevisionDate": "/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date[../../gmd:dateType/gmd:CI_DateTypeCode[@codeListValue='revision']]",
- *         "pointsOfContact": {
- *             "xpath": "/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty",
- *             "properties": {
- *                 "individualName": "gmd:individualName/gco:CharacterString",
- *                 "organisationName": "gmd:organisationName/gco:CharacterString",
- *                 "contactInfo": {
- *                     "xpath": "gmd:contactInfo/gmd:CI_Contact",
- *                     "properties": {
- *                         "phone": "gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString",
- *                         "hoursOfService": "gmd:hoursOfService/gco:CharacterString"
- *                     }
- *                 },
- *                 "role": "gmd:role/gmd:CI_RoleCode/@codeListValue"
- *             }
- *         }
- *     },
- *     "layersRegex": "^espub_mob:gev_ajeu$"
- * }]
- * ```
- *
- * Each extractor is an object, that has two props: "properties" and "layersRegex". "layersRegex" allows to define a regular exression
- * that would be use to determine the names of the layers that the extractor should be used with.
- * "properties" is an object that contains a description of what metadata info should be displayed and how.
- * Each property of this object must be in the following form:
- *
- * ```
- * {
- *   [localizedPropKey]: "xpath string"
- * }
- * ```
- *
- * or
- *
- * ```
- * {
- *   [localizedPropKey]: {
- *     "xpath": "base xpath string",
- *     "properties": {
- *       ...
- *     }
- *   }
- * }
- * ```
- *
- * "localizedPropKey" is a value that is going to be used to compute a localized string id in the default metadata template like this:
- * "toc.layerMetadata.${localizedPropKey}". If the translation is missing a default string will be shown containing localizedPropKey.
- * The value of each "properties" object's prop can be either a string containing an xpath string that will be used to extract
- * a string from metadata xml to be displayed as a value of the corresponding prop in the ui, or an object
- * that describes a subtable, if metadata prop cannot be displayed just as a singular string value. That object has two properties:
- * "xpath", and "properties". "xpath" defines a relative xpath to be used as a base for all properties in "properties". This "properties" object
- * adheres to the same structure described here.
- *
- * If there are multiple extractors which "layersRegex" matches layer's name, the one that occures in the array first will be used for
- * metadata processing.
- */
-const TOCPlugin = connect(tocSelector, {
-    groupPropertiesChangeHandler: changeGroupProperties,
-    layerPropertiesChangeHandler: changeLayerProperties,
-    retrieveLayerData: getLayerCapabilities,
-    onToggleGroup: toggleByType('groups', toggleNode),
-    onToggleLayer: toggleByType('layers', toggleNode),
-    onContextMenu: contextNode,
-    onBrowseData: browseData,
-    onQueryBuilder: openQueryBuilder,
-    onDownload: download,
+const ConnectedTOC = connect(tocSelector, {
     onSort: moveNode,
-    onSettings: showSettings,
-    onZoomToExtent: zoomToExtent,
-    hideSettings,
-    updateSettings,
-    updateNode,
-    removeNode,
-    onSelectNode: selectNode,
-    onFilter: filterLayers,
-    onAddLayer: setControlProperties.bind(null, "metadataexplorer", "enabled", true, "group"),
-    onAddGroup: setControlProperties.bind(null, "addgroup", "enabled", true, "parent"),
-    onGetMetadataRecord: getMetadataRecordById,
-    onError: error,
-    hideLayerMetadata,
-    onNewWidget: () => createWidget(),
-    refreshLayerVersion,
-    onLayerInfo: setControlProperty.bind(null, 'layerinfo', 'enabled', true, false)
-})(compose(
-    securityEnhancer,
-    checkPluginsEnhancer
-)(LayerTree));
+    onChange: updateNode,
+    onChangeGroupProperties: changeGroupProperties,
+    onRemove: removeNode,
+    onZoomTo: zoomToExtent,
+    onSelectNode: selectNode
+})(TOC);
 
-import API from '../api/catalog';
-
-export default {
-    TOCPlugin: assign(TOCPlugin, {
-        Toolbar: {
-            name: 'toc',
-            position: 7,
-            exclusive: true,
-            panel: true,
-            help: <Message msgId="helptexts.layerSwitcher"/>,
-            tooltip: "layers",
-            wrap: true,
-            title: 'layers',
-            icon: <Glyphicon glyph="1-layer"/>,
-            priority: 1
-        },
+export default createPlugin('TOC', {
+    component: ConnectedTOC,
+    containers: {
         DrawerMenu: {
             name: 'toc',
             position: 1,
-            glyph: "1-layer",
-            icon: <img src={layersIcon}/>,
+            glyph: '1-layer',
             buttonConfig: {
-                buttonClassName: "square-button no-border",
-                tooltip: "toc.layers"
+                buttonClassName: 'square-button no-border',
+                tooltip: 'toc.layers'
             },
             priority: 2
         }
-    }),
-    reducers: {
-        queryform: require('../reducers/queryform').default,
-        query: require('../reducers/query').default
-    },
-    // TODO: remove this dependency, it is needed only to use getMetadataRecordById and related actions that can be moved in the TOC
-    epics: require("../epics/catalog").default(API)
-};
+    }
+});

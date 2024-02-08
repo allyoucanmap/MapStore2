@@ -506,13 +506,11 @@ export const reorderFunc = (groups, allLayers) => {
 };
 export const denormalizeGroups = (allLayers, groups) => {
     let getGroupVisibility = (nodes) => {
-        let visibility = true;
-        nodes.forEach((node) => {
-            if (!node.visibility) {
-                visibility = false;
-            }
-        });
-        return visibility;
+        return nodes.every(node => node.visibility === true)
+            ? true
+            : nodes.every(node => node.visibility === false)
+                ? false
+                : null;
     };
     let getNormalizedGroup = (group, layers) => {
         const nodes = group.nodes.map((node) => {
@@ -521,9 +519,16 @@ export const denormalizeGroups = (allLayers, groups) => {
             }
             return layers.filter((layer) => layer.id === node)[0];
         });
-        return assign({}, group, {nodes, visibility: getGroupVisibility(nodes)});
+        return {
+            ...group,
+            nodes,
+            visibility: getGroupVisibility(nodes)
+        };
     };
-    let normalizedLayers = allLayers.map((layer) => assign({}, layer, {expanded: layer.expanded || false}));
+    let normalizedLayers = allLayers.map((layer) => ({
+        ...layer,
+        expanded: layer.expanded || false
+    }));
     return {
         flat: normalizedLayers,
         groups: groups.map((group) => getNormalizedGroup(group, normalizedLayers))
@@ -602,7 +607,7 @@ export const geoJSONToLayer = (geoJSON, id) => {
     return {
         type: 'vector',
         visibility: true,
-        group: 'Local shape',
+        group: 'Default.Local shape',
         id,
         name: geoJSON.fileName,
         hideLoading: true,
@@ -904,7 +909,7 @@ export const getLayerTypeGlyph = (layer) => {
     if (isAnnotationLayer(layer)) {
         return 'comment';
     }
-    return '';
+    return '1-layer';
 };
 
 LayersUtils = {

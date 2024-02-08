@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import { compose, defaultProps, getContext, withPropsOnChange } from 'recompose';
@@ -13,7 +14,7 @@ import {createSelector} from 'reselect';
 
 import {setControlProperty} from '../actions/controls';
 import {getLayerCapabilities} from '../actions/layerCapabilities';
-import {hideSettings, updateNode, updateSettings, updateSettingsParams} from '../actions/layers';
+import {hideSettings, updateNode, updateSettings, updateSettingsParams, showSettings} from '../actions/layers';
 import {toggleStyleEditor} from '../actions/styleeditor';
 import {updateSettingsLifecycle} from "../components/TOC/enhancers/tocItemsSettings";
 import TOCItemsSettings from '../components/TOC/TOCItemsSettings';
@@ -56,6 +57,48 @@ const tocItemsSettingsSelector = createSelector([
     isCesiumActive,
     showFeatureEditOption
 }));
+
+const SettingsButton = connect(() => ({}), {
+    onSettings: showSettings,
+    onHideSettings: hideSettings
+})(({
+    selectedNodes,
+    status,
+    itemComponent,
+    statusTypes,
+    expanded,
+    onSettings = () => {},
+    onHideSettings = () => {},
+    ...props
+}) => {
+    const ItemComponent = itemComponent;
+
+    function handleShowSettings() {
+        if (!expanded) {
+            return status === statusTypes.LAYER
+                ? onSettings(selectedNodes[0].id, 'layers', {
+                    opacity: parseFloat(selectedNodes[0]?.node?.opacity !== undefined
+                        ? selectedNodes[0]?.node?.opacity
+                        : 1)
+                })
+                : onSettings(selectedNodes[0].id, 'groups', {});
+        }
+        return onHideSettings();
+    }
+    // TODO: HIDE IF ANNOTATION LAYER
+    // EXPANDED is it needed?
+    if (!status || [statusTypes.LAYER, statusTypes.GROUP].includes(status)) {
+        return (
+            <ItemComponent
+                {...props}
+                glyph="wrench"
+                tooltipId={status === statusTypes.GROUP ? 'toc.toolGroupSettingsTooltip' : 'toc.toolLayerSettingsTooltip'}
+                onClick={() => handleShowSettings()}
+            />
+        );
+    }
+    return null;
+});
 
 /**
  * TOCItemsSettings plugin. This plugin allows to edit settings of groups and layers.
@@ -111,7 +154,9 @@ export default createPlugin('TOCItemsSettings', {
     containers: {
         TOC: {
             doNotHide: true,
-            name: "TOCItemsSettings"
+            name: "TOCItemsSettings",
+            Component: SettingsButton,
+            target: 'toolbar'
         }
     }
 });

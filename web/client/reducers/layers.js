@@ -122,6 +122,69 @@ const updateGroupIds = (node, parentGroupId, newLayers) => {
     return node;
 };
 
+export const sortGroups = (
+    {
+        groups: _groups,
+        layers: _layers
+    },
+    {
+        node: _node,
+        index: _index,
+        groupId: _groupId
+    }
+) => {
+    const node = getNode(_groups || [], _node);
+    const layerNode = getNode(_layers, _node);
+    if (node && _index >= 0 && node.id !== 'root' && node.id !== 'Default' && !(!!layerNode && _groupId === 'root')) {
+        const groupId = _groupId || 'Default';
+        const curGroupId = layerNode ? (layerNode.group || 'Default') : (() => {
+            const groups = node.id.split('.');
+            return groups[groups.length - 2] || 'root';
+        })();
+
+        if (groupId === curGroupId) {
+            const curGroupNode = curGroupId === 'root' ? {nodes: _groups} : getNode(_groups, curGroupId);
+            let nodes = (curGroupNode && curGroupNode.nodes || []).slice();
+            const nodeIndex = nodes.findIndex(x => (x.id || x) === (node.id || node));
+
+            if (nodeIndex !== -1 && nodeIndex !== _index) {
+                const swapCnt = Math.abs(_index - nodeIndex);
+                const delta = nodeIndex < _index ? 1 : -1;
+                let pos = nodeIndex;
+                for (let i = 0; i < swapCnt; ++i, pos += delta) {
+                    const tmp = nodes[pos];
+                    nodes[pos] = nodes[pos + delta];
+                    nodes[pos + delta] = tmp;
+                }
+
+                const newGroups = curGroupId === 'root' ? nodes : deepChange(_groups, _groupId, 'nodes', nodes);
+
+                return {
+                    layers: sortLayers(newGroups, _layers),
+                    groups: newGroups
+                };
+            }
+        }
+        const groupsWithRemovedNode = deepRemove(_groups, node.id || node);
+        const dstGroup = groupId === 'root' ? {nodes: groupsWithRemovedNode} : getNode(groupsWithRemovedNode, _groupId);
+        if (dstGroup) {
+            const newLayers = _layers.map(layer => ({ ...layer }));
+            const newNode = updateGroupIds(node, groupId === 'root' ? '' : groupId, newLayers);
+            let newDestNodes = dstGroup.nodes.slice();
+            newDestNodes.splice(_index, 0, newNode);
+            const newGroups = groupId === 'root' ?
+                newDestNodes :
+                deepChange(groupsWithRemovedNode.slice(), dstGroup.id, 'nodes', newDestNodes);
+
+            return {
+                layers: sortLayers(newGroups, newLayers),
+                groups: newGroups
+            };
+        }
+    }
+    return null;
+};
+
 function layers(state = { flat: [] }, action) {
     switch (action.type) {
     case TOGGLE_CONTROL: {
@@ -433,6 +496,33 @@ function layers(state = { flat: [] }, action) {
         });
     }
     case SELECT_NODE: {
+        let selected = [];
+        const stateSelected = state?.selected || [];
+        if (action?.ctrlKey) {
+            selected = stateSelected.includes(action.id)
+                ? stateSelected.filter((id) => id !== action.id)
+                : [...stateSelected, action.id];
+        } else {
+            selected = stateSelected.includes(action.id)
+                ? []
+                : [action.id];
+        }
+        return {
+            ...state,
+            selected,
+            settings: {
+                expanded: false,
+                node: null,
+                nodeType: null,
+                options: {}
+            },
+            layerMetadata: {
+                expanded: false,
+                metadataRecord: {},
+                maskLoading: false
+            }
+        };
+        /*
         let selected = state.selected ? [].concat(state.selected) : [];
 
         if (action.id && action.nodeType === 'group') {
@@ -488,6 +578,7 @@ function layers(state = { flat: [] }, action) {
                 maskLoading: false
             }
         });
+        */
     }
     case FILTER_LAYERS: {
         return assign({}, state, {

@@ -41,7 +41,7 @@ import {
     toggleThumbnail,
     setNewServiceStatus
 } from '../actions/catalog';
-import { setControlProperty, toggleControl } from '../actions/controls';
+import { setControlProperty, toggleControl, setControlProperties } from '../actions/controls';
 import { changeLayerProperties } from '../actions/layers';
 import API from '../api/catalog';
 import CatalogComp from '../components/catalog/Catalog';
@@ -278,6 +278,31 @@ const MetadataExplorerPlugin = connect(metadataExplorerSelector, {
     setNewServiceStatus
 })(MetadataExplorerComponent);
 
+const AddLayerButton = connect(() => ({}), {
+    onClick: setControlProperties.bind(null, 'metadataexplorer', 'enabled', true, 'group')
+})(({
+    onClick,
+    selectedNodes,
+    status,
+    itemComponent,
+    statusTypes,
+    ...props
+}) => {
+    const ItemComponent = itemComponent;
+    if (!status || [statusTypes.DESELECT, statusTypes.GROUP].includes(status)) {
+        const group = selectedNodes?.[0]?.id;
+        return (
+            <ItemComponent
+                {...props}
+                glyph="add-layer"
+                tooltipId={status === statusTypes.GROUP ? 'toc.addLayerToGroup' : 'toc.addLayer'}
+                onClick={() => onClick(group)}
+            />
+        );
+    }
+    return null;
+});
+
 /**
  * MetadataExplorer (Catalog) plugin. Shows the catalogs results (CSW, WMS, WMTS, TMS, WFS and COG).
  * Some useful flags in `localConfig.json`:
@@ -315,7 +340,9 @@ export default {
         TOC: {
             name: 'MetadataExplorer',
             doNotHide: true,
-            priority: 1
+            priority: 1,
+            target: 'toolbar',
+            Component: AddLayerButton
         },
         SidebarMenu: {
             name: 'metadataexplorer',

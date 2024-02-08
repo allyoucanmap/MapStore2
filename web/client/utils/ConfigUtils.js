@@ -208,7 +208,47 @@ export const setUrlPlaceholders = function(layer) {
     }
     return layer;
 };
-
+/*
+const updateGroupsStructure = ({
+    groups,
+    layers
+}) => {
+    if ((groups || []).some(({ id }) => id !== 'background' && (id || '').indexOf('Default') !== 0)) {
+        const newGroups = groups.map((group) => {
+            if (group.id === 'background') {
+                return group;
+            }
+            if ((group.id || '').indexOf('Default') === 0) {
+                return group;
+            }
+            return {
+                ...group,
+                id: `Default.${group.id}`
+            };
+        });
+        return {
+            groups: newGroups,
+            layers: layers.map((layer) => {
+                if (layer.group === 'background') {
+                    return layer;
+                }
+                return {
+                    ...layer,
+                    ...(layer?.group && {
+                        group: (layer.group || '').indexOf('Default') === 0
+                            ? layer.group
+                            : `Default.${layer.group}`
+                    })
+                };
+            })
+        };
+    }
+    return {
+        groups,
+        layers
+    };
+};
+*/
 export const normalizeConfig = function(config) {
     const {layers, groups, plugins, ...other} = config;
     other.center = getCenter(other.center);
