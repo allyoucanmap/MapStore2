@@ -9,7 +9,23 @@
 import { isObject, get } from 'lodash';
 
 import {getLocale} from './LocaleUtils';
+import { DEFAULT_GROUP_ID } from './LayersUtils';
 import head from "lodash/head";
+
+export const StatusTypes = {
+    DESELECT: 'DESELECT',
+    GROUP: 'GROUP',
+    LAYER: 'LAYER',
+    BOTH: 'BOTH',
+    GROUPS: 'GROUPS',
+    LAYERS: 'LAYERS'
+};
+
+export const isSingleDefaultGroup = (tree) => {
+    return tree?.length === 1 && tree?.[0]?.nodes && tree?.[0]?.id === DEFAULT_GROUP_ID
+        && tree?.[0]?.visibility !== false
+        && tree?.[0]?.mutuallyExclusive !== true;
+};
 
 export const isValidNewGroupOption = function({ label }) {
     const filterWrongGroupRegex = RegExp('^\/|\/$|\/{2,}');

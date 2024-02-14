@@ -14,6 +14,7 @@ import { isNil, isArray } from 'lodash';
 
 class OpacitySlider extends React.Component {
     static propTypes = {
+        hide: PropTypes.bool,
         opacity: PropTypes.number,
         disabled: PropTypes.bool,
         hideTooltip: PropTypes.bool,
@@ -28,7 +29,7 @@ class OpacitySlider extends React.Component {
 
     render() {
 
-        return (
+        return this.props.hide ? null : (
             <div
                 className={`mapstore-slider ${this.props.hideTooltip ? '' : 'with-tooltip'}`}
                 onClick={(e) => { e.stopPropagation(); }}>

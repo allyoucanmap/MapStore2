@@ -73,7 +73,8 @@ export default createPlugin(
                         onSetActive: setActive,
                         onSetSwipeMode: setMode
                     }
-                )(SwipeButton)
+                )(SwipeButton),
+                position: 13
             },
             Map: {
                 name: "Swipe",

@@ -21,6 +21,7 @@ import RulesEditor from "../plugins/RulesEditor";
 import RulesManagerFooter from "../plugins/RulesManagerFooter";
 import UserSession from "../plugins/UserSession";
 import FeatureEditor from '../plugins/FeatureEditor';
+import MetadataInfo from '../plugins/MetadataInfo';
 
 import {toModulePlugin} from "../utils/ModulePluginsUtils";
 
@@ -45,6 +46,7 @@ export const plugins = {
     RulesManagerFooter: RulesManagerFooter,
     UserSessionPlugin: UserSession,
     FeatureEditorPlugin: FeatureEditor,
+    MetadataInfoPlugin: MetadataInfo,
 
     // ### DYNAMIC PLUGINS ### //
     // product plugins

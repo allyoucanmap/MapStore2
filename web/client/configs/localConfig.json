@@ -454,7 +454,23 @@
                         "scaleDependent": true,
                         "legendWidth": 12,
                         "legendHeight": 12
-                      }
+                      },
+                      "indicators": [{
+                        "key": "dimension",
+                        "type": "dimension",
+                        "glyph": "calendar",
+                        "props": {
+                          "style": {
+                            "color": "#dddddd",
+                            "float": "right"
+                          },
+                          "tooltip": "dateFilter.supportedDateFilter",
+                          "placement": "bottom"
+                        },
+                        "condition": {
+                          "name": "pippo"
+                        }
+                      }]
                     }
                 }
             },

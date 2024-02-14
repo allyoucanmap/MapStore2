@@ -9,9 +9,10 @@
 
 import {findIndex} from 'lodash';
 import { compose, withProps, withStateHandlers } from 'recompose';
+import { DEFAULT_GROUP_ID } from '../../../../../../utils/LayersUtils';
 const getGroupLayerIds = (id, map) =>
     (map.layers || [])
-        .filter(({ group = "Default" } = {}) => group === id)
+        .filter(({ group = DEFAULT_GROUP_ID } = {}) => group === id)
         .map(({ id: lid } = {}) => lid);
 
 /**
