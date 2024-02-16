@@ -6,10 +6,27 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { isObject, get } from 'lodash';
+import { isObject, get, isNil } from 'lodash';
 
 import {getLocale} from './LocaleUtils';
+import { DEFAULT_GROUP_ID, NodeTypes } from './LayersUtils';
+import { isSRSAllowed } from './CoordinatesUtils';
 import head from "lodash/head";
+
+export const StatusTypes = {
+    DESELECT: 'DESELECT',
+    GROUP: 'GROUP',
+    LAYER: 'LAYER',
+    BOTH: 'BOTH',
+    GROUPS: 'GROUPS',
+    LAYERS: 'LAYERS'
+};
+
+export const isSingleDefaultGroup = (tree) => {
+    return tree?.length === 1 && tree?.[0]?.nodes && tree?.[0]?.id === DEFAULT_GROUP_ID
+        && tree?.[0]?.visibility !== false
+        && tree?.[0]?.mutuallyExclusive !== true;
+};
 
 export const isValidNewGroupOption = function({ label }) {
     const filterWrongGroupRegex = RegExp('^\/|\/$|\/{2,}');
@@ -123,4 +140,49 @@ export const getLabelName = (groupLabel = "", groups = []) => {
     label = label.replace(/\./g, '/');
     label = label.replace(/\${dot}/g, '.');
     return label;
+};
+
+
+const getSourceCRS = (node) => node?.bbox?.crs || node?.sourceMetadata?.crs;
+
+const isCRSCompatible = (node) => {
+    const CRS = getSourceCRS(node);
+    // Check if source crs is compatible
+    return !isNil(CRS) ? isSRSAllowed(CRS) : true;
+};
+export const getLayerErrorMessage = (node) => {
+    if (node.loadingError === 'Error') {
+        return { msgId: "toc.loadingerror" };
+    }
+    if (!isCRSCompatible(node)) {
+        return {
+            msgId: "toc.sourceCRSNotCompatible",
+            msgParams: { sourceCRS: getSourceCRS(node) }
+        };
+    }
+    return null;
+};
+
+const findGroup = (nodeId, node) => {
+    if (node?.id === nodeId) {
+        return node;
+    }
+    return node?.nodes.reduce((found, childNode) => {
+        if (found !== null) {
+            return found;
+        }
+        return childNode?.nodes ? findGroup(nodeId, childNode) : null;
+    }, null);
+};
+
+export const selectedNodesIdsToObject = (selectedNodesIds, layers, tree) => {
+    return selectedNodesIds.map(nodeId => {
+        const layer = layers.find(({ id }) => nodeId === id);
+        if (layer) {
+            const error = getLayerErrorMessage(layer);
+            return { id: nodeId, node: { ...layer, error }, type: NodeTypes.LAYER };
+        }
+        const group = findGroup(nodeId, { nodes: tree });
+        return { id: nodeId, node: group, type: NodeTypes.GROUP };
+    });
 };

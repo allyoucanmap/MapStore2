@@ -14,6 +14,7 @@ import { isNil, isArray } from 'lodash';
 
 class OpacitySlider extends React.Component {
     static propTypes = {
+        hide: PropTypes.bool,
         opacity: PropTypes.number,
         disabled: PropTypes.bool,
         hideTooltip: PropTypes.bool,
@@ -28,12 +29,13 @@ class OpacitySlider extends React.Component {
 
     render() {
 
-        return (
+        return this.props.hide ? null : (
             <div
                 className={`mapstore-slider ${this.props.hideTooltip ? '' : 'with-tooltip'}`}
                 onClick={(e) => { e.stopPropagation(); }}>
                 {this.props.hideTooltip &&
                 <Slider
+                    key="no-tooltip"
                     disabled={this.props.disabled}
                     start={[isNil(this.props.opacity) ? 100 : Math.round(this.props.opacity * 100)]}
                     range={{min: 0, max: 100}}
@@ -44,6 +46,7 @@ class OpacitySlider extends React.Component {
                     }}/>
                 ||
                 <Slider
+                    key="tooltip"
                     disabled={this.props.disabled}
                     start={[isNil(this.props.opacity) ? 100 : Math.round(this.props.opacity * 100)]}
                     tooltips={[true]}

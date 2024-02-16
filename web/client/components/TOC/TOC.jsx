@@ -7,54 +7,128 @@
  */
 
 import React from 'react';
-
-import PropTypes from 'prop-types';
-import dndTree from './enhancers/dndTree';
+import LayersTree from './LayersTree';
+import {
+    NodeTypes,
+    denormalizeGroups,
+    splitMapAndLayers,
+    sortGroups,
+    changeNodeConfiguration
+} from '../../utils/LayersUtils';
+import { selectedNodesIdsToObject } from '../../utils/TOCUtils';
+import {
+    saveMapConfiguration
+} from '../../utils/MapUtils';
 import './css/toc.css';
 
-class TOC extends React.Component {
-    static propTypes = {
-        filter: PropTypes.func,
-        nodes: PropTypes.array,
-        id: PropTypes.string,
-        onSort: PropTypes.func,
-        onError: PropTypes.func,
-        setDndState: PropTypes.func
-    };
-
-    static defaultProps = {
-        filter() {return true; },
-        nodes: [],
-        id: 'mapstore-layers',
-        onSort: null,
-        setDndState: () => {}
-    };
-
-    render() {
-        var content = [];
-        var filteredNodes = this.props.nodes.filter(this.props.filter);
-        if (this.props.children) {
-            let i = 0;
-            content = filteredNodes.map((node) => React.cloneElement(this.props.children, {
-                node: node,
-                parentNodeId: 'root',
-                onSort: this.props.onSort,
-                onError: this.props.onError,
-                sortIndex: node.hide || node.dummy ? i : i++,
-                key: node.name || node.id || 'default',
-                isDraggable: !!this.props.onSort && !(node.nodes && node.name === 'Default'),
-                setDndState: this.props.setDndState
-            }));
-        }
-        if (this.props.onSort) {
-            return (
-                <div id={this.props.id} className="mapstore-layers-container">
-                    {content}
-                </div>
-            );
-        }
-        return <div id={this.props.id} className="mapstore-layers-container">{content}</div>;
-    }
+export function ControlledTOC({
+    tree,
+    contextMenu,
+    onSort = () => {},
+    onChange = () => {},
+    onSelectNode = () => {},
+    onContextMenu = () => {},
+    groupNodeComponent,
+    layerNodeComponent,
+    filterText,
+    selectedNodes,
+    rootGroupId,
+    nodeTypes = NodeTypes,
+    config,
+    className,
+    nodeItems,
+    nodeToolItems,
+    singleDefaultGroup,
+    theme
+}) {
+    return (
+        <LayersTree
+            className={className}
+            theme={theme}
+            tree={tree}
+            filterText={filterText}
+            onSort={onSort}
+            onChange={onChange}
+            groupNodeComponent={groupNodeComponent}
+            layerNodeComponent={layerNodeComponent}
+            contextMenu={contextMenu}
+            onContextMenu={onContextMenu}
+            selectedNodes={selectedNodes}
+            onSelect={(event, currentNode, nodeType) => {
+                onSelectNode(currentNode.id, nodeType === nodeTypes.GROUP ? 'group' : 'layer', event?.ctrlKey);
+            }}
+            nodeTypes={nodeTypes}
+            rootGroupId={rootGroupId}
+            config={config}
+            nodeItems={nodeItems}
+            nodeToolItems={nodeToolItems}
+            singleDefaultGroup={singleDefaultGroup}
+        />
+    );
 }
 
-export default dndTree(TOC);
+function TOC({
+    map,
+    onChangeMap = () => {},
+    selectedNodes = [],
+    onSelectNode = () => {},
+    config,
+    className,
+    nodeToolItems,
+    singleDefaultGroup,
+    nodeItems,
+    theme
+}) {
+    const { layers } = splitMapAndLayers(map) || {};
+    const tree = denormalizeGroups(layers.flat || [], layers.groups || []).groups;
+    function handleOnChange(currentLayers, currentGroups) {
+        const mapConfig = saveMapConfiguration(map, currentLayers || layers.flat, currentGroups || layers.groups, []);
+        const newMap = {
+            ...map,
+            layers: mapConfig?.map?.layers,
+            groups: mapConfig?.map?.groups
+        };
+        onChangeMap(newMap);
+    }
+    function handleOnSort(nodeId, groupId, index) {
+        const sortedGroups = sortGroups({
+            groups: layers.groups,
+            layers: layers.flat
+        }, {
+            node: nodeId,
+            index,
+            groupId
+        });
+        if (sortedGroups) {
+            handleOnChange(sortedGroups.layers, sortedGroups.groups);
+        }
+    }
+    function handleUpdateNode(nodeId, nodeType, options) {
+        const updatedNode = changeNodeConfiguration({
+            groups: layers.groups,
+            layers: layers.flat
+        }, {
+            node: nodeId,
+            nodeType,
+            options
+        });
+        handleOnChange(updatedNode.layers, updatedNode.groups);
+    }
+    return (
+        <ControlledTOC
+            className={className}
+            theme={theme}
+            tree={tree}
+            selectedNodes={selectedNodesIdsToObject(selectedNodes, layers.flat, tree)}
+            onSelectNode={onSelectNode}
+            onSort={handleOnSort}
+            onChange={handleUpdateNode}
+            config={config}
+            nodeItems={nodeItems}
+            nodeToolItems={nodeToolItems}
+            singleDefaultGroup={singleDefaultGroup}
+        />
+    );
+}
+
+export default TOC;

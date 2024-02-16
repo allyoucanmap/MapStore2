@@ -9,11 +9,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import RuleLegendIcon from '../../styleeditor/RuleLegendIcon';
 
-function StyleBasedLegend({ style }) {
+function VectorLegend({ style }) {
 
     const renderRules = (rules) => {
         return (rules || []).map((rule) => {
-            return (<div className="wfs-legend-rule" key={rule.ruleId}>
+            return (<div className="ms-vector-legend-rule" key={rule.ruleId}>
                 <RuleLegendIcon rule={rule} />
                 <span>{rule.name || ''}</span>
             </div>);
@@ -22,15 +22,15 @@ function StyleBasedLegend({ style }) {
 
     return <>
         {
-            style.format === 'geostyler' && <div className="wfs-legend">
+            style.format === 'geostyler' && <div className="ms-vector-legend">
                 {renderRules(style.body.rules)}
             </div>
         }
     </>;
 }
 
-StyleBasedLegend.propTypes = {
+VectorLegend.propTypes = {
     style: PropTypes.object
 };
 
-export default StyleBasedLegend;
+export default VectorLegend;

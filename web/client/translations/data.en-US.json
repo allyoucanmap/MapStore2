@@ -615,6 +615,10 @@
             "notVisibleZoomOut": "The layer is not visible because it is outside the resolution limits. Zoom out to show the layer",
             "notVisibleSwitchTo3D": "Switch to 3D map mode in order to see this layer",
             "notVisibleSwitchTo2D": "Switch to 2D map mode in order to see this layer",
+            "toolGroupShowAllChildren": "Check all children nodes visibility",
+            "toolGroupHideAllChildren": "Uncheck all children nodes visibility",
+            "activateToolGroupMutuallyExclusive": "Activate mutually exclusive visibility of children nodes",
+            "deactivateToolGroupMutuallyExclusive": "Deactivate mutually exclusive visibility of children nodes",
             "refreshOptions": {
                 "bbox": "Update BBOX",
                 "search": "Update search options",

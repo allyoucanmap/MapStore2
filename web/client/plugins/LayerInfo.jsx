@@ -81,6 +81,36 @@ const LayerInfoPlugin = ({
     );
 };
 
+const LayerInfoButton = connect(() => ({}), {
+    onClick: setControlProperty.bind(null, 'layerinfo', 'enabled', true, false)
+})(({
+    onClick,
+    status,
+    itemComponent,
+    statusTypes,
+    config,
+    ...props
+}) => {
+    const ItemComponent = itemComponent;
+
+    // deprecated TOC configuration
+    if (config.activateLayerInfoTool === false) {
+        return null;
+    }
+
+    if ([statusTypes.DESELECT].includes(status)) {
+        return (
+            <ItemComponent
+                {...props}
+                glyph="layer-info"
+                tooltipId={'toc.layerFilterTooltip'}
+                onClick={() => onClick()}
+            />
+        );
+    }
+    return null;
+});
+
 export default createPlugin('LayerInfo', {
     component: connect(createStructuredSelector({
         enabled: layerInfoControlEnabledSelector,
@@ -98,7 +128,10 @@ export default createPlugin('LayerInfo', {
     containers: {
         TOC: {
             name: 'LayerInfo',
-            doNotHide: true
+            doNotHide: true,
+            target: 'toolbar',
+            Component: LayerInfoButton,
+            position: 1
         }
     },
     reducers: {

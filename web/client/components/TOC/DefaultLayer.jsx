@@ -1,258 +1,279 @@
 /*
- * Copyright 2015, GeoSolutions Sas.
+ * Copyright 2022, GeoSolutions Sas.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
- */
+*/
 
 import React from 'react';
-
-import PropTypes from 'prop-types';
-import Node from './Node';
-import { isObject, castArray, find, isNil } from 'lodash';
-import { Grid, Row, Col, Glyphicon } from 'react-bootstrap';
-import draggableComponent from './enhancers/draggableComponent';
-import VisibilityCheck from './fragments/VisibilityCheck';
-import Title from './fragments/Title';
-import WMSLegend from './fragments/WMSLegend';
-import LayersTool from './fragments/LayersTool';
-import OpacitySlider from './fragments/OpacitySlider';
-import ToggleFilter from './fragments/ToggleFilter';
-import tooltip from '../misc/enhancers/tooltip';
-import localizedProps from '../misc/enhancers/localizedProps';
+import { castArray, find } from 'lodash';
+import { Glyphicon } from 'react-bootstrap';
 import { isInsideResolutionsLimits, getLayerTypeGlyph } from '../../utils/LayersUtils';
-import StyleBasedLegend from './fragments/StyleBasedLegend';
-import { isSRSAllowed } from '../../utils/CoordinatesUtils';
+import { getLayerErrorMessage } from '../../utils/TOCUtils';
+import DropNode from './DropNode';
+import DragNode from './DragNode';
+import { VisualizationModes } from '../../utils/MapTypeUtils';
+import InlineLoader from './InlineLoader';
+import WMSLegend from './fragments/WMSLegend';
+import OpacitySlider from './fragments/OpacitySlider';
+import VectorLegend from './fragments/VectorLegend';
+import VisibilityCheck from './fragments/VisibilityCheck';
+import NodeHeader from './NodeHeader';
+import NodeTool from './NodeTool';
+import ExpandButton from './fragments/ExpandButton';
 
-const GlyphIndicator = localizedProps('tooltip')(tooltip(Glyphicon));
-
-/**
- * Default layer node for TOC
- */
-class DefaultLayer extends React.Component {
-    static propTypes = {
-        node: PropTypes.object,
-        propertiesChangeHandler: PropTypes.func,
-        onToggle: PropTypes.func,
-        onContextMenu: PropTypes.func,
-        onSelect: PropTypes.func,
-        style: PropTypes.object,
-        sortableStyle: PropTypes.object,
-        activateLegendTool: PropTypes.bool,
-        activateOpacityTool: PropTypes.bool,
-        indicators: PropTypes.array,
-        visibilityCheckType: PropTypes.string,
-        currentZoomLvl: PropTypes.number,
-        scales: PropTypes.array,
-        additionalTools: PropTypes.array,
-        legendOptions: PropTypes.object,
-        currentLocale: PropTypes.string,
-        selectedNodes: PropTypes.array,
-        filterText: PropTypes.string,
-        onUpdateNode: PropTypes.func,
-        titleTooltip: PropTypes.bool,
-        filter: PropTypes.func,
-        showFullTitleOnExpand: PropTypes.bool,
-        hideOpacityTooltip: PropTypes.bool,
-        tooltipOptions: PropTypes.object,
-        connectDragPreview: PropTypes.func,
-        connectDragSource: PropTypes.func,
-        connectDropTarget: PropTypes.func,
-        isDraggable: PropTypes.bool,
-        isDragging: PropTypes.bool,
-        isOver: PropTypes.bool,
-        language: PropTypes.string,
-        resolution: PropTypes.number
-    };
-
-    static defaultProps = {
-        style: {},
-        sortableStyle: {},
-        propertiesChangeHandler: () => {},
-        onToggle: () => {},
-        onContextMenu: () => {},
-        onSelect: () => {},
-        activateLegendTool: false,
-        activateOpacityTool: true,
-        indicators: [],
-        visibilityCheckType: "glyph",
-        additionalTools: [],
-        currentLocale: 'en-US',
-        joinStr: ' - ',
-        selectedNodes: [],
-        filterText: '',
-        onUpdateNode: () => {},
-        filter: () => true,
-        titleTooltip: false,
-        showFullTitleOnExpand: false,
-        hideOpacityTooltip: false,
-        connectDragPreview: (x) => x,
-        connectDragSource: (x) => x,
-        connectDropTarget: (x) => x
-    };
-
-    getTitle = (layer) => {
-        const translation = isObject(layer.title) ? layer.title[this.props.currentLocale] || layer.title.default : layer.title;
-        return translation || layer.name;
-    };
-
-    getVisibilityMessage = () => {
-        if (this.props.node.exclusiveMapType) {
-            return this.props.node?.type === '3dtiles' ? 'toc.notVisibleSwitchTo3D' : this.props.node?.type === 'cog' ? 'toc.notVisibleSwitchTo2D' : '';
-        }
-        const maxResolution = this.props.node.maxResolution || Infinity;
-        return this.props.resolution >=  maxResolution
+const getLayerVisibilityWarningMessageId = (node, config = {}) => {
+    if (config.visualizationMode === VisualizationModes._2D && ['3dtiles'].includes(node.type)) {
+        return 'toc.notVisibleSwitchTo3D';
+    }
+    if (config.visualizationMode === VisualizationModes._3D && ['cog'].includes(node.type)) {
+        return 'toc.notVisibleSwitchTo2D';
+    }
+    if (config.resolution !== undefined && !isInsideResolutionsLimits(node, config.resolution)) {
+        const maxResolution = node.maxResolution || Infinity;
+        return config.resolution >=  maxResolution
             ? 'toc.notVisibleZoomIn'
             : 'toc.notVisibleZoomOut';
-    };
+    }
+    if (node.loadingError === 'Warning') {
+        return 'toc.toggleLayerVisibilityWarning';
+    }
+    return '';
+};
 
-    getErrorTooltipParams = () => {
-        if (!this.isCRSCompatible()) {
-            return {
-                tooltip: "toc.sourceCRSNotCompatible",
-                msgParams: {sourceCRS: this.getSourceCRS()}
-            };
+const DefaultLayerNode = ({
+    node,
+    filterText,
+    onChange,
+    sortHandler,
+    config = {},
+    nodeToolItems = [],
+    onSelect,
+    nodeType,
+    nodeTypes,
+    error,
+    visibilityWarningMessageId,
+    visibilityCheck,
+    nodeIcon
+}) => {
+
+    const getContent = () => {
+
+        // currently the only content of the layer is the legend
+        // so we hide it if not visible
+        if (error || config?.layerOptions?.hideLegend) {
+            return null;
         }
-        return { tooltip: "toc.loadingerror" };
-    }
-    getSourceCRS = () => this.props.node?.bbox?.crs || this.props.node?.sourceMetadata?.crs;
 
-    renderOpacitySlider = (hideOpacityTooltip) => {
-        return (this.props.activateOpacityTool && this.props.node?.type !== '3dtiles') ? (
-            <OpacitySlider
-                opacity={this.props.node.opacity}
-                disabled={!this.props.node.visibility}
-                hideTooltip={hideOpacityTooltip}
-                onChange={opacity => this.props.onUpdateNode(this.props.node.id, 'layers', {opacity})}/>
-        ) : null;
-    }
-
-    renderCollapsible = () => {
-        return (
-            <div key="legend" position="collapsible" className="collapsible-toc">
-                <Grid fluid>
-                    {this.props.showFullTitleOnExpand ? <Row><Col xs={12} className="toc-full-title">{this.getTitle(this.props.node)}</Col></Row> : null}
-                    {this.props.activateLegendTool && this.props.node.type === 'wms' &&
-                        <Row>
-                            <Col xs={12}>
-                                <WMSLegend node={this.props.node} currentZoomLvl={this.props.currentZoomLvl} scales={this.props.scales} language={this.props.language} {...this.props.legendOptions} />
-                            </Col>
-                        </Row>}
-                    {this.props.activateLegendTool && ['wfs', 'vector'].includes(this.props.node.type) &&
-                        <StyleBasedLegend style={this.props.node.style}/>
-                    }
-                </Grid>
-                {this.renderOpacitySlider(this.props.hideOpacityTooltip)}
-            </div>);
-    };
-
-    renderVisibility = () => {
-        return this.isLayerError() ?
-            (<LayersTool key="loadingerror"
-                glyph="exclamation-mark text-danger"
-                {...this.getErrorTooltipParams()}
-                className="toc-error" />)
-            :
-            (<VisibilityCheck key="visibilitycheck"
-                tooltip={this.props.node.loadingError === 'Warning' ? 'toc.toggleLayerVisibilityWarning' : 'toc.toggleLayerVisibility'}
-                node={this.props.node}
-                checkType={this.props.visibilityCheckType}
-                propertiesChangeHandler={this.props.propertiesChangeHandler} />);
-    }
-
-    renderToolsLegend = (isEmpty) => {
-        return this.isLayerError() || isEmpty ?
-            null
-            :
-            (<LayersTool
-                node={this.props.node}
-                tooltip="toc.displayLegendAndTools"
-                key="toollegend"
-                className="toc-legend"
-                ref="target"
-                glyph="chevron-left"
-                onClick={(node) => this.props.onToggle(node.id, node.expanded)} />);
-    }
-    renderIndicators = () => {
-        /** initial support to render icons in TOC nodes (now only type = "dimension" supported) */
-        return castArray(this.props.indicators).map( indicator =>
-            (indicator.type === "dimension" ? find(this.props.node && this.props.node.dimensions || [], indicator.condition) : false)
-                ? indicator.glyph && <GlyphIndicator key={indicator.key} glyph={indicator.glyph} {...indicator.props} />
-                : null);
-    }
-    renderNode = (grab, hide, selected, error, warning, isDummy, other) => {
-        const isEmpty = !(
-            this.props.showFullTitleOnExpand
-            || this.props.activateLegendTool && (
-                this.props.node.type === 'wms'
-                || ['wfs', 'vector'].includes(this.props.node.type) && this.props.node?.style?.format === 'geostyler'
-            )
-        );
-        const glyph = getLayerTypeGlyph(this.props.node);
-        const head = (isDummy ?
-            <div style={{padding: 0, height: 10}} className="toc-default-layer-head"/> :
-            <div className="toc-default-layer-head">
-                {grab}
-                {this.renderVisibility()}
-                {glyph && <Glyphicon glyph={glyph} />}
-                <ToggleFilter node={this.props.node} propertiesChangeHandler={this.props.propertiesChangeHandler}/>
-                <Title
-                    tooltipOptions={this.props.tooltipOptions}
-                    tooltip={this.props.titleTooltip}
-                    filterText={this.props.filterText}
-                    node={this.props.node}
-                    currentLocale={this.props.currentLocale}
-                    onClick={this.props.onSelect}
-                    onContextMenu={this.props.onContextMenu}
-                />
-                {this.props.node.loading ? <div className="toc-inline-loader"></div> : this.renderToolsLegend(isEmpty)}
-                {!isInsideResolutionsLimits(this.props.node, this.props.resolution) || this.props.node.exclusiveMapType ? <GlyphIndicator glyph="info-sign" tooltipId={this.getVisibilityMessage()} style={{ 'float': 'right' }}/> : null}
-                {this.props.indicators ? this.renderIndicators() : null}
-            </div>
-        );
-        return (
-            <Node className={(this.props.isDragging || this.props.node.placeholder ? "is-placeholder " : "") + 'toc-default-layer' + hide + selected + error + warning} style={this.props.style} type="layer" {...other}>
-                {other.isDraggable && !isDummy ? this.props.connectDragPreview(head) : head}
-                {isDummy || !this.props.activateOpacityTool || this.props.node.expanded || !this.props.node.visibility || this.isLayerError() ? null : this.renderOpacitySlider(this.props.hideOpacityTooltip)}
-                {isDummy || isEmpty ? null : this.renderCollapsible()}
-            </Node>
-        );
-    }
-
-    render() {
-        let {children, propertiesChangeHandler, onToggle, connectDragSource, connectDropTarget, ...other } = this.props;
-        const hide = !this.props.node.visibility || this.props.node.invalid || this.props.node.exclusiveMapType || !isInsideResolutionsLimits(this.props.node, this.props.resolution) ? ' visibility' : '';
-        const selected = this.props.selectedNodes.filter((s) => s === this.props.node.id).length > 0 ? ' selected' : '';
-        const error = this.isLayerError() ? ' layer-error' : '';
-        const warning = this.props.node.loadingError === 'Warning' ? ' layer-warning' : '';
-        const grab = other.isDraggable ? <LayersTool key="grabTool" tooltip="toc.grabLayerIcon" className="toc-grab" ref="target" glyph="grab-handle"/> : <span className="toc-layer-tool toc-grab"/>;
-        const isDummy = !!this.props.node.dummy;
-        const filteredNode = !isDummy && this.filterLayers(this.props.node) ? this.renderNode(grab, hide, selected, error, warning, isDummy, other) : null;
-        const tocListItem = (
-            <div style={isDummy ? {opacity: 0, boxShadow: 'none'} : {}} className="toc-list-item">
-                {!this.props.filterText || (this.props.filterText && isDummy) ? this.renderNode(grab, hide, selected, error, warning, isDummy, other) : filteredNode}
-            </div>
-        );
-        if (other.node.showComponent !== false && !other.node.hide && this.props.filter(this.props.node)) {
-            return connectDropTarget(other.isDraggable && !isDummy ? connectDragSource(tocListItem) : tocListItem);
+        const layerType = node?.type;
+        if (['wfs', 'vector'].includes(layerType)) {
+            const hasStyle = node?.style?.format === 'geostyler' && node?.style?.body?.rules?.length > 0;
+            return hasStyle
+                ? (
+                    <>
+                        <li>
+                            <VectorLegend
+                                style={node?.style}
+                            />
+                        </li>
+                    </>
+                )
+                : null;
+        }
+        if (layerType === 'wms') {
+            return (
+                <>
+                    <li>
+                        <WMSLegend
+                            node={node}
+                            currentZoomLvl={config?.zoom}
+                            scales={config?.scales}
+                            language={config?.language}
+                            {...config?.layerOptions?.legendOptions}
+                        />
+                    </li>
+                </>
+            );
         }
         return null;
-    }
-
-    filterLayers = (layer) => {
-        const translation = isObject(layer.title) ? layer.title[this.props.currentLocale] || layer.title.default : layer.title;
-        const title = translation || layer.name;
-        return (title || '').toLowerCase().indexOf(this.props.filterText.toLowerCase()) !== -1;
     };
 
-    isLayerError = () => this.props.node.loadingError === 'Error' || !this.isCRSCompatible();
+    const forceExpanded = config?.expanded !== undefined;
+    const expanded = forceExpanded ? config?.expanded : node?.expanded;
+    const content = getContent(error);
 
-    isCRSCompatible = () => {
-        const CRS = this.getSourceCRS();
-        // Check if source crs is compatible
-        return !isNil(CRS) ? isSRSAllowed(CRS) : true;
+    return (
+        <>
+            <NodeHeader
+                node={node}
+                className={nodeType}
+                filterText={filterText}
+                currentLocale={config?.currentLocale}
+                tooltipOptions={config?.layerOptions?.tooltipOptions}
+                onClick={onSelect}
+                showTitleTooltip={config?.showTitleTooltip}
+                beforeTitle={
+                    <>
+                        {sortHandler}
+                        <ExpandButton
+                            hide={!(!forceExpanded && content)}
+                            expanded={expanded}
+                            onChange={onChange}
+                        />
+                        {visibilityCheck}
+                        {nodeIcon}
+                    </>
+                }
+                afterTitle={
+                    <>
+                        {visibilityWarningMessageId && <NodeTool glyph="info-sign" tooltipId={visibilityWarningMessageId} />}
+                        {
+                        // indicators are deprecated
+                        // use node items instead
+                        }
+                        {config?.layerOptions?.indicators ? castArray(config.layerOptions.indicators).map( indicator =>
+                            (indicator.type === 'dimension'
+                                ? find(node?.dimensions || [], indicator.condition) : false)
+                                ? indicator.glyph && <NodeTool onClick={false} key={indicator.key} glyph={indicator.glyph} {...indicator.props} />
+                                : null)
+                            : null}
+                        {nodeToolItems.map(({ Component, name }) => {
+                            return (<Component key={name} itemComponent={NodeTool} node={node} onChange={onChange} nodeType={nodeType} nodeTypes={nodeTypes}/>);
+                        })}
+                    </>
+                }
+            />
+            {expanded && content ? <ul>
+                {content}
+            </ul> : null}
+            <OpacitySlider
+                hide={!!error || config?.hideOpacitySlider || ['3dtiles'].includes(node?.type)}
+                opacity={node?.opacity}
+                disabled={!node.visibility}
+                hideTooltip={!config.showOpacityTooltip}
+                onChange={opacity => onChange({ opacity })}
+            />
+        </>
+    );
+};
+
+const DefaultLayer = ({
+    node: nodeProp,
+    parentId,
+    connectDragPreview = cmp => cmp,
+    connectDragSource = cmp => cmp,
+    index,
+    sort,
+    filter = () => true,
+    filterText,
+    replaceNodeOptions = node => node,
+    onChange = () => {},
+    onContextMenu = () => {},
+    onSelect = () => {},
+    getNodeStyle = () => {},
+    getNodeClassName = () => '',
+    parentMutuallyExclusive,
+    nodeType,
+    sortable,
+    config,
+    nodeToolItems = [],
+    nodeItems = [],
+    nodeTypes
+}) => {
+
+    const replacedNode = replaceNodeOptions(nodeProp, nodeType);
+    const error = replacedNode?.error ?? getLayerErrorMessage(replacedNode);
+    const visibilityWarningMessageId = getLayerVisibilityWarningMessageId(replacedNode, config);
+    const node = {
+        ...nodeProp,
+        error,
+        visibilityWarningMessageId
+    };
+
+    function handleOnChange(options) {
+        onChange(node.id, nodeType, options, parentId);
     }
-}
 
-export default draggableComponent('LayerOrGroup', DefaultLayer);
+    function handleOnContextMenu(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        onContextMenu(event, nodeProp, nodeType, parentId);
+    }
+
+    function handleOnSelect(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        onSelect(event, nodeProp, nodeType, parentId);
+    }
+
+    if (!filter(node, nodeType)) {
+        return null;
+    }
+    const icon = getLayerTypeGlyph(node);
+    const layerNodeProp = {
+        node,
+        filterText,
+        onChange: handleOnChange,
+        parentMutuallyExclusive,
+        config,
+        nodeToolItems,
+        onSelect: handleOnSelect,
+        nodeType,
+        error,
+        visibilityWarningMessageId,
+        nodeTypes,
+        sortHandler:
+            sortable ? connectDragSource(
+                <div className="grab-handle" onClick={(event) => event.stopPropagation()}>
+                    <Glyphicon glyph="grab-handle" />
+                </div>
+            ) : <div className="grab-handle disabled" />,
+        visibilityCheck: (<VisibilityCheck
+            error={error}
+            hide={config?.hideVisibilityButton}
+            mutuallyExclusive={parentMutuallyExclusive}
+            value={!!node?.visibility}
+            onChange={(visibility) => {
+                handleOnChange({ visibility });
+            }}
+        />),
+        nodeIcon: <Glyphicon className="ms-node-icon" glyph={icon} />
+    };
+    const style = getNodeStyle(node, nodeType);
+    const className = getNodeClassName(node, nodeType);
+    const filteredNodeItems = nodeItems
+        .filter(({ selector = () => false }) => selector(layerNodeProp));
+    return (
+        connectDragPreview(
+            <li
+                className={`ms-node ms-node-layer${className ? ` ${className}` : ''}`}
+                style={style}
+                onContextMenu={handleOnContextMenu}>
+                <DropNode
+                    sortable={sortable}
+                    sort={sort}
+                    nodeType={nodeType}
+                    index={index}
+                    id={node.id}
+                    parentId={parentId}
+                >
+                    <InlineLoader loading={node?.loading}/>
+                    {filteredNodeItems.length
+                        ? filteredNodeItems.map(({ Component, name }) => {
+                            return (
+                                <Component key={name} {...layerNodeProp} defaultLayerNodeComponent={DefaultLayerNode} />
+                            );
+                        })
+                        : <DefaultLayerNode
+                            {...layerNodeProp}
+                        />}
+                </DropNode>
+            </li>
+        )
+    );
+};
+
+const DraggableDefaultLayer = (props) => <DragNode {...props} component={DefaultLayer}/>;
+
+export default DraggableDefaultLayer;

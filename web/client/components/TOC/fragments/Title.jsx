@@ -6,71 +6,45 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import PropTypes from 'prop-types';
-
 import React from 'react';
-import { Tooltip } from 'react-bootstrap';
-import OverlayTrigger from '../../misc/OverlayTrigger';
+import tooltip from '../../misc/enhancers/tooltip';
 import { getTitleAndTooltip } from '../../../utils/TOCUtils';
-import './css/toctitle.css';
 
-class Title extends React.Component {
-    static propTypes = {
-        node: PropTypes.object,
-        onClick: PropTypes.func,
-        onContextMenu: PropTypes.func,
-        currentLocale: PropTypes.string,
-        filterText: PropTypes.string,
-        tooltip: PropTypes.bool,
-        tooltipOptions: PropTypes.object
-    };
+const NodeTitle = tooltip(({ children, ...props }) => {
+    return <div {...props} className="ms-node-title">{children}</div>;
+});
 
-    static defaultProps = {
-        onClick: () => {},
-        onContextMenu: () => {},
-        currentLocale: 'en-US',
-        filterText: '',
-        tooltip: false,
-        tooltipOptions: {
-            maxLength: 807,
-            separator: " - "
-        }
-    };
-
-    getFilteredTitle = (title) => {
-        const regularExpression = new RegExp(this.props.filterText.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'gi');
-        const matches = title.match(regularExpression);
-
-        if (!this.props.filterText || !matches) {
-            return title;
-        }
-
-        return title.split(regularExpression).map((split, idx) => {
-            if (idx < matches.length) {
-                return [...split, <strong key={idx}>{matches[idx]}</strong>];
-            }
-            return split;
-        });
-    };
-
-    renderTitle = () => {
-        const {title} = getTitleAndTooltip(this.props);
-        return (
-            <div className="toc-title" onClick={this.props.onClick ? (e) => this.props.onClick(this.props.node.id, 'layer', e.ctrlKey) : () => {}} onContextMenu={(e) => {e.preventDefault(); this.props.onContextMenu(this.props.node); }}>
-                {this.getFilteredTitle(title)}
-            </div>
-        );
-    };
-
-    render() {
-        const {tooltipText} = getTitleAndTooltip(this.props);
-        return this.props.tooltip && tooltipText ? (
-            <OverlayTrigger placement={this.props.node.tooltipPlacement || "top"} overlay={(<Tooltip id={"tooltip-layer-title"}>{tooltipText}</Tooltip>)}>
-                {this.renderTitle()}
-            </OverlayTrigger>
-        ) : this.renderTitle();
+const Title = ({
+    node,
+    filterText = '',
+    currentLocale,
+    tooltipOptions,
+    showTooltip
+}) => {
+    const { title: value, tooltipText } = getTitleAndTooltip({ node, currentLocale, tooltipOptions });
+    const tooltipValue = showTooltip ? tooltipText : undefined;
+    const id = `title-tooltip-${node?.id}`;
+    const tooltipPosition = node?.tooltipPlacement || 'top';
+    if (!filterText) {
+        return (<NodeTitle idDropDown={id} keyProp={id} tooltip={tooltipValue} tooltipPosition={tooltipPosition} >{value}</NodeTitle>);
     }
-}
-
+    const regularExpression = new RegExp(filterText.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'gi');
+    const matches = value.match(regularExpression);
+    if (!matches) {
+        return (<NodeTitle idDropDown={id} keyProp={id} tooltip={tooltipValue} tooltipPosition={tooltipPosition}>{value}</NodeTitle>);
+    }
+    return (<NodeTitle idDropDown={id} keyProp={id} tooltip={tooltipValue} tooltipPosition={tooltipPosition}>
+        {value.split(regularExpression)
+            .map((split, idx) => {
+                if (idx < matches.length) {
+                    return (<React.Fragment key={idx}>
+                        {split}
+                        <mark >{matches[idx]}</mark>
+                    </React.Fragment>);
+                }
+                return (<React.Fragment key={idx}>{split}</React.Fragment>);
+            })}
+    </NodeTitle>);
+};
 
 export default Title;

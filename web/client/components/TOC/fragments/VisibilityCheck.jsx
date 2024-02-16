@@ -7,51 +7,49 @@
  */
 
 import React from 'react';
+import { Glyphicon } from 'react-bootstrap';
+import tooltip from '../../misc/enhancers/tooltip';
+import Message from '../../I18N/Message';
+const Button = tooltip(({ children, ...props }) => <button {...props}>{children}</button>);
 
-import PropTypes from 'prop-types';
-import { isFunction } from 'lodash';
-import LayersTool from './LayersTool';
+const VisibilityCheck = ({
+    hide,
+    value,
+    onChange,
+    mutuallyExclusive,
+    error
+}) => {
 
-class VisibilityCheck extends React.Component {
-    static propTypes = {
-        node: PropTypes.object,
-        tooltip: PropTypes.string,
-        propertiesChangeHandler: PropTypes.func,
-        style: PropTypes.object,
-        checkType: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-        glyphChecked: PropTypes.string,
-        glyphUnchecked: PropTypes.string
-    };
-
-    static defaultProps = {
-        style: {},
-        checkType: "glyph",
-        glyphChecked: "eye-open",
-        tooltip: "toc.toggleLayerVisibility",
-        glyphUnchecked: "eye-close"
-    };
-
-    render() {
-        if (this.props.checkType === "glyph") {
-            return (<LayersTool
-                tooltip={this.props.tooltip}
-                style={this.props.style}
-                className={"visibility-check" + (this.props.node.visibility ? " checked" : "")}
-                data-position={this.props.node.storeIndex}
-                glyph={this.props.node.visibility ? this.props.glyphChecked : this.props.glyphUnchecked}
-                onClick={this.changeVisibility}
-            />);
+    const getIcon = () => {
+        if (error) {
+            return 'exclamation-mark';
         }
-        return (<input className="visibility-check" style={this.props.style}
-            data-position={this.props.node.storeIndex}
-            type={isFunction(this.props.checkType) ? this.props.checkType(this.props.node) : this.props.checkType}
-            checked={this.props.node.visibility ? "checked" : ""}
-            onChange={this.changeVisibility} />);
-    }
-
-    changeVisibility = () => {
-        this.props.propertiesChangeHandler(this.props.node.id, {visibility: !this.props.node.visibility});
+        if (mutuallyExclusive) {
+            return value ? 'radio-on' : 'radio-off';
+        }
+        return value ? 'checkbox-on' : 'checkbox-off';
     };
-}
+
+    if (hide) {
+        return null;
+    }
+    return (
+        <Button
+            tooltip={error
+                ? <Message msgId={error.msgId} msgParams={error.msgParams} />
+                : null}
+            className={value && !error ? 'active' : ''}
+            onClick={(event) => {
+                event.stopPropagation();
+                onChange(!value);
+            }}
+            onContextMenu={(event) => {
+                event.stopPropagation();
+            }}
+        >
+            <Glyphicon glyph={getIcon()} />
+        </Button>
+    );
+};
 
 export default VisibilityCheck;
