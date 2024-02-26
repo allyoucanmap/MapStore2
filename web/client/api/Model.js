@@ -7,6 +7,7 @@
  */
 import axios from 'axios';
 import proj4 from 'proj4';
+import { METERS_PER_UNIT } from '../utils/MapUtils';
 
 /**
  * get ifc model main info such as: longitude, latitude, height and scale
@@ -192,6 +193,27 @@ export const getIFCModel = (url) => {
                 });
         });
 };
+
+const getSize = ({ modelID, ifcModule, data }) => {
+    const { ifcApi, WebIFC } = ifcModule;
+    const boundingBoxSize = ifcApi.GetLineIDsWithType(modelID, WebIFC.IFCBOUNDINGBOX).size(); // eslint-disable-line
+    // let coordinates = [];    // this is the left-bottom corner coordinates of the bbox
+    if (boundingBoxSize) {
+        const sizes = [...Array(boundingBoxSize).keys()].map((index) => {
+            const ifcBBoxLineID = ifcApi.GetLineIDsWithType(modelID, WebIFC.IFCBOUNDINGBOX).get(index); // eslint-disable-line
+            const ifcBBoxEntity = ifcApi.GetLine(modelID, ifcBBoxLineID); // eslint-disable-line
+            return [
+                ifcBBoxEntity.XDim.value,
+                ifcBBoxEntity.YDim.value,
+                ifcBBoxEntity.ZDim.value
+            ];
+        });
+        return sizes[0];
+    }
+    const { size } = ifcDataToJSON({ data, ifcModule });
+    return size;
+};
+
 /**
  * Common requests to IFC
  * @module api.IFC
@@ -215,19 +237,21 @@ export const getCapabilities = (url) => {
             let capabilities = extractCapabilities(ifcModule, modelID, url);
             // extract model origin info by reading IFCProjectedCRS, IFCMapCONVERSION in case of IFC4
             const modelOriginProperties = getModelOriginCoords(ifcModule, capabilities.version, modelID);
+            const size = getSize({ modelID, ifcModule, data });
             capabilities.properties = {
                 ...capabilities.properties,
-                ...modelOriginProperties
+                ...modelOriginProperties,
+                size
             };
             ifcApi.CloseModel(modelID);     // eslint-disable-line
             let properties = capabilities.properties;
             // todo: getting bbox needs to enhance to get the accurate bbox of the ifc model
             let bbox = {
                 bounds: {
-                    minx: (properties.longitude || 0) - 0.001,
-                    miny: (properties.latitude || 0) - 0.001,
-                    maxx: (properties.longitude || 0) + 0.001,
-                    maxy: (properties.latitude || 0) + 0.001
+                    minx: (properties.longitude || 0) - ((size[0] / 2) / METERS_PER_UNIT.degrees),
+                    miny: (properties.latitude || 0) - ((size[1] / 2) / METERS_PER_UNIT.degrees),
+                    maxx: (properties.longitude || 0) + ((size[0] / 2) / METERS_PER_UNIT.degrees),
+                    maxy: (properties.latitude || 0) + ((size[1] / 2) / METERS_PER_UNIT.degrees)
                 },
                 crs: 'EPSG:4326'
             };
