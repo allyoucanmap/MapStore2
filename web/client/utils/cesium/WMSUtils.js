@@ -15,12 +15,25 @@ import { creditsToAttribution, getAuthenticationParam, getURLs, getWMSVendorPara
 import { isVectorFormat } from '../VectorTileUtils';
 import { optionsToVendorParams } from '../VendorParamsUtils';
 import { randomInt } from '../RandomUtils';
+// import {
+//     changeGroupProperties,
+//     changeLayerProperties,
+//     hideSettings,
+//     removeNode,
+//     showSettings,
+//     sortNode,
+//     toggleNode,
+//     updateNode,
+//     updateSettings
+// } from '';
 
 function getQueryString(parameters) {
     return Object.keys(parameters).map((key) => key + '=' + encodeURIComponent(parameters[key])).join('&');
 }
 
 const PARAM_OPTIONS = ["layers", "styles", "style", "format", "transparent", "version", "tiled", "opacity", "zindex", "srs", "singletile", "_v_", "filterobj" ];
+
+const alreadyProxiedURLs = [];
 
 
 function splitUrl(originalUrl) {
@@ -48,7 +61,13 @@ WMSProxy.prototype.getURL = function(resource) {
 function NoProxy() {}
 
 NoProxy.prototype.getURL = function(resource) {
+
     const { url, queryString } = splitUrl(resource);
+    // console.log("resource--", resource,alreadyProxiedURLs,url?.split("?")[0]);
+    if (alreadyProxiedURLs.includes(url?.split("?")[0])) {
+        return getProxyUrl() + encodeURIComponent(url + queryString);
+    }
+
     return url + queryString;
 };
 
@@ -57,7 +76,8 @@ export const getProxy = (options) => {
     let proxyUrl = ConfigUtils.getProxyUrl({});
     let proxy;
     if (proxyUrl) {
-        proxy = options.noCors || needProxy(options.url);
+        proxy = options.noCors || options.forceProxy;
+        // proxy = false;
     }
     return proxy ? new WMSProxy(proxyUrl) : new NoProxy();
 };
@@ -91,6 +111,12 @@ export const wmsToCesiumOptionsBIL = (options) => {
     };
 };
 
+function retryCallback(resource) {
+    alreadyProxiedURLs.push(resource.request.url?.split("?")[0]);
+    resource.proxy = new WMSProxy(getProxyUrl());
+    return true;
+}
+
 export function wmsToCesiumOptions(options) {
     var opacity = options.opacity !== undefined ? options.opacity : 1;
     const params = optionsToVendorParams(options);
@@ -105,6 +131,9 @@ export function wmsToCesiumOptions(options) {
             url: "{s}",
             headers,
             proxy: getProxy(options)
+            // retryCallback: retryCallback,
+            // retryAttempts: 1
+
         }),
         // #7516 this helps Cesium to use CORS requests in a proper way, even when headers are not
         // present in the Resource
@@ -125,7 +154,8 @@ export function wmsToCesiumOptions(options) {
             height: options.tileSize || 256,
             ...(options._v_ ? {_v_: options._v_} : {}),
             ...(params || {}),
-            ...getAuthenticationParam(options)
+            ...getAuthenticationParam(options),
+            id: options.id
 
         }
     };

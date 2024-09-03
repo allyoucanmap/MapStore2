@@ -10,8 +10,9 @@ import React from 'react';
 import Layers from '../../../utils/cesium/Layers';
 import assign from 'object-assign';
 import PropTypes from 'prop-types';
-import { round, isNil } from 'lodash';
+import { round, isNil, castArray } from 'lodash';
 import { getResolutions } from '../../../utils/MapUtils';
+import { testCors, getProxyCacheByUrl } from '../../../api/CORS';
 
 class CesiumLayer extends React.Component {
     static propTypes = {
@@ -210,9 +211,18 @@ class CesiumLayer extends React.Component {
 
     createLayer = (type, options, position, map, securityToken) => {
         if (type) {
-            const opts = assign({}, options, position ? {zIndex: position} : null, {securityToken});
+            const isProxy = options?.url ? getProxyCacheByUrl(castArray(options.url)[0]) : undefined;
+            if (isProxy !== undefined) {
+                this._isProxy = isProxy;
+                this._prevIsProxy = this._isProxy;
+            }
+            const opts = {
+                ...options,
+                ...(position ? { zIndex: position } : null),
+                securityToken,
+                ...(this._isProxy ? { forceProxy: this._isProxy } : null)
+            };
             this.layer = Layers.createLayer(type, opts, map);
-
             if (this.layer) {
                 this.layer.layerName = options.name;
                 this.layer.layerId = options.id;
@@ -225,7 +235,20 @@ class CesiumLayer extends React.Component {
     };
 
     updateLayer = (newProps, oldProps) => {
-        const newLayer = Layers.updateLayer(newProps.type, this.layer, {...newProps.options, securityToken: newProps.securityToken}, {...oldProps.options, securityToken: oldProps.securityToken}, this.props.map);
+        const newLayer = Layers.updateLayer(
+            newProps.type,
+            this.layer,
+            {
+                ...newProps.options,
+                securityToken: newProps.securityToken,
+                forceProxy: this._isProxy
+            },
+            {
+                ...oldProps.options,
+                securityToken: oldProps.securityToken,
+                forceProxy: this._prevIsProxy
+            },
+            this.props.map);
         if (newLayer) {
             this.removeLayer();
             this.layer = newLayer;
@@ -249,7 +272,7 @@ class CesiumLayer extends React.Component {
         newProps.map.scene.requestRender();
     };
 
-    addLayer = (newProps) => {
+    _addLayer = (newProps) => {
         // detached layers are layers that do not work through a provider
         // for this reason they cannot be added or removed from the map imageryProviders
         if (this.layer && !this.layer.detached) {
@@ -265,7 +288,23 @@ class CesiumLayer extends React.Component {
                 }, this.props.options.refresh);
             }
         }
+        if (this.layer?.detached && this.layer?.add) {
+            this.layer.add();
+        }
     };
+
+    addLayer = (newProps) => {
+        if (this._isProxy === undefined && newProps?.options?.url) {
+            const urls = castArray(newProps.options.url);
+            return testCors(urls[0])
+                .then((isProxy) => {
+                    this._isProxy = isProxy;
+                    this.updateLayer(newProps, this.props);
+                    this._prevIsProxy = this._isProxy;
+                });
+        }
+        return this._addLayer(newProps);
+    }
 
     removeLayer = (provider) => {
         const toRemove = provider || this.provider;

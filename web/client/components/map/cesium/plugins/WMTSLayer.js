@@ -111,6 +111,7 @@ function wmtsToCesiumOptions(_options) {
     let proxy;
     if (proxyUrl) {
         proxy = needProxy(options.url) && proxyUrl;
+        proxy = options.forceProxy;
     }
     const isValid = isValidTile(options.matrixIds && options.matrixIds[tileMatrixSetID]);
     const queryParametersString = urlParser.format({ query: {...getAuthenticationParam(options)}});
@@ -161,7 +162,7 @@ const createLayer = options => {
 const updateLayer = (layer, newOptions, oldOptions) => {
     if (newOptions.securityToken !== oldOptions.securityToken
     || oldOptions.format !== newOptions.format
-    || oldOptions.credits !== newOptions.credits) {
+    || oldOptions.credits !== newOptions.credits || newOptions.forceProxy !== oldOptions.forceProxy) {
         return createLayer(newOptions);
     }
     return null;

@@ -6,18 +6,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const axios = require('axios');
-const combineURLs = require('axios/lib/helpers/combineURLs');
-const url = require('url');
-const ConfigUtils = require('../utils/ConfigUtils').default;
-const {isAuthenticationActivated, getAuthenticationRule, getToken,
-    getBasicAuthHeader} = require('../utils/SecurityUtils');
+import axios from 'axios';
+import combineURLs from 'axios/lib/helpers/combineURLs';
+import ConfigUtils from '../utils/ConfigUtils';
+import {
+    isAuthenticationActivated,
+    getAuthenticationRule,
+    getToken,
+    getBasicAuthHeader
+} from '../utils/SecurityUtils';
 
-const assign = require('object-assign');
-const isObject = require('lodash/isObject');
-const omitBy = require('lodash/omitBy');
-const isNil = require('lodash/isNil');
-const urlUtil = require('url');
+import assign from 'object-assign';
+import isObject from 'lodash/isObject';
+import omitBy from 'lodash/omitBy';
+import isNil from 'lodash/isNil';
+import urlUtil from 'url';
+import { getProxyCacheByUrl, setProxyCacheByUrl } from '../api/CORS';
 
 /**
  * Internal helper that adds an extra paramater to an axios configuration.
@@ -35,8 +39,6 @@ function addParameterToAxiosConfig(axiosConfig, parameterName, parameterValue) {
 function addHeaderToAxiosConfig(axiosConfig, headerName, headerValue) {
     axiosConfig.headers = assign({}, axiosConfig.headers, {[headerName]: headerValue});
 }
-
-const corsDisabled = [];
 
 /**
  * Internal helper that will add to the axios config object the correct
@@ -126,7 +128,7 @@ axios.interceptors.request.use(config => {
                 proxyUrl = proxyUrl.url;
             }
             const isCORS = useCORS.reduce((found, current) => found || uri.indexOf(current) === 0, false);
-            const cannotUseCORS = corsDisabled.reduce((found, current) => found || uri.indexOf(current) === 0, false);
+            const cannotUseCORS = getProxyCacheByUrl(uri);
             if (!isCORS && (!autoDetectCORS || cannotUseCORS)) {
                 const parsedUri = urlUtil.parse(uri, true, true);
                 const params = omitBy(config.params, isNil);
@@ -149,10 +151,8 @@ axios.interceptors.request.use(config => {
 
 axios.interceptors.response.use(response => response, (error) => {
     if (error.config && error.config.autoDetectCORS) {
-        const urlParts = url.parse(error.config.url);
-        const baseUrl = urlParts.protocol + "//" + urlParts.host + urlParts.pathname;
-        if (corsDisabled.indexOf(baseUrl) === -1 && typeof error.response === 'undefined') {
-            corsDisabled.push(baseUrl);
+        if (!getProxyCacheByUrl(error.config.url) && typeof error.response === 'undefined') {
+            setProxyCacheByUrl(error.config.url, true);
             return new Promise((resolve, reject) => {
                 axios({ ...error.config, autoDetectCORS: false}).then(resolve).catch(reject);
             });
@@ -161,4 +161,4 @@ axios.interceptors.response.use(response => response, (error) => {
     return Promise.reject(error.response ? {...error.response, originalError: error} : error);
 });
 
-module.exports = axios;
+export default axios;
