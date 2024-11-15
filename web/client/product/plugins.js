@@ -23,6 +23,7 @@ import UserSession from "../plugins/UserSession";
 import FeatureEditor from '../plugins/FeatureEditor';
 import MetadataInfo from '../plugins/MetadataInfo';
 import TOC from '../plugins/TOC';
+import resourcesCatalogPlugins from '../plugins/ResourcesCatalog';
 
 import {toModulePlugin} from "../utils/ModulePluginsUtils";
 
@@ -31,6 +32,7 @@ import {toModulePlugin} from "../utils/ModulePluginsUtils";
  */
 export const plugins = {
     // ### STATIC PLUGINS ### //
+    ...resourcesCatalogPlugins,
     ContextCreatorPlugin: ContextCreator,
     ContextPlugin: Context,
     Dashboard: Dashboard,
