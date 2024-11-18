@@ -1,0 +1,157 @@
+
+// **************
+// Theme
+// **************
+
+#ms-components-theme(@theme-vars) {
+    .ms-resources-pagination {
+        .color-var(@theme-vars[main-color]);
+        .background-color-var(@theme-vars[main-bg]);
+        .border-top-color-var(@theme-vars[main-border-color]);
+    }
+    .ms-card-grid.theme-secondary {
+        .ms-resources-pagination {
+            .color-var(@theme-vars[main-variant-color]);
+            .background-color-var(@theme-vars[main-variant-bg]);
+            .border-top-color-var(@theme-vars[main-border-color]);
+        }
+    }
+    .ms-resource-detail {
+        .color-var(@theme-vars[main-color]);
+        .background-color-var(@theme-vars[main-bg]);
+    }
+}
+
+// **************
+// Layout
+// **************
+
+.ms-resources-panel-wrapper {
+    position: fixed;
+    width: 100%;
+    display: flex;
+    left: 0;
+    pointer-events: none;
+    > * {
+        pointer-events: auto;
+    }
+    z-index: 10;
+    .ms-resource-detail,
+    .ms-resources-filter {
+        .shadow-soft();
+    }
+}
+
+.ms-resources-filter {
+    position: relative;
+    max-width: 400px;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+.ms-resource-detail {
+    position: relative;
+    max-width: 640px;
+    width: 100%;
+    height: 100%;
+    margin-right: 0;
+    margin-left: auto;
+    z-index: 10;
+}
+.ms-resources-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    z-index: 50;
+    border-top-width: 1px;
+    border-top-style: solid;
+    .pagination {
+        margin: 0;
+    }
+}
+
+.ms-resource-detail {
+    .ms-details-info-row {
+        .ms-details-info-label {
+            width: 200px;
+        }
+        .ms-details-info-value {
+            max-width: calc(100% - 200px);
+        }
+    }
+    .ms-details-info-label-link {
+        padding: 0.25rem;
+        font-weight: bold;
+    }
+}
+
+@media (max-width: 1400px) {
+    .ms-resource-detail {
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 968px) {
+    .ms-resources-filter,
+    .ms-resource-detail {
+        max-width: 100%;
+    }
+}
+
+.ms-resources-grid {
+    &.ms-panel {
+        height: 100%;
+
+        .ms-card-grid-container {
+            overflow: auto;
+        }
+
+        .ms-grid-container,
+        .ms-card-grid,
+        .ms-card-grid > div,
+        .ms-card-grid > div > div,
+        .ms-card-grid-container {
+            min-height: auto;
+            height: 100%;
+        }
+
+        .ms-resources-panel-wrapper {
+            position: absolute;
+        }
+
+        .ms-resources-filter {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .ms-resource-detail {
+            max-width: 100%;
+        }
+
+        .ms-details-panel section {
+            box-shadow: none;
+        }
+
+        .ms-resources-pagination {
+            z-index: 10;
+        }
+
+        .ms-card-list {
+            max-width: 100%;
+        }
+    }
+    .ms-card-grid-container {
+        .ms-menu {
+            .ms-menu-container {
+                .ms-menu-list {
+                    .nav-link.btn {
+                        font-size: @font-size-base;
+                    }
+                }
+            }
+        }
+    }
+}
+    

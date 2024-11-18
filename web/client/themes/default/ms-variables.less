@@ -19,9 +19,9 @@
 @ms2-color-disabled: #eee;
 @ms2-color-text-disabled: #999;
 
-@ms2-color-primary: #078aa3;
-@ms2-color-info: #5a9aab;
-@ms2-color-success: #398439;
+@ms2-color-primary: #c5ceeb;
+@ms2-color-info: #e3e3e3;
+@ms2-color-success: #b7e5b9;
 @ms2-color-warning: #ebbc35;
 @ms2-color-danger: #bb4940;
 
@@ -31,13 +31,15 @@
 // MapStore Theme Variables
 // ******************************************
 
+@ms-page-max-width: 1440px;
+
 // hints:
 // bg -> background color
 // color -> text color
 
 @ms-main-color: @ms2-color-text;
 @ms-main-bg: @ms2-color-background;
-@ms-mask-bg: #00000088;
+@ms-mask-bg: rgba(@ms-main-bg, 50%);
 @ms-main-border-color: @ms2-color-shade-lighter;
 
 @ms-main-variant-color: @ms-main-color;
@@ -67,10 +69,10 @@
 @ms-disabled-color: @ms2-color-text-disabled;
 @ms-disabled-bg: @ms2-color-disabled;
 
-@ms-link-color: @ms-primary;
-@ms-link-hover-color: darken(@ms-primary, 8%);
+@ms-link-color: #005dc7;
+@ms-link-hover-color: #0075ff;
 
-@ms-primary-contrast: @ms2-color-text-primary;
+@ms-primary-contrast: @ms-main-color;
 @ms-info-contrast: @ms-primary-contrast;
 @ms-success-contrast: @ms-primary-contrast;
 @ms-warning-contrast: @ms-primary-contrast;
@@ -79,6 +81,9 @@
 @ms-tray-bg: @ms-main-bg;
 @ms-tray-color: lighten(@ms-main-color, 10%);
 @ms-tray-border: lighten(@ms-primary, 10%);
+
+@ms-image-color: #dddddd;
+@ms-image-bg: #f2f2f2;
 
 @ms-font-family-sans-serif: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 @ms-font-family-serif: Georgia, 'Times New Roman', Times, serif;
@@ -138,6 +143,11 @@
     link-hover-color: --ms-link-hover-color, @ms-link-hover-color;
 
     // **************
+    // colors for images background (eg. thumbnail placeholder)
+    image-color: --ms-image-color, @ms-image-color;
+    image-bg: --ms-image-bg, @ms-image-bg;
+
+    // **************
     // colors variant based on bootstrap categorization
     // used mainly for buttons
     primary: --ms-primary, @ms-primary;
@@ -163,25 +173,25 @@
     // **************
     // buttons states colors variants
     @button-default: {
-        button-color: --ms-button-color, @ms-primary;
+        button-color: --ms-button-color, @ms-main-color;
         button-bg: --ms-button-bg, @ms-main-bg;
-        button-border-color: --ms-button-border-color, @ms-primary;
-        button-focus-color: --ms-button-focus-color, @ms-primary;
+        button-border-color: --ms-button-border-color, transparent;
+        button-focus-color: --ms-button-focus-color, @ms-main-color;
         button-focus-bg: --ms-button-focus-bg, @ms-main-bg;
-        button-focus-border-color: --ms-button-focus-border-color, @ms-primary;
-        button-hover-color: --ms-button-hover-color, lighten(@ms-primary, 10%);
+        button-focus-border-color: --ms-button-focus-border-color, transparent;
+        button-hover-color: --ms-button-hover-color, lighten(@ms-main-color, 10%);
         button-hover-bg: --ms-button-hover-bg, darken(@ms-main-bg, 10%);
-        button-hover-border-color: --ms-button-hover-border-color, @ms-primary;
-        button-active-color: --ms-button-active-color, lighten(@ms-primary, 10%);
+        button-hover-border-color: --ms-button-hover-border-color, @ms-main-border-color;
+        button-active-color: --ms-button-active-color, lighten(@ms-main-color, 10%);
         button-active-bg: --ms-button-active-bg, darken(@ms-main-bg, 10%);
-        button-active-border-color: --ms-button-active-border-color, @ms-primary;
-        button-active-hover-color: --ms-button-active-hover-color, lighten(@ms-primary, 10%);
+        button-active-border-color: --ms-button-active-border-color, @ms-main-border-color;
+        button-active-hover-color: --ms-button-active-hover-color, lighten(@ms-main-color, 10%);
         button-active-hover-bg: --ms-button-active-hover-bg, darken(@ms-main-bg, 17%);
-        button-active-hover-border-color: --ms-button-active-hover-border-color, @ms-primary;
+        button-active-hover-border-color: --ms-button-active-hover-border-color, @ms-main-border-color;
         button-disabled-color: --ms-button-disabled-color, @ms-disabled-color;
         button-disabled-bg: --ms-button-disabled-bg, @ms-disabled-bg;
         button-disabled-border-color: --ms-button-disabled-border-color, @ms-disabled-bg;
-        button-badge-color: --ms-button-badge-color, @ms-primary;
+        button-badge-color: --ms-button-badge-color, @ms-main-color;
         button-badge-bg: --ms-button-badge-bg, @ms-main-bg;
     }
 
@@ -201,9 +211,9 @@
         button-active-hover-color: --ms-button-primary-active-hover-color, @ms-primary-contrast;
         button-active-hover-bg: --ms-button-primary-active-hover-bg, darken(@ms-primary, 17%);
         button-active-hover-border-color: --ms-button-primary-active-hover-border-color, darken(@ms-primary, 25%);
-        button-disabled-color: --ms-button-primary-disabled-color, @ms-primary-contrast;
-        button-disabled-bg: --ms-button-primary-disabled-bg, lighten(desaturate(@ms-primary, 50%), 20%);
-        button-disabled-border-color: --ms-button-primary-disabled-border-color, lighten(desaturate(@ms-primary, 50%), 20%);
+        button-disabled-color: --ms-button-primary-disabled-color, @ms-disabled-color;
+        button-disabled-bg: --ms-button-primary-disabled-bg, @ms-disabled-bg;
+        button-disabled-border-color: --ms-button-primary-disabled-border-color, @ms-disabled-bg;
         button-badge-color: --ms-button-primary-badge-color, @ms-primary;
         button-badge-bg: --ms-button-primary-badge-bg, @ms-primary-contrast;
     }
@@ -424,3 +434,9 @@
 }
 
 
+// inline variables
+// default values
+
+:root {
+    --tag-color: @ms-link-color;
+}

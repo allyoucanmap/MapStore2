@@ -1,0 +1,132 @@
+/*
+ * Copyright 2020, GeoSolutions Sas.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+// **************
+// Theme
+// **************
+
+#ms-components-theme(@theme-vars) {
+    .ms-card-grid {
+        .color-var(@theme-vars[main-color]);
+        .background-color-var(@theme-vars[main-bg]);
+        .ms-resources-menu {
+            .color-var(@theme-vars[main-color]);
+            .background-color-var(@theme-vars[main-bg]);
+        }
+    }
+    .ms-card-grid.theme-secondary {
+        .color-var(@theme-vars[main-variant-color]);
+        .background-color-var(@theme-vars[main-variant-bg]);
+        .ms-resources-menu {
+            .color-var(@theme-vars[main-variant-color]);
+            .background-color-var(@theme-vars[main-variant-bg]);
+        }
+    }
+    .ms-resource-delete-warning {
+        .border-bottom-color-var(@theme-vars[main-border-color]);
+        .color-var(@theme-vars[warning]);
+    }
+}
+
+// **************
+// Layout
+// **************
+
+.ms-card-grid {
+    padding-top: 20px;
+    container-name: card-grid;
+    container-type: inline-size;
+    .ms-card-grid-container {
+        position: relative;
+        max-width: @ms-page-max-width;
+        margin: auto;
+        width: 100%;
+        padding: 0 0.5rem;
+    }
+    h3 {
+        margin-left: 1rem;
+        margin-top: 1rem;
+        font-weight: 600;
+        color: grey;
+    }
+    .ms-card-grid-container > ul {
+        position: relative;
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        max-width: @ms-page-max-width;
+        margin: auto;
+        width: 100%;
+        min-height: 256px;
+        gap: 1rem;
+        padding: 1rem 0;
+        > li {
+            padding: 0;
+            width: 100%;
+            margin: 0;
+            position: relative;
+        }
+        &.ms-cards-type-grid > li {
+            width: calc(25% - 0.75rem);
+        }
+        .ms-cards-loader {
+            z-index: 2;
+            background-color: rgba(255, 255, 255, 0.3);
+            font-size: 0.5rem;
+        }
+    }
+    .ms-card-grid-message {
+        padding: 1rem;
+        text-align: center;
+        width: 100%;
+        h1 {
+            font-size: 2.75rem;
+            margin-bottom: 2rem;
+        }
+        p {
+            font-size: 2rem;
+            font-weight: lighter;
+            line-height: 2.5rem;
+        }
+        a {
+            text-decoration: underline;
+        }
+    }
+    .ms-card-grid-pagination {
+        padding: 1rem;
+        text-align: center;
+        padding-bottom: 3rem;
+    }
+    .ms-card-grid-pagination.featured-list {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.5rem;
+        button, button:focus {
+            color: black;
+            background: none;
+            border: none;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+    }
+}
+
+@container card-grid (width < 1100px) {
+    .ms-card-grid .ms-card-grid-container>ul.ms-cards-type-grid > li {
+        width: calc(50% - 0.5rem);
+    }
+}
+@container card-grid (width < 600px) {
+    .ms-card-grid .ms-card-grid-container>ul.ms-cards-type-grid > li {
+        width: 100%;
+    }
+}

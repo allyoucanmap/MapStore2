@@ -1,0 +1,43 @@
+/*
+ * Copyright 2020, GeoSolutions Sas.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+// **************
+// Theme
+// **************
+
+
+// **************
+// Layout
+// **************
+
+.ms-resources-filter.ms-box {
+    max-width: 400px;
+    width: 100%;
+    .shadow-sm();
+}
+
+.ms-resource-detail.ms-box {
+    max-width: 640px;
+    width: 100%;
+    margin-right: 0;
+    margin-left: auto;
+    .shadow-sm();
+}
+
+@media (max-width: 1400px) {
+    .ms-resource-detail {
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 968px) {
+    .ms-resources-filter,
+    .ms-resource-detail {
+        max-width: 100%;
+    }
+}
