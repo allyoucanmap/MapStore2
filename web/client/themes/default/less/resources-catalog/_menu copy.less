@@ -1,0 +1,351 @@
+// **************
+// Theme
+// **************
+
+#ms-components-theme(@theme-vars) {
+    .ms-action-navbar-title {
+        .background-color-var(@theme-vars[info]);
+        .color-var(@theme-vars[info-contrast]);
+    }
+    .ms-menu-divider {
+        .background-color-var(@theme-vars[primary-contrast]);
+    }
+    .ms-main-header {
+        .background-color-var(@theme-vars[main-bg]);
+    }
+    .ms-menu {
+        .color-var(@theme-vars[main-color]);
+        .background-color-var(@theme-vars[main-bg]);
+        &.ms-primary {
+            .color-var(@theme-vars[primary-contrast]);
+            .background-color-var(@theme-vars[primary]);
+        }
+        &.ms-default {
+            .color-var(@theme-vars[main-color]);
+            .background-color-var(@theme-vars[main-bg]);
+            .ms-menu-divider {
+                .background-color-var(@theme-vars[main-color]);
+            }
+        }
+        &.ms-secondary {
+            .color-var(@theme-vars[main-variant-color]);
+            .background-color-var(@theme-vars[main-variant-bg]);
+            .ms-menu-divider {
+                .background-color-var(@theme-vars[main-border-color]);
+            }
+        }
+        &.ms-default,
+        &.ms-secondary,
+        .ms-menu-content-right {
+            .btn-default {
+                &:hover {
+                    .color-var(@theme-vars[main-hover-color]);
+                    .background-color-var(@theme-vars[main-hover-bg]);
+                }
+                &.active {
+                    .color-var(@theme-vars[primary-contrast]);
+                    .background-color-var(@theme-vars[primary]);
+                }
+            }
+        }
+    }
+    #ms-topbar {
+        .highlight-menu {
+            .border-bottom-color-var(@theme-vars[main-border-color]);
+        }
+    }
+}
+
+// **************
+// Layout
+// **************
+
+.nav-link {
+    display: block;
+    padding: 0.25rem 0.5rem;
+}
+
+.dropdown-menu .divider {
+    margin: 0.5rem 0;
+}
+
+.ms-main-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 150;
+}
+
+.ms-main-header-placeholder {
+    position: relative;
+    width: 100%;
+}
+
+nav.hide-navigation#ms-topbar {
+    display: none;
+}
+
+#ms-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    .highlight-menu {
+        border-width: 2px;
+    }
+}
+
+.ms-language-selector {
+    .dropdown-menu {
+        height: auto;
+        max-height: 400px;
+        overflow: auto;
+    }
+    &.inline {
+        padding: 0.5rem;
+    }
+    .btn.active {
+        font-weight: bold;
+        text-decoration: underline;
+    }
+}
+
+.ms-menu {
+    display: flex;
+    width: 100%;
+    position: relative;
+    padding: 0.5rem 0;
+    min-height: 3rem;
+
+    &.ms-default,
+    &.ms-secondary {
+        padding: 0.25rem 0;
+        font-size: @font-size-sm;
+        min-height: 2rem;
+        .nav-link {
+            font-size: @font-size-sm;
+        }
+    }
+
+    &.ms-primary {
+        padding: 0.25rem 0;
+        min-height: 2rem;
+    }
+
+    .dropdown-menu li button {
+        width: 100%;
+        text-align: left;
+        padding: 3px 20px;
+    }
+
+    &.ms-menu-symmetric {
+        .ms-menu-content-left,
+        .ms-menu-content-right {
+            display: flex;
+            flex: 1;
+            flex-direction: row;
+            min-width: 0;
+        }
+        .ms-menu-content-right {
+            flex-direction: row-reverse;
+        }
+    }
+    .ms-menu-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin: auto;
+        width: 100%;
+    }
+    .ms-menu-content {
+        display: flex;
+        flex-direction: row;
+        flex: 1;
+        padding: 0 0.3rem;
+        align-items: center;
+    }
+
+    .ms-menu-content-left {
+        display: flex;
+        flex: 1;
+        flex-direction: row;
+        min-width: 0;
+        .ms-menu-list {
+            > li {
+                .dropdown {
+                    margin-right: 0.2rem;
+                    .btn-sm {
+                        padding: 0.313rem 0.5rem;
+                    }
+                    .caret {
+                        margin-left: 0.125rem;
+                    }
+                }
+            }
+        }
+    }
+
+    .ms-menu-list {
+        display: inline-flex;
+        align-items: center;
+        flex-direction: row;
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        // li is still visible for injected plugin that return a null component
+        // so we need to target the inner component and apply the margin to that element
+        > li > * {
+            margin-right: 0.4rem;
+        }
+
+        img {
+            width: auto;
+            height: 2.5rem;
+        }
+    }
+    .ms-menu-content-right {
+        .ms-menu-list {
+            // li is still visible for injected plugin that return a null component
+            // so we need to target the inner component and apply the margin to that element
+            > li > * {
+                margin-right: 0;
+                margin-left: 0.4rem;
+            }
+        }
+    }
+    .ms-menu-content-side {
+        position: relative;
+    }
+    > .dropdown {
+        visibility: hidden;
+    }
+
+    .ms-user-menu-dropdown {
+        > button {
+            padding: 0;
+            background-color: transparent;
+            border-color: transparent;
+            border-radius: 50%;
+            img {
+                border-radius: 50%;
+            }
+        }
+    }
+    .ms-menu-divider {
+        width: 1px;
+        height: 1.2rem;
+    }
+    .ms-menu-fill {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        .clear-pointer {
+            cursor: pointer;
+        }
+        .resources-found {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .resources-count {
+            padding: 0em 0.2em;
+        }
+        .badge {
+            font-weight: normal;
+            background-color: transparent;
+        }
+    }
+}
+/*
+.ms-resources-menu {
+    position: sticky;
+    top: 0px;
+    z-index: 10;
+    .ms-menu-fill {
+        gap: 0.25rem;
+    }
+    .ms-resources-menu-title {
+        font-size: @font-size-large;
+        padding-top: 0.5rem;
+        font-weight: bold;
+    }
+    .ms-menu-content {
+        padding: 0;
+    }
+}
+*/
+.ms-action-navbar-title {
+    font-weight: 400;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 13rem;
+    min-height: 30px;
+    margin-right: 0.4rem;
+    padding: 0.1rem 0 0.1rem 0.5rem;
+    border-radius: 2px;
+    font-size: @font-size-sm;
+
+    button.btn {
+        background-color: transparent;
+        border: none;
+        color: inherit;
+    }
+
+    i {
+        font-size: @font-size-lg;
+    }
+
+    div:first-child {
+        display: flex;
+        align-items: center;
+        width: 10rem;
+    }
+}
+
+.ms-action-navbar-resource-title {
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: default;
+}
+
+a.ms-action-navbar-breadcrumb-link {
+    padding: 0;
+    color: inherit;
+
+    &:hover {
+        color: inherit;
+    }
+}
+
+.ms-action-navbar-breadcrumb-seperator {
+    margin: 0 0.5rem;
+}
+
+.ms-language-selector {
+    margin-left: 0.4rem;
+}
+
+.ms-content-responsive {
+    span:last-child:not(span:first-of-type) {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 485px) {
+.ms-content-responsive {
+    span:first-of-type {
+        display: none;
+    }
+    span:last-child:not(span:first-of-type) {
+            display: unset;
+    }
+    }
+}
+
+@media (max-width: 748px) {
+    #ms-brand-navbar-bottom.hide-search-bar {
+        display: none;
+    }
+}

@@ -1,0 +1,338 @@
+// **************
+// Theme
+// **************
+
+#ms-components-theme(@theme-vars) {
+    .ms-share-panel {
+        .color-var(@theme-vars[main-color]);
+        .background-color-var(@theme-vars[main-bg]);
+        .ms-share-permissions-list-head,
+        .ms-share-permission-tag {
+            .background-color-var(@theme-vars[main-bg]);
+        }
+    }
+    .ms-share-permissions-head,
+    .ms-share-permissions-container,
+    .ms-share-permission-tag {
+        .border-color-var(@theme-vars[main-border-color]);
+    }
+    .ms-share-permissions-pinned {
+        .color-var(@theme-vars[main-variant-color]);
+        .background-color-var(@theme-vars[main-variant-bg]);
+        .border-color-var(@theme-vars[main-border-color]);
+    }
+    .ms-geo-limits {
+        .color-var(@theme-vars[main-color]);
+        .background-color-var(@theme-vars[main-bg]);
+    }
+    .ms-add-permissions-entries-container {
+        .color-var(@theme-vars[main-color]);
+        .background-color-var(@theme-vars[main-bg]);
+    }
+
+    .ms-share-link-wrapper {
+        .color-var(@theme-vars[main-color]);
+        .background-color-var(@theme-vars[main-bg]);
+        .border-color-var(@theme-vars[main-border-color]);
+    }
+    .ms-geo-limits-loader {
+        .color-var(@theme-vars[main-color]);
+        .background-color-var(@theme-vars[main-bg]);
+    }
+}
+
+// **************
+// Layout
+// **************
+
+.ms-share-panel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .ms-share-panel-head {
+        display: flex;
+        align-items: center;
+        h2 {
+            flex: 1;
+            word-break: break-all;
+            margin: 0;
+            font-size: 1.4rem;
+        }
+        margin: 0 0.5rem;
+    }
+    .ms-share-panel-body {
+        flex: 1;
+        overflow: auto;
+        position: relative;
+        width: 100%;
+    }
+    .ms-share-permissions-container {
+        border-width: 1px;
+        border-style: solid;
+        padding: 0.5rem;
+        margin: 0.5rem;
+    }
+}
+.ms-share-permissions-row {
+    display: flex;
+    align-items: center;
+}
+.ms-share-permissions-container {
+    position: relative;
+    .ms-popover {
+        display: inline-block;
+    }
+}
+.ms-share-permissions-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    li + li,
+    .ms-share-permissions-row + .ms-share-permissions-row {
+        margin-top: 0.5rem;
+    }
+}
+.ms-share-permissions-list-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding-bottom: 0.5rem;
+    .input-group {
+        width: 100%;
+    }
+    .ms-popover {
+        padding: 0.5rem 0;
+        .btn {
+            font-weight: bold;
+        }
+    }
+}
+.ms-share-permissions-head {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    padding: 0.5rem 0;
+    .btn-default {
+        border-color: transparent;
+    }
+}
+.ms-share-permissions-icon {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    img {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 50%;
+    }
+}
+.ms-share-permissions-name {
+    flex: 1;
+    padding: 0 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ms-share-permissions-options {
+    min-width: 200px;
+    padding: 0 0.25rem;
+    .is-open{
+        z-index: 9;
+    }
+
+}
+.ms-share-permissions-tools {
+    padding: 0 0.25rem;
+}
+
+.ms-share-permissions-pinned {
+    border-width: 1px;
+    border-style: solid;
+    padding: 0.75rem 0;
+    position: relative;
+    .ms-pin {
+        position: absolute;
+        left: 0;
+        top: 0;
+        margin: 0.5rem;
+    }
+}
+
+.ms-share-permissions-label {
+    font-weight: bold;
+    margin: 0;
+}
+
+.ms-share-permissions-owner {
+    min-width: 200px;
+    padding: 0 0.25rem;
+
+
+}
+
+.ms-share-permission-tag {
+    display: flex;
+    align-items: center;
+    max-width: calc(200px - 0.5rem);
+    border-radius: 20px;
+    border-width: 1px;
+    border-style: solid;
+    white-space: nowrap;
+    padding: .25rem;
+}
+
+.ms-share-permission-tag a {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-left: 0.25rem;
+}
+
+.ms-share-permission-tag .ms-share-permissions-icon img {
+    width: unset;
+}
+
+.ms-geo-limits {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    .shadow-soft();
+    .ms-geo-limits-tools {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 0.25rem;
+        .shadow-soft();
+    }
+    .ms-geo-limits-loader {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        opacity: 0.6;
+    }
+}
+
+.ms-add-permissions-entries-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    .shadow-soft();
+    .nav {
+        padding-top: 0.25rem;
+    }
+    .ms-add-permissions-entries-body {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        flex: 1;
+        .ms-add-permissions-entries-panel {
+            position: absolute;
+        }
+    }
+}
+.ms-add-permissions-entries-panel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    .ms-share-filter {
+        margin: 0.25rem;
+    }
+    .ms-share-permissions-list {
+        flex: 1;
+        position: relative;
+        width: 100%;
+        overflow: auto;
+        padding: 0.25rem;
+    }
+}
+
+.ms-share-filter {
+    display: flex;
+    align-items: center;
+    position: relative;
+    .form-control {
+        width: 100%;
+        padding-right: 2rem;
+    }
+    .ms-spinner,
+    .btn {
+        position: absolute;
+        right: 1px;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+.ms-permissions-alert {
+    width: 100%;
+    padding: 0.25rem;
+    padding-top: 1rem;
+    text-align: center;
+    font-style: italic;
+    position: relative;
+}
+.ms-share-panel-label {
+    padding: 0 0.5rem;
+    margin: 0 0.5rem;
+    label {
+        margin: 0;
+    }
+}
+.ms-share-link-wrapper {
+    border-width: 1px;
+    border-style: solid;
+}
+
+.ms-share-link-pad {
+    padding: 5px 10px;
+
+    .ms-share-link {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0;
+        
+        textarea {
+            resize: none;
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-family: @font-family-monospace;
+        }
+        input {
+            flex: 1;
+            border: none;
+            font-family: @font-family-monospace;
+            text-overflow: ellipsis;
+        }
+
+    }
+    
+    .ms-share-page-link {
+        padding: 0.2rem 0.5rem;
+
+        .ms-share-title {
+            margin-bottom: 0;
+            font-size: 0.8rem;
+            text-transform: capitalize;
+        }
+        .checkbox {
+            font-size: @font-size-sm;
+        }
+    }
+}

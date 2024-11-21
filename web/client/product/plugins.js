@@ -23,6 +23,7 @@ import UserSession from "../plugins/UserSession";
 import FeatureEditor from '../plugins/FeatureEditor';
 import MetadataInfo from '../plugins/MetadataInfo';
 import TOC from '../plugins/TOC';
+import resourcesCatalogPlugins from '../plugins/ResourcesCatalog';
 
 import {toModulePlugin} from "../utils/ModulePluginsUtils";
 
@@ -31,6 +32,7 @@ import {toModulePlugin} from "../utils/ModulePluginsUtils";
  */
 export const plugins = {
     // ### STATIC PLUGINS ### //
+    ...resourcesCatalogPlugins,
     ContextCreatorPlugin: ContextCreator,
     ContextPlugin: Context,
     Dashboard: Dashboard,
@@ -54,10 +56,10 @@ export const plugins = {
     // product plugins
     AboutPlugin: toModulePlugin('About', () => import(/* webpackChunkName: 'plugins/about' */ './plugins/About')),
     AttributionPlugin: toModulePlugin('Attribution', () => import(/* webpackChunkName: 'plugins/attribution' */ './plugins/Attribution')),
-    FooterPlugin: toModulePlugin('Footer', () => import(/* webpackChunkName: 'plugins/footer' */ './plugins/Footer'), {}, 'FooterPlugin'),
-    ForkPlugin: toModulePlugin('Fork', () => import(/* webpackChunkName: 'plugins/fork' */ './plugins/Fork')),
+    // FooterPlugin: toModulePlugin('Footer', () => import(/* webpackChunkName: 'plugins/footer' */ './plugins/Footer'), {}, 'FooterPlugin'),
+    // ForkPlugin: toModulePlugin('Fork', () => import(/* webpackChunkName: 'plugins/fork' */ './plugins/Fork')),
     HeaderPlugin: toModulePlugin('Header', () => import(/* webpackChunkName: 'plugins/header' */ './plugins/Header')),
-    HomeDescriptionPlugin: toModulePlugin('HomeDescription', () => import(/* webpackChunkName: 'plugins/HomeDescription' */ './plugins/HomeDescription')),
+    // HomeDescriptionPlugin: toModulePlugin('HomeDescription', () => import(/* webpackChunkName: 'plugins/HomeDescription' */ './plugins/HomeDescription')),
     MadeWithLovePlugin: toModulePlugin('MadeWithLove', () => import(/* webpackChunkName: 'plugins/madeWithLove' */ './plugins/MadeWithLove')),
     // framework plugins
     MapTypePlugin: toModulePlugin('MapType', () => import(/* webpackChunkName: 'plugins/mapType' */ './plugins/MapType')),

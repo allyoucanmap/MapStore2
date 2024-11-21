@@ -121,7 +121,7 @@ class ManagerMenu extends React.Component {
     render() {
         if (this.props.role === "ADMIN") {
             return (
-                <ToolsContainer id={this.props.id} className="square-button"
+                <ToolsContainer id={this.props.id} className="square-button-md"
                     container={Container}
                     toolStyle="primary"
                     activeStyle="default"
@@ -161,6 +161,11 @@ export default {
             position: 1,
             tool: true,
             priority: 1
+        },
+        BrandNavbar: {
+            target: 'right-menu',
+            position: 3,
+            priority: 3
         }
     }),
     reducers: {}

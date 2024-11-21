@@ -40,7 +40,9 @@ class LangBar extends React.Component {
                 className={this.props.className}>
                 <DropdownButton
                     pullRight
+                    noCaret
                     id={this.props.id}
+                    className="square-button-md"
                     title={
                         <FlagButton
                             componentAsButton={false}
