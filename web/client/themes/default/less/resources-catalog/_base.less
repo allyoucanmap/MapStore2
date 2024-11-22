@@ -1,0 +1,140 @@
+
+// **************
+// Theme
+// **************
+
+#ms-components-theme(@theme-vars) {
+    .pagination.custom {
+        &> li > a,
+        &> li > span {
+            background-color: transparent;
+        }
+        &> .disabled > span,
+        &> .disabled > span:hover,
+        &> .disabled > span:focus,
+        &> .disabled > a,
+        &> .disabled > a:hover,
+        &> .disabled > a:focus {
+            background-color: transparent;
+        }
+        &> .active > a,
+        &> .active > span,
+        &> .active > a:hover,
+        &> .active > span:hover,
+        &> .active > span:focus {
+            .color-var(@theme-vars[primary-contrast]);
+            .background-color-var(@theme-vars[primary]);
+        }
+    }
+    .tabs-underline {
+        > .nav > li {
+            > a {
+                .color-var(@theme-vars[main-color], true);
+                .background-color-var(@theme-vars[main-bg], true);
+            }
+            > a:hover {
+                .border-bottom-color-var(@theme-vars[main-border-color]);
+            }
+            &.active {
+                > a {
+                    .border-bottom-color-var(@theme-vars[selected-color]);
+                }
+            }
+        }
+    }
+    .ms-tag {
+        .color-var(@theme-vars[main-color]);
+        &.Select-option,
+        &.Select-value {
+            .color-var(@theme-vars[main-color], true);
+        }
+        &:focus,
+        &:hover {
+            .color-var(@theme-vars[main-color]);
+        }
+    }
+}
+
+// **************
+// Layout
+// **************
+
+.pagination.custom {
+    &> li > a,
+    &> li > span {
+        height: 30px;
+        min-width: 30px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.25rem;
+        border: none;
+    }
+}
+
+.tabs-underline {
+    > .nav > li {
+        + li {
+            margin-left: 1rem;
+        }
+        > a {
+            padding: 0;
+            border-bottom: 0.2rem solid transparent;
+        }
+    }
+}
+
+.ms-tag {
+    border: 1px solid var(--tag-color);
+    border-radius: 10rem;
+    padding: 0 0.4rem;
+    display: inline-block;
+    position: relative;
+    background-color: rgb(from var(--tag-color) r g b / 1%);
+    &:hover:has(a),
+    &:hover:is(a) {
+        background-color: rgb(from var(--tag-color) r g b / 20%);
+    }
+    &.active {
+        background-color: rgb(from var(--tag-color) r g b / 30%);
+    }
+    &.Select-value {
+        border: 1px solid var(--tag-color) !important;
+        margin-right: 0.25rem;
+        border-radius: 10rem;
+        padding: 0;
+        display: inline-block;
+        position: relative;
+        background-color: rgb(from var(--tag-color) r g b / 30%) !important;
+        .Select-value-icon {
+            border-top-left-radius: 10rem;
+            border-bottom-left-radius: 10rem;
+            padding: 0 0.4rem;
+            border-color: var(--tag-color);
+        }
+        .Select-value-label {
+            border-top-right-radius: 10rem;
+            border-bottom-right-radius: 10rem;
+            padding: 0 0.4rem;
+        }
+    }
+    &.Select-option {
+        background-color: rgb(from var(--tag-color) r g b / 1%);
+        display: inline-block;
+        width: fit-content;
+        margin: 0.25rem 0 0 0.25rem;
+        &:last-child {
+            border-radius: 10rem;
+            margin-bottom: 0.25rem;
+        }
+        &.is-selected {
+            background-color: rgb(from var(--tag-color) r g b / 30%) !important;
+        }
+    }
+    img {
+        width: 1em;
+        height: 1em;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+}
