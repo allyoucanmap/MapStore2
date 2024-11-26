@@ -208,6 +208,11 @@ export default createPlugin(
                 position: 2,
                 tool: true,
                 priority: 1
+            },
+            BrandNavbar: {
+                position: 4,
+                priority: 2,
+                target: 'right-menu'
             }
         }
     }

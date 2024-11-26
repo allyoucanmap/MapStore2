@@ -333,7 +333,7 @@ export const loadGeostoryEpic = (action$, {getState = () => {}}) => action$
                             ...data,
                             sections: sectionsWithId
                         } : data;
-                        return ({ data: newData, isStatic: true, canEdit: true });
+                        return ({ data: newData, isStatic: true });
                     });
             }
             return getResource(id);
@@ -550,6 +550,7 @@ export const handlePendingGeoStoryChanges = action$ =>
                         action$.ofType(
                             SAVED, LOCATION_CHANGE, LOGOUT
                         )
+                        .filter(action => !(action.type === LOCATION_CHANGE && action?.payload?.action === 'REPLACE')) // action REPLACE is used to manage pending changes
                         .take(1)
                             .switchMap(() => Observable.of(setPendingChanges(false)))
                     )
