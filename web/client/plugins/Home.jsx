@@ -102,6 +102,11 @@ export default {
                 style: { display: burgerMenuSelector(state) ? 'none' : null }
             }),
             priority: 4
+        },
+        BrandNavbar: {
+            target: 'right-menu',
+            position: 1,
+            priority: 5
         }
     }),
     reducers: {},
