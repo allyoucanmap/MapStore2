@@ -26,6 +26,7 @@ import TOC from '../plugins/TOC';
 import SearchServicesConfig from "../plugins/SearchServicesConfig";
 
 import {toModulePlugin} from "../utils/ModulePluginsUtils";
+import HelloWorldPlugin from '../plugins/HelloWorld';
 
 /**
   * Please, keep them sorted alphabetically
@@ -51,6 +52,7 @@ export const plugins = {
     MetadataInfoPlugin: MetadataInfo,
     SearchServicesConfigPlugin: SearchServicesConfig,
     TOCPlugin: TOC,
+    HelloWorldPlugin,
 
     // ### DYNAMIC PLUGINS ### //
     // product plugins

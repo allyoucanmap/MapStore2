@@ -4192,6 +4192,10 @@
             "validLayer": "This layer is valid and can be used in this process",
             "invalidLayer": "This layer does not support the needed wps processes \ngeo:buffer\ngs:IntersectionFeatureCollection\ngs:CollectGeometries\n\nor it is a Raster layer"
           }
+        },
+        "helloworld": {
+            "hello": "Hello World",
+            "test": "Test"
         }
     }
 }

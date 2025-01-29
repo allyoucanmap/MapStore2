@@ -1,6 +1,9 @@
 {
   "plugins": [
     {
+      "name": "HelloWorld"
+    },
+    {
       "name": "Map",
       "glyph": "1-map",
       "mandatory": true,
