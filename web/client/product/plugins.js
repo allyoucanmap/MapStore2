@@ -25,6 +25,7 @@ import MetadataInfo from '../plugins/MetadataInfo';
 import TOC from '../plugins/TOC';
 
 import {toModulePlugin} from "../utils/ModulePluginsUtils";
+import HelloWorldPlugin from '../plugins/HelloWorld';
 
 /**
   * Please, keep them sorted alphabetically
@@ -49,6 +50,7 @@ export const plugins = {
     FeatureEditorPlugin: FeatureEditor,
     MetadataInfoPlugin: MetadataInfo,
     TOCPlugin: TOC,
+    HelloWorldPlugin,
 
     // ### DYNAMIC PLUGINS ### //
     // product plugins
