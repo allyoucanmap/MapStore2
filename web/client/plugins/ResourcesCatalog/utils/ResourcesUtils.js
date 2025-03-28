@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { isEmpty, isEqual, omit, isArray, isObject, isString } from 'lodash';
+import { isEmpty, isEqual, omit, isArray, isObject, isString, get } from 'lodash';
 import merge from 'lodash/fp/merge';
 import uuid from 'uuid/v1';
 
@@ -18,7 +18,7 @@ const NODATA = 'NODATA';
  */
 export const parseNODATA = (value) => value === NODATA ? '' : value;
 
-export const resourceTypes = {
+const resourceTypes = {
     MAP: {
         icon: { glyph: '1-map', type: 'glyphicon' },
         formatViewerPath: (resource) => {
@@ -210,4 +210,19 @@ export const parseResourceProperties = (resource) => {
             detailsSettings
         }
     };
+};
+
+export const replaceResourcePaths = (value, resource, facets = []) => {
+    if (isArray(value)) {
+        return value.map(val => replaceResourcePaths(val, resource, facets));
+    }
+    if (isObject(value)) {
+        const facet = facets.find(fc => fc.id === value.facet);
+        const valuePath = value.path && { value: get(resource, value.path) };
+        return Object.keys(value).reduce((acc, key) => ({
+            ...acc,
+            [key]: replaceResourcePaths(value[key], resource, facets)
+        }), { ...facet, ...valuePath });
+    }
+    return value;
 };

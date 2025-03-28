@@ -84,7 +84,6 @@ function ResourcesGrid({
     setLoading,
     setResources,
     setResourcesMetadata,
-    customFilters,
     resources,
     isFirstRequest,
     requestResources,
@@ -97,11 +96,9 @@ function ResourcesGrid({
     search,
     onResetSearch,
     hideWithNoResults,
-    getResourceStatus,
     formatHref,
-    getResourceTypesInfo,
-    getResourceId,
-    storedParams
+    storedParams,
+    getResourceId
 }) {
 
     const { query } = url.parse(location.search, true);
@@ -121,7 +118,7 @@ function ResourcesGrid({
         setResourcesMetadata,
         defaultQuery,
         pageSize,
-        customFilters,
+        monitoredState,
         user,
         queryPage,
         onReset: () => onResetSearch(id),
@@ -157,9 +154,9 @@ function ResourcesGrid({
     });
 
     const isValidItem = (target) => (item) => item.target === target && (!item?.cfg?.resourcesGridId || item?.cfg?.resourcesGridId === id);
-    const cardOptions = configuredItems.filter(isValidItem('card-options'));
-    const cardButtons = configuredItems.filter(isValidItem('card-buttons'));
-    const menuItemsLeft = configuredItems.filter(isValidItem('left-menu'));
+    const cardOptions = configuredItems.filter(isValidItem('card-options')).sort((a, b) => a.position - b.position);
+    const cardButtons = configuredItems.filter(isValidItem('card-buttons')).sort((a, b) => a.position - b.position);
+    const menuItemsLeft = configuredItems.filter(isValidItem('left-menu')).sort((a, b) => a.position - b.position);
     const { Component: cardComponent } = configuredItems.find(isValidItem('card')) || {};
     function handleUpdate(newParams) {
         onSearch(newParams);
@@ -211,9 +208,7 @@ function ResourcesGrid({
                                     [columnsId]: newColumns
                                 })
                             }
-                            getResourceStatus={getResourceStatus}
                             formatHref={formatHref}
-                            getResourceTypesInfo={getResourceTypesInfo}
                             getResourceId={getResourceId}
                         />
                     }
@@ -245,9 +240,7 @@ function ResourcesGrid({
                     cardComponent={cardComponent}
                     isCardActive={res => getResourceId(res) === getResourceId(selectedResource)}
                     getMainMessageId={getMainMessageId}
-                    getResourceStatus={getResourceStatus}
                     formatHref={formatHref}
-                    getResourceTypesInfo={getResourceTypesInfo}
                     getResourceId={getResourceId}
                 />
             </div>

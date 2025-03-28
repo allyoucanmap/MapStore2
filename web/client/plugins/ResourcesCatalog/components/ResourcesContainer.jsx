@@ -32,9 +32,7 @@ const ResourcesContainer = (props) => {
         query,
         columns,
         metadata,
-        getResourceStatus,
         formatHref,
-        getResourceTypesInfo,
         getResourceId
     } = props;
     const messageId = getMainMessageId(props);
@@ -57,9 +55,8 @@ const ResourcesContainer = (props) => {
                     {resources.map((resource, idx) => {
                         const {
                             isProcessing,
-                            isDownloading,
                             items: statusItems
-                        } = getResourceStatus(resource);
+                        } = resource?.['@extras']?.status || {};
                         // enable allowedOptions (menu cards)
                         const allowedOptions =  !isProcessing ? cardOptions : [];
                         return (
@@ -75,11 +72,8 @@ const ResourcesContainer = (props) => {
                                     layoutCardsStyle={cardLayoutStyle}
                                     loading={isProcessing}
                                     readOnly={isProcessing}
-                                    downloading={isDownloading}
                                     statusItems={statusItems}
-                                    getResourceStatus={getResourceStatus}
                                     formatHref={formatHref}
-                                    getResourceTypesInfo={getResourceTypesInfo}
                                     getResourceId={getResourceId}
                                     onClick={onSelect}
                                     query={query}
@@ -121,8 +115,7 @@ ResourcesContainer.defaultProps = {
     loading: false,
     formatHref: () => '#',
     isCardActive: () => false,
-    getMessageId: () => undefined,
-    getResourceStatus: () => ({})
+    getMessageId: () => undefined
 };
 
 export default ResourcesContainer;

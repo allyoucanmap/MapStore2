@@ -79,7 +79,7 @@ const useQueryResourcesByLocation = ({
     request = () => Promise.resolve({}),
     defaultQuery,
     pageSize,
-    customFilters,
+    monitoredState,
     location,
     onPush = () => {},
     user,
@@ -121,9 +121,9 @@ const useQueryResourcesByLocation = ({
             request({
                 params: {
                     ...requestParams,
-                    customFilters,
                     pageSize
                 },
+                monitoredState,
                 config: {
                     cancelToken: source?.current?.token
                 }

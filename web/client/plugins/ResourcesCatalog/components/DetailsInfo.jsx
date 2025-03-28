@@ -58,7 +58,7 @@ function DetailsInfoField({ field, children, className }) {
     const values = castArray(field.value);
     const isLinkLabel = isFieldLabelOnly(field);
     return (
-        <FlexBox gap="sm" classNames={['_padding-b-xs', '_row']} className={className}>
+        <FlexBox gap="sm" classNames={['ms-details-info-field', '_padding-b-xs', '_row']} className={className}>
             <Text className={isLinkLabel ? '' : '_label'} fontSize="sm"><DetailInfoFieldLabel field={field} /></Text>
             {!isLinkLabel ? <FlexBox.Fill>
                 <Text fontSize="sm">{children(values)}</Text>

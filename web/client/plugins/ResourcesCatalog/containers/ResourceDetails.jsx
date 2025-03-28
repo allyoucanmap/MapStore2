@@ -12,9 +12,9 @@ import useRequestResource from '../hooks/useRequestResource';
 import DetailsInfo from '../components/DetailsInfo';
 import ButtonMS from '../../../components/layout/Button';
 import Icon from '../components/Icon';
-import { getResourceTypesInfo, getResourceId } from '../utils/ResourcesUtils';
+import { getResourceTypesInfo, getResourceId, replaceResourcePaths } from '../utils/ResourcesUtils';
 import DetailsHeader from '../components/DetailsHeader';
-import { isEmpty, isArray, isObject, get } from 'lodash';
+import { isEmpty } from 'lodash';
 import useParsePluginConfigExpressions from '../hooks/useParsePluginConfigExpressions';
 import { hashLocationToHref } from '../utils/ResourcesFiltersUtils';
 import url from 'url';
@@ -25,27 +25,6 @@ import Message from '../../../components/I18N/Message';
 import tooltip from '../../../components/misc/enhancers/tooltip';
 
 const Button = tooltip(ButtonMS);
-
-const replaceResourcePaths = (value, resource, facets) => {
-    if (isArray(value)) {
-        return value.map(val => replaceResourcePaths(val, resource, facets));
-    }
-    if (isObject(value)) {
-        if (value.path || value.facet) {
-            const facet = facets.find(fc => fc.id === value.facet);
-            return {
-                ...facet,
-                ...value,
-                ...(value.path && { value: get(resource, value.path) })
-            };
-        }
-        return Object.keys(value).reduce((acc, key) => ({
-            ...acc,
-            [key]: replaceResourcePaths(value[key], resource, facets)
-        }), {});
-    }
-    return value;
-};
 
 function ResourceDetails({
     user,
