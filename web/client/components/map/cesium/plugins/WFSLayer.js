@@ -19,6 +19,7 @@ import {
 import { applyDefaultStyleToVectorLayer } from '../../../../utils/StyleUtils';
 import GeoJSONStyledFeatures from  '../../../../utils/cesium/GeoJSONStyledFeatures';
 import { ServerTypes } from '../../../../utils/LayersUtils';
+import TiledBillboardCollection from '../../../../utils/cesium/TiledBillboardCollection';
 
 const requestFeatures = (options, params, config) => {
     return getFeature(options.url, options.name, {
@@ -73,43 +74,73 @@ const createLayer = (options, map) => {
     let loader;
     let loadingBbox;
     let bboxTimeout;
+    let tiledPrimitive;
 
     const add = () => {
         loader = createLoader(options);
         if (options?.strategy === 'bbox') {
-            loadingBbox = () => {
-                if (bboxTimeout) {
-                    clearTimeout(bboxTimeout);
-                    bboxTimeout = undefined;
-                }
-                bboxTimeout = setTimeout(() => {
-                    const viewRectangle = map.camera.computeViewRectangle();
-                    const cameraPitch = Math.abs(Cesium.Math.toDegrees(map.camera.pitch));
-                    if (viewRectangle && cameraPitch > 60) {
-                        loader([
-                            Cesium.Math.toDegrees(viewRectangle.west),
-                            Cesium.Math.toDegrees(viewRectangle.south),
-                            Cesium.Math.toDegrees(viewRectangle.east),
-                            Cesium.Math.toDegrees(viewRectangle.north)
-                        ])
-                            .then(({ data: collection }) => {
-                                styledFeatures.setFeatures(collection.features);
-                                layerToGeoStylerStyle(options)
-                                    .then((style) => {
-                                        getStyle(applyDefaultStyleToVectorLayer({
-                                            ...options,
-                                            features: collection.features,
-                                            style
-                                        }), 'cesium')
-                                            .then((styleFunc) => {
-                                                styledFeatures.setStyleFunction(styleFunc);
-                                            });
-                                    });
-                            });
-                    }
-                }, 300);
-            };
-            map.camera.moveEnd.addEventListener(loadingBbox);
+
+            // This need to be implemented for 'tilegrid' strategy
+            tiledPrimitive = new TiledBillboardCollection({
+                map,
+                features: [],
+                id: options?.id,
+                opacity: options.opacity,
+                minimumLevel: 17,
+                maximumLevel: 17,
+                msId: options.id,
+                debugTiles: true,
+                queryable: options.queryable === undefined || options.queryable,
+                style: options.style,
+                loadTile: (tile) => loader([
+                    Cesium.Math.toDegrees(tile.rectangle.west),
+                    Cesium.Math.toDegrees(tile.rectangle.south),
+                    Cesium.Math.toDegrees(tile.rectangle.east),
+                    Cesium.Math.toDegrees(tile.rectangle.north)
+                ]).then(({ data: collection }) => collection)
+            });
+
+            // layerToGeoStylerStyle(options)
+            //     .then((style) => {
+            //         getStyle({ style }, 'cesium')
+            //             .then((styleFunc) => {
+            //                 tiledPrimitive.setStyleFunction(styleFunc);
+            //             });
+            //     });
+
+            // loadingBbox = () => {
+            //     if (bboxTimeout) {
+            //         clearTimeout(bboxTimeout);
+            //         bboxTimeout = undefined;
+            //     }
+            //     bboxTimeout = setTimeout(() => {
+            //         const viewRectangle = map.camera.computeViewRectangle();
+            //         const cameraPitch = Math.abs(Cesium.Math.toDegrees(map.camera.pitch));
+            //         if (viewRectangle && cameraPitch > 60) {
+            //             loader([
+            //                 Cesium.Math.toDegrees(viewRectangle.west),
+            //                 Cesium.Math.toDegrees(viewRectangle.south),
+            //                 Cesium.Math.toDegrees(viewRectangle.east),
+            //                 Cesium.Math.toDegrees(viewRectangle.north)
+            //             ])
+            //                 .then(({ data: collection }) => {
+            //                     styledFeatures.setFeatures(collection.features);
+            //                     layerToGeoStylerStyle(options)
+            //                         .then((style) => {
+            //                             getStyle(applyDefaultStyleToVectorLayer({
+            //                                 ...options,
+            //                                 features: collection.features,
+            //                                 style
+            //                             }), 'cesium')
+            //                                 .then((styleFunc) => {
+            //                                     styledFeatures.setStyleFunction(styleFunc);
+            //                                 });
+            //                         });
+            //                 });
+            //         }
+            //     }, 300);
+            // };
+            // map.camera.moveEnd.addEventListener(loadingBbox);
         } else {
             loader()
                 .then(({ data: collection }) => {
@@ -136,6 +167,10 @@ const createLayer = (options, map) => {
             if (styledFeatures) {
                 styledFeatures.destroy();
                 styledFeatures = undefined;
+            }
+            if (tiledPrimitive) {
+                tiledPrimitive.destroy();
+                tiledPrimitive = undefined;
             }
             if (loadingBbox) {
                 map.camera.moveEnd.removeEventListener(loadingBbox);
