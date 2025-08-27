@@ -11,7 +11,7 @@ import FlexBox from '../../layout/FlexBox';
 import Text from '../../layout/Text';
 import { getTagColorVariables } from '../../../utils/ResourcesFiltersUtils';
 import { Checkbox, Glyphicon } from 'react-bootstrap';
-
+import Select from 'react-select';
 
 const FilterView = () => {
     return (
@@ -96,6 +96,13 @@ const FilterView = () => {
                 <FlexBox component={Text} fontSize="sm" gap="sm" centerChildrenVertically>
                     <Glyphicon glyph="radio-off" /> Category B
                 </FlexBox>
+            </FlexBox>
+            <div style={{ width: '100%', height: 1, background: '#ddd' }} />
+            <FlexBox column gap="xs">
+                <Text fontSize="sm">
+                    Category
+                </Text>
+                <Select />
             </FlexBox>
         </FlexBox>
     );

@@ -45,10 +45,10 @@ export default ({
                         <FlexBox>
                             <FlexBox.Fill>
                                 <Select
-                                    value={'[Filter selector 1]'}
+                                    value={'Sub regions'}
                                     options={[{
-                                        value: '[Filter selector 1]',
-                                        label: '[Filter selector 1]'
+                                        value: 'Sub regions',
+                                        label: 'Sub regions'
                                     }]}
                                     clearable={false}
                                 />
@@ -90,7 +90,7 @@ export default ({
                                         value={type}
                                         options={[{
                                             value: 'categorize',
-                                            label: 'Categorize'
+                                            label: 'Category'
                                         }, {
                                             value: 'single-filter',
                                             label: 'Single filter'
@@ -160,12 +160,12 @@ export default ({
                                     />
                                 </InputGroup>
                             </FormGroup> : null}
-                            {type === 'categorize' ? <FormGroup className="form-group-flex">
+                            {/* type === 'categorize' ? <FormGroup className="form-group-flex">
                                 <ControlLabel>Maximum categories</ControlLabel>
                                 <InputGroup style={{ zIndex: 1 }}>
                                     <FormControl value={10} type="number" style={{ width: 60 }}/>
                                 </InputGroup>
-                            </FormGroup> : null}
+                            </FormGroup> : null */}
                         </FlexBox>
                     </Tab>
                     <Tab key="layout" eventKey="layout" title="Layout">
