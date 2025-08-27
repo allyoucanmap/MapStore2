@@ -28,6 +28,8 @@ const getWidgetIcon = ({widgetType, charts = []} = {}) => {
         return "1-map";
     case "counter":
         return "counter";
+    case "filter":
+        return "filter";
     default:
         return "stats";
     }

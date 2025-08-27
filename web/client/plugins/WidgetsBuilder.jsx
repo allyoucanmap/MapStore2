@@ -128,7 +128,9 @@ const WidgetsBuilderButton = connect((state) => ({ available: widgetBuilderAvail
 }) => {
     const ItemComponent = itemComponent;
     const layer = selectedNodes?.[0]?.node;
-    if (available && [statusTypes.LAYER].includes(status) && layer?.search && layer.search !== 'vector') {
+    if (available &&
+        (([statusTypes.LAYER].includes(status) && layer?.search && layer.search !== 'vector')
+        || [statusTypes.DESELECT].includes(status))) {
         return (
             <ItemComponent
                 {...props}

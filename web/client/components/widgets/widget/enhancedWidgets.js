@@ -1,5 +1,5 @@
 import { compose } from 'recompose';
-
+import React from 'react';
 // enhancers for base menus and functionalities
 import chartWidget, { chartWidgetProps } from '../enhancers/chartWidget';
 import counterWidget from '../enhancers/counterWidget';
@@ -29,6 +29,7 @@ import BaseMapWidget from './MapWidget';
 import BaseTableWidget from './TableWidget';
 import BaseCounterWidget from './CounterWidget';
 import BaseLegendWidget from './LegendWidget';
+import BaseFilterWidget from './FilterWidget';
 import dependenciesToShapes from '../enhancers/dependenciesToShapes';
 
 //
@@ -53,6 +54,12 @@ export const ChartWidget = compose(
     chartWidget,
     dependenciesToShapes
 )(BaseChartWidget);
+
+export const FilterWidget = compose(
+    dependenciesToWidget,
+    dependenciesToFilter,
+    dependenciesToOptions
+)(BaseFilterWidget);
 
 /**
  * Basic text widget with the base menu.
