@@ -36,7 +36,48 @@ const applyContextAttribute = (resource, contextId) => {
     };
 };
 
-const getResourceByType = (state, props) => {
+// export const getResourceInfoByType = (state, props) => {
+//     const resourceType = props?.resourceType;
+//     const initialResource = getInitialSelectedResource(state, props);
+//     const resource = getSelectedResource(state, props);
+//     const newResource = defaultNewResource(resourceType);
+//     if (resourceType === 'MAP') {
+//         const contextResource = contextResourceSelector(state);
+//         const mapInfo = (mapSelector(state) || {})?.info;
+//         const contextId = contextResource?.id !== undefined
+//             ? contextResource.id
+//             : mapInfo?.context; // new map has context in info property
+//         const mapResource = omit(mapInfo, ['context']);
+//         const mapInitialResource = applyContextAttribute(isEmpty(mapResource) ? newResource : mapResource, contextId);
+//         return {
+//             initialResource: resource ? initialResource : mapInitialResource,
+//             resource: resource ? resource : mapInitialResource
+//         };
+//     }
+//     if (resourceType === 'DASHBOARD') {
+//         const dashboardResource = getDashboardResource(state);
+//         const dashboardInitialResource = isEmpty(dashboardResource) ? newResource : dashboardResource;
+//         return {
+//             initialResource: resource ? initialResource : dashboardInitialResource,
+//             resource: resource ? resource : dashboardInitialResource
+//         };
+//     }
+//     if (resourceType === 'GEOSTORY') {
+//         const geoStoryResource = resourceSelector(state);
+//         const geoStoryInitialResource = isEmpty(geoStoryResource) ? newResource : geoStoryResource;
+//         return {
+//             initialResource: resource ? initialResource : geoStoryInitialResource,
+//             resource: resource ? resource : geoStoryInitialResource
+//         };
+//     }
+//     return {
+//         resource,
+//         initialResource
+//     };
+// };
+
+// TODO: try to use createSelector instead to use inline selectors
+const getResourceInfoByTypeSelectorCreator = (excludeData) => (state, props) => {
     const resourceType = props?.resourceType;
     const initialResource = getInitialSelectedResource(state, props);
     const resource = getSelectedResource(state, props);
@@ -52,10 +93,12 @@ const getResourceByType = (state, props) => {
         return {
             initialResource: resource ? initialResource : mapInitialResource,
             resource: resource ? resource : mapInitialResource,
-            data: {
-                payload: mapSaveSelector(state),
-                pending: mapHasPendingChangesSelector(state)
-            }
+            ...(!excludeData && {
+                data: {
+                    // TODO: we should pass also initial payload to compare after inside the comparePendingChanges func
+                    payload: mapSaveSelector(state) // TODO: mapSaveSelector uses saveMapConfiguration that too slow. We should compose the map only on save and on compare and not in the selector
+                }
+            })
         };
     }
     if (resourceType === 'DASHBOARD') {
@@ -64,10 +107,12 @@ const getResourceByType = (state, props) => {
         return {
             initialResource: resource ? initialResource : dashboardInitialResource,
             resource: resource ? resource : dashboardInitialResource,
-            data: {
-                payload: widgetsConfig(state),
-                pending: dashboardHasPendingChangesSelector(state)
-            }
+            ...(!excludeData && {
+                data: {
+                    // TODO: we should pass also initial payload to compare after inside the comparePendingChanges func
+                    payload: widgetsConfig(state)
+                }
+            })
         };
     }
     if (resourceType === 'GEOSTORY') {
@@ -76,10 +121,12 @@ const getResourceByType = (state, props) => {
         return {
             initialResource: resource ? initialResource : geoStoryInitialResource,
             resource: resource ? resource : geoStoryInitialResource,
-            data: {
-                payload: currentStorySelector(state),
-                pending: hasPendingChanges(state)
-            }
+            ...(!excludeData && {
+                data: {
+                    // TODO: in this case we can pass the pending selector because geostories store a boolean and not compare initial and current data payload
+                    payload: currentStorySelector(state)
+                }
+            })
         };
     }
     return {
@@ -88,10 +135,17 @@ const getResourceByType = (state, props) => {
     };
 };
 
-export const getPendingChanges = (state, props, defaultResourceType) => {
-    const { initialResource, resource, data } = getResourceByType(state, props, defaultResourceType);
+export const getResourceInfoByType = getResourceInfoByTypeSelectorCreator(true);
+export const getResourceWithDataInfoByType = getResourceInfoByTypeSelectorCreator(false);
+
+export const getComputedPendingChanges = (state, props) => {
+    const { initialResource, resource, data } = getResourceInfoByType(state, props);
     if (!(resource && initialResource)) {
         return null;
     }
     return computePendingChanges(initialResource, resource, data);
+};
+
+export const getPendingChanges = (state) => {
+    return state?.save?.pendingChanges;
 };

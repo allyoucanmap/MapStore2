@@ -30,7 +30,7 @@ import {
     getDetailPanelTab,
     getAvailableResourceTypes
 } from './selectors/resources';
-import { getPendingChanges } from './selectors/save';
+import { getResourceWithDataInfoByType } from './selectors/save';
 import ResourcePermissions from './containers/ResourcePermissions';
 import ResourceAbout from './containers/ResourceAbout';
 import { updateResource } from '../../observables/geostore';
@@ -319,7 +319,8 @@ function ResourceDetails({
 const resourceDetailsConnect = connect(
     createStructuredSelector({
         resource: getSelectedResource,
-        pendingChanges: getPendingChanges,
+        // pendingChanges: getPendingChanges,
+        resourceInfo: getResourceWithDataInfoByType,
         user: userSelector,
         monitoredState: getMonitoredStateSelector,
         location: getRouterLocation,
@@ -339,7 +340,7 @@ const resourceDetailsConnect = connect(
 
 function BrandNavbarDetailsButton({
     resource: selectedResource,
-    pendingChanges,
+    resourceInfo,
     resourceType,
     onSelect,
     onShow,
@@ -350,7 +351,7 @@ function BrandNavbarDetailsButton({
         return null;
     }
     const resource = selectedResource ? undefined : parseResourceProperties({
-        ...pendingChanges?.initialResource,
+        ...resourceInfo?.initialResource,
         category: {
             name: resourceType
         }

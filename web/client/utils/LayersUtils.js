@@ -140,9 +140,11 @@ export const getGroupNodes = (node) => {
                 nodes = a.concat(getGroupNodes(b));
             }
             if (isString(b)) {
-                return [...nodes, b];
+                nodes.push(b);
+            } else {
+                nodes.push(b.id);
             }
-            return [...nodes, b.id];
+            return nodes;
         }, []);
     }
     return [];

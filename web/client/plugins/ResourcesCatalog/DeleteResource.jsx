@@ -13,7 +13,7 @@ import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import Persistence from '../../api/persistence';
 import { searchResources } from './actions/resources';
-import { getPendingChanges } from './selectors/save';
+import { getResourceInfoByType } from './selectors/save';
 import { push } from 'connected-react-router';
 import useIsMounted from '../../hooks/useIsMounted';
 
@@ -99,8 +99,8 @@ const deleteResourcesConnect = connect(
             if (props.resource) {
                 return props.resource;
             }
-            const pendingChanges = getPendingChanges(state, { resourceType: 'MAP', ...props });
-            return pendingChanges?.resource;
+            const { resource } = getResourceInfoByType(state, { resourceType: 'MAP', ...props });
+            return resource;
         }
     }),
     {

@@ -112,14 +112,8 @@ const recursivePendingChanges = (a, b) => {
             : acc;
     }, {});
 };
-/**
- * compare initial and current resource and it returns pending changes
- * @param {object} initialResource initial resource properties
- * @param {object} resource resource properties including changes applied in the viewer
- * @param {object} data optional data configuration of the resource
- * @return {object} pending changes object { initialResource, resource, saveResource, changes } where `saveResource` is the resource ready to be saved and `changes` contains the changed properties
- */
-export const computePendingChanges = (initialResource, resource, resourceData) => {
+
+export const computeResourceDiff = (initialResource, resource) => {
     const { attributes: pendingAttributes = {}, tags, ...pendingChanges } = recursivePendingChanges(resource, initialResource);
 
     const attributesWithDataPayloads = {
@@ -164,31 +158,60 @@ export const computePendingChanges = (initialResource, resource, resourceData) =
     const linkTags = (resource?.tags || []).filter(tag => !(initialResource?.tags || []).find(t => t.id === tag.id)).map(tag => ({ tag, action: 'link' }));
     const mergedTags = [...unlinkTags, ...linkTags];
     return {
-        initialResource,
-        resource,
-        saveResource: {
-            id: initialResource.id,
-            ...(resourceData?.payload && { data: resourceData.payload }),
-            permission: pendingChanges.permissions ?? initialResource.permissions,
-            category: initialResource?.category?.name,
-            ...(mergedTags?.length && { tags: mergedTags }),
-            metadata: {
-                ...metadata,
-                attributes: Object.fromEntries(Object.keys(mergedAttributes || {}).map((key) => {
-                    return [key, isObject(mergedAttributes[key])
-                        ? JSON.stringify(mergedAttributes[key])
-                        : mergedAttributes[key]];
-                }))
-            },
-            ...(!isEmpty(linkedResources) && { linkedResources })
+        pendingChanges,
+        metadata,
+        linkedResources,
+        attributes,
+        mergedAttributes,
+        mergedTags
+    };
+};
+
+export const computeSaveResource = (initialResource, resource, resourceData) => {
+    const {
+        pendingChanges,
+        metadata,
+        linkedResources,
+        mergedAttributes,
+        mergedTags
+    } = computeResourceDiff(initialResource, resource);
+    return {
+        id: initialResource.id,
+        ...(resourceData?.payload && { data: resourceData.payload }),
+        permission: pendingChanges.permissions ?? initialResource.permissions,
+        category: initialResource?.category?.name,
+        ...(mergedTags?.length && { tags: mergedTags }),
+        metadata: {
+            ...metadata,
+            attributes: Object.fromEntries(Object.keys(mergedAttributes || {}).map((key) => {
+                return [key, isObject(mergedAttributes[key])
+                    ? JSON.stringify(mergedAttributes[key])
+                    : mergedAttributes[key]];
+            }))
         },
-        changes: {
-            ...pendingChanges,
-            ...(mergedTags?.length && { tags: mergedTags }),
-            ...(!isEmpty(attributes) && { attributes }),
-            ...(!isEmpty(linkedResources) && { linkedResources }),
-            ...(resourceData?.pending && { data: true })
-        }
+        ...(!isEmpty(linkedResources) && { linkedResources })
+    };
+};
+/**
+ * compare initial and current resource and it returns pending changes
+ * @param {object} initialResource initial resource properties
+ * @param {object} resource resource properties including changes applied in the viewer
+ * @param {object} data optional data configuration of the resource
+ * @return {object} pending changes object { initialResource, resource, saveResource, changes } where `saveResource` is the resource ready to be saved and `changes` contains the changed properties
+ */
+export const computePendingChanges = (initialResource, resource, resourceData) => {
+    const {
+        attributes,
+        pendingChanges,
+        linkedResources,
+        mergedTags
+    } = computeResourceDiff(initialResource, resource);
+    return {
+        ...pendingChanges,
+        ...(mergedTags?.length && { tags: mergedTags }),
+        ...(!isEmpty(attributes) && { attributes }),
+        ...(!isEmpty(linkedResources) && { linkedResources }),
+        ...(resourceData?.pending && { data: true }) // TODO: some resource provides initial and current payload so compare them here with specific functions
     };
 };
 /* parse a stringify obj from resource properties */

@@ -6,22 +6,28 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import uuid from 'uuid/v1';
 import { createPlugin } from "../../utils/PluginsUtils";
 import PendingStatePrompt from './containers/PendingStatePrompt';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import { isEmpty } from 'lodash';
-import { getPendingChanges } from './selectors/save';
+import { getPendingChanges, getResourceWithDataInfoByType } from './selectors/save';
 import Persistence from '../../api/persistence';
 import { setSelectedResource } from './actions/resources';
-import { mapSaveError, mapSaved, mapInfoLoaded, configureMap } from '../../actions/config';
+import { mapSaveError, mapSaved, mapInfoLoaded, configureMap, MAP_CONFIG_LOADED } from '../../actions/config';
 import { userSelector } from '../../selectors/security';
 import { storySaved, geostoryLoaded, setResource as setGeoStoryResource, setCurrentStory, saveGeoStoryError } from '../../actions/geostory';
 import { dashboardSaveError, dashboardSaved, dashboardLoaded } from '../../actions/dashboard';
 import { convertDependenciesMappingForCompatibility } from '../../utils/WidgetsUtils';
 import { show } from '../../actions/notifications';
+import { computePendingChanges, computeSaveResource } from '../../utils/GeostoreUtils';
+import save from './reducers/save';
+import { setPendingChanges as setPendingChangesAction } from './actions/save';
+import { layersSelector } from '../../selectors/layers';
+import { Observable } from 'rxjs';
+import { updateNode } from '../../actions/layers';
 
 function addNameToResource(resource) {
     return {
@@ -43,6 +49,7 @@ function addNameToResource(resource) {
 function Save({
     pendingChanges,
     resourceType,
+    resourceInfo,
     onSelect,
     onSuccess,
     onError,
@@ -53,10 +60,10 @@ function Save({
 }) {
     const [loading, setLoading] = useState(false);
 
-    const changes = !isEmpty(pendingChanges.changes);
-    const saveResource = pendingChanges.saveResource;
+    const changes = !isEmpty(pendingChanges);
 
     function handleSave() {
+        const saveResource = computeSaveResource(resourceInfo.initialResource, resourceInfo.resource, resourceInfo.data);
         if (saveResource && !loading) {
             setLoading(true);
             const api = Persistence.getApi();
@@ -85,7 +92,7 @@ function Save({
         }
     }
 
-    if (!(user && pendingChanges?.resource?.canEdit)) {
+    if (!(user && resourceInfo?.resource?.canEdit)) {
         return null;
     }
     const Component = component;
@@ -106,6 +113,7 @@ function Save({
 const saveConnect = connect(
     createStructuredSelector({
         user: userSelector,
+        resourceInfo: getResourceWithDataInfoByType,
         pendingChanges: getPendingChanges
     }),
     {
@@ -158,14 +166,63 @@ SavePlugin.defaultProps = {
     resourceType: 'MAP'
 };
 
-const ConnectedPendingStatePrompt = saveConnect(({
-    user,
-    pendingChanges
+const useComputedPendingChanges = ({
+    setPendingChanges,
+    initialResource,
+    resource,
+    data
 }) => {
-    if (!(user && (pendingChanges?.resource?.canCopy || pendingChanges?.resource?.canEdit))) {
+    const timeout = useRef();
+    useEffect(() => {
+        if (timeout.current) {
+            clearTimeout(timeout.current);
+            timeout.current = undefined;
+        }
+        timeout.current = setTimeout(() => {
+            const pendingChanges = computePendingChanges(initialResource, resource, data);
+            console.log('pendingChanges', pendingChanges);
+            setPendingChanges(pendingChanges);
+        }, 500);
+    }, [initialResource, resource, data]);
+    useEffect(() => {
+        return () => {
+            if (timeout.current) {
+                clearTimeout(timeout.current);
+                timeout.current = undefined;
+            }
+            setPendingChanges(null);
+        };
+    }, []);
+    return null;
+};
+
+const ConnectedPendingStatePrompt = connect(
+    createStructuredSelector({
+        user: userSelector,
+        resourceInfo: getResourceWithDataInfoByType
+    }),
+    {
+        // onSetPendingChanges: setPendingChangesAction
+    }
+)(({
+    user,
+    resourceInfo,
+    // onSetPendingChanges
+}) => {
+
+    const [pendingChanges, setPendingChanges] = useState(false);
+    useComputedPendingChanges({
+        ...resourceInfo,
+        setPendingChanges: (newPendingChanges) => {
+            setPendingChanges(newPendingChanges);
+            // onSetPendingChanges(newPendingChanges);
+        }
+    });
+
+    if (!(user && (resourceInfo?.resource?.canCopy || resourceInfo?.resource?.canEdit))) {
         return null;
     }
-    const changes = !isEmpty(pendingChanges.changes);
+    const changes = !isEmpty(pendingChanges);
     return (
         <PendingStatePrompt
             pendingState={changes}
@@ -204,5 +261,19 @@ export default createPlugin('Save', {
             priority: 1,
             doNotHide: true
         }
+    },
+    reducers: {
+        save
+    },
+    epics: {
+        // testUpdateNodeEpic: (action$, { getState }) => {
+        //     return action$.ofType(MAP_CONFIG_LOADED)
+        //         .switchMap(() => {
+        //             const layers = layersSelector(getState());
+        //             return Observable.of(
+        //                 ...layers.map((layer) => updateNode(layer.id, 'layers', { visibility: false }))
+        //             );
+        //         });
+        // }
     }
 });
