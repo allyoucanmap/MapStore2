@@ -665,7 +665,12 @@
         "name": "Language"
       },
       {
-        "name": "Itinerary"
+        "name": "Itinerary",
+        "cfg": {
+          "config": {
+            "url": "http://development.demo.geonode.org:8989/route"
+          }
+        }
       }
     ],
     "embedded": [

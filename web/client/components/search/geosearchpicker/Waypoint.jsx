@@ -38,7 +38,8 @@ const Waypoint = draggableComponent(({
     onSelectLocationFromMap,
     onToggleCoordinateEditor,
     isDragging,
-    isOver
+    isOver,
+    iconSrc
 }) => {
     const dragHandle = <div className="drag-handle"><Glyphicon glyph="grab-handle" /></div>;
 
@@ -82,8 +83,8 @@ const Waypoint = draggableComponent(({
                 ? (
                     <>
                         {connectDragSource ? connectDragSource(dragHandle) : dragHandle}
-                        <FlexBox centerChildren className="ms-secondary-colors _relative indicator-circle">
-                            {index + 1}
+                        <FlexBox centerChildren className="_relative indicator-circle">
+                            {iconSrc ? <img src={iconSrc}/> : null}
                             <div className="waypoint-connector"></div>
                         </FlexBox>
                     </>

@@ -16,6 +16,8 @@ import Button from '../../misc/Button';
 import Message from '../../I18N/Message';
 import draggableContainer from '../../misc/enhancers/draggableContainer';
 import Waypoint from './Waypoint';
+import { createMarkerSvgDataUrl } from '../../../plugins/Itinerary/utils/ItineraryUtils';
+import { WAYPOINT_MARKER_COLORS } from '../../../plugins/Itinerary/constants';
 
 /**
  * GeoSearchPicker component
@@ -102,6 +104,16 @@ const GeoSearchPicker = draggableContainer(({
         onUpdateLocations(newLocations);
     };
 
+    const getIcon = (index) => {
+        if (index === 0) {
+            return createMarkerSvgDataUrl(WAYPOINT_MARKER_COLORS.START, 16, null);
+        }
+        if (index === (waypoints.length - 1)) {
+            return createMarkerSvgDataUrl(WAYPOINT_MARKER_COLORS.END, 16, null);
+        }
+        return createMarkerSvgDataUrl(WAYPOINT_MARKER_COLORS.WAYPOINT, 16, index);
+    };
+
     return (
         <FlexBox column gap="md" className="geosearch-container">
             {waypoints.map((waypoint, idx) => (
@@ -111,6 +123,7 @@ const GeoSearchPicker = draggableContainer(({
                     sortId={idx}
                     idx={idx}
                     index={idx}
+                    iconSrc={getIcon(idx)}
                     containerId={containerId || "waypoint-container"}
                     onSort={handleSort}
                     waypoint={waypoint}
