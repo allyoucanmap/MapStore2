@@ -14,6 +14,38 @@ import { getResolutions } from '../../../utils/MapUtils';
 import axios from '../../../libs/ajax';
 import { getProxyCacheByUrl } from '../../../utils/ProxyUtils';
 
+const updatePrimitiveImageryLayers = (map, primitive) => {
+    if (primitive?.imageryLayers) {
+        for (let i = 0; i < primitive.imageryLayers.length; i++) {
+            const imageryLayer = primitive.imageryLayers.get(i);
+            primitive.imageryLayers.remove(imageryLayer, false);
+        }
+        for (let i = 0; i < map.imageryLayers.length; i++) {
+            const imageryLayer = map.imageryLayers.get(i);
+            if (imageryLayer._position > primitive._position) {
+                primitive.imageryLayers.add(imageryLayer);
+            }
+        }
+    }
+    map.scene.requestRender();
+};
+
+const updatePrimitivesImageryLayers = (map) => {
+    for (let i = 0; i < map.scene.primitives.length; i++) {
+        const primitive = map.scene.primitives.get(i);
+        updatePrimitiveImageryLayers(map, primitive);
+    }
+};
+
+const removePrimitivesImageryLayer = (map, removedImageryLayer) => {
+    for (let i = 0; i < map.scene.primitives.length; i++) {
+        const primitive = map.scene.primitives.get(i);
+        if (primitive.imageryLayers.contains(removedImageryLayer)) {
+            primitive.imageryLayers.remove(removedImageryLayer, false);
+        }
+    }
+};
+
 class CesiumLayer extends React.Component {
     static propTypes = {
         map: PropTypes.object,
@@ -26,6 +58,18 @@ class CesiumLayer extends React.Component {
     };
 
     componentDidMount() {
+        if (!this.props.map._msUpdatePrimitivesImageryLayers) {
+            this.props.map._msUpdatePrimitivesImageryLayersTimeout = null;
+            this.props.map._msUpdatePrimitivesImageryLayers = () => {
+                if (this.props.map._msUpdatePrimitivesImageryLayersTimeout) {
+                    clearTimeout(this.props.map._msUpdatePrimitivesImageryLayersTimeout);
+                    this.props.map._msUpdatePrimitivesImageryLayersTimeout = null;
+                }
+                this.props.map._msUpdatePrimitivesImageryLayersTimeout = setTimeout(() => {
+                    updatePrimitivesImageryLayers(this.props.map);
+                }, 100);
+            };
+        }
         // initial visibility should also take into account the visibility limits
         // in particular for detached layers (eg. Vector, WFS, 3D Tiles, ...)
         const visibility = this.getVisibilityOption(this.props);
@@ -48,6 +92,9 @@ class CesiumLayer extends React.Component {
             if (this.provider) {
                 this.provider._position = newProps.position;
             }
+            if (this._primitive) {
+                this._primitive._position = newProps.position;
+            }
         }
         if (this.props.options && this.props.options.params && this.layer.updateParams && newProps.options.visibility) {
             const changed = Object.keys(this.props.options.params).reduce((found, param) => {
@@ -68,6 +115,12 @@ class CesiumLayer extends React.Component {
             }
         }
         this.updateLayer(newProps, this.props);
+        if (this.props.options?.visibility !== newProps.options.visibility
+            || this.props.options?.opacity !== newProps.options.opacity
+            || this.props.position !== newProps.position
+        ) {
+            this.props.map._msUpdatePrimitivesImageryLayers();
+        }
     }
 
     componentWillUnmount() {
@@ -148,7 +201,7 @@ class CesiumLayer extends React.Component {
                 visibility
             }, props.position, props.map, props.securityToken);
             if (this.layer.add) {
-                this.layer.add();
+                this.layer.add((properties) => this.detachLayerCallback(properties));
             }
             return;
         }
@@ -273,8 +326,17 @@ class CesiumLayer extends React.Component {
                 this.provider.alpha = newProps.options.opacity;
             }
         }
+        this.props.map._msUpdatePrimitivesImageryLayers();
         newProps.map.scene.requestRender();
     };
+
+    detachLayerCallback({ primitive }) {
+        if (primitive) {
+            primitive._position = this.props.position;
+            this._primitive = primitive;
+            this.props.map._msUpdatePrimitivesImageryLayers();
+        }
+    }
 
     _addLayer = (newProps) => {
         // detached layers are layers that do not work through a provider
@@ -293,7 +355,7 @@ class CesiumLayer extends React.Component {
             }
         }
         if (this.layer?.detached && this.layer?.add) {
-            this.layer.add();
+            this.layer.add((properties) => this.detachLayerCallback(properties));
         }
     };
 
@@ -313,12 +375,14 @@ class CesiumLayer extends React.Component {
     removeLayer = (provider) => {
         const toRemove = provider || this.provider;
         if (toRemove) {
+            removePrimitivesImageryLayer(this.props.map, toRemove);
             this.props.map.imageryLayers.remove(toRemove);
         }
         // detached layers are layers that do not work through a provider
         // for this reason they cannot be added or removed from the map imageryProviders
         if (this.layer?.detached && this.layer?.remove) {
             this.layer.remove();
+            this._primitive = undefined;
         }
         this.props.map.scene.requestRender();
     };
