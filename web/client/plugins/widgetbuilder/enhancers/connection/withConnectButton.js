@@ -34,22 +34,22 @@ export default (showCondition = () => true) => compose(
         return {
             stepButtons: [
                 ...stepButtons,
-                {
-                    onClick: () => toggleConnection(availableDependencies, widgets),
-                    disabled: disableConnect,
-                    visible: !!showCondition(props) && availableDependencies.length > 0,
-                    bsStyle: (!disableMultiDependencySupport && connected) ? "success" : "primary",
-                    glyph: connected ? "plug" : "unplug",
-                    tooltipId: disableConnect
-                        ? "widgets.builder.wizard.disableConnectToMap"
-                        : connected
-                            ? "widgets.builder.wizard.clearConnection"
-                            : isSingleDependency
-                                ? isTableOnlyWidget
-                                    ? "widgets.builder.wizard.connectToTheTable"
-                                    : "widgets.builder.wizard.connectToTheMap"
-                                : "widgets.builder.wizard.connectToAMap"
-                }
+                // {
+                //     onClick: () => toggleConnection(availableDependencies, widgets),
+                //     disabled: disableConnect,
+                //     visible: !!showCondition(props) && availableDependencies.length > 0,
+                //     bsStyle: (!disableMultiDependencySupport && connected) ? "success" : "primary",
+                //     glyph: connected ? "plug" : "unplug",
+                //     tooltipId: disableConnect
+                //         ? "widgets.builder.wizard.disableConnectToMap"
+                //         : connected
+                //             ? "widgets.builder.wizard.clearConnection"
+                //             : isSingleDependency
+                //                 ? isTableOnlyWidget
+                //                     ? "widgets.builder.wizard.connectToTheTable"
+                //                     : "widgets.builder.wizard.connectToTheMap"
+                //                 : "widgets.builder.wizard.connectToAMap"
+                // }
             ]
         };
     })

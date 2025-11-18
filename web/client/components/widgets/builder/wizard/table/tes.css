@@ -1,0 +1,54 @@
+.ms-interactions-container {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.ms-interactions-container > li > ul{
+    padding-left: 1rem;
+}
+
+.ms-interactions-targets ul {
+    padding-left: 1rem;
+}
+
+.ms-connection-row {
+    /*border-bottom: 1px solid #ddd; */
+    /* padding: 0.25rem; */
+}
+
+.ms-connection-row .btn {
+    padding: 0;
+}
+
+.ms-connection-row .btn:has(.glyphicon-unplug) {
+    opacity: 0.5;
+}
+.ms-interactions-event {
+    border: 1px solid #ddd;
+    padding: 0.25rem;
+    background-color: #e6e6e6;
+}
+
+.ms-interaction-target {
+    border: 1px solid #ddd;
+    padding: 0.25rem;
+}
+
+.ms-interaction-target:hover {
+    border-color: #0075ff;
+    border-style: dashed;
+}
+
+.ms-interaction-target li {
+    border-top: 1px solid #ddd;
+    padding-top: 0.1rem;
+}
+
+.ms-interaction-target.connected {
+    border-color: #0075ff;
+    background-color: rgb(from #0075ff r g b / 20%);
+}
+
+.ms-interaction-target .btn {
+    background-color: transparent;
+}

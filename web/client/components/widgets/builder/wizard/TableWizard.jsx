@@ -30,13 +30,14 @@ const triggerValidationReset = compose(lifecycle({
 })
 );
 
-export default triggerValidationReset(({ onChange = () => { }, onFinish = () => { }, setPage = () => { }, data = {}, layer = {}, step = 0, types, featureTypeProperties, dependencies }) =>
+export default triggerValidationReset(({ onChange = () => { }, onFinish = () => { }, setPage = () => { }, data = {}, layer = {}, step = 0, types, featureTypeProperties, dependencies, ...props }) =>
     (<Wizard
         step={step}
         setPage={setPage}
         onFinish={onFinish}
         isStepValid={n => n === 1 ? isChartOptionsValid(data.options) : true} hideButtons>
         <TableOptions
+            {...props}
             dependencies={dependencies}
             key="chart-options"
             featureTypeProperties={featureTypeProperties}

@@ -84,7 +84,7 @@ const WidgetViewWrapper = props => {
 
     return (
         <FlexBox column classNames={["_relative", "_fill"]}>
-            <FlexBox.Fill classNames={["_relative", "_overflow-auto"]}>
+            <FlexBox.Fill classNames={["_relative", "_overflow-auto", "ms-widgets-view"]}>
                 <WidgetsView
                     {...filteredProps}
                     layouts={layoutForWidgets} // only selected layout without properties

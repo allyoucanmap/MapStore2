@@ -30,7 +30,9 @@ export default ({
     setEditNode = () => {},
     closeNodeEditor = () => {},
     isLocalizedLayerStylesEnabled,
-    env
+    env,
+    widgets,
+    data
 } = {}) => {
     const [selectedMap, setSelectedMap] = useState({});
     const [emptyMap, setEmptyMap] = useState(false);
@@ -61,6 +63,8 @@ export default ({
                 {!emptyMap && <MapOptions
                     editNode={editNode}
                     setEditNode={setEditNode}
+                    widgets={widgets}
+                    data={editorData}
                     addonsItems={addonsItems}
                     closeNodeEditor={closeNodeEditor}
                     onNodeSelect={onNodeSelect}
