@@ -50,7 +50,7 @@
   },
   "authenticationRules": [
     {
-      "urlPattern": ".*geostore.*",
+      "urlPattern": ".*rest/geostore.*",
       "method": "bearer"
     },
     {
@@ -526,7 +526,12 @@
       "AddGroup",
       "TOCItemsSettings",
       "Tutorial",
-      "MapFooter",
+      {
+        "name": "MapFooter",
+        "cfg": {
+          "containerPosition": "footer"
+        }
+      },
       {
         "name": "Measure",
         "cfg": {
@@ -1234,6 +1239,7 @@
       "UserManager",
       "GroupManager",
       "TagsManager",
+      "IPManager",
       "Footer",
       { "name": "About" }
     ]

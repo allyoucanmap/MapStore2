@@ -13,6 +13,8 @@ MapStore's architecture is designed for modularity and extensibility, allowing d
 
 For more information check the <a href="https://docs.mapstore.geosolutionsgroup.com/en/latest/" target="_blank">MapStore documentation!</a>
 
+Also check out the MapStore project entry page available online at [mapstore.io](https://mapstore.io/)
+
 ## Documentation
 
 You can find more documentation about how to build, install or develop with MapStore on the <a href="https://docs.mapstore.geosolutionsgroup.com/en/latest/" target="_blank">documentation site</a>.
@@ -170,19 +172,19 @@ Here below is a small list of organizations using MapStore either directly or th
 - [CRAIG - France](https://ids.craig.fr/mapstore/#/)
 - Compagnie Nationale du Rhone - France
 - [Urban Brussles (BruGIS) - Belgium](https://gis.urban.brussels/brugis/#/)
+- [Ruhr Regional Association](https://mapstore.geoportal.ruhr/#/)
 - [Atlas Horizon 2020](http://www.atlas-horizon2020.eu/), this is based on GeoNode
 - [Whanganui District Council - New Zealand](https://data.whanganui.govt.nz/mapstore2-whanganuidc/#/)
 - [Otorohanga District Council - New Zealand](https://maps.otodc.govt.nz)
 - [Wairoa District Council - New Zealand](https://maps.wairoadc.govt.nz/#/)
 - [Cleveland Metroparks - USA](https://mapstore.cmparks.net/)
-- [Minerva - Canada](https://cczis.minervaintelligence.com/)
 - [Moldova National GeoPortal](http://www.moldova-map.md/)
 - [Region of Tuscany, Hydrologic Service - Italy](https://webgis.sir.toscana.it/mapstore/#/)
 - Neftex Halliburton - UK
 - Dhiantus - Sweden
 - [LaMMa Consortium - Italy](https://geoportale.lamma.rete.toscana.it/difesa_suolo/#/)
 - [Arno River Authority - Italy](https://geodata.appenninosettentrionale.it/mapstore/)
-- [Austrocontrol - Austria](https://sdimd-free.austrocontrol.at/mapstore/)
+- [Austro Control - Austria](https://maps.austrocontrol.at/mapstore/)
 - Earth-i - UK
 - MapStand - UK
 - [County of Milan - Italy](https://inlineainfrastrutture.cittametropolitana.mi.it/mapstore)
