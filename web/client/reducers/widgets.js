@@ -30,12 +30,13 @@ import {
     TOGGLE_TRAY,
     toggleCollapse,
     REPLACE,
-    WIDGETS_REGEX
+    WIDGETS_REGEX,
+    REPLACE_LAYOUT_VIEW,
+    SET_SELECTED_LAYOUT_VIEW_ID
 } from '../actions/widgets';
 import { REFRESH_SECURITY_LAYERS, CLEAR_SECURITY } from '../actions/security';
 import { MAP_CONFIG_LOADED } from '../actions/config';
 import { DASHBOARD_LOADED, DASHBOARD_RESET } from '../actions/dashboard';
-import assign from 'object-assign';
 import set from 'lodash/fp/set';
 import { get, find, omit, mapValues, castArray, isEmpty } from 'lodash';
 import { arrayUpsert, compose, arrayDelete } from '../utils/ImmutableUtils';
@@ -111,9 +112,13 @@ function widgetsReducer(state = emptyState, action) {
         }
         const w = state?.defaults?.initialSize?.w ?? 1;
         const h = state?.defaults?.initialSize?.h ?? 1;
+        const selectedLayoutId = get(state, `containers[${DEFAULT_TARGET}].selectedLayoutId`);
+        const layouts = get(state, `containers[${DEFAULT_TARGET}].layouts`);
+        const layoutId = selectedLayoutId || layouts?.[0]?.id;
         return arrayUpsert(`containers[${action.target}].widgets`, {
             id: action.id,
             ...widget,
+            ...(layoutId ? { layoutId } : {}),
             dataGrid: action.id && {
                 w,
                 h,
@@ -143,7 +148,7 @@ function widgetsReducer(state = emptyState, action) {
         if (action.mode === "merge") {
             uValue = action.key === "maps"
                 ? oldWidget.maps.map(m => m.mapId === action.value?.mapId ? {...m, ...action?.value} : m)
-                : assign({}, oldWidget[action.key], action.value);
+                : Object.assign({}, oldWidget[action.key], action.value);
         }
         return arrayUpsert(`containers[${action.target}].widgets`,
             set(action.key, uValue, oldWidget), { id: action.id },
@@ -447,6 +452,12 @@ function widgetsReducer(state = emptyState, action) {
     }
     case TOGGLE_TRAY: {
         return set('tray', action.value, state);
+    }
+    case REPLACE_LAYOUT_VIEW: {
+        return set(`containers[${action.target}].layouts`, action.layouts, state);
+    }
+    case SET_SELECTED_LAYOUT_VIEW_ID: {
+        return set(`containers[${action.target}].selectedLayoutId`, action.viewId, state);
     }
     default:
         return state;

@@ -26,7 +26,11 @@ import {
     getWidgetLayersNames,
     isChartCompatibleWithTableWidget,
     canTableWidgetBeDependency,
-    checkMapSyncWithWidgetOfMapType
+    checkMapSyncWithWidgetOfMapType,
+    addCurrentTimeShapes,
+    getNextAvailableName,
+    updateDependenciesForMultiViewCompatibility,
+    getDefaultNullPlaceholderForDataType
 } from '../WidgetsUtils';
 import * as simpleStatistics from 'simple-statistics';
 import { createClassifyGeoJSONSync } from '../../api/GeoJSONClassification';
@@ -796,5 +800,126 @@ describe('Test WidgetsUtils', () => {
         };
         const result = checkMapSyncWithWidgetOfMapType(parameters.widgets, parameters.dependenciesMap);
         expect(result).toEqual(false);
+    });
+    describe('addCurrentTimeShapes', () => {
+        it('returns empty array if no start or end in timeRange', () => {
+            const data = { xAxisOpts: [{ type: 'date', showCurrentTime: true }], yAxisOpts: [{ type: 'date', showCurrentTime: true }] };
+            const shapes = addCurrentTimeShapes(data, {});
+            expect(shapes).toEqual([]);
+        });
+        it('returns a line shape if only start is provided', () => {
+            const data = { xAxisOpts: [{ type: 'date', showCurrentTime: true }], yAxisOpts: [{ type: 'date', showCurrentTime: true }] };
+            const timeRange = { start: '2025-07-22' };
+            const shapes = addCurrentTimeShapes(data, timeRange);
+            expect(shapes.length).toBe(2); // one for x, one for y
+            expect(shapes[0].type).toBe('line');
+            expect(shapes[1].type).toBe('line');
+            expect(shapes[0].line.color).toBe('rgba(58, 186, 111, 0.75)');
+            expect(shapes[0].line.dash).toBe('dash');
+            expect(shapes[0].line.width).toBe(3);
+        });
+        it('returns a rect shape if both start and end are provided', () => {
+            const data = { xAxisOpts: [{ type: 'date', showCurrentTime: true }], yAxisOpts: [{ type: 'date', showCurrentTime: true }] };
+            const timeRange = { start: '2025-07-22', end: '2025-07-23' };
+            const shapes = addCurrentTimeShapes(data, timeRange);
+            expect(shapes.length).toBe(2); // one for x, one for y
+            expect(shapes[0].type).toBe('rect');
+            expect(shapes[1].type).toBe('rect');
+            expect(shapes[0].fillcolor).toBe('rgba(58, 186, 111, 0.75)');
+        });
+        it('uses custom axis shape options if provided', () => {
+            const data = {
+                xAxisOpts: [{ type: 'date', showCurrentTime: true, currentTimeShape: { color: 'red', style: 'dot', size: 5 }}],
+                yAxisOpts: [{ type: 'date', showCurrentTime: true, currentTimeShape: { color: 'blue', style: 'longdash', size: 2 }}]
+            };
+            const timeRange = { start: '2025-07-22' };
+            const shapes = addCurrentTimeShapes(data, timeRange);
+            expect(shapes.length).toBe(2);
+            expect(shapes[0].line.color).toBe('red');
+            expect(shapes[0].line.dash).toBe('dot');
+            expect(shapes[0].line.width).toBe(5);
+            expect(shapes[1].line.color).toBe('blue');
+            expect(shapes[1].line.dash).toBe('longdash');
+            expect(shapes[1].line.width).toBe(2);
+        });
+    });
+
+    describe('getNextAvailableName', () => {
+        it('should return "View 1" when no views exist', () => {
+            const data = [];
+            const result = getNextAvailableName(data);
+            expect(result).toBe('View 1');
+        });
+
+        it('should return next available number when consecutive views exist', () => {
+            const data = [{ name: 'View 1' }, { name: 'View 2' }, { name: 'View 3' }];
+            const result = getNextAvailableName(data);
+            expect(result).toBe('View 4');
+        });
+
+        it('should fill in missing gaps in the sequence', () => {
+            const data = [{ name: 'View 1' }, { name: 'View 3' }, { name: 'View 4' }];
+            const result = getNextAvailableName(data);
+            expect(result).toBe('View 2');
+        });
+    });
+
+    describe('updateDependenciesForMultiViewCompatibility', () => {
+        it('should handle data with existing layouts array', () => {
+            const data = {
+                layouts: [{ id: '1', name: 'Layout 1' }],
+                widgets: [{ id: 'w1', layoutId: '1' }]
+            };
+            const result = updateDependenciesForMultiViewCompatibility(data);
+            expect(Array.isArray(result.layouts)).toBe(true);
+            expect(result.layouts[0].id).toBe('1');
+            expect(result.widgets[0].layoutId).toBe('1');
+        });
+
+        it('should wrap a single layout object into an array if not already an array', () => {
+            const data = {
+                layouts: { md: [] },
+                widgets: [{ id: 'w1' }]
+            };
+            const result = updateDependenciesForMultiViewCompatibility(data);
+            expect(Array.isArray(result.layouts)).toBe(true);
+            expect(result.layouts[0].name).toBe('Main view');
+            expect(result.widgets[0].layoutId).toBe(result.layouts[0].id);
+        });
+
+        it('should assign missing layoutId to widgets based on first layout', () => {
+            const data = {
+                layouts: [{ id: 'l1', name: 'Layout 1' }],
+                widgets: [{ id: 'w1' }, { id: 'w2', layoutId: 'l2' }]
+            };
+            const result = updateDependenciesForMultiViewCompatibility(data);
+            expect(result.widgets[0].layoutId).toBe('l1');
+            expect(result.widgets[1].layoutId).toBe('l2');
+        });
+    });
+
+    describe('getDefaultNullPlaceholderForDataType', () => {
+        it('returns correct default values for numeric types', () => {
+            expect(getDefaultNullPlaceholderForDataType('int')).toBe(0);
+            expect(getDefaultNullPlaceholderForDataType('number')).toBe(0);
+        });
+        it('returns correct default values for string and boolean types', () => {
+            expect(getDefaultNullPlaceholderForDataType('string')).toBe('NULL');
+            expect(getDefaultNullPlaceholderForDataType('boolean')).toBe('NULL');
+        });
+        it('returns correct default values for date and time types', () => {
+            const dateResult = getDefaultNullPlaceholderForDataType('date');
+            const timeResult = getDefaultNullPlaceholderForDataType('time');
+            const dateTimeResult = getDefaultNullPlaceholderForDataType('date-time');
+
+            // Date should be in format like "2025-01-21Z"
+            expect(dateResult).toMatch(/^\d{4}-\d{2}-\d{2}Z$/);
+
+            // Time should be in format like "1970-01-01T14:30:45Z"
+            expect(timeResult).toMatch(/^1970-01-01T\d{2}:\d{2}:\d{2}Z$/);
+
+            // DateTime should be in format like "2025-01-21T14:30:45Z"
+            expect(dateTimeResult).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+        });
     });
 });
