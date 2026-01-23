@@ -235,13 +235,13 @@ const DefaultLayerNode = ({
                     items={nodeContentItems}
                 />
             </ul>
-            <OpacitySlider
+            {/* <OpacitySlider
                 hide={!!error || config?.hideOpacitySlider || ['3dtiles', 'model'].includes(node?.type)}
                 opacity={node?.opacity}
                 disabled={!node.visibility}
                 hideTooltip={!config.showOpacityTooltip}
                 onChange={opacity => onChange({ opacity })}
-            />
+            /> */}
         </>
     );
 };

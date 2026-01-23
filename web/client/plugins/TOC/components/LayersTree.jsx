@@ -91,7 +91,8 @@ const LayersTree = ({
     nodeContentItems,
     singleDefaultGroup = isSingleDefaultGroup(tree),
     theme,
-    getNodeStyle = () => ({})
+    getNodeStyle = () => ({}),
+    style
 }) => {
 
     const containerNode = useRef();
@@ -135,6 +136,7 @@ const LayersTree = ({
     return (
         <div
             className={`ms-layers-tree${className ? ` ${className}` : ''}${theme ? ` ${theme}-tree` : ''}${!config.showFullTitle && !filterText ? ' single-line-title' : ''}`}
+            style={style}
             onPointerLeave={() => {
                 if (sortId) {
                     setSortId(null);

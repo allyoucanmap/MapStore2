@@ -949,6 +949,12 @@
           "cropDataSetVisible": false
         }
       },
+      {
+        "name": "Print",
+        "cfg": {
+          "type": "dashboard"
+        }
+      },
       { "name": "ResourceDetails", "cfg": { "resourceType": "DASHBOARD" } },
       { "name": "Save", "cfg": { "resourceType": "DASHBOARD" } },
       { "name": "SaveAs", "cfg": { "resourceType": "DASHBOARD" } },
@@ -1130,6 +1136,12 @@
     ],
     "geostory": [
       { "name": "SecurityPopup" },
+      {
+        "name": "Print",
+        "cfg": {
+          "type": "geostory"
+        }
+      },
       {
         "name": "ResourceDetails",
         "cfg": { "containerPosition": "columns", "resourceType": "GEOSTORY" }

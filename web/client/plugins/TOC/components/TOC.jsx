@@ -79,10 +79,12 @@ export function ControlledTOC({
     nodeContentItems,
     singleDefaultGroup,
     theme,
-    getNodeStyle
+    getNodeStyle,
+    style
 }) {
     return (
         <LayersTree
+            style={style}
             className={className}
             theme={theme}
             tree={tree}
