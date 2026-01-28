@@ -35,7 +35,7 @@ import { getDerivedLayersVisibility, isInsideResolutionsLimits } from '../utils/
 import { has, includes, over, transform } from 'lodash';
 import {additionalLayersSelector} from "../selectors/additionallayers";
 import { MapLibraries } from '../utils/MapTypeUtils';
-import FlexBox from '../components/layout/FlexBox';
+import FlexBox, { FlexFill } from '../components/layout/FlexBox';
 import Text from '../components/layout/Text';
 import Button from '../components/layout/Button';
 import { getResolutionMultiplier } from '../utils/PrintUtils';
@@ -320,7 +320,7 @@ const Box = forwardRef((props, ref) => {
     } = parseBoxProps(props);
     const [hover, setHover] = useState(false);
     return (
-        <div ref={ref} className={className} style={{ ...style, position: 'absolute', top: y, left: x, width, height, fontSize, ...(edit ? { border: '1px dashed #ddd' } : {}) }} onPointerLeave={() => setHover(false)} onPointerOver={() => setHover(true)}>
+        <div  ref={ref} className={className || 'box-l' } style={{ ...style, position: 'absolute', top: y, left: x, width, height, fontSize, ...(edit ? { border: '1px dashed #ddd' } : {}) }} onPointerLeave={() => setHover(false)} onPointerOver={() => setHover(true)}>
             {children}
             {edit && hover ? <>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: '1px solid #6298fa' }}></div>
@@ -354,6 +354,8 @@ const Paper = forwardRef(({
     );
 });
 
+const RESOLUTION_SCALE = 50000000
+
 const SetResolutions = ({
     map,
     dpi = 96,
@@ -371,7 +373,7 @@ const SetResolutions = ({
                     );
             }));
             setTimeout(() => {
-                map.getView().setResolution((50000000 / 100) /
+                map.getView().setResolution((RESOLUTION_SCALE / 100) /
                     getPointResolution(
                         map.getView().getProjection(),
                         dpi / (INCHES_TO_CM) /* scaleProp */,
@@ -397,6 +399,7 @@ import chart1 from './print-01.png'
 import chart2 from './print-02.png'
 import chart3 from './print-03.png'
 import print from './print.json'
+import moment from 'moment';
 const RulerX = ({
     x,
     scale,
@@ -493,17 +496,18 @@ const Legend = ({
 };
 
 const Print = ({
-    type = 'map'
+    type = 'map',
+    publisher = true
 }) => {
     const [scale, setScale] = useState(0.8);
     const [view, setView] = useState();
-     const [open, setOpen] = useState();
+    const [open, setOpen] = useState();
     const dpi = 96;
     const itm = {
         map: [
             { id: "1", title: 'Image', visibility: true, x: 0.5, y: 0.5, width: 2, height: 2, fontSize: 0.4, type: 'image', src: '/dist/web/client/product/assets/img/logo.png' },
             { id: "2", title: 'Map', editable: true, visibility: true, x: 0.5, y: 3, width: 28.7, height: 16, fontSize: 0.4, type: 'map', src: '' },
-            ...(view === 'template' ? [{ id: "5", title: 'Resource', visibility: true, x: 0.5, y: 3, width: 28.7, height: 16, fontSize: 0.4, type: 'resource' }] : []),
+            // ...(view === 'template' ? [{ id: "5", title: 'Resource', visibility: true, x: 0.5, y: 3, width: 28.7, height: 16, fontSize: 0.4, type: 'resource' }] : []),
             { id: "3", title: 'Title', editable: true, visibility: true, x: 3, y: 1, width: 5, height: 1.2, fontSize: 0.8, type: 'text', value: 'My map' },
             { id: "4", title: 'North Arrow', visibility: true, x: 26.7, y: 16, width: 2, height: 2, fontSize: 0.4, type: 'image', src: arrow },
            
@@ -527,9 +531,9 @@ const Print = ({
             { id: "11", title: 'Table', visibility: true, x: 10, y: 4, width: 9.5, height: 9, fontSize: 0.195, type: 'table', geojson: print },
             { id: "115", title: 'Text', visibility: true, x: 10, y: 3, width: 9.5, height: 1, fontSize: 0.4, type: 'text', value: 'States Table' },
             { id: "12", title: 'Text', visibility: true, x: 19.5, y: 4, width: 4.75, height: 6, fontSize: 0.25, type: 'text', value: '<p>Sample dashboard to show all widgets and connection.</p><p>It contains:</p><ul><li>Sample chart widget</li><li>Sample counter widget</li><li>Map and Legend widget</li><li>Table widget <strong style="color: rgb(255, 153, 0);">with filter enabled</strong></li><li>Text widget (this one)</li></ul><p>All the widget are connected to browse data also according the filter specified in the table.</p>' },
-            { id: "13", title: 'Legend', visibility: true, x: 19.5 + 4.75, y: 4, width: 4.75, fontSize: 0.25, height: 6, type: 'legend', layers: [{ title: 'States of US', legendUrl: 'https://gs-stable.geosolutionsgroup.com/geoserver/wms?LEGEND_OPTIONS=forceLabels%3Aon&SLD_VERSION=1.1.0&authkey=784e257f-da27-4ea3-9d95-5b90d18f920c&format=image%2Fpng&height=12&layer=gs%3Aus_states&request=GetLegendGraphic&service=WMS&style=&version=1.3.0&width=12' }] }
+            { id: "13", title: 'Legend', visibility: true, x: 19.5 + 4.75, y: 4, width: 4.75, fontSize: 0.25, height: 6, type: 'legend', layers: [{ title: 'States of US', legendUrl: 'https://gs-stable.geosolutionsgroup.com/geoserver/wms?LEGEND_OPTIONS=forceLabels%3Aon&SLD_VERSION=1.1.0&format=image%2Fpng&height=12&layer=gs%3Aus_states&request=GetLegendGraphic&service=WMS&style=&version=1.3.0&width=12' }] }
         ].map((entry) => ['1', '3'].includes(entry.id) ? entry : ({ ...entry, x: entry.x + 0.1, width: entry.width - 0.2 })),
-        geostory_2: [
+        geostory: [
             { id: "1", title: 'Image', visibility: true, x: 0.6, y: 0.5, width: 2, height: 2, fontSize: 0.4, type: 'image', src: '/dist/web/client/product/assets/img/logo.png' },
             // { id: "2", title: 'Map', visibility: true, x: 0.5, y: 4, width: 9.5, height: 9, fontSize: 0.4, type: 'map', src: '' },
             { id: "25", title: 'Text', visibility: true, x: 4.35, y: 3, width: 21, height: 4, fontSize: 0.4, type: 'text', value: 'This is a list of the highest astronomical observatories in the world, considering only ground-based observatories and ordered by elevation above mean sea level. The main list includes only permanent observatories with facilities constructed at a fixed location, followed by a supplementary list for temporary observatories such as transportable telescopes or instrument packages. For large observatories with numerous telescopes at a single location, only a single entry is included listing the main elevation of the observatory or of the highest operational instrument if that information is available.' },
@@ -547,7 +551,7 @@ const Print = ({
             { id: "3", title: 'Text', visibility: true, x: 17.7, y: 12.3, width: 11, height: 1.5, fontSize: 0.3, type: 'text', value: 'Particle detector at Chacaltaya Astrophysical Observatory, the highest permanent astronomical observatory in the world from the 1940s through 2009.' },
             { id: "4", title: 'North Arrow', visibility: true, x: 0.5, y: 16.5, width: 2, height: 2, fontSize: 0.4, type: 'image', src: arrow },
         ],
-        geostory: [
+        geostory_4: [
             { id: "1", title: 'Image', visibility: true, x: 0.6, y: 0.5, width: 2, height: 2, fontSize: 0.4, type: 'image', src: '/dist/web/client/product/assets/img/logo.png' },
             { id: "2", title: 'Map', visibility: true, x: 12, y: 3, width: 17.2, height: 16, fontSize: 0.4, type: 'map', src: '' },
             // { id: "3", title: 'Shape', visibility: true, x: 0.5, y: 3, width: 12, height: 16, fontSize: 0.3, type: 'shape', background: '#ffffffaa' },
@@ -556,6 +560,7 @@ const Print = ({
             { id: "5", title: 'Image', visibility: true, x: 0.5, y: 4.5, width: 11, height: 8.5, fontSize: 0.4, type: 'image', src: '	https://demo.geo-solutions.it/mockups/mapstore2/geostory/assets/img/Hanle_observatory.jpg' },
             { id: "3", title: 'Text', visibility: true, x: 0.5, y: 13.1, width: 11, height: 3, fontSize: 0.3, type: 'text', value: 'The Indian Astronomical Observatory (IAO), located in Hanle near Leh in Ladakh, India, has one of the world\'s highest located sites for optical, infrared and gamma-ray telescopes. It is operated by the Indian Institute of Astrophysics, Bangalore. It is currently the ninth (see List of highest astronomical observatories) highest optical telescope in the world, situated at an elevation of 4,500 meters (14,764 ft).' },
             { id: "4", title: 'North Arrow', visibility: true, x: 26.7, y: 16.5, width: 2, height: 2, fontSize: 0.4, type: 'image', src: arrow },
+            // { id: "5", title: 'Resource', visibility: true, x: 0.5, y: 3, width: 28.7, height: 16, fontSize: 0.4, type: 'resource' }
         ]
     };
     const [items, setItems] = useState(itm[type]);
@@ -584,13 +589,13 @@ const Print = ({
                     <Button square variant={open ? "success" : undefined} onClick={ ()=> setOpen(!open)}>
                         <Glyphicon glyph="menu-hamburger" />
                     </Button>
-                    <Button square variant={view === 'template' ? 'success' : undefined}>
+                    {publisher ? <Button square variant={publisher ? 'success' : undefined}>
                         <Glyphicon glyph="box" />
-                    </Button>
+                    </Button> : null}
                     <Button square>
                         <Glyphicon glyph="refresh" />
                     </Button>
-                    {view === 'template' ? <>
+                    {publisher ? <>
                         <div style={{ borderBottom: '1px solid #ddd' }}></div>
                         <Button square>
                             <Glyphicon glyph="1-map" />
@@ -624,11 +629,11 @@ const Print = ({
                 {open ? <FlexBox column style={{ width: 200, borderRight: '1px solid #ddd' }} className="_padding-sm">
                     <div>Page 01</div>
                     <ControlledTOC
-                        tree={items}
+                        tree={items.filter((item) => publisher || (!publisher && item.editable))}
                         style={{ paddingLeft: 0, paddingRight: 0 }}
                         selectedNodes={[{ id: '2' }]}
                         config={{
-                            sortable: view === 'template'
+                            sortable: publisher
                         }}
                         nodeItems={[ { Component: ({ defaultLayerNodeComponent, ...props }) => {
                             const Cmp = defaultLayerNodeComponent;
@@ -639,10 +644,10 @@ const Print = ({
                                 'image': "picture"
                             };
                             return (
-                                <Cmp {...props} visibilityCheck={view === 'template' ? props.visibilityCheck : null} nodeIcon={<Glyphicon className="ms-node-icon" glyph={icons[props.node.title] || icons[props.node.type]} />}/>
+                                <Cmp {...props} visibilityCheck={publisher ? props.visibilityCheck : null} nodeIcon={<Glyphicon className="ms-node-icon" glyph={icons[props.node.title] || icons[props.node.type]} />}/>
                             );
                         }, name: 'Custom', selector: () => true }]}
-                        nodeToolItems={[ { Component: () => <Glyphicon glyph="unlock" />, name: 'Lock' }]}
+                        nodeToolItems={publisher ? [ { Component: () => <Glyphicon glyph="unlock" />, name: 'Lock' }] : []}
                     />
                 </FlexBox> : null}
                 <FlexBox.Fill flexBox  className="_relative" column>
@@ -665,7 +670,7 @@ const Print = ({
                                 <Paper ref={paper} x={1} y={1} width={29.7} height={21} dpi={dpi} scale={scale}>
                                     {items.map((entry) => {
                                         return (
-                                            <Box {...entry} dpi={dpi} scale={scale} edit={view === 'template'} style={{ overflow: 'hidden'}} >
+                                            <Box {...entry} dpi={dpi} scale={scale} edit={publisher} style={{ overflow: 'hidden'}} >
                                                 {entry.type === 'map'
                                                     ?
                                                     <Map
@@ -794,7 +799,7 @@ const Print = ({
                         </FlexBox.Fill>
                     </FlexBox.Fill>
                     <FlexBox gap="xs" className="_padding-xs ms-main-colors" style={{ borderTop: '1px solid #ddd', zIndex: 0 }}>
-                        {view === 'template' ? <Button size="sm">
+                        {publisher ? <Button size="sm">
                             Add new page
                         </Button> : null}
                         {type === 'geostory' ? <PaginationCustom
@@ -889,11 +894,74 @@ const Print = ({
                         </Tab>
                             : <Tab eventKey="layout" title={'Layout'}>
                                 <FlexBox column  gap="sm" className="_padding-tb-md"  style={{ fontSize: '0.75rem' }}>
-                                    <FormGroup>
+                                    {publisher ? <FormGroup>
                                         <ControlLabel>
-                                            Template
+                                            Custom layouts
                                         </ControlLabel>
                                         <InputGroup>
+                                            <Select
+                                                clearable={false}
+                                                value={{ value: 'A4 Landscape', label: 'A4 Landscape' }}
+                                                options={[
+                                                    { value: 'A4 Portrait', label: 'A4 Portrait' },
+                                                    { value: 'A4 Landscape', label: 'A4 Landscape' },
+                                                    { value: 'A3 Portrait', label: 'A3 Portrait' },
+                                                    { value: 'A3 Landscape', label: 'A3 Landscape' }
+                                                ]}/>
+                                            <InputGroup.Addon className="btn" onClick={() => {
+                                                setView('template');
+                                                setTimeout(() => {
+                                                    setItems(itm[type]);
+                                                }, 5);
+                                            }}>
+                                                <Glyphicon glyph="plus" />
+                                            </InputGroup.Addon>
+                                            <InputGroup.Addon className="btn" onClick={() => {
+                                                setView('template');
+                                                setTimeout(() => {
+                                                    setItems(itm[type]);
+                                                }, 5);
+                                            }}>
+                                                <Glyphicon glyph="trash" />
+                                            </InputGroup.Addon>
+                                        </InputGroup>
+                                    </FormGroup> : null}
+                                    {publisher ? <FormGroup>
+                                        <ControlLabel>
+                                            Layout title
+                                        </ControlLabel>
+
+                                        <FormControl placeholder="Enter title..." defaultValue="A4 Landscape" />
+                                    </FormGroup> : null}
+                                    {/* publisher ? <FormGroup>
+                                        <ControlLabel>
+                                            Master template
+                                        </ControlLabel>
+                                        <Select
+                                            clearable={false}
+                                            value={{ value: 'A4 Landscape', label: 'A4 Landscape' }}
+                                            options={[
+                                                { value: 'A4 Portrait', label: 'A4 Portrait' },
+                                                { value: 'A4 Landscape', label: 'A4 Landscape' },
+                                                { value: 'A3 Portrait', label: 'A3 Portrait' },
+                                                { value: 'A3 Landscape', label: 'A3 Landscape' }
+                                            ]}/>
+                                    </FormGroup> : null */}
+                                    {!publisher ? <FormGroup>
+                                        <ControlLabel>
+                                            Layouts
+                                        </ControlLabel>
+                                        <Select
+                                            clearable={false}
+                                            value={{ value: 'A4 Landscape', label: 'A4 Landscape' }}
+                                            options={[
+                                                { value: 'A4 Portrait', label: 'A4 Portrait' },
+                                                { value: 'A4 Landscape', label: 'A4 Landscape' },
+                                                { value: 'A3 Portrait', label: 'A3 Portrait' },
+                                                { value: 'A3 Landscape', label: 'A3 Landscape' }
+                                            ]}/>
+                                    </FormGroup> : null}
+                                    {/* <InputGroup>
                                             <Select
                                                 clearable={false}
                                                 value={{ value: 'A4 Landscape', label: 'A4 Landscape' }}
@@ -927,8 +995,8 @@ const Print = ({
                                             }}>
                                                 <Glyphicon glyph="trash" />
                                             </InputGroup.Addon>
-                                        </InputGroup>
-                                    </FormGroup>
+                                        </InputGroup> */}
+                                   
                                     {/* <FormGroup>
                                         <ControlLabel>
                                             Dimensions
@@ -969,8 +1037,17 @@ const Print = ({
                                                 { value: 'JPEG', label: 'JPEG' }
                                             ]}/>
                                     </FormGroup>
+                                    {/* <FormGroup>
+                                        <ControlLabel>
+                                            Receive via e-mail
+                                        </ControlLabel>
+                                        <FormControl type="text" placeholder="example@mail.com" />
+                                    </FormGroup> */}
                                 </FlexBox>
                             </Tab>}
+                        {publisher ? <Tab eventKey="page" title={'Page'}>
+
+                        </Tab> : null}
                         <Tab eventKey="selected" title={'Selected'}>
                             {/* <FlexBox.Fill style={{ overflow: 'auto' }}>
                                 <ControlledTOC
@@ -1014,19 +1091,23 @@ const Print = ({
                                             <ControlLabel>
                                                 Title
                                             </ControlLabel>
-                                            <FormControl value={'Map'} type="text"/>
+                                            <FormControl disabled={!publisher} value={'Map'} type="text"/>
                                         </FormGroup>
+                                        {publisher ? <Checkbox>
+                                            Editable by user
+                                        </Checkbox> : null}
                                     </FlexBox>
                                     <div/>
                                     <div>Configuration</div>
                                     <FlexBox column  gap="sm" style={{ fontSize: '0.75rem' }}>
+                                        
                                         <FormGroup>
                                             <ControlLabel>
                                                 Scale
                                             </ControlLabel>
                                             <InputGroup>
                                                 <InputGroup.Addon>{'1 : '}</InputGroup.Addon>
-                                                <FormControl value={10000} type="number"/>
+                                                <FormControl value={RESOLUTION_SCALE} type="number"/>
                                                 <InputGroup.Addon>{'cm'}</InputGroup.Addon>
                                             </InputGroup>
                                         </FormGroup>
@@ -1051,11 +1132,23 @@ const Print = ({
                                                     { value: 'EPSG:3857', label: 'EPSG:3857' }
                                                 ]}/>
                                         </FormGroup>
+                                        <FormGroup>
+                                            <ControlLabel>
+                                                Map view
+                                            </ControlLabel>
+                                            <InputGroup>
+                                                <Select
+                                                    clearable={false}
+
+                                                    options={[]}/>
+                                                <InputGroup.Addon className="btn"><Glyphicon glyph="pencil" /></InputGroup.Addon>
+                                            </InputGroup>
+                                        </FormGroup>
                                         <Checkbox>Show graticule</Checkbox>
                                     </FlexBox>
                                     <div/>
-                                    <div>Position and dimension</div>
-                                    <FlexBox column  gap="sm" style={{ fontSize: '0.75rem' }}>
+                                    {publisher ? <div>Position and dimension</div> : null}
+                                    {publisher ? <FlexBox column  gap="sm" style={{ fontSize: '0.75rem' }}>
                                         <FlexBox centerChildrenVertically>
                                             <FlexBox.Fill column flexBox gap="sm" >
                                                 <FormGroup>
@@ -1098,12 +1191,26 @@ const Print = ({
                                                 <div style={{ position: 'absolute', top: '50%', right: 0, transform: 'translate(50%, -50%)' }}><Glyphicon glyph="unlock" /></div>
                                             </div>
                                         </FlexBox>
-                                    </FlexBox>
+                                    </FlexBox> : null}
                                 </FlexBox>
                             </FlexBox.Fill>
                         </Tab>
-                        {view !== 'template' ? <Tab eventKey="atlas" title={'Atlas'}>
+                        {publisher ? <Tab eventKey="atlas" title={'Atlas'}>
 
+                        </Tab> : null}
+                        {view !== 'template' ? <Tab eventKey="prints" title={'Prints'}>
+                            <FlexBox column gap="sm" className="_padding-tb-md">
+                                <FlexBox centerChildrenVertically gap="sm" className="_padding-sm" style={{ border: '1px solid #ddd', borderRadius: 4 }}>
+                                    <Glyphicon glyph="print" />1 - Demo Map | {moment(Date.now()).format('lll')}
+                                    <FlexFill />
+                                    <Button square>
+                                        <Glyphicon glyph="trash" />
+                                    </Button>
+                                    <Button square variant="primary">
+                                        <Glyphicon glyph="download" />
+                                    </Button>
+                                </FlexBox>
+                            </FlexBox>
                         </Tab> : null}
                     </Tabs>
                 </FlexBox>
@@ -1134,10 +1241,16 @@ const Print = ({
 };
 
 const PrintPlugin = (props) => {
+    useEffect(() => {
+        setTimeout(() => {
+            props.onInit();
+        }, 1000)
+        
+    }, [])
     return (
         <PortalComp>
-            <div style={{ width: '100%', height: '100%', position: 'absolute', padding: '4rem', pointerEvents: 'none' }}>
-                <div className="ms-main-colors shadow" style={{ pointerEvents: 'auto', width: 'calc(100% - 8rem)', height: 'calc(100% - 8rem)', position: 'absolute' }}>
+            <div style={{ width: '100%', height: '100%', position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                <div className="ms-main-colors shadow" style={{ pointerEvents: 'auto', width: 1650, maxWidth: 'calc(100% - 8rem)', height: 'calc(100% - 8rem)', position: 'absolute' }}>
                     <Print {...props} />
                 </div>
             </div>
@@ -1146,7 +1259,9 @@ const PrintPlugin = (props) => {
 };
 
 export default createPlugin('Print', {
-    component: PrintPlugin,
+    component: connect(() => ({}), {
+        onInit: toggleControl.bind(null, 'print', null)
+    })(PrintPlugin),
     containers: {
         SidebarMenu: {
             name: "print",

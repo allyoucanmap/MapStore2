@@ -26,6 +26,9 @@
     padding: 0.25em;
 }
 
+/* .box-l:hover {
+        outline: 1px solid var(--ms-focus-color, #6298fa);
+} */
 .legend-print {
     padding: 0;
 }
