@@ -359,7 +359,8 @@ const RESOLUTION_SCALE = 50000000
 const SetResolutions = ({
     map,
     dpi = 96,
-    scale: scaleProp
+    scale: scaleProp,
+    denominator = RESOLUTION_SCALE
 }) => {
     useEffect(() => {
         if (map) {
@@ -373,7 +374,7 @@ const SetResolutions = ({
                     );
             }));
             setTimeout(() => {
-                map.getView().setResolution((RESOLUTION_SCALE / 100) /
+                map.getView().setResolution((denominator / 100) /
                     getPointResolution(
                         map.getView().getProjection(),
                         dpi / (INCHES_TO_CM) /* scaleProp */,
@@ -400,6 +401,7 @@ import chart2 from './print-02.png'
 import chart3 from './print-03.png'
 import print from './print.json'
 import moment from 'moment';
+import ColorSelector from '../components/style/ColorSelector';
 const RulerX = ({
     x,
     scale,
@@ -504,13 +506,178 @@ const Print = ({
     const [open, setOpen] = useState();
     const dpi = 96;
     const itm = {
-        map: [
+        map_1: [
             { id: "1", title: 'Image', visibility: true, x: 0.5, y: 0.5, width: 2, height: 2, fontSize: 0.4, type: 'image', src: '/dist/web/client/product/assets/img/logo.png' },
             { id: "2", title: 'Map', editable: true, visibility: true, x: 0.5, y: 3, width: 28.7, height: 16, fontSize: 0.4, type: 'map', src: '' },
             // ...(view === 'template' ? [{ id: "5", title: 'Resource', visibility: true, x: 0.5, y: 3, width: 28.7, height: 16, fontSize: 0.4, type: 'resource' }] : []),
             { id: "3", title: 'Title', editable: true, visibility: true, x: 3, y: 1, width: 5, height: 1.2, fontSize: 0.8, type: 'text', value: 'My map' },
             { id: "4", title: 'North Arrow', visibility: true, x: 26.7, y: 16, width: 2, height: 2, fontSize: 0.4, type: 'image', src: arrow },
            
+        ],
+        map: [
+            { id: "0", title: 'Image', visibility: true, x: 0.5, y: 0.5, width: 2, height: 2, fontSize: 0.4, type: 'image', src: '/dist/web/client/product/assets/img/logo.png' },
+            { id: "1", title: 'Map Left', editable: true, visibility: true, x: 0.5, y: 3, width: 28.7 / 2 - 0.5, height: 16, fontSize: 0.4, type: 'map', src: '',
+                denominator: 6000000,
+                layers: [ {
+                    "format": "image/jpeg",
+                    "group": "background",
+                    "name": "osm:osm",
+                    "opacity": 1,
+                    "title": "OSM Bright",
+                    "thumbURL": "product/assets/img/osm-bright.jpg",
+                    "type": "wms",
+                    "url": [
+                        "https://maps1.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps2.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps3.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps4.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps5.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps6.geosolutionsgroup.com/geoserver/wms"
+                    ],
+                    "tileSize": 512,
+                    "visibility": true,
+                    "singleTile": false,
+                    "credits": {
+                        "title": "OSM Bright | Rendering <a href=\"https://www.geo-solutions.it/\">GeoSolutions</a> | Data © <a href=\"http://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"http://www.openstreetmap.org/copyright\">ODbL</a>"
+                    }
+                }, {
+                    "id": "gs:us_states__15",
+                    "format": "image/vnd.jpeg-png8",
+                    "search": {
+                        "url": "https://gs-stable.geo-solutions.it/geoserver/wfs",
+                        "type": "wfs"
+                    },
+                    "name": "gs:us_states",
+                    "opacity": 1,
+                    "description": "gfnhgfhgfhgfh",
+                    "style": "pophade",
+                    "title": "States of US",
+                    "tiled": true,
+                    "type": "wms",
+                    "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+                    "bbox": {
+                        "crs": "EPSG:4326",
+                        "bounds": {
+                            "minx": "-124.73142200000001",
+                            "miny": "24.955967",
+                            "maxx": "-66.969849",
+                            "maxy": "49.371735"
+                        }
+                    },
+                    "visibility": true,
+                    "singleTile": false,
+                    "allowedSRS": {
+                        "EPSG:3857": true,
+                        "EPSG:900913": true,
+                        "EPSG:4326": true
+                    },
+                    "dimensions": [],
+                    "hideLoading": false,
+                    "handleClickOnLayer": false,
+                    "featureInfo": {
+                        "format": "TEMPLATE",
+                        "template": "<p><strong>STATE_NAME - ${properties.STATE_NAME}</strong></p><p><strong>SUB_REGION - ${properties.SUB_REGION }</strong></p><p><strong>STATE_ABBR - ${properties.STATE_ABBR }</strong></p><p><strong>LAND_KM - ${properties.LAND_KM }</strong></p>"
+                    },
+                    "catalogURL": null,
+                    "useForElevation": false,
+                    "hidden": false,
+                    "legendOptions": {
+                        "legendWidth": 100,
+                        "legendHeight": 50
+                    },
+                    "tileSize": 512,
+                    "version": "1.3.0",
+                    "expanded": true,
+                    "enableInteractiveLegend": true,
+                    "enableDynamicLegend": true,
+                    "params": {},
+                    "localizedLayerStyles": true,
+                    "disableFeaturesEditing": true
+                }]
+            },
+            { id: "2", title: 'Map Right', editable: true, visibility: true, x: 0.5 + 28.7 / 2 + 0.5, y: 3, width: 28.7 / 2 - 0.5, height: 16, fontSize: 0.4, type: 'map', src: '',
+                denominator: 50000000,
+                layers: [ {
+                    "format": "image/jpeg",
+                    "group": "background",
+                    "name": "osm:osm",
+                    "opacity": 1,
+                    "title": "OSM Bright",
+                    "thumbURL": "product/assets/img/osm-bright.jpg",
+                    "type": "wms",
+                    "url": [
+                        "https://maps1.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps2.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps3.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps4.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps5.geosolutionsgroup.com/geoserver/wms",
+                        "https://maps6.geosolutionsgroup.com/geoserver/wms"
+                    ],
+                    "tileSize": 512,
+                    "visibility": true,
+                    "singleTile": false,
+                    "credits": {
+                        "title": "OSM Bright | Rendering <a href=\"https://www.geo-solutions.it/\">GeoSolutions</a> | Data © <a href=\"http://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"http://www.openstreetmap.org/copyright\">ODbL</a>"
+                    }
+                }, {
+                    "id": "gs:us_states__15",
+                    "format": "image/vnd.jpeg-png8",
+                    "search": {
+                        "url": "https://gs-stable.geo-solutions.it/geoserver/wfs",
+                        "type": "wfs"
+                    },
+                    "name": "gs:us_states",
+                    "opacity": 1,
+                    "description": "gfnhgfhgfhgfh",
+                    "style": "pophade",
+                    "title": "States of US",
+                    "tiled": true,
+                    "type": "wms",
+                    "url": "https://gs-stable.geo-solutions.it/geoserver/wms",
+                    "bbox": {
+                        "crs": "EPSG:4326",
+                        "bounds": {
+                            "minx": "-124.73142200000001",
+                            "miny": "24.955967",
+                            "maxx": "-66.969849",
+                            "maxy": "49.371735"
+                        }
+                    },
+                    "visibility": true,
+                    "singleTile": false,
+                    "allowedSRS": {
+                        "EPSG:3857": true,
+                        "EPSG:900913": true,
+                        "EPSG:4326": true
+                    },
+                    "dimensions": [],
+                    "hideLoading": false,
+                    "handleClickOnLayer": false,
+                    "featureInfo": {
+                        "format": "TEMPLATE",
+                        "template": "<p><strong>STATE_NAME - ${properties.STATE_NAME}</strong></p><p><strong>SUB_REGION - ${properties.SUB_REGION }</strong></p><p><strong>STATE_ABBR - ${properties.STATE_ABBR }</strong></p><p><strong>LAND_KM - ${properties.LAND_KM }</strong></p>"
+                    },
+                    "catalogURL": null,
+                    "useForElevation": false,
+                    "hidden": false,
+                    "legendOptions": {
+                        "legendWidth": 100,
+                        "legendHeight": 50
+                    },
+                    "tileSize": 512,
+                    "version": "1.3.0",
+                    "expanded": true,
+                    "enableInteractiveLegend": true,
+                    "enableDynamicLegend": true,
+                    "params": {},
+                    "localizedLayerStyles": true,
+                    "disableFeaturesEditing": true
+                }]
+            },
+            // ...(view === 'template' ? [{ id: "5", title: 'Resource', visibility: true, x: 0.5, y: 3, width: 28.7, height: 16, fontSize: 0.4, type: 'resource' }] : []),
+            { id: "3", title: 'Title', editable: true, visibility: true, x: 3, y: 1, width: 5, height: 1.2, fontSize: 0.8, type: 'text', value: 'My map' },
+            { id: "4", title: 'North Arrow', visibility: true, x: 26.7, y: 16, width: 2, height: 2, fontSize: 0.4, type: 'image', src: arrow },
+            { id: "5", title: 'Shape', visibility: true, x: 21.7, y: 10.1, width: 1.5, height: 1.9, fontSize: 0.3, type: 'shape', background: '#ff0000' },
         ],
         dashboard: [
             { id: "1", title: 'Image', visibility: true, x: 0.6, y: 0.5, width: 2, height: 2, fontSize: 0.4, type: 'image', src: '/dist/web/client/product/assets/img/logo.png' },
@@ -576,6 +743,8 @@ const Print = ({
         const py = event.clientY - paperRect.top;
         setPosition([x, y, ((px / dpi) * INCHES_TO_CM) / scale, ((py / dpi) * INCHES_TO_CM) / scale]);
     }
+
+    const selectedId = 2;
     return (
         <FlexBox className="print _relative _fill" column>
             <FlexBox gap="sm" className="_padding-sm" centerChildrenVertically style={{ borderBottom: '1px solid #ddd' }}>
@@ -631,7 +800,7 @@ const Print = ({
                     <ControlledTOC
                         tree={items.filter((item) => publisher || (!publisher && item.editable))}
                         style={{ paddingLeft: 0, paddingRight: 0 }}
-                        selectedNodes={[{ id: '2' }]}
+                        selectedNodes={[{ id: `${selectedId}` }]}
                         config={{
                             sortable: publisher
                         }}
@@ -674,13 +843,14 @@ const Print = ({
                                                 {entry.type === 'map'
                                                     ?
                                                     <Map
+                                                        id={entry.id}
                                                         mapType="openlayers"
                                                         map={{
                                                             registerHooks: false,
                                                             projection: 'EPSG:3857',
                                                             center: {
-                                                                x: -101.124,
-                                                                y: 39.865,
+                                                                x: -90,
+                                                                y: 39.9,
                                                                 crs: 'EPSG:4326'
                                                             }
                                                         }}
@@ -691,7 +861,7 @@ const Print = ({
                                                             transform: `scale(${scale})`,
                                                             transformOrigin: 'top left'
                                                         }}
-                                                        layers={[{
+                                                        layers={entry.layers || [{
                                                             "format": "image/jpeg",
                                                             "group": "background",
                                                             "name": "osm:osm",
@@ -768,7 +938,7 @@ const Print = ({
                                                             "disableFeaturesEditing": true
                                                         }]}
                                                     >
-                                                        <SetResolutions dpi={dpi} scale={scale}/>
+                                                        <SetResolutions denominator={entry.denominator} dpi={dpi} scale={scale}/>
                                                     </Map>
                                                     : entry.type === 'text'
                                                         ? <div dangerouslySetInnerHTML={{ __html: entry.value }}></div>
@@ -809,6 +979,7 @@ const Print = ({
                             //     // setPage(value - 1);
                             // }}
                         /> : null}
+                        
                         <FlexBox.Fill></FlexBox.Fill>
                         <FlexBox gap="md" centerChildrenVertically className="_padding-xs" style={{  fontSize: '0.75rem', border: '1px solid #ddd', zIndex: 0, borderRadius: 4 }}>
                             <span>x : {position[2]?.toFixed(3)} cm</span>
@@ -1085,13 +1256,13 @@ const Print = ({
                             {/* <div style={{ borderBottom: '1px solid #ddd' }}></div> */}
                             <FlexBox.Fill  className="_padding-tb-md"  style={{ overflow: 'auto' }}>
                                 <FlexBox column  gap="sm">
-                                    {/* <div className="ms-main-colors _padding-t-md" style={{ zIndex: 10, position: 'sticky', top: 0 }}>Selected object: <strong>{items[1].title}</strong></div> */}
+                                    {/* <div className="ms-main-colors _padding-t-md" style={{ zIndex: 10, position: 'sticky', top: 0 }}>Selected object: <strong>{items[selectedId].title}</strong></div> */}
                                     <FlexBox column  gap="sm" style={{ fontSize: '0.75rem' }}>
                                         <FormGroup>
                                             <ControlLabel>
                                                 Title
                                             </ControlLabel>
-                                            <FormControl disabled={!publisher} value={'Map'} type="text"/>
+                                            <FormControl disabled={!publisher} value={items[selectedId].title} type="text"/>
                                         </FormGroup>
                                         {publisher ? <Checkbox>
                                             Editable by user
@@ -1146,6 +1317,26 @@ const Print = ({
                                         </FormGroup>
                                         <Checkbox>Show graticule</Checkbox>
                                     </FlexBox>
+                                    <div>Overviews</div>
+                                    <FlexBox column  gap="sm" style={{ fontSize: '0.75rem' }}>
+                                        <Button>Add new overview</Button>
+                                        <FlexBox centerChildrenVertically gap="sm" className="_padding-sm" style={{ border: '1px solid #ddd', borderRadius: 4 }}>
+                                            <FormControl value="Overview 1" style={{ width: 100 }} />
+                                            <FlexFill>
+                                                <Select
+                                                value={{ label: 'Map Left', value: 'Map Left' }}
+                                                options={[{ label: 'Map Right', value: 'Map Right' }, { label: 'Map Left', value: 'Map Left' }]}/>
+                                            </FlexFill>
+                                            <ColorSelector color="#ff0000" style={{ width: 30 }}/>
+                                            <Button square>
+                                                <Glyphicon glyph="trash" />
+                                            </Button>
+                                        </FlexBox>
+                                    </FlexBox>
+                                    <div>Atlas</div>
+                                    <FlexBox column  gap="sm" style={{ fontSize: '0.75rem' }}>
+                                        <Checkbox>Fixed scale</Checkbox>
+                                    </FlexBox>
                                     <div/>
                                     {publisher ? <div>Position and dimension</div> : null}
                                     {publisher ? <FlexBox column  gap="sm" style={{ fontSize: '0.75rem' }}>
@@ -1154,14 +1345,14 @@ const Print = ({
                                                 <FormGroup>
                                                     <InputGroup>
                                                         <InputGroup.Addon>{'X'}</InputGroup.Addon>
-                                                        <FormControl value={items[1].x} type="number"/>
+                                                        <FormControl value={items[selectedId].x} type="number"/>
                                                         <InputGroup.Addon>{'cm'}</InputGroup.Addon>
                                                     </InputGroup>
                                                 </FormGroup>
                                                 <FormGroup>
                                                     <InputGroup>
                                                         <InputGroup.Addon>{'Y'}</InputGroup.Addon>
-                                                        <FormControl value={items[1].y} type="number"/>
+                                                        <FormControl value={items[selectedId].y} type="number"/>
                                                         <InputGroup.Addon>{'cm'}</InputGroup.Addon>
                                                     </InputGroup>
                                                 </FormGroup>
@@ -1175,14 +1366,14 @@ const Print = ({
                                                 <FormGroup>
                                                     <InputGroup>
                                                         <InputGroup.Addon>{'Width'}</InputGroup.Addon>
-                                                        <FormControl value={items[1].width} type="number"/>
+                                                        <FormControl value={items[selectedId].width} type="number"/>
                                                         <InputGroup.Addon>{'cm'}</InputGroup.Addon>
                                                     </InputGroup>
                                                 </FormGroup>
                                                 <FormGroup>
                                                     <InputGroup>
                                                         <InputGroup.Addon>{'Height'}</InputGroup.Addon>
-                                                        <FormControl value={items[1].height} type="number"/>
+                                                        <FormControl value={items[selectedId].height} type="number"/>
                                                         <InputGroup.Addon>{'cm'}</InputGroup.Addon>
                                                     </InputGroup>
                                                 </FormGroup>
@@ -1196,7 +1387,52 @@ const Print = ({
                             </FlexBox.Fill>
                         </Tab>
                         {publisher ? <Tab eventKey="atlas" title={'Atlas'}>
-
+                            <FlexBox column gap="sm" className="_padding-tb-md" style={{ fontSize: '0.75rem' }}>
+                                <Checkbox checked>Generate Atlas</Checkbox>
+                                <FormGroup>
+                                    <ControlLabel>
+                                        Coverage layer
+                                    </ControlLabel>
+                                    <InputGroup>
+                                        <Select
+                                            clearable={false}
+                                            value={{ label: 'States of US', value: 'States of US' }}
+                                            options={[{ label: 'States of US', value: 'States of US' }]}/>
+                                        <InputGroup.Addon className="btn"><Glyphicon glyph="cog" /></InputGroup.Addon>
+                                    </InputGroup>
+                                </FormGroup>
+                                <FormGroup>
+                                    <ControlLabel>
+                                        Page name
+                                    </ControlLabel>
+                                    <Select
+                                        clearable={false}
+                                        value={{ label: 'STATE_NAME', value: 'STATE_NAME' }}
+                                        options={[{ label: 'STATE_NAME', value: 'STATE_NAME' }]}/>
+                                </FormGroup>
+                                <FlexBox>
+                                    <FormControl disabled value="Illinois" style={{ width: 'auto' }}/>
+                                    <FlexFill>
+                                        <PaginationCustom
+                                            items={10}
+                                            activePage={2}
+                                            // onSelect={(value) => {
+                                            //     // setPage(value - 1);
+                                            // }}
+                                        />
+                                    </FlexFill>
+                                    
+                                </FlexBox>
+                                
+                                <FormGroup>
+                                    <ControlLabel>
+                                        Controlled maps
+                                    </ControlLabel>
+                                    <Select
+                                        options={[{ label: 'Map Right', value: 'Map Right' }, { label: 'Map Left', value: 'Map Left' }]}/>
+                                </FormGroup>
+                                
+                            </FlexBox>
                         </Tab> : null}
                         {view !== 'template' ? <Tab eventKey="prints" title={'Prints'}>
                             <FlexBox column gap="sm" className="_padding-tb-md">

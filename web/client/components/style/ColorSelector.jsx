@@ -33,12 +33,13 @@ function ColorSelector({
     onOpen,
     disabled,
     presetColors,
-    placement
+    placement,
+    style
 }) {
 
     return (
         <div
-            className="ms-color-selector">
+            className="ms-color-selector" style={style}>
             <ColorPicker
                 text={<Glyphicon glyph="dropper" />}
                 format={format}
