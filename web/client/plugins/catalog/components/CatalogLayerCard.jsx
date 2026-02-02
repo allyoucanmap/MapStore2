@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import React, { useState } from 'react';
-import { Glyphicon, Checkbox, } from 'react-bootstrap';
+import { Glyphicon, Checkbox, SplitButton, MenuItem } from 'react-bootstrap';
 import Button from '../../../components/layout/Button';
 import ResourceCard from '../../ResourcesCatalog/components/ResourceCard';
 import { isObject, isEmpty } from 'lodash';
@@ -93,7 +93,7 @@ const CatalogLayerCard = ({
             csw: { name: 'CSW', color: '#B8E986' },
             arcgis: { name: 'ArcGIS', color: '#417505' }
         };
-
+        console.log(record_);
         const tags = [];
         if (record_.serviceType && serviceTagMap[record_.serviceType]) {
             tags.push(serviceTagMap[record_.serviceType]);
@@ -113,60 +113,90 @@ const CatalogLayerCard = ({
     
     const buttons = [{
         Component: (props) => (
-            <Button
-                {...props}
-                className="square-button-md"
-                variant="primary"
-                disabled={loading}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onAddToMap(record_);
-                }}
-            >
-                {loading ? <Glyphicon glyph="refresh" /> : <Glyphicon glyph="plus" />}
-            </Button>
+            hasAdditionalServices ?
+            <div className="catalog-split-button" onClick={(e) => {
+                        e.stopPropagation();
+                    }}>
+                <SplitButton
+                    title={<Glyphicon glyph="plus" />}
+                    pullRight
+                    onClick={(e) => {
+                    }}
+                >
+                    <MenuItem><Message msgId="catalog.additionalOGCServices.wms"/></MenuItem>
+                    <MenuItem><Message msgId="catalog.additionalOGCServices.wfs"/></MenuItem>
+                </SplitButton>
+            </div>
+                
+                :
+                <Button
+                    {...props}
+                    className="square-button-md"
+                    disabled={loading}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToMap(record_);
+                    }}
+                >
+                    {loading ? <Glyphicon glyph="refresh" /> : <Glyphicon glyph="plus" />}
+                </Button>
+            
         ),
         name: 'addToMap',
         target: 'card-buttons'
     }];
 
     // If there are additional services, create options dropdown with all services
-    const options = [];
-    if (hasAdditionalServices) {
-        options.push({
-            Component: () => (
-                <li
-                    className='_padding-lr-md _padding-tb-sm'
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onAddToMap(record_);
-                    }}
-                >
-                    <Message msgId={`catalog.additionalOGCServices.${record_.serviceType || 'wms'}`} />
-                </li>
-            ),
-            name: `add-${record_.serviceType || 'wms'}`,
-            target: 'card-options'
-        });
+    const options = [{
+        Component: () => (
+            <li
+                className='_padding-lr-md _padding-tb-sm'
+                onClick={(e) => {
+                    // e.stopPropagation();
+                    // onAddToMap(record_.additionalOGCServices[serviceType], serviceType);
+                }}
+            >
+                Show full content
+            </li>
+        ),
+        name: `show`,
+        target: 'card-options'
+    }];
+    // if (hasAdditionalServices) {
+    //     options.push({
+    //         Component: () => (
+    //             <li
+    //                 className='_padding-lr-md _padding-tb-sm'
+    //                 onClick={(e) => {
+    //                     e.stopPropagation();
+    //                     onAddToMap(record_);
+    //                 }}
+    //             >
+    //                 <Message msgId={`catalog.additionalOGCServices.${record_.serviceType || 'wms'}`} />
+    //             </li>
+    //         ),
+    //         name: `add-${record_.serviceType || 'wms'}`,
+    //         target: 'card-options'
+    //     });
 
-        Object.keys(record_?.additionalOGCServices || {}).forEach(serviceType => {
-            options.push({
-                Component: () => (
-                    <li
-                        className='_padding-lr-md _padding-tb-sm'
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onAddToMap(record_.additionalOGCServices[serviceType], serviceType);
-                        }}
-                    >
-                        <Message msgId={`catalog.additionalOGCServices.${serviceType}`} />
-                    </li>
-                ),
-                name: `add-${serviceType}`,
-                target: 'card-options'
-            });
-        });
-    }
+    //     Object.keys(record_?.additionalOGCServices || {}).forEach(serviceType => {
+    //         options.push({
+    //             Component: () => (
+    //                 <li
+    //                     className='_padding-lr-md _padding-tb-sm'
+    //                     onClick={(e) => {
+    //                         e.stopPropagation();
+    //                         onAddToMap(record_.additionalOGCServices[serviceType], serviceType);
+    //                     }}
+    //                 >
+    //                     Show full title and description
+    //                 </li>
+    //             ),
+    //             name: `add-${serviceType}`,
+    //             target: 'card-options'
+    //         });
+    //     });
+    // }
 
     return (
         <li
@@ -202,14 +232,14 @@ const CatalogLayerCard = ({
                     ...record_,
                     '@extras': {
                         info: {
-                            thumbnailUrl: record_?.thumbnail_url,
-                            icon: { glyph: 'add-layer' },
+                            thumbnailUrl: record_?.thumbnail,
+                            icon: { glyph: 'dataset' },
                             title: getTitle(record_?.title),
-                            creator: record_.metadata?.creator,
-                            description: record_?.description || 'No description available'
+                            // creator: record_.metadata?.creator,
+                            description: record_?.description
                         }
                     },
-                    tags: generateTags()
+                    tags: []// generateTags()
                 }}
                 options={options}
                 buttons={buttons}
@@ -217,12 +247,12 @@ const CatalogLayerCard = ({
                 hideThumbnail={hideThumbnail}
                 onClick={() => onToggle(record, !isChecked)}
                 layoutCardsStyle="grid"
+                inline
                 metadata={[
-                    { path: '@extras.info.title', target: 'header' },
+                    { path: '@extras.info.title', target: 'header', showFullContent: false },
                     { path: 'identifier', target: 'body' },
-                    { path: '@extras.info.description', target: 'body', ellipsis: false },
-                    { path: 'tags', itemColor: 'color', itemValue: 'name', showFullContent: true, type: 'tag' },
-                    { path: '@extras.info.creator', target: 'footer', icon: { glyph: 'user' }, noDataLabelId: 'resourcesCatalog.emptyUnknown', width: 10, disableIf: false }
+                    { path: '@extras.info.description', target: 'body', showFullContent: false },
+                    { path: 'tags', itemColor: 'color', itemValue: 'name', showFullContent: false, type: 'tag', target: 'footer' }
                 ]}
             />
             {loading && (
