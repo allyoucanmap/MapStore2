@@ -7,13 +7,16 @@
  ectory of this source tree.
  */
 
-import React from 'react';
+import React, { useContext } from 'react';
 
 import ConfigUtils from '../../utils/ConfigUtils';
+import { DocumentContext } from '../../contexts/DocumentContext';
+
 
 const withContainer = (Component) => {
     return (props) => {
-        return <Component {...props} container={document.querySelector('.' + (ConfigUtils.getConfigProp('themePrefix') || 'ms2') + " > div") || document.body}/>;
+        const doc = useContext(DocumentContext);
+        return <Component {...props} container={doc.querySelector('.' + (ConfigUtils.getConfigProp('themePrefix') || 'ms2') + " > div") || doc.body}/>;
     };
 };
 

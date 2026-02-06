@@ -269,8 +269,7 @@ const standardButtons = {
         }}
         glyph="viewport-filter"
         tooltipPosition="top"
-        className="viewportFilter-tool"
-        buttonClassName="square-button no-border"
+        className="viewportFilter-tool square-button no-border"
         active={viewportFilter ?? pluginCfg?.filterByViewport}
         pullLeft
     />)
