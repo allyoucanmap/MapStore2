@@ -71,6 +71,19 @@ createPlugin('MyPlugin', {
 });
 ```
 
+### Js minification with esbuild
+
+Production builds now minify js bundles with esbuild. Existing projects based on MapStore should update the devDependencies inside the package.json.
+
+No other change is needed to adopt it. To keep using terser, pass the new `jsMinifier` parameter to the configuration builder:
+
+```js
+buildConfig({
+    // ...
+    jsMinifier: 'terser'
+});
+```
+
 ## Migration from 2026.01.01 to 2026.01.02
 
 ### Monitored state available by default

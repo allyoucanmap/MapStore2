@@ -3,6 +3,7 @@ const DefinePlugin = require("webpack/lib/DefinePlugin");
 const ProvidePlugin = require("webpack/lib/ProvidePlugin");
 const NoEmitOnErrorsPlugin = require("webpack/lib/NoEmitOnErrorsPlugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const path = require('path');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
@@ -51,6 +52,7 @@ const {devServer: DEV_SERVER, devtool: DEV_TOOL} = require('./devServer');
  * @param {object} config.projectConfig config mapped to __MAPSTORE_PROJECT_CONFIG__, available only with object syntax
  * @param {string} config.cesiumBaseUrl (optional) url for cesium assets, workers and widgets. It is needed only for custom project where the structure of dist folder is not following the default one
  * @param {string} config.devtool (optional) dev tool for webpack, available only with object syntax. Default is undefined.
+ * @param {string} config.jsMinifier (optional) minifier used for js bundles in production: "esbuild" or "terser" (the webpack default minimizer).
  * @returns a webpack configuration object
  * @example
  * // It's possible to use a single object argument to pass the parameters.
@@ -118,7 +120,8 @@ module.exports = (...args) => mapArgumentsToObject(args, ({
     devServer,
     resolveModules,
     cesiumBaseUrl,
-    devtool = DEV_TOOL
+    devtool = DEV_TOOL,
+    jsMinifier = 'esbuild'
 }) => ({
     target: "web",
     entry: Object.assign({}, bundles, themeEntries),
@@ -128,8 +131,16 @@ module.exports = (...args) => mapArgumentsToObject(args, ({
         minimize: !!prod,
         ...(prod && {
             minimizer: [
-                // For webpack@5 you can use the `...` syntax to extend existing minimizers (i.e. `terser-webpack-plugin`)
-                `...`,
+                jsMinifier === 'terser'
+                    // For webpack@5 you can use the `...` syntax to extend existing minimizers (i.e. `terser-webpack-plugin`)
+                    ? `...`
+                    : new TerserPlugin({
+                        minify: TerserPlugin.esbuildMinify,
+                        terserOptions: {
+                            // prevent the minifier from emitting syntax newer than the supported browsers
+                            target: 'es2018'
+                        }
+                    }),
                 new CssMinimizerPlugin() // minify css bundle
             ]
         })

@@ -57,6 +57,7 @@
     "css-minimizer-webpack-plugin": "3.0.2",
     "denodeify": "1.2.1",
     "docma": "1.5.1",
+    "esbuild": "0.25.5",
     "eslint": "7.32.0",
     "eslint-plugin-import": "2.29.1",
     "eslint-plugin-no-only-tests": "2.6.0",
@@ -97,9 +98,10 @@
     "simple-git": "2.20.1",
     "style-loader": "2.0.0",
     "terser": "5.18.1",
+    "terser-webpack-plugin": "5.6.1",
     "url-loader": "0.5.7",
     "webpack": "5.104.1",
-    "webpack-bundle-size-analyzer": "2.0.2",
+    "webpack-bundle-analyzer": "4.10.2",
     "webpack-cli": "4.10.0",
     "webpack-dev-server": "3.11.0"
   },
@@ -295,7 +297,7 @@
     "md:fix": "markdownlint --fix .",
     "lint": "eslint web/client --ext .jsx,.js && npm run md && npm run json:check",
     "i18n": "node  utility/translations/findMissingTranslations.js",
-    "analyze": "npm run fe:clean && mkdirp ./web/client/dist && webpack --json --config build/prod-webpack.config.js | webpack-bundle-size-analyzer",
+    "analyze": "npm run fe:clean && mkdirp ./web/client/dist && webpack build --progress --color --config build/analyze-webpack.config.js",
     "generate:changelog": "node ./build/generateChangelog.js",
     "json:check": "prettier --ignore-path .prettierignore --check \"./**/*.json\"",
     "json:write": "prettier --ignore-path .prettierignore --write \"./**/*.json\""
