@@ -71,6 +71,23 @@ createPlugin('MyPlugin', {
 });
 ```
 
+### Webpack dev server upgrade
+
+MapStore upgraded `webpack-dev-server` from version 3 to version 4. Existing projects based on MapStore should apply the following changes.
+
+- update the devDependencies inside the package.json
+- update the dev server scripts in the package.json: the `--inline` flag has been removed in webpack-dev-server 4 and `--content-base` has been replaced by `--static`:
+
+```json
+// before
+"fe:start": "webpack serve --progress --color --port 8081 --hot --inline --config webpack.config.js --content-base .",
+"fe:start-prod": "webpack serve --progress --color --port 8081 --hot --inline --config prod-webpack.config.js --content-base .",
+
+// after
+"fe:start": "webpack serve --progress --color --port 8081 --hot --config webpack.config.js --static .",
+"fe:start-prod": "webpack serve --progress --color --port 8081 --hot --config prod-webpack.config.js --static ."
+```
+
 ## Migration from 2026.01.01 to 2026.01.02
 
 ### Monitored state available by default
