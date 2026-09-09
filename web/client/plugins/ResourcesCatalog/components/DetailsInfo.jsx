@@ -286,25 +286,7 @@ const parseTabItems = (items) => {
 };
 const isDefaultTabType = (type) => type === 'tab';
 
-const tabCyDataMap = {
-    info: 'dataset-view-sidepanel-tab-info',
-    location: 'dataset-view-sidepanel-tab-location',
-    locations: 'dataset-view-sidepanel-tab-location',
-    assets: 'dataset-view-sidepanel-tab-assets',
-    data: 'dataset-view-sidepanel-tab-data',
-    related: 'dataset-view-sidepanel-tab-data',
-    share: 'dataset-view-sidepanel-tab-share',
-    settings: 'dataset-view-sidepanel-tab-settings'
-};
-
-const getTabCyData = (tab = {}) => {
-    const normalizedId = `${tab?.id || ''}`.toLowerCase();
-    if (tabCyDataMap[normalizedId]) {
-        return tabCyDataMap[normalizedId];
-    }
-    const normalizedLabel = `${tab?.label || ''}`.toLowerCase();
-    return tabCyDataMap[normalizedLabel] || null;
-};
+const getTabDataMsId = (tab = {}) => tab['data-ms-id'] ?? (tab.id ? `dataset-view-sidepanel-tab-${tab.id}` : undefined);
 
 function DetailsInfo({
     tabs = [],
@@ -342,7 +324,7 @@ function DetailsInfo({
             selectedTabId={selectedTab ?? filteredTabs?.[0]?.id}
             onSelect={onSelectTab}
             tabs={filteredTabs.map(({Component, ...tab} = {}) => ({
-                title: <span {...(getTabCyData(tab) ? { 'data-ms-id': getTabCyData(tab) } : {})}><DetailInfoFieldLabel field={tab} /></span>,
+                title: <span data-ms-id={getTabDataMsId(tab)}><DetailInfoFieldLabel field={tab} /></span>,
                 eventKey: tab?.id,
                 component: <div data-ms-id="dataset-view-sidepanel-tab-content"><Component fields={tab?.items} {...props} /></div>
             }))}
