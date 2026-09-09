@@ -34,14 +34,9 @@ const ResourceCardButton = ({
     variant,
     borderTransparent,
     loading,
-    cardMsIdPrefix,
     dataMsId,
     ...props
 }) => {
-    const resolvedDataMsId = dataMsId
-        || (cardMsIdPrefix && ['heart', 'heart-o'].includes(glyph) ? `${cardMsIdPrefix}-btn-favorite` : null)
-        || (cardMsIdPrefix && glyph === 'details' ? `${cardMsIdPrefix}-properties` : null);
-
     function handleOnClick(event) {
         event.stopPropagation();
         if (onClick) {
@@ -54,7 +49,7 @@ const ResourceCardButton = ({
             square={square}
             borderTransparent={borderTransparent}
             {...props}
-            {...resolvedDataMsId ? { 'data-ms-id': resolvedDataMsId } : {}}
+            data-ms-id={dataMsId}
             tooltipId={square && labelId ? labelId : null}
             onClick={handleOnClick}
         >
@@ -430,7 +425,7 @@ const ResourceCard = forwardRef(({
     onClick,
     hideThumbnail,
     target,
-    cardIndex
+    cardMsIdPrefix
 }, ref) => {
 
     const resource = data;
@@ -439,7 +434,6 @@ const ResourceCard = forwardRef(({
         viewerUrl,
         thumbnailUrl
     } = getResourceInfo(resource);
-    const cardMsIdPrefix = cardIndex !== undefined ? `dataset-card-${cardIndex}` : undefined;
 
     const CardComponent = component || ResourceCardWrapper;
     const CardBody = cardBody[layoutCardsStyle];

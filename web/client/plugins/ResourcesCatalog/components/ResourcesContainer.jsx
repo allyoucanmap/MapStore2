@@ -61,13 +61,14 @@ const ResourcesContainer = (props) => {
                         } = getResourceStatus(resource);
                         // enable allowedOptions (menu cards)
                         const allowedOptions =  !isProcessing ? cardOptions : [];
+                        const cardMsIdPrefix = `dataset-card-${idx}`;
                         return (
                             <li
                                 key={`${idx}:${resource?.id}`}
-                                data-ms-id={`dataset-card-${idx}`}
+                                data-ms-id={cardMsIdPrefix}
                             >
                                 <ResourceCard
-                                    cardIndex={idx}
+                                    cardMsIdPrefix={cardMsIdPrefix}
                                     component={cardComponent}
                                     active={isCardActive(resource)}
                                     data={resource}
