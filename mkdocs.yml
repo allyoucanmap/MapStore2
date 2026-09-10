@@ -152,6 +152,7 @@ nav:
       - FAQ: 'developer-guide/dev-faq.md'
     - Guidelines:
       - Code Conventions: 'developer-guide/code-conventions.md'
+      - Test Automation Identifiers: 'developer-guide/test-automation-identifiers.md'
       - Documentation: 'developer-guide/documentation-guidelines.md'
       - Migration: 'developer-guide/mapstore-migration-guide.md'
       - Release: 'developer-guide/release.md'

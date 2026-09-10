@@ -7,6 +7,7 @@ In order to preserve quality, maintainability and testability when you develop i
 - Access to the state using state selectors
 - Prefer plugins `cfg` over `initialState` for plugins configurations
 - Use `web/client/libs/ajax` in your hooks or in redux-observable for async
+- Use `data-ms-id` for test automation identifiers (see [Test Automation Identifiers](test-automation-identifiers.md))
 
 ## Access to the state using state selectors
 
