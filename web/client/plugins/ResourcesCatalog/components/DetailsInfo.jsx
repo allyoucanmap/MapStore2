@@ -50,7 +50,7 @@ const isFieldLabelOnly = ({style, value}) => isEmptyValue(value) && isStyleLabel
 const DetailInfoFieldLabel = ({ field }) => {
     const label = field.labelId ? <Message msgId={field.labelId} /> : field.label;
     return isStyleLabel(field.style) && field.href
-        ? (<a href={field.href} target={field.target} data-ms-id={field['data-ms-id']}>{label}</a>)
+        ? (<a href={field.href} target={field.target} data-ms-id={field.dataMsId}>{label}</a>)
         : label;
 };
 
@@ -60,7 +60,7 @@ function DetailsInfoField({ field, children, className }) {
     return (
         <FlexBox gap="sm" classNames={['ms-details-info-field', '_padding-b-xs', '_row']} className={className}>
             <Text className={isLinkLabel ? '' : '_label'} fontSize="sm"><DetailInfoFieldLabel field={field} /></Text>
-            {!isLinkLabel ? <FlexBox.Fill data-ms-id={field['data-ms-id']}>
+            {!isLinkLabel ? <FlexBox.Fill data-ms-id={field.dataMsId}>
                 <Text fontSize="sm">{children(values)}</Text>
             </FlexBox.Fill> : null}
         </FlexBox>
@@ -286,7 +286,7 @@ const parseTabItems = (items) => {
 };
 const isDefaultTabType = (type) => type === 'tab';
 
-const getTabDataMsId = (tab = {}) => tab['data-ms-id'] ?? (tab.id ? `dataset-view-sidepanel-tab-${tab.id}` : undefined);
+const getTabDataMsId = (tab = {}) => tab.dataMsId ?? (tab.id ? `dataset-view-sidepanel-tab-${tab.id}` : undefined);
 
 function DetailsInfo({
     tabs = [],

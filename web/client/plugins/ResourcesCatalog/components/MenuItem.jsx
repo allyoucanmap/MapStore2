@@ -36,7 +36,7 @@ const DropdownMenuItems = ({
                             variant="default"
                             className={itm.className}
                             showMessage
-                            dataMsId={itm['data-ms-id']}
+                            dataMsId={itm.dataMsId}
                         />
                     );
                 }
@@ -52,7 +52,7 @@ const DropdownMenuItems = ({
                             as={itm?.items ? 'span' : 'a' }
                             target={itm.target ?? target}
                             className={itm.className}
-                            data-ms-id={itm['data-ms-id']}
+                            data-ms-id={itm.dataMsId}
                         >
                             {itm.glyph ? <Glyphicon glyph={itm.glyph} /> : null}
                             {itm.glyph && labelNode ? ' ' : null}
@@ -88,7 +88,7 @@ const DropdownMenuItems = ({
  * @prop {string} item.square square style for button
  * @prop {string} item.tooltipId tooltip message id
  * @prop {string} item.src image source
- * @prop {string} item['data-ms-id'] test automation identifier
+ * @prop {string} item.dataMsId test automation identifier, rendered as the `data-ms-id` attribute
  * @prop {node} containerNode the node to append the child element into a DOM
  * @prop {number} tabIndex define navigation order
  * @prop {string} size button size, one of `xs`, `sm`, `md` or `xl`
@@ -126,7 +126,7 @@ const MenuItem = ({
         square,
         tooltipId,
         src,
-        'data-ms-id': dataMsId
+        dataMsId
     } = item || {};
 
     const target = itemTarget ?? defaultTarget;
