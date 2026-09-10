@@ -156,7 +156,7 @@ const DownloadDialog = ({
                 <button
                     onClick={onClose}
                     className="settings-panel-close close"
-                    {...{ 'data-ms-id': 'dataset-export-box-close' }}
+                    data-ms-id="dataset-export-box-close"
                 >
                     {closeGlyph ? <Glyphicon glyph={closeGlyph}/> : <span>×</span>}
                 </button>
@@ -196,7 +196,7 @@ const DownloadDialog = ({
                 <Button
                     bsStyle="primary"
                     className="download-button"
-                    {...{ 'data-ms-id': 'dataset-export-box-export' }}
+                    data-ms-id="dataset-export-box-export"
                     disabled={formatsLoading || formats.length === 0}
                     onClick={handleExport}>
                     {renderIcon()} <Message msgId="layerdownload.export" />

@@ -47,7 +47,7 @@ const DownloadWPSOptions = ({
             {advancedOptionsVisible && <div className="mapstore-downloadwpsoptions-advanced-options">
                 <Button
                     className="no-border"
-                    {...{ 'data-ms-id': 'dataset-export-toggle-advanced' }}
+                    data-ms-id="dataset-export-toggle-advanced"
                     onClick={() => openAdvancedOptions(!advancedOptionsOpened)}
                 >
                     <Glyphicon glyph={`chevron-${advancedOptionsOpened ? 'down' : 'right'}`}/>

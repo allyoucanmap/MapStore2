@@ -64,7 +64,7 @@ function ResourceCardActionButtons({
                     size="xs"
                     noCaret
                     className="_border-transparent"
-                    {...cardMsIdPrefix ? { 'data-ms-id': `${cardMsIdPrefix}-actions` } : {}}
+                    data-ms-id={cardMsIdPrefix ? `${cardMsIdPrefix}-actions` : undefined}
                 >
                     <Glyphicon glyph="option-vertical" />
                 </Dropdown.Toggle>
