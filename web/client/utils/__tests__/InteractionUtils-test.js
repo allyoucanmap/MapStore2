@@ -28,6 +28,7 @@ import {
     findAllApplyFiltersForZoomTo,
     findNodeById,
     isInteractionSender,
+    hasSenderOwnZoomExtent,
     isSenderTriggerKey,
     extractWidgetIdFromNodePath,
     WIDGET_EVENTS_BY_WIDGET_TYPE
@@ -794,10 +795,18 @@ describe('InteractionUtils', () => {
         });
     });
 
+    describe('hasSenderOwnZoomExtent', () => {
+        it('is true only for senders zooming to their own data', () => {
+            expect(hasSenderOwnZoomExtent({ widgetType: 'table' })).toBe(true);
+            expect(hasSenderOwnZoomExtent({ widgetType: 'filter' })).toBe(false);
+            expect(hasSenderOwnZoomExtent()).toBe(false);
+        });
+    });
+
     describe('getPossibleTargetsEditingWidget', () => {
         it('returns the table targets constrained to its layer', () => {
             const targets = getPossibleTargetsEditingWidget('table', { id: 'layer-1', name: 'topp:states' });
-            expect(targets.map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_FILTER]);
+            expect(targets.map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_FILTER, TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]);
             expect(targets[0].constraints.layer).toExist();
             expect(getPossibleTargetsEditingWidget('table')[0].constraints).toEqual({});
         });
@@ -824,6 +833,14 @@ describe('InteractionUtils', () => {
             expect(zoomNode.type).toBe('element');
             expect(zoomNode.nodePath).toBe('map.applyZoomTo');
             expect(mapCollection.children[0].id).toBe('layers');
+        });
+
+        it('exposes zoom to feature on the same map zoom node', () => {
+            const rootTree = generateRootTree([], mapZoomLayers);
+            const display = getDisplayInteractionTargetTree(rootTree, { targetType: TARGET_TYPES.APPLY_ZOOM_TO_FEATURE });
+            const mapNode = display.children[0];
+            expect(mapNode.nodePath).toBe('map.applyZoomTo');
+            expect(mapNode.interactionMetadata.targets.map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]);
         });
 
         it('renders the zoomTo action directly on the Map node (no nested "Zoom to" child leaf)', () => {

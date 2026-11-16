@@ -15,6 +15,8 @@ import {
     applyDimensionEffect,
     buildFilterWidgetAppliedData,
     buildTableWidgetAppliedData,
+    getTableWidgetZoomExtentLayers,
+    SENDER_ZOOM_EXTENT_LAYERS,
     getSenderSourceIds,
     cleanupEffectsBySenderId,
     cleanupInteractionsAfterLayerDeletion,
@@ -143,6 +145,24 @@ describe('InteractionEffectsUtils', () => {
         });
     });
 
+    describe('getTableWidgetZoomExtentLayers', () => {
+        const layer = { id: 'layer-1', name: 'topp:states', url: '/geoserver/wms' };
+        const options = { propertyName: ['STATE_NAME'] };
+        const quickFilters = { STATE_NAME: { rawValue: 'Arizona', value: 'Arizona', operator: 'ilike', type: 'string', attribute: 'STATE_NAME' } };
+        it('returns the table layer filtered by the table filters', () => {
+            const [extentLayer] = getTableWidgetZoomExtentLayers({ layer, options, quickFilters });
+            expect(extentLayer.name).toBe(layer.name);
+            expect(extentLayer.url).toBe(layer.url);
+            expect(Object.keys(extentLayer.layerFilter).length > 0).toBe(true);
+            expect(SENDER_ZOOM_EXTENT_LAYERS.table).toBe(getTableWidgetZoomExtentLayers);
+        });
+        it('returns no layers without filter or layer', () => {
+            expect(getTableWidgetZoomExtentLayers({ layer, options })).toEqual([]);
+            expect(getTableWidgetZoomExtentLayers({ options, quickFilters })).toEqual([]);
+            expect(getTableWidgetZoomExtentLayers()).toEqual([]);
+        });
+    });
+
     describe('applyFilterEffect', () => {
         it('adds the filter to a table widget tagged with the sender', () => {
             const context = makeContext({ widgets: [{ id: TABLE_ID, widgetType: 'table' }] });
@@ -237,6 +257,13 @@ describe('InteractionEffectsUtils', () => {
             expect(actions.length).toBe(1);
             expect(actions[0].widgetId).toBe(SENDER_ID);
             expect(actions[0].value).toEqual([kept]);
+        });
+        it('cleanupInteractionsAfterLayerDeletion keeps the table zoom-to plugged without layer filters', () => {
+            const removed = makeInteraction({ id: 'removed', target: { nodePath: `map.layers[${LAYER_ID}]` } });
+            const zoomTo = makeInteraction({ id: 'zoom', targetType: TARGET_TYPES.APPLY_ZOOM_TO, target: { nodePath: 'map.applyZoomTo' } });
+            const context = makeContext({ widgets: [{ id: TABLE_ID, widgetType: 'table', interactions: [removed, zoomTo] }] });
+            const [update] = cleanupInteractionsAfterLayerDeletion(LAYER_ID, context);
+            expect(update.value).toEqual([zoomTo]);
         });
         it('cleanupInteractionsAfterLayerDeletion cleans the table sender interactions', () => {
             const kept = makeInteraction({ id: 'kept' });

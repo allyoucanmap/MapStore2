@@ -2387,6 +2387,8 @@
           "configureChartOptions": "Configurer les options de graphique",
           "configureWidgetOptions": "Configurer les options du widget",
           "columnFilter": "Filtre des colonnes",
+          "zoomToFilteredBounds": "Zoomer sur l'emprise filtrée",
+          "zoomToFeatureExtent": "Zoomer sur l'emprise de l'entité",
           "errorChart": "Un ou plusieurs graphiques ne sont pas valides",
           "errorFilter": "Un ou plusieurs filtres ne sont pas valides",
           "backToTableOptions": "Retour à l'option de table",

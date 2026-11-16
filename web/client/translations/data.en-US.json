@@ -2387,6 +2387,8 @@
           "configureChartOptions": "Configure chart options",
           "configureWidgetOptions": "Configure widget options",
           "columnFilter": "Column filter",
+          "zoomToFilteredBounds": "Zoom to filtered bounds",
+          "zoomToFeatureExtent": "Zoom to feature extent",
           "errorChart": "One or more chart(s) is invalid",
           "errorFilter": "One or more filter(s) is invalid",
           "backToTableOptions": "Back to table options",

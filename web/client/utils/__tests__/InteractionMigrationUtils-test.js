@@ -12,7 +12,9 @@ import {
     getLegacyConnectionSource,
     migrateLegacyConnections,
     LEGACY_CONNECTION_CONVERTERS,
-    MAIN_MAP_SENDER_ID
+    LEGACY_CONNECTION_EFFECT_WRITERS,
+    MAIN_MAP_SENDER_ID,
+    convertTableLegacyConnection
 } from '../InteractionMigrationUtils';
 
 const TABLE_ID = 'table-1';
@@ -67,12 +69,13 @@ describe('InteractionMigrationUtils', () => {
     });
 
     describe('migrateLegacyConnections', () => {
-        it('has no registered converters yet', () => {
-            expect(LEGACY_CONNECTION_CONVERTERS).toEqual({});
+        it('registers the table converter and effect writer', () => {
+            expect(Object.keys(LEGACY_CONNECTION_CONVERTERS)).toEqual(['table']);
+            expect(Object.keys(LEGACY_CONNECTION_EFFECT_WRITERS)).toEqual(['table']);
         });
         it('returns the same configuration without converters or widgets', () => {
             const config = { widgets: [makeTable(), makeConnectedChart()] };
-            expect(migrateLegacyConnections(config)).toBe(config);
+            expect(migrateLegacyConnections(config, {})).toBe(config);
             expect(migrateLegacyConnections(undefined, testConverters)).toBe(undefined);
             const noWidgets = { layouts: {} };
             expect(migrateLegacyConnections(noWidgets, testConverters)).toBe(noWidgets);
@@ -109,6 +112,125 @@ describe('InteractionMigrationUtils', () => {
             const rejected = { widgets: [makeTable(), makeConnectedChart()] };
             expect(migrateLegacyConnections(rejected, { table: () => null })).toBe(rejected);
             expect(migrateLegacyConnections(rejected, { chart: testConverters.table })).toBe(rejected);
+        });
+    });
+
+    describe('table legacy connections', () => {
+        const LAYER = { id: 'states', name: 'topp:states', url: '/geoserver/wms' };
+        const OTHER_LAYER = { id: 'roads', name: 'topp:roads', url: '/geoserver/wms' };
+        const options = { propertyName: ['STATE_NAME'] };
+        const quickFilters = { STATE_NAME: { rawValue: 'Arizona', value: 'Arizona', operator: 'ilike', type: 'string', attribute: 'STATE_NAME' } };
+        const legacyDependencies = {
+            mapSync: true,
+            dependenciesMap: {
+                filter: `widgets[${TABLE_ID}].filter`,
+                quickFilters: `widgets[${TABLE_ID}].quickFilters`,
+                layer: `widgets[${TABLE_ID}].layer`,
+                options: `widgets[${TABLE_ID}].options`
+            }
+        };
+        const table = makeTable({ layer: LAYER, options });
+        const counter = { id: 'counter-1', widgetType: 'counter', layer: LAYER, ...legacyDependencies };
+
+        it('converts a counter connection into a filter interaction', () => {
+            const { interactions, receiver } = convertTableLegacyConnection(counter, table);
+            expect(interactions.length).toBe(1);
+            expect(interactions[0].targetType).toBe('applyFilter');
+            expect(interactions[0].plugged).toBe(true);
+            expect(interactions[0].source.nodePath).toBe(`widgets[${TABLE_ID}]`);
+            expect(interactions[0].target.nodePath).toBe('widgets[counter-1]');
+            expect(interactions[0].target.metaData.constraints.layer.name).toBe(LAYER.name);
+            expect(receiver.mapSync).toNotExist();
+            expect(receiver.dependenciesMap).toNotExist();
+            expect(receiver.layer).toBe(LAYER);
+        });
+        it('converts only the chart traces on the table layer', () => {
+            const chart = {
+                id: CHART_ID,
+                widgetType: 'chart',
+                charts: [{ chartId: 'c1', traces: [{ id: 't1', layer: LAYER }, { id: 't2', layer: OTHER_LAYER }] }],
+                ...legacyDependencies
+            };
+            const { interactions } = convertTableLegacyConnection(chart, table);
+            expect(interactions.map(i => i.target.nodePath)).toEqual([`widgets[${CHART_ID}].charts[c1].traces[t1]`]);
+        });
+        it('converts a map widget connection into layer filters and auto zoom for each map', () => {
+            const mapWidget = {
+                id: 'map-w',
+                widgetType: 'map',
+                maps: [
+                    { mapId: 'm1', layers: [{ id: 'osm', name: 'osm' }, { id: 'l1', name: LAYER.name }] },
+                    { mapId: 'm2', layers: [{ id: 'l2', name: OTHER_LAYER.name }] }
+                ],
+                ...legacyDependencies
+            };
+            const { interactions } = convertTableLegacyConnection(mapWidget, table);
+            expect(interactions.map(i => [i.targetType, i.target.nodePath])).toEqual([
+                ['applyFilter', 'widgets[map-w].maps[m1].layers[l1]'],
+                ['applyZoomTo', 'widgets[map-w].maps[m1].applyZoomTo'],
+                ['applyZoomToFeature', 'widgets[map-w].maps[m1].applyZoomTo'],
+                ['applyZoomTo', 'widgets[map-w].maps[m2].applyZoomTo'],
+                ['applyZoomToFeature', 'widgets[map-w].maps[m2].applyZoomTo']
+            ]);
+            expect(interactions[1].configuration.autoZoom).toBe(true);
+            expect(interactions[0].configuration.autoZoom).toBe(false);
+            expect(interactions.every(i => i.plugged)).toBe(true);
+        });
+        it('keeps the connection legacy when the table is connected to a map or nothing can be converted', () => {
+            expect(convertTableLegacyConnection(counter, { ...table, mapSync: true })).toBe(null);
+            expect(convertTableLegacyConnection({ ...counter, widgetType: 'text' }, table)).toBe(null);
+            expect(convertTableLegacyConnection({ id: CHART_ID, widgetType: 'chart', charts: [] }, table)).toBe(null);
+        });
+        it('migrates the connection and writes the current table filter into the receiver', () => {
+            const existing = { id: 'other-filter', appliedFromWidget: 'filter-w' };
+            const config = { widgets: [{ ...table, quickFilters }, { ...counter, interactionFilters: [existing] }] };
+            const migrated = migrateLegacyConnections(config);
+            const [migratedTable, migratedCounter] = migrated.widgets;
+            const interactionId = migratedTable.interactions[0].id;
+            expect(interactionId).toBe('legacy:counter-1:applyFilter:widgets[counter-1]');
+            expect(migratedCounter.mapSync).toNotExist();
+            expect(migratedCounter.interactionFilters.length).toBe(2);
+            expect(migratedCounter.interactionFilters[0]).toEqual(existing);
+            expect(migratedCounter.interactionFilters[1].id).toBe(interactionId);
+            expect(migratedCounter.interactionFilters[1].appliedFromWidget).toBe(TABLE_ID);
+            expect(migratedCounter.interactionFilters[1].filters[0].body).toContain('STATE_NAME');
+            expect(migrateLegacyConnections(migrated)).toBe(migrated);
+        });
+        it('converts widgets chained through a map widget into direct table interactions', () => {
+            const mapWidget = {
+                id: 'map-w',
+                widgetType: 'map',
+                maps: [{ mapId: 'm1', layers: [{ id: 'l1', name: LAYER.name }] }],
+                ...legacyDependencies
+            };
+            const chainedChart = {
+                id: CHART_ID,
+                widgetType: 'chart',
+                charts: [{ chartId: 'c1', traces: [{ id: 't1', layer: LAYER }] }],
+                mapSync: true,
+                dependenciesMap: {
+                    viewport: 'widgets[map-w].maps[m1].viewport',
+                    filter: 'widgets[map-w].filter',
+                    quickFilters: 'widgets[map-w].quickFilters'
+                }
+            };
+            const legend = { id: 'legend-1', widgetType: 'legend', mapSync: true, dependenciesMap: { layers: 'widgets[map-w].maps[m1].layers' } };
+            const migrated = migrateLegacyConnections({ widgets: [{ ...table, quickFilters }, mapWidget, chainedChart, legend] });
+            const [migratedTable, migratedMap, migratedChart, migratedLegend] = migrated.widgets;
+            const chartInteraction = migratedTable.interactions.find(i => i.target.nodePath === `widgets[${CHART_ID}].charts[c1].traces[t1]`);
+            expect(chartInteraction).toExist();
+            expect(migratedTable.interactions.length).toBe(4);
+            expect(migratedMap.dependenciesMap).toNotExist();
+            expect(migratedMap.maps[0].layers[0].layerFilter.filters.length).toBe(1);
+            expect(migratedChart.dependenciesMap).toBe(chainedChart.dependenciesMap);
+            expect(migratedChart.charts[0].traces[0].interactionFilters[0].id).toBe(chartInteraction.id);
+            expect(migratedLegend).toBe(legend);
+            expect(migrateLegacyConnections(migrated)).toBe(migrated);
+        });
+        it('writes no filter when the table has none', () => {
+            const migrated = migrateLegacyConnections({ widgets: [table, counter] });
+            expect(migrated.widgets[1].interactionFilters).toNotExist();
+            expect(migrated.widgets[0].interactions.length).toBe(1);
         });
     });
 });

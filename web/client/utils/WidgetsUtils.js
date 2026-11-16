@@ -1298,6 +1298,21 @@ export const isChartCompatibleWithTableWidget = (widget, tableWidget) => {
 };
 
 /**
+ * Returns true if the table shows the column filters, when it sends interactions or legacy connections read it
+ * @param {object} widget the widget to check
+ * @param {object[]} widgets all the widgets of the container
+ * @returns {boolean}
+ */
+export const isTableColumnFiltersEnabled = (widget, widgets = []) => {
+    if (widget?.widgetType !== 'table') {
+        return false;
+    }
+    return (widget.interactions || []).some(interaction => interaction?.plugged)
+        || widgets.some(({ mapSync, dependenciesMap }) => mapSync && dependenciesMap
+            && Object.values(dependenciesMap).some(path => typeof path === 'string' && path.indexOf(widget.id) !== -1));
+};
+
+/**
  * Check if a table widget can be a depedency to the widget currently is edit
  * @param {object} widget current widget in edit
  * @param {object} dependencyTableWidget target widget in check for dependency compatibility

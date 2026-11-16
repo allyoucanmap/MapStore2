@@ -38,7 +38,8 @@ import {
     updateDependenciesForMultiViewCompatibility,
     getDefaultNullPlaceholderForDataType,
     getErrorMessageId,
-    updateDependenciesMap
+    updateDependenciesMap,
+    isTableColumnFiltersEnabled
 } from '../WidgetsUtils';
 import * as simpleStatistics from 'simple-statistics';
 import { createClassifyGeoJSONSync } from '../../api/GeoJSONClassification';
@@ -1464,4 +1465,21 @@ describe('Test WidgetsUtils', () => {
         });
     });
 
+    describe('isTableColumnFiltersEnabled', () => {
+        const table = { id: 'table-1', widgetType: 'table' };
+        it('is enabled when the table has plugged interactions', () => {
+            expect(isTableColumnFiltersEnabled({ ...table, interactions: [{ plugged: false }, { plugged: true }] })).toBe(true);
+            expect(isTableColumnFiltersEnabled({ ...table, interactions: [{ plugged: false }] })).toBe(false);
+        });
+        it('is enabled when a legacy connection reads the table', () => {
+            const receiver = { id: 'chart-1', mapSync: true, dependenciesMap: { quickFilters: 'widgets[table-1].quickFilters' } };
+            expect(isTableColumnFiltersEnabled(table, [table, receiver])).toBe(true);
+            expect(isTableColumnFiltersEnabled(table, [table, { ...receiver, mapSync: false }])).toBe(false);
+        });
+        it('is disabled for other widgets or without connections', () => {
+            expect(isTableColumnFiltersEnabled({ id: 'c', widgetType: 'chart', interactions: [{ plugged: true }] })).toBe(false);
+            expect(isTableColumnFiltersEnabled(table, [table])).toBe(false);
+            expect(isTableColumnFiltersEnabled()).toBe(false);
+        });
+    });
 });

@@ -68,6 +68,33 @@ describe('widgets tableWidget enhancer', () => {
         expect(container).toExist();
 
     });
+    it('tableWidget shows the row zoom and sends zoom to feature when the table has a plugged zoom to feature interaction', (done) => {
+        const interactions = [{ id: 'zoom-feature', plugged: true, targetType: 'applyZoomToFeature' }];
+        const Sink = tableWidget(createSink( props => {
+            expect(props.gridTools.length).toEqual(1);
+            props.gridTools[0].events.onClick({ bbox: [-10, 0, 0, -10] }, {}, "", { maxZoom: 10 })
+                .then(() => {
+                    const [action] = store.getActions();
+                    expect(action.type).toBe('INTERACTIONS:ZOOM_TO_FEATURE');
+                    expect(action.widgetId).toBe('123456');
+                    expect(action.sourceId).toBe('123456');
+                    expect(action.feature.bbox).toEqual([-10, 0, 0, -10]);
+                    expect(action.crs).toBe('EPSG:4326');
+                    expect(action.maxZoom).toBe(10);
+                    done();
+                })
+                .catch(done);
+        }));
+        ReactDOM.render( <Provider store={store}><Sink enableZoomInTblWidget id="123456" mapSync={false} interactions={interactions} widgetType={"table"} isDashboardWidget updateProperty={() => {}} /></Provider>, document.getElementById("container"));
+    });
+    it('tableWidget hides the row zoom when the zoom to feature interaction is unplugged', (done) => {
+        const interactions = [{ id: 'zoom-feature', plugged: false, targetType: 'applyZoomToFeature' }];
+        const Sink = tableWidget(createSink( props => {
+            expect(props.gridTools.length).toEqual(0);
+            done();
+        }));
+        ReactDOM.render( <Provider store={store}><Sink enableZoomInTblWidget id="123456" mapSync={false} interactions={interactions} widgetType={"table"} isDashboardWidget updateProperty={() => {}} /></Provider>, document.getElementById("container"));
+    });
     it('tableWidget with gridTools including zoom icon for dashboard viewer in case of just table is added [No maps added]', (done) => {
         const Sink = tableWidget(createSink( props => {
             expect(props).toExist();

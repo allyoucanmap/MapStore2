@@ -13,7 +13,7 @@ import InteractionsRow from './InteractionsRow';
 import { buildInteractionObject, findInteraction, getInteractionTargetNodeDisabled } from './interactionHelpers';
 import { DEFAULT_CONFIGURATION } from './interactionConstants';
 
-const InteractionTargetsList = ({target, interactionTree, interactions, sourceWidgetId, currentSourceId, onEditorChange, filteredInteractionTree, alreadyExistingInteractions, sourceSelectionMode, timelineEnabled = false}) => {
+const InteractionTargetsList = ({target, interactionTree, interactions, sourceWidgetId, currentSourceId, onEditorChange, filteredInteractionTree, alreadyExistingInteractions, sourceSelectionMode, timelineEnabled = false, ownZoomExtent = false}) => {
     const sourceNodePath = React.useMemo(() => {
         const sourceNode = findNodeById(interactionTree, currentSourceId);
         return sourceNode?.nodePath || null;
@@ -28,13 +28,14 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
             plugged,
             alreadyExistingInteractions,
             sourceSelectionMode,
-            timelineEnabled
+            timelineEnabled,
+            ownZoomExtent
         });
         return {
             disabled: nodeDisabled.disabled,
             reason: nodeDisabled.reasonMsgId ? <Message msgId={nodeDisabled.reasonMsgId} /> : null
         };
-    }, [alreadyExistingInteractions, sourceSelectionMode, timelineEnabled]);
+    }, [alreadyExistingInteractions, sourceSelectionMode, timelineEnabled, ownZoomExtent]);
 
     const setInteraction = React.useCallback(({
         targetNodePath,
@@ -79,7 +80,8 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
                         plugged: interaction.plugged,
                         alreadyExistingInteractions: newInteractions,
                         sourceSelectionMode,
-                        timelineEnabled
+                        timelineEnabled,
+                        ownZoomExtent
                     });
                     if (nodeDisabled.disabled) {
                         return { ...interaction, plugged: false };
@@ -89,7 +91,7 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
             return interaction;
         });
         onEditorChange('interactions', newInteractions);
-    }, [sourceWidgetId, onEditorChange, interactions, sourceNodePath, target, interactionTree, sourceSelectionMode, timelineEnabled]);
+    }, [sourceWidgetId, onEditorChange, interactions, sourceNodePath, target, interactionTree, sourceSelectionMode, timelineEnabled, ownZoomExtent]);
 
     const renderRow = (item, idx) => {
         const targetNodePath = item.nodePath;
@@ -141,7 +143,8 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
                 isConfigurable={!directlyPluggable || isMapTime}
                 configuration={configuration}
                 configurationContext={{
-                    hasOtherThanMapTimeConnected: hasOtherThanMapTimeConnected
+                    hasOtherThanMapTimeConnected: hasOtherThanMapTimeConnected,
+                    ownZoomExtent
                 }}
                 nodeDisabled={nodeDisabled}
                 onPlugChange={handlePlugChange}

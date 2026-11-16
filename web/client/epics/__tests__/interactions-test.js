@@ -6,10 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 import expect from 'expect';
+import axios from '../../libs/ajax';
+import MockAdapter from 'axios-mock-adapter';
 
 import { testEpic, addTimeoutEpic, TEST_TIMEOUT } from './epicTestUtils';
-import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic } from '../interactions';
-import { applyWidgetInteractions, zoomToFilterExtent, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
+import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, zoomToFeatureEpic } from '../interactions';
+import { applyWidgetInteractions, zoomToFilterExtent, zoomToFeature, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
 import { UPDATE_PROPERTY, DELETE, insertWidget, updateWidgetProperty } from '../../actions/widgets';
 import { CHANGE_LAYER_PARAMS, CHANGE_LAYER_PROPERTIES, removeNode } from '../../actions/layers';
 import { TARGET_TYPES } from '../../utils/InteractionUtils';
@@ -751,6 +753,159 @@ describe('interactions epics', () => {
                 makeState([makeSenderTable(), makeChartWidget()]),
                 done
             );
+        });
+
+        describe('zoom to filtered bounds', () => {
+            const BOUNDS = '<?xml version="1.0" encoding="UTF-8"?><ows:BoundingBox xmlns:ows="http://www.opengis.net/ows/1.1" crs="EPSG:4326"><ows:LowerCorner>-10 20</ows:LowerCorner><ows:UpperCorner>30 40</ows:UpperCorner></ows:BoundingBox>';
+            const zoomInteraction = {
+                id: 'table-zoom-1',
+                plugged: true,
+                targetType: TARGET_TYPES.APPLY_ZOOM_TO,
+                source: { nodePath: `widgets[${TABLE_WIDGET_ID}]` },
+                target: { nodePath: `widgets[${MAP_WIDGET_ID}].maps[${MAP_ID}].applyZoomTo` },
+                configuration: { autoZoom: true }
+            };
+            const makeZoomTable = (overrides = {}) => makeTableWidget({
+                layer: { name: 'test:layer', id: 'layer-1', url: '/geoserver/wms' },
+                options: { propertyName: ['STATE_NAME'] },
+                quickFilters: { STATE_NAME: { rawValue: 'Arizona', value: 'Arizona', operator: 'ilike', type: 'string', attribute: 'STATE_NAME' } },
+                interactions: [zoomInteraction],
+                ...overrides
+            });
+            let mockAxios;
+            let requests;
+            beforeEach(() => {
+                requests = 0;
+                mockAxios = new MockAdapter(axios);
+                mockAxios.onPost().reply(() => {
+                    requests++;
+                    return [200, BOUNDS];
+                });
+            });
+            afterEach(() => {
+                mockAxios.restore();
+            });
+
+            it('zooms the map widget to the table filtered records without layer filter interactions', (done) => {
+                testEpic(
+                    applyWidgetInteractionsEpic,
+                    1,
+                    [zoomToFilterExtent(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID)],
+                    (actions) => {
+                        expect(actions[0].type).toBe(UPDATE_PROPERTY);
+                        expect(actions[0].id).toBe(MAP_WIDGET_ID);
+                        expect(actions[0].key).toBe('maps');
+                        expect(actions[0].value.mapId).toBe(MAP_ID);
+                        expect(actions[0].value.zoomToRequest.extent).toEqual([-10, 20, 30, 40]);
+                    },
+                    makeState([makeZoomTable(), makeMapWidget()]),
+                    done
+                );
+            });
+
+            it('requests the extent once when the table filter changes quickly', (done) => {
+                testEpic(
+                    applyWidgetInteractionsEpic,
+                    1,
+                    [
+                        applyWidgetInteractions(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID),
+                        applyWidgetInteractions(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID)
+                    ],
+                    (actions) => {
+                        expect(actions[0].key).toBe('maps');
+                        expect(requests).toBe(1);
+                    },
+                    makeState([makeZoomTable(), makeMapWidget()]),
+                    done
+                );
+            });
+
+            it('zooms automatically also without the auto zoom configuration', (done) => {
+                testEpic(
+                    applyWidgetInteractionsEpic,
+                    1,
+                    [applyWidgetInteractions(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID)],
+                    (actions) => {
+                        expect(actions[0].key).toBe('maps');
+                    },
+                    makeState([makeZoomTable({ interactions: [{ ...zoomInteraction, configuration: { autoZoom: false } }] }), makeMapWidget()]),
+                    done
+                );
+            });
+
+            it('does not zoom when the table has no filter', (done) => {
+                testEpic(
+                    addTimeoutEpic(applyWidgetInteractionsEpic, 20),
+                    1,
+                    [zoomToFilterExtent(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID)],
+                    (actions) => {
+                        expect(actions[0].type).toBe(TEST_TIMEOUT);
+                        expect(requests).toBe(0);
+                    },
+                    makeState([makeZoomTable({ quickFilters: {} }), makeMapWidget()]),
+                    done
+                );
+            });
+        });
+
+        describe('zoom to feature', () => {
+            const makeZoomToFeatureInteraction = (overrides = {}) => ({
+                id: 'table-zoom-feature-1',
+                plugged: true,
+                targetType: TARGET_TYPES.APPLY_ZOOM_TO_FEATURE,
+                source: { nodePath: `widgets[${TABLE_WIDGET_ID}]` },
+                target: { nodePath: `widgets[${MAP_WIDGET_ID}].maps[${MAP_ID}].applyZoomTo` },
+                ...overrides
+            });
+            const feature = { type: 'Feature', id: 'f1', bbox: [1, 2, 3, 4], geometry: null };
+            const options = { crs: 'EPSG:4326', maxZoom: 12 };
+
+            it('zooms the plugged map widgets to the feature extent', (done) => {
+                testEpic(
+                    zoomToFeatureEpic,
+                    1,
+                    [zoomToFeature(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID, feature, options)],
+                    (actions) => {
+                        expect(actions[0].type).toBe(UPDATE_PROPERTY);
+                        expect(actions[0].id).toBe(MAP_WIDGET_ID);
+                        expect(actions[0].key).toBe('maps');
+                        expect(actions[0].value).toEqual({ mapId: MAP_ID, zoomToRequest: { extent: [1, 2, 3, 4], crs: 'EPSG:4326', maxZoom: 12 } });
+                    },
+                    makeState([makeTableWidget({ interactions: [makeZoomToFeatureInteraction()] }), makeMapWidget()]),
+                    done
+                );
+            });
+
+            it('computes the extent from the geometry when the feature has no bbox', (done) => {
+                const pointFeature = { type: 'Feature', id: 'f2', geometry: { type: 'Point', coordinates: [10, 20] } };
+                testEpic(
+                    zoomToFeatureEpic,
+                    1,
+                    [zoomToFeature(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID, pointFeature)],
+                    (actions) => {
+                        expect(actions[0].value.zoomToRequest.extent).toEqual([10, 20, 10, 20]);
+                        expect(actions[0].value.zoomToRequest.crs).toBe('EPSG:4326');
+                    },
+                    makeState([makeTableWidget({ interactions: [makeZoomToFeatureInteraction()] }), makeMapWidget()]),
+                    done
+                );
+            });
+
+            it('ignores unplugged and other zoom interactions', (done) => {
+                testEpic(
+                    addTimeoutEpic(zoomToFeatureEpic, 20),
+                    1,
+                    [zoomToFeature(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID, feature, options)],
+                    (actions) => {
+                        expect(actions[0].type).toBe(TEST_TIMEOUT);
+                    },
+                    makeState([makeTableWidget({ interactions: [
+                        makeZoomToFeatureInteraction({ plugged: false }),
+                        makeZoomToFeatureInteraction({ id: 'zoom-bounds', targetType: TARGET_TYPES.APPLY_ZOOM_TO })
+                    ] }), makeMapWidget()]),
+                    done
+                );
+            });
         });
     });
 });

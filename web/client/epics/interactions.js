@@ -9,6 +9,7 @@
 import Rx from 'rxjs';
 import get from 'lodash/get';
 import sortBy from 'lodash/sortBy';
+import uniqBy from 'lodash/uniqBy';
 import { getMainMapZoomToPadding } from '../utils/MapWidgetUtils';
 import { mapPaddingSelector } from '../selectors/maplayout';
 import bbox from '@turf/bbox';
@@ -16,7 +17,7 @@ import xml2js from 'xml2js';
 
 import { getFeatureLayer } from '../api/WFS';
 import { updateWidgetProperty, INSERT, UPDATE, DELETE, UPDATE_PROPERTY } from '../actions/widgets';
-import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT } from '../actions/interactions';
+import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, ZOOM_TO_FEATURE } from '../actions/interactions';
 import { zoomToExtent } from '../actions/map';
 import { setCurrentTime } from '../actions/dimension';
 import { REMOVE_NODE, changeLayerProperties, changeLayerParams } from '../actions/layers';
@@ -26,14 +27,17 @@ import {
     extractMapIdFromNodePath,
     extractWidgetIdFromNodePath,
     isInteractionSender,
+    hasSenderOwnZoomExtent,
     isSenderTriggerKey,
     isMapLayerPath,
+    isMapZoomToTarget,
     TARGET_TYPES,
     findAllApplyFiltersForZoomTo
 } from '../utils/InteractionUtils';
 import {
     TARGET_EFFECTS,
     SENDER_DATA_BUILDERS,
+    SENDER_ZOOM_EXTENT_LAYERS,
     getSenderSourceIds,
     cleanupEffectsBySenderId,
     cleanupEffectsOfDeletedInteractions,
@@ -45,6 +49,9 @@ import { toOGCFilter } from '../utils/FilterUtils';
 import { getWFSLayerName, getWpsUrl } from '../utils/LayersUtils';
 import { getLayerFromId, layersSelector } from '../selectors/layers';
 import { shouldSkipInteraction } from '../selectors/widgets';
+
+// waits for typing to settle before requesting the extent and moving the map
+const AUTO_ZOOM_DEBOUNCE = 400;
 
 const getContainerWidgets = (state, target) => get(state, `widgets.containers[${target}].widgets`) || [];
 
@@ -99,15 +106,17 @@ function resolveZoomToLayer(applyFilterInteraction, state, targetContainer) {
  * @param {object} resolvedLayer - `{mapWidgetId, mapId}` from `resolveZoomToLayer`
  * @param {string} targetContainer - The widget container target
  * @param {object} [padding] - Optional `{top, right, bottom, left}` pixel padding for widget occlusion
+ * @param {string} [crs] - extent projection, EPSG:4326 by default
+ * @param {number} [maxZoom] - optional max zoom level
  * @returns {object} Action to dispatch
  */
-function buildZoomToExtentAction(extent, { mapWidgetId, mapId }, targetContainer, padding) {
+function buildZoomToExtentAction(extent, { mapWidgetId, mapId }, targetContainer, padding, crs = "EPSG:4326", maxZoom) {
     if (!mapWidgetId) {
-        return zoomToExtent(extent, "EPSG:4326", undefined, padding ? { padding } : undefined);
+        return zoomToExtent(extent, crs, maxZoom, padding ? { padding } : undefined);
     }
     return updateWidgetProperty(mapWidgetId, 'maps', {
         mapId,
-        zoomToRequest: { extent, crs: "EPSG:4326", ...(padding ? { padding } : {}) }
+        zoomToRequest: { extent, crs, ...(maxZoom !== undefined ? { maxZoom } : {}), ...(padding ? { padding } : {}) }
     }, 'merge', targetContainer);
 }
 
@@ -150,32 +159,51 @@ function fetchLayerExtent(layer) {
         }).catch(() => wfsFallback());
 }
 
+const getMapTargetKey = ({ mapWidgetId, mapId }) => `${mapWidgetId || 'main'}-${mapId || 'main'}`;
+
+const resolveZoomToMapTarget = (nodePath) => isMapZoomToTarget(nodePath)
+    ? {}
+    : { mapWidgetId: extractWidgetIdFromNodePath(nodePath), mapId: extractMapIdFromNodePath(nodePath) };
+
 /**
- * Resolves and combines the filtered extents of connected layers and zooms the target map.
- * @param {object} interaction - The plugged zoomTo interaction
- * @param {object} sender - The sender widget owning the interaction
- * @param {object} state - Redux state
- * @param {string} targetContainer - The widget container target
- * @returns {Observable} Observable emitting zero or one action
+ * Returns the layers to compute the extent from and the maps to zoom, from the sender data or from the filtered layers
+ * @param {object} interaction the plugged zoom-to interaction
+ * @param {object} sender the sender widget
+ * @param {object} state redux state
+ * @param {string} targetContainer the widget container target
+ * @returns {object} `{ layers, mapTargets }`
+ */
+function resolveZoomToSources(interaction, sender, state, targetContainer) {
+    const getOwnLayers = SENDER_ZOOM_EXTENT_LAYERS[sender?.widgetType];
+    if (getOwnLayers) {
+        return { layers: getOwnLayers(sender), mapTargets: [resolveZoomToMapTarget(interaction?.target?.nodePath)] };
+    }
+    const resolvedLayers = findAllApplyFiltersForZoomTo(interaction, sender?.interactions || [])
+        .map(applyFilterInteraction => resolveZoomToLayer(applyFilterInteraction, state, targetContainer))
+        .filter(({ layer } = {}) => layer);
+    return {
+        layers: resolvedLayers.map(({ layer }) => layer),
+        mapTargets: uniqBy(resolvedLayers, getMapTargetKey)
+    };
+}
+
+/**
+ * Resolves and combines the filtered extents of the zoom-to sources and zooms the target maps
+ * @param {object} interaction the plugged zoom-to interaction
+ * @param {object} sender the sender widget owning the interaction
+ * @param {object} state redux state
+ * @param {string} targetContainer the widget container target
+ * @returns {Observable} zoom actions
  */
 function applyInteractionEffectForZoomTo(interaction, sender, state, targetContainer = 'floating') {
-    const siblingInteractions = sender.interactions || [];
-    const zoomToInteractions = findAllApplyFiltersForZoomTo(interaction, siblingInteractions);
-    if (zoomToInteractions.length === 0) {
-        return Rx.Observable.empty();
-    }
-
-    // Resolve all connected layers
-    const resolvedLayers = zoomToInteractions
-        .map(zoomInteraction => resolveZoomToLayer(zoomInteraction, state, targetContainer))
-        .filter(({layer} = {}) => layer);
-    if (resolvedLayers.length === 0) {
+    const { layers, mapTargets } = resolveZoomToSources(interaction, sender, state, targetContainer);
+    if (layers.length === 0 || mapTargets.length === 0) {
         return Rx.Observable.empty();
     }
 
     // Fetch extents for all layers concurrently
     return Rx.Observable.forkJoin(
-        resolvedLayers.map(({layer} = {}) => fetchLayerExtent(layer).catch(() => Rx.Observable.of(null)))
+        layers.map(layer => fetchLayerExtent(layer).catch(() => Rx.Observable.of(null)))
     )
         .switchMap(extents => {
             const validExtents = extents.filter(Boolean);
@@ -189,18 +217,7 @@ function applyInteractionEffectForZoomTo(interaction, sender, state, targetConta
                 Math.max(acc[3], ext[3])
             ]);
 
-            // Get unique map targets
-            const uniqueTargets = [];
-            const seen = new Set();
-            resolvedLayers.forEach(rl => {
-                const key = `${rl.mapWidgetId || 'main'}-${rl.mapId || 'main'}`;
-                if (!seen.has(key)) {
-                    seen.add(key);
-                    uniqueTargets.push(rl);
-                }
-            });
-
-            const actions = uniqueTargets.map(target => {
+            const actions = mapTargets.map(target => {
                 const padding = target.mapWidgetId
                     ? undefined
                     : getMainMapZoomToPadding(mapPaddingSelector(state));
@@ -240,8 +257,12 @@ export const applyWidgetInteractionsEpic = (action$, store) =>
                 .concatMap(interaction => {
                     const currentState = store.getState();
                     if (interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO) {
-                        return isManualZoomTrigger || interaction?.configuration?.autoZoom === true
-                            ? applyInteractionEffectForZoomTo(interaction, sender, currentState, target)
+                        if (isManualZoomTrigger) {
+                            return applyInteractionEffectForZoomTo(interaction, sender, currentState, target);
+                        }
+                        // a newer apply cancels the pending zoom through switchMap
+                        return interaction?.configuration?.autoZoom === true || hasSenderOwnZoomExtent(sender)
+                            ? Rx.Observable.timer(AUTO_ZOOM_DEBOUNCE).switchMap(() => applyInteractionEffectForZoomTo(interaction, sender, store.getState(), target))
                             : Rx.Observable.empty();
                     }
                     const applyEffect = TARGET_EFFECTS[interaction.targetType];
@@ -311,8 +332,39 @@ export const applyOnSenderPropertyChangeEpic = (action$, store) =>
                 : Rx.Observable.empty();
         });
 
+/**
+ * Zooms the maps targeted by the plugged zoom to feature interactions of a sender source to the feature
+ */
+export const zoomToFeatureEpic = (action$, store) =>
+    action$
+        .ofType(ZOOM_TO_FEATURE)
+        .switchMap(({ widgetId, target = 'floating', sourceId, feature, crs, maxZoom }) => {
+            const state = store.getState();
+            const extent = feature?.bbox || (feature?.geometry ? bbox(feature) : null);
+            const sender = getContainerWidgets(state, target).find(w => w.id === widgetId);
+            const mapTargets = uniqBy(
+                (sender?.interactions || [])
+                    .filter(interaction => interaction.plugged === true
+                        && interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO_FEATURE
+                        && interaction.source?.nodePath?.includes(sourceId))
+                    .map(interaction => resolveZoomToMapTarget(interaction.target?.nodePath)),
+                getMapTargetKey
+            );
+            return extent
+                ? Rx.Observable.from(mapTargets.map(mapTarget => buildZoomToExtentAction(
+                    extent,
+                    mapTarget,
+                    target,
+                    mapTarget.mapWidgetId ? undefined : getMainMapZoomToPadding(mapPaddingSelector(state)),
+                    crs,
+                    maxZoom
+                )))
+                : Rx.Observable.empty();
+        });
+
 export default {
     applyWidgetInteractionsEpic,
     cleanupAndReapplyWidgetInteractionsEpic,
-    applyOnSenderPropertyChangeEpic
+    applyOnSenderPropertyChangeEpic,
+    zoomToFeatureEpic
 };

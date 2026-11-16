@@ -16,7 +16,7 @@ const ResponsiveReactGridLayout =
         widthProvider
     )(Responsive);
 import withGroupColor from '../enhancers/withGroupColor';
-import { fitLayoutInRows, placeNewWidgets } from '../../../utils/WidgetsUtils';
+import { fitLayoutInRows, placeNewWidgets, isTableColumnFiltersEnabled } from '../../../utils/WidgetsUtils';
 const DefaultWidget = withGroupColor(require('../widget/DefaultWidget').default);
 const getWidgetGroups = (groups = [], w) => groups.filter(g => find(g.widgets, id => id === w.id));
 // the header is the drag handle, so the controls it contains must not start a drag
@@ -62,8 +62,6 @@ export default pure(({
     env,
     ...actions
 } = {}) => {
-    // checking if this widget appears among other dependenciesMap of other widgets (i.e. it is a parent table)
-    const allDependenciesMap = widgets.filter(({mapSync, dependenciesMap}) => mapSync && dependenciesMap).map(({dependenciesMap}) => dependenciesMap);
     const maximizedIds = castArray(maximized?.widget || [])
         .map(widget => widget?.id)
         .filter(maximizedId => maximizedId && widgets.some(widget => widget.id === maximizedId));
@@ -72,7 +70,7 @@ export default pure(({
         xxs: maximizedIds.map(i => ({ i, x: 0, y: 0, w: 1, h: 1 }))
     };
     const effectiveLayouts = isMaximized ? maximizedLayouts : layouts;
-    const getEnableColumnFilters = w => w.widgetType  === "table" && allDependenciesMap.filter(depMap => Object.keys(depMap).filter(d => depMap[d] && depMap[d].indexOf(w.id) !== -1).length > 0 ).length > 0;
+    const getEnableColumnFilters = w => isTableColumnFiltersEnabled(w, widgets);
 
     return (<GridComponent
         key={id || "widgets-view"}

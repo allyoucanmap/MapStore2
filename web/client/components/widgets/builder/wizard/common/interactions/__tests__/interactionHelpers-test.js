@@ -208,6 +208,26 @@ describe('interactionHelpers', () => {
             });
         });
 
+        it('should hide auto zoom for senders zooming to their own data', () => {
+            const configuration = { autoZoom: false };
+            const context = { targetType: TARGET_TYPES.APPLY_ZOOM_TO, plugged: true };
+            expect(getVisibleConfigurationKeys(configuration, context, CONFIGURATION_RENDER_MODES.INLINE_BUTTON)).toEqual(['autoZoom']);
+            expect(getVisibleConfigurationKeys(configuration, { ...context, ownZoomExtent: true }, CONFIGURATION_RENDER_MODES.INLINE_BUTTON)).toEqual([]);
+        });
+
+        it('should not require an applyFilter sibling for senders zooming to their own data', () => {
+            const result = getInteractionTargetNodeDisabled({
+                item: elementItem,
+                target: { targetType: TARGET_TYPES.APPLY_ZOOM_TO },
+                targetNodePath: 'map.applyZoomTo',
+                sourceNodePath,
+                plugged: false,
+                alreadyExistingInteractions: [],
+                ownZoomExtent: true
+            });
+            expect(result.disabled).toBe(false);
+        });
+
         it('should disable zoomTo targets when no applyFilter sibling exists for the same map', () => {
             const result = getInteractionTargetNodeDisabled({
                 item: elementItem,

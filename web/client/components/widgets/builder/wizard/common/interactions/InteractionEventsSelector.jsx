@@ -14,13 +14,13 @@ import { Glyphicon } from 'react-bootstrap';
 import { getWidgetInteractionTreeGenerated, getEditingWidget, getAllInteractionsWhileEditingSelector, isTimelineEnabledForInteractions } from '../../../../../../selectors/widgets';
 import InteractionTargetsList from './InteractionTargetsList';
 import './interaction-wizard.less';
-import { getDisplayInteractionTargetTree } from '../../../../../../utils/InteractionUtils';
+import { getDisplayInteractionTargetTree, hasSenderOwnZoomExtent } from '../../../../../../utils/InteractionUtils';
 import Message from '../../../../../I18N/Message';
 import tooltip from '../../../../../misc/enhancers/tooltip';
 
 const TButton = tooltip(Button);
 
-export const InteractionEventsSelector = ({target, expanded, toggleExpanded = () => {}, interactionTree, interactions, sourceWidgetId, currentSourceId, onEditorChange, alreadyExistingInteractions, valueAttributeType, sourceSelectionMode, timelineEnabled = false, targetTitleMsgIds = {}, removable = false, onRemove = () => {}}) => {
+export const InteractionEventsSelector = ({target, expanded, toggleExpanded = () => {}, interactionTree, interactions, sourceWidgetId, currentSourceId, onEditorChange, alreadyExistingInteractions, valueAttributeType, sourceSelectionMode, timelineEnabled = false, ownZoomExtent = false, targetTitleMsgIds = {}, removable = false, onRemove = () => {}}) => {
 
     const filteredInteractionTree = useMemo(() => {
         return getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType, sourceWidgetId);
@@ -66,6 +66,7 @@ export const InteractionEventsSelector = ({target, expanded, toggleExpanded = ()
                         alreadyExistingInteractions={alreadyExistingInteractions}
                         sourceSelectionMode={sourceSelectionMode}
                         timelineEnabled={timelineEnabled}
+                        ownZoomExtent={ownZoomExtent}
                     />
                 ) : (
                     <FlexBox component="li" className="ms-interactions-empty-state">
@@ -90,6 +91,7 @@ export default connect((state) => {
         interactions,
         // for all widget
         alreadyExistingInteractions: getAllInteractionsWhileEditingSelector(state),
-        timelineEnabled: isTimelineEnabledForInteractions(state)
+        timelineEnabled: isTimelineEnabledForInteractions(state),
+        ownZoomExtent: hasSenderOwnZoomExtent(editingWidget)
     };
 }, null)(InteractionEventsSelector);

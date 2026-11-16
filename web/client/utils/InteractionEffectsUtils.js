@@ -19,7 +19,8 @@ import {
     isMapTimeTarget,
     isInteractionSender,
     TARGET_TYPES,
-    unplugOrphanZoomToInteractions
+    unplugOrphanZoomToInteractions,
+    hasSenderOwnZoomExtent
 } from './InteractionUtils';
 import { defaultLayerFilter, toCQLFilter } from './FilterUtils';
 import { composeFilterObject } from '../components/widgets/enhancers/utils';
@@ -302,6 +303,25 @@ export function buildTableWidgetAppliedData(tableWidget) {
 }
 
 /**
+ * Returns the table layer filtered by the table column and configured filters, empty without a filter
+ * @param {object} tableWidget the table widget
+ * @returns {object[]} layers to compute the zoom extent from
+ */
+export function getTableWidgetZoomExtentLayers(tableWidget) {
+    const filterObj = composeFilterObject(tableWidget?.filter, tableWidget?.quickFilters, tableWidget?.options);
+    return tableWidget?.layer && !isEmpty(filterObj)
+        ? [{ ...tableWidget.layer, layerFilter: filterObj }]
+        : [];
+}
+
+/**
+ * Zoom extent layers by sender type, for senders that zoom to their own data: (widget) => layers
+ */
+export const SENDER_ZOOM_EXTENT_LAYERS = {
+    table: getTableWidgetZoomExtentLayers
+};
+
+/**
  * Data builders by sender widget type: (widget, sourceId, interaction) => appliedData
  */
 export const SENDER_DATA_BUILDERS = {
@@ -454,7 +474,7 @@ function updateSendersInteractions({ widgets = [], target = 'floating' }, filter
         .filter(isInteractionSender)
         .reduce((updates, sender) => {
             const interactions = sender.interactions || [];
-            const filteredInteractions = filterInteractions(interactions);
+            const filteredInteractions = filterInteractions(interactions, sender);
             // compares by value: unplugging an orphaned zoom-to keeps the array length unchanged
             return isEqual(filteredInteractions, interactions)
                 ? updates
@@ -471,12 +491,13 @@ export function cleanupInteractionsAfterLayerDeletion(deletedLayerId, context = 
     if (!deletedLayerId) {
         return [];
     }
-    return updateSendersInteractions(context, interactions => unplugOrphanZoomToInteractions(
-        interactions.filter(interaction => {
+    return updateSendersInteractions(context, (interactions, sender) => {
+        const remaining = interactions.filter(interaction => {
             const targetNodePath = interaction?.target?.nodePath || '';
             return !isMapLayerPath(targetNodePath) || extractLayerIdFromNodePath(targetNodePath) !== deletedLayerId;
-        })
-    ));
+        });
+        return hasSenderOwnZoomExtent(sender) ? remaining : unplugOrphanZoomToInteractions(remaining);
+    });
 }
 
 /**

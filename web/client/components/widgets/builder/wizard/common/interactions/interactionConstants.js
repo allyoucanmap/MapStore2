@@ -57,7 +57,9 @@ export const CONFIGURATION_METADATA = {
             targetType: {
                 isEqual: TARGET_TYPES.APPLY_ZOOM_TO
             },
-            plugged: { isEqual: true }
+            plugged: { isEqual: true },
+            // senders zooming to their own data always zoom on change
+            ownZoomExtent: { isNotEqual: true }
         },
         infoMsgByTargetType: {
             "default": "widgets.filterWidget.autoZoomInfo"

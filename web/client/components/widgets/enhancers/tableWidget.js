@@ -15,6 +15,8 @@ import deleteWidget from './deleteWidget';
 import LoadingSpinner from '../../misc/LoadingSpinner';
 import { defaultIcons, editableWidget, withHeaderTools } from './tools';
 import { zoomToExtent } from '../../../actions/map';
+import { zoomToFeature } from '../../../actions/interactions';
+import { TARGET_TYPES } from '../../../utils/InteractionUtils';
 import {error} from '../../../actions/notifications';
 import { gridTools } from '../../../plugins/featuregrid/index';
 import { getFeature } from '../../../api/WFS';
@@ -35,7 +37,14 @@ export default compose(
         const isDashboardWidget = isZoomEnabled && !!ownProps?.isDashboardWidget;
         const isMapViewerWidget = isZoomEnabled && !isDashboardWidget;
         const mapWidgetsConnectedWithTable = ownProps?.widgets?.filter(i => i.widgetType === 'map' && i?.dependenciesMap && i?.dependenciesMap?.mapSync?.includes(ownProps.id) && i.mapSync) || [];
-        const isMapSync = ownProps?.mapSync || mapWidgetsConnectedWithTable.length;
+        const hasZoomToFeatureInteractions = (ownProps?.interactions || [])
+            .some(interaction => interaction?.plugged && interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO_FEATURE);
+        const isMapSync = ownProps?.mapSync || mapWidgetsConnectedWithTable.length || hasZoomToFeatureInteractions;
+        // legacy connected maps read extentObj, zoom to feature interactions read the action
+        const zoomDashboardMaps = (feature, crs, maxZoom) => {
+            ownProps?.updateProperty(ownProps.id, `dependencies.extentObj`, { extent: feature.bbox, crs, maxZoom });
+            dispatch(zoomToFeature(ownProps.id, undefined, ownProps.id, feature, { crs, maxZoom }));
+        };
         return {
             gridTools: (isMapSync && isDashboardWidget) || (isMapViewerWidget) ? gridTools.map((t) => ({
                 ...t,
@@ -54,21 +63,15 @@ export default compose(
                                 });
                                 p.geometry = featureData?.features[0].geometry;     // set geometry to feature for the future hit
                                 p.bbox = bbox(featureData?.features[0]);     // set geometry to feature for the future hit
-                                if (isDashboardWidget) {       // in case of table widget in dashboard view set extent to widget dependencies
-                                    ownProps?.updateProperty(ownProps.id, `dependencies.extentObj`, {
-                                        extent: p.bbox,
-                                        crs: crs || "EPSG:4326", maxZoom
-                                    });
+                                if (isDashboardWidget) {       // in case of table widget in dashboard view zoom the connected maps
+                                    zoomDashboardMaps(p, crs || "EPSG:4326", maxZoom);
                                 } else {        // in case of table widget within the map viewer zoom to the feature
                                     dispatch(zoomToExtent(p.bbox, crs || "EPSG:4326", maxZoom));
                                 }
                                 ownProps?.updateProperty(ownProps.id, `dependencies.zoomLoader`, false);        // stop zoom loader
                             } else {        // in case the geometry is already existing --> zoom to feature directly without fetching
                                 if (isDashboardWidget) {
-                                    ownProps?.updateProperty(ownProps.id, `dependencies.extentObj`, {
-                                        extent: p.bbox,
-                                        crs: crs || "EPSG:4326", maxZoom
-                                    });
+                                    zoomDashboardMaps(p, crs || "EPSG:4326", maxZoom);
                                 } else {
                                     dispatch(zoomToExtent(p.bbox, crs || "EPSG:4326", maxZoom));
                                 }

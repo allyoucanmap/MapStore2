@@ -7,6 +7,9 @@
  */
 
 import isEmpty from 'lodash/isEmpty';
+import omit from 'lodash/omit';
+import { TARGET_TYPES, TARGET_EVENT_DATA_TYPES, createLayerConstraint, extractWidgetIdFromNodePath } from './InteractionUtils';
+import { applyFilterEffect, buildTableWidgetAppliedData, INTERACTION_UPDATES } from './InteractionEffectsUtils';
 
 export const MAIN_MAP_SENDER_ID = 'map';
 
@@ -38,10 +41,112 @@ export const getLegacyConnectionSource = (widget) => {
     return { senderId, ...(mapId ? { mapId } : {}) };
 };
 
+const legacyInteraction = (sender, targetType, nodePath, layer) => ({
+    plugged: true,
+    targetType,
+    source: { nodePath: `widgets[${sender.id}]` },
+    target: {
+        nodePath,
+        metaData: {
+            targetType,
+            expectedDataType: TARGET_EVENT_DATA_TYPES[targetType],
+            constraints: layer ? { layer: createLayerConstraint(layer) } : {}
+        }
+    },
+    configuration: {
+        forcePlug: false,
+        twoWaySynchronization: false,
+        autoZoom: targetType === TARGET_TYPES.APPLY_ZOOM_TO
+    }
+});
+
+const CHAINED_FILTER_KEYS = ['filter', 'quickFilters'];
+const CHAINABLE_WIDGET_TYPES = ['chart', 'counter', 'table'];
+
+const getTableFilterChainedWidgets = (mapReceiver, widgets = []) => widgets.filter(widget =>
+    widget.mapSync
+    && CHAINABLE_WIDGET_TYPES.includes(widget.widgetType)
+    && CHAINED_FILTER_KEYS.some(key => {
+        const path = widget.dependenciesMap?.[key];
+        return typeof path === 'string' && LEGACY_WIDGET_PATH_REGEX.exec(path)?.[1] === mapReceiver.id;
+    })
+);
+
+const TABLE_LEGACY_RECEIVER_INTERACTIONS = {
+    counter: (receiver, sender) => [legacyInteraction(sender, TARGET_TYPES.APPLY_FILTER, `widgets[${receiver.id}]`, receiver.layer)],
+    table: (receiver, sender) => [legacyInteraction(sender, TARGET_TYPES.APPLY_FILTER, `widgets[${receiver.id}]`, receiver.layer)],
+    chart: (receiver, sender) => (receiver.charts || []).flatMap(chart => (chart.traces || [])
+        .filter(trace => trace?.layer?.name === sender.layer?.name)
+        .map(trace => legacyInteraction(sender, TARGET_TYPES.APPLY_FILTER,
+            `widgets[${receiver.id}].charts[${chart.chartId || chart.id}].traces[${trace.id}]`, trace.layer))),
+    // the old connection filtered the first layer with the table layer name, zoomed to the table records and to the clicked row
+    map: (receiver, sender, widgets) => [
+        ...(receiver.maps || []).flatMap(map => {
+            const layer = (map.layers || []).find(l => l.name === sender.layer?.name);
+            return [
+                ...(layer ? [legacyInteraction(sender, TARGET_TYPES.APPLY_FILTER, `widgets[${receiver.id}].maps[${map.mapId}].layers[${layer.id}]`, layer)] : []),
+                legacyInteraction(sender, TARGET_TYPES.APPLY_ZOOM_TO, `widgets[${receiver.id}].maps[${map.mapId}].${TARGET_TYPES.APPLY_ZOOM_TO}`),
+                legacyInteraction(sender, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, `widgets[${receiver.id}].maps[${map.mapId}].${TARGET_TYPES.APPLY_ZOOM_TO}`)
+            ];
+        }),
+        // widgets reading the table filter through the map become direct targets, their map connection stays legacy
+        ...getTableFilterChainedWidgets(receiver, widgets)
+            .flatMap(chained => TABLE_LEGACY_RECEIVER_INTERACTIONS[chained.widgetType]?.(chained, sender, widgets) || [])
+    ]
+};
+
 /**
- * Legacy connection converters by sender widget type: `(receiver, sender, source) => ({ interactions, receiver }) | null`
+ * Converts a receiver connected to a table into interactions of the table
+ * @param {object} receiver the connected receiver widget
+ * @param {object} sender the table widget
+ * @param {object} source the legacy connection source
+ * @param {object[]} widgets all the widgets, to find the ones chained through a map widget
+ * @returns {object|null} `{ interactions, receiver }`, null when the connection must stay legacy
  */
-export const LEGACY_CONNECTION_CONVERTERS = {};
+export const convertTableLegacyConnection = (receiver, sender, source, widgets) => {
+    // a table connected to a map forwards the map dependencies too, the chain is converted with the map sender
+    const getInteractions = !sender?.mapSync ? TABLE_LEGACY_RECEIVER_INTERACTIONS[receiver?.widgetType] : null;
+    const interactions = getInteractions ? getInteractions(receiver, sender, widgets) : [];
+    return interactions.length
+        ? { interactions, receiver: omit(receiver, ['mapSync', 'dependenciesMap']) }
+        : null;
+};
+
+/**
+ * Writes the current table filter into a targeted widget, so converted resources show filtered data on load
+ * @param {object} receiver the targeted widget
+ * @param {object} sender the table widget
+ * @param {object[]} interactions the converted interactions, with their ids
+ * @returns {object} the receiver with the applied filters
+ */
+export const writeTableLegacyConnectionEffects = (receiver, sender, interactions) => {
+    const appliedData = buildTableWidgetAppliedData(sender);
+    if (!appliedData) {
+        return receiver;
+    }
+    return interactions
+        .filter(interaction => interaction.targetType === TARGET_TYPES.APPLY_FILTER)
+        .reduce((updated, interaction) => {
+            const update = applyFilterEffect({ ...interaction, appliedData }, { widgets: [updated] });
+            return update?.type === INTERACTION_UPDATES.WIDGET_PROPERTY
+                ? { ...updated, [update.key]: update.value }
+                : updated;
+        }, receiver);
+};
+
+/**
+ * Legacy connection converters by sender widget type: `(receiver, sender, source, widgets) => ({ interactions, receiver }) | null`
+ */
+export const LEGACY_CONNECTION_CONVERTERS = {
+    table: convertTableLegacyConnection
+};
+
+/**
+ * Writers of the converted interaction effects into a targeted widget, by sender widget type: `(widget, sender, interactions) => widget`
+ */
+export const LEGACY_CONNECTION_EFFECT_WRITERS = {
+    table: writeTableLegacyConnectionEffects
+};
 
 const mergeInteractions = (existing = [], added = []) => {
     const existingIds = existing.map(interaction => interaction?.id);
@@ -52,9 +157,10 @@ const mergeInteractions = (existing = [], added = []) => {
  * Converts legacy widget connections (`mapSync`, `dependenciesMap`) into sender interactions
  * @param {object} config widgets configuration with `widgets`
  * @param {object} [converters] converters by sender widget type
+ * @param {object} [effectWriters] effect writers by sender widget type
  * @returns {object} the converted configuration, the same object when nothing is converted
  */
-export const migrateLegacyConnections = (config, converters = LEGACY_CONNECTION_CONVERTERS) => {
+export const migrateLegacyConnections = (config, converters = LEGACY_CONNECTION_CONVERTERS, effectWriters = LEGACY_CONNECTION_EFFECT_WRITERS) => {
     const widgets = config?.widgets;
     if (!Array.isArray(widgets) || isEmpty(converters)) {
         return config;
@@ -67,7 +173,7 @@ export const migrateLegacyConnections = (config, converters = LEGACY_CONNECTION_
         const sender = source && source.senderId !== MAIN_MAP_SENDER_ID
             ? widgets.find(w => w.id === source.senderId)
             : undefined;
-        const result = sender ? converters[sender.widgetType]?.(widget, sender, source) : null;
+        const result = sender ? converters[sender.widgetType]?.(widget, sender, source, widgets) : null;
         if (!result) {
             return;
         }
@@ -78,10 +184,17 @@ export const migrateLegacyConnections = (config, converters = LEGACY_CONNECTION_
     if (isEmpty(receivers)) {
         return config;
     }
+    // effects are written into every targeted widget, also the ones chained through a converted receiver
+    const writeEffects = (widget) => Object.entries(addedBySender).reduce((updated, [senderId, added]) => {
+        const sender = widgets.find(w => w.id === senderId);
+        const writer = effectWriters?.[sender?.widgetType];
+        const targeting = added.filter(interaction => extractWidgetIdFromNodePath(interaction?.target?.nodePath) === widget.id);
+        return writer && targeting.length ? writer(updated, sender, targeting) : updated;
+    }, receivers[widget.id] || widget);
     return {
         ...config,
         widgets: widgets.map(widget => {
-            const updated = receivers[widget.id] || widget;
+            const updated = writeEffects(widget);
             return addedBySender[widget.id]
                 ? { ...updated, interactions: mergeInteractions(updated.interactions, addedBySender[widget.id]) }
                 : updated;

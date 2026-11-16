@@ -143,7 +143,8 @@ export const getInteractionTargetNodeDisabled = ({
     plugged,
     alreadyExistingInteractions = [],
     sourceSelectionMode,
-    timelineEnabled = false
+    timelineEnabled = false,
+    ownZoomExtent = false
 }) => {
     if (item?.type !== 'element') {
         return DEFAULT_NODE_DISABLED;
@@ -229,7 +230,7 @@ export const getInteractionTargetNodeDisabled = ({
         }
     }
 
-    if (target.targetType === TARGET_TYPES.APPLY_ZOOM_TO) {
+    if (target.targetType === TARGET_TYPES.APPLY_ZOOM_TO && !ownZoomExtent) {
         const zoomInteraction = {
             source: { nodePath: sourceNodePath },
             target: { nodePath: targetNodePath }

@@ -13,7 +13,7 @@ import { generateRootTree, TARGET_TYPES, getChartAxisFromCurrentTimeTargetPath, 
 import { currentTimeSelector } from './dimension';
 import { pathnameSelector } from './router';
 import { DEFAULT_TARGET, DEPENDENCY_SELECTOR_KEY, LAYERS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
-import { cleanPaths, getWidgetsGroups, getWidgetDependency, getSelectedWidgetData, extractTraceData, canTableWidgetBeDependency } from '../utils/WidgetsUtils';
+import { cleanPaths, getWidgetsGroups, getWidgetDependency, getSelectedWidgetData, extractTraceData } from '../utils/WidgetsUtils';
 import { dashboardServicesSelector, isDashboardAvailable, isDashboardEditing } from './dashboard';
 import { createSelector, createStructuredSelector } from 'reselect';
 import { createShallowSelector } from '../utils/ReselectUtils';
@@ -211,29 +211,18 @@ export const availableDependenciesSelector = createSelector(
     })
 );
 /**
- * this selector adds some more filtering on tables when a widget is in edit mode
- * and the table widgets does not share the same dataset (layername)
+ * Maps the widget in edit mode can connect to with the legacy connect button, tables connect through their interactions
  */
 export const availableDependenciesForEditingWidgetSelector = createSelector(
     getMapWidgetsPerView,
-    getTableWidgetsPerView,
     mapSelector,
-    pathnameSelector,
-    getEditingWidget,
-    (ws = [], tableWidgets = [], map = {}, pathname, editingWidget) => {
+    (ws = [], map = {}) => {
         return {
             availableDependencies:
                 flatten(ws
                     .map(({id, maps = []}) => maps.map(({mapId} = {})=> `widgets[${id}].maps[${mapId}].map`)))
                     .concat(castArray(map).map(() => map ? "map" : null))
                     .filter(w => w)
-                    .concat(
-                        castArray(tableWidgets)
-                            .filter(() => pathname.indexOf("viewer") === -1)
-                            .filter((w) => canTableWidgetBeDependency(editingWidget, w))
-                            .filter((w) => editingWidget && editingWidget.id !== w.id)
-                            .map(({id}) => `widgets[${id}]`)
-                    )
         };
     }
 );

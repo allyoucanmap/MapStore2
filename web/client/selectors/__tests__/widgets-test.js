@@ -333,9 +333,8 @@ describe('widgets selectors', () => {
         const state = availableDependenciesForEditingWidgetSelector(stateInput);
         const availableDeps = state.availableDependencies;
         expect(availableDeps).toExist();
-        expect(availableDeps.length).toBe(2);
-        expect(availableDeps[0]).toBe('widgets[tableId]');
-        expect(availableDeps[1]).toBe('widgets[otherTableId]');
+        // tables connect through their interactions, not the legacy connect button
+        expect(availableDeps.length).toBe(0);
     });
     it('availableDependenciesForEditingWidgetSelector for chart', () => {
         const stateInput = {
@@ -381,10 +380,8 @@ describe('widgets selectors', () => {
         const state = availableDependenciesForEditingWidgetSelector(stateInput);
         const availableDeps = state.availableDependencies;
         expect(availableDeps).toExist();
-        expect(availableDeps.length).toBe(3);
+        expect(availableDeps.length).toBe(1);
         expect(availableDeps[0]).toBe('widgets[WIDGET].maps[MAPS].map');
-        expect(availableDeps[1]).toBe('widgets[tableId]');
-        expect(availableDeps[2]).toBe('widgets[otherTableId]');
     });
     it('availableDependenciesForEditingWidgetSelector for counter', () => {
         const stateInput = {
@@ -428,9 +425,8 @@ describe('widgets selectors', () => {
         const state = availableDependenciesForEditingWidgetSelector(stateInput);
         const availableDeps = state.availableDependencies;
         expect(availableDeps).toExist();
-        expect(availableDeps.length).toBe(2);
+        expect(availableDeps.length).toBe(1);
         expect(availableDeps[0]).toBe('widgets[WIDGET].maps[MAPS].map');
-        expect(availableDeps[1]).toBe('widgets[tableId]');
     });
     it('dependenciesSelector', () => {
         const state = {

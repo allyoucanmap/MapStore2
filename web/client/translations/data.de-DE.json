@@ -2426,6 +2426,8 @@
           "configureChartOptions": "Diagrammoptionen konfigurieren",
           "configureWidgetOptions": "Widget-Optionen konfigurieren",
           "columnFilter": "Spaltenfilter",
+          "zoomToFilteredBounds": "Auf gefilterte Ausdehnung zoomen",
+          "zoomToFeatureExtent": "Auf Objektausdehnung zoomen",
           "errorChart": "Mindestens ein Diagramm ist ungültig",
           "errorFilter": "Mindestens ein Filter ist ungültig",
           "backToTableOptions": "Zurück zu den Tabellenoptionen",
