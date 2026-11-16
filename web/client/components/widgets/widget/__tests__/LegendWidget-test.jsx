@@ -87,4 +87,11 @@ describe('LegendWidget component', () => {
         expect(container.querySelector('.empty-state-container')).toBeTruthy();
         expect(container.querySelector('.ms-layers-tree')).toBeFalsy();
     });
+    it('LegendWidget tools keep the widget updateProperty while the legend writes to its map', () => {
+        const updateProperty = expect.createSpy();
+        const legendMap = { widgetId: 'map-w', mapId: 'm1', map: { layers: [{ id: 'layer:00', name: 'layer:00', title: 'Layer', visibility: true, type: 'wms' }] } };
+        ReactDOM.render(<LegendWidget id="legend-1" toolsOptions={{ showPin: true }} legendMap={legendMap} updateProperty={updateProperty} />, document.getElementById("container"));
+        ReactTestUtils.Simulate.click(document.getElementById('container').querySelector('.glyphicon-pushpin'));
+        expect(updateProperty).toHaveBeenCalledWith('legend-1', 'dataGrid.static', true);
+    });
 });

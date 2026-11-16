@@ -106,6 +106,20 @@ describe('InteractionMigrationUtils', () => {
             expect(migrated.widgets[1].title).toBe('Chart');
             expect(migrated.widgets[2]).toBe(config.widgets[2]);
         });
+        it('adds the receiver interactions to the receiver, without touching a sender that gets none', () => {
+            const receiverConverters = {
+                table: (receiver) => ({
+                    interactions: [],
+                    receiverInteractions: [{ plugged: true, targetType: 'applyLegend', source: { nodePath: `widgets[${receiver.id}]` }, target: { nodePath: `widgets[${TABLE_ID}].maps[m1].applyLegend` } }],
+                    receiver: omit(receiver, ['mapSync', 'dependenciesMap'])
+                })
+            };
+            const table = makeTable();
+            const migrated = migrateLegacyConnections({ widgets: [table, makeConnectedChart()] }, receiverConverters, {});
+            expect(migrated.widgets[0]).toBe(table);
+            expect(migrated.widgets[1].interactions.map(i => i.id)).toEqual([`legacy:${CHART_ID}:applyLegend:widgets[${TABLE_ID}].maps[m1].applyLegend`]);
+            expect(migrateLegacyConnections(migrated, receiverConverters, {})).toBe(migrated);
+        });
         it('keeps connections without a converter, to the main map or rejected by the converter', () => {
             const mainMap = { id: 'counter-1', widgetType: 'counter', mapSync: true };
             const config = { widgets: [makeTable(), mainMap] };
@@ -169,9 +183,9 @@ describe('InteractionMigrationUtils', () => {
             expect(interactions.map(i => [i.targetType, i.target.nodePath])).toEqual([
                 ['applyFilter', 'widgets[map-w].maps[m1].layers[l1]'],
                 ['applyZoomTo', 'widgets[map-w].maps[m1].applyZoomTo'],
-                ['applyZoomToFeature', 'widgets[map-w].maps[m1].applyZoomTo'],
+                ['applyZoomToFeature', 'widgets[map-w].maps[m1].applyZoomToFeature'],
                 ['applyZoomTo', 'widgets[map-w].maps[m2].applyZoomTo'],
-                ['applyZoomToFeature', 'widgets[map-w].maps[m2].applyZoomTo']
+                ['applyZoomToFeature', 'widgets[map-w].maps[m2].applyZoomToFeature']
             ]);
             expect(interactions[1].configuration.autoZoom).toBe(true);
             expect(interactions[0].configuration.autoZoom).toBe(false);
@@ -283,8 +297,8 @@ describe('InteractionMigrationUtils', () => {
             };
             const { interactions, receiver } = convertMapLegacyConnection(mapReceiver, mapWidget, source);
             expect(interactions.map(i => [i.targetType, i.target.nodePath])).toEqual([
-                ['applyViewSync', 'widgets[map-r].maps[r1].applyZoomTo'],
-                ['applyViewSync', 'widgets[map-r].maps[r2].applyZoomTo']
+                ['applyViewSync', 'widgets[map-r].maps[r1].applyViewSync'],
+                ['applyViewSync', 'widgets[map-r].maps[r2].applyViewSync']
             ]);
             expect(interactions[0].source.nodePath).toBe('widgets[map-w].maps[m1]');
             expect(receiver.dependenciesMap).toNotExist();
@@ -296,10 +310,10 @@ describe('InteractionMigrationUtils', () => {
             expect(migratedLegend.mapSync).toNotExist();
             expect(migratedLegend.dependenciesMap).toNotExist();
             expect(migratedLegend.interactions.map(i => [i.targetType, i.source.nodePath, i.target.nodePath, i.plugged])).toEqual([
-                ['applyLegend', 'widgets[legend-1]', 'widgets[map-w].maps[m1].applyZoomTo', true]
+                ['applyLegend', 'widgets[legend-1]', 'widgets[map-w].maps[m1].applyLegend', true]
             ]);
-            expect(migratedLegend.interactions[0].id).toBe('legacy:legend-1:applyLegend:widgets[map-w].maps[m1].applyZoomTo');
-            expect(migratedMap.interactions).toEqual([]);
+            expect(migratedLegend.interactions[0].id).toBe('legacy:legend-1:applyLegend:widgets[map-w].maps[m1].applyLegend');
+            expect(migratedMap).toBe(mapWidget);
             expect(migrateLegacyConnections(migrated)).toBe(migrated);
         });
         it('migrates the connection and writes the viewport filter as transient', () => {

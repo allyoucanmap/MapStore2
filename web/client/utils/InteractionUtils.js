@@ -28,12 +28,16 @@ export const EVENTS = {
  */
 export const INTERACTION_SENDER_TYPES = ['filter', 'table', 'map', 'legend'];
 
+const isKeyOrSubKey = (key, keys) => typeof key === 'string' && keys.some(triggerKey => key === triggerKey || key.startsWith(`${triggerKey}.`));
+const MAP_VIEW_KEYS = ['bbox', 'center', 'zoom'];
+
 /**
- * Widget properties, by sender type, whose update reapplies the sender interactions
+ * Updates of a sender (`UPDATE_PROPERTY` `{ key, value }`) that reapply its interactions, by sender type
  */
-export const SENDER_TRIGGER_KEYS = {
-    table: ['quickFilters', 'filter'],
-    map: ['maps']
+export const SENDER_TRIGGERS = {
+    table: ({ key }) => isKeyOrSubKey(key, ['quickFilters', 'filter']),
+    // only view changes, not layer changes (e.g. from a legend) or zoom requests
+    map: ({ key, value }) => key === 'maps' && !!value && !Array.isArray(value) && MAP_VIEW_KEYS.some(viewKey => viewKey in value)
 };
 
 export const MAIN_MAP_WIDGET_ID = 'map';
@@ -75,10 +79,9 @@ export const SENDER_OWN_ZOOM_EXTENT_TYPES = ['table'];
 export const hasSenderOwnZoomExtent = (widget) => SENDER_OWN_ZOOM_EXTENT_TYPES.includes(widget?.widgetType);
 
 /**
- * Returns true if updating the property key (e.g. `quickFilters.NAME`) reapplies the sender interactions
+ * Returns true if the update (`{ key, value }`, e.g. `quickFilters.NAME`) reapplies the sender interactions
  */
-export const isSenderTriggerKey = (widget, key) => typeof key === 'string'
-    && (SENDER_TRIGGER_KEYS[widget?.widgetType] || []).some(triggerKey => key === triggerKey || key.startsWith(`${triggerKey}.`));
+export const isSenderTriggerUpdate = (widget, update) => !!SENDER_TRIGGERS[widget?.widgetType]?.(update || {});
 
 export const TARGET_TYPES = {
     APPLY_FILTER: 'applyFilter',
@@ -90,6 +93,12 @@ export const TARGET_TYPES = {
     APPLY_VIEW_SYNC: 'applyViewSync',
     APPLY_LEGEND: 'applyLegend'
 };
+
+// map-level targets have one leaf node per target type, the node id is the target type
+export const MAP_LEVEL_TARGET_TYPES = [TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, TARGET_TYPES.APPLY_VIEW_SYNC, TARGET_TYPES.APPLY_LEGEND];
+// the main map is zoomed by its widgets, only map widgets follow another map or are controlled by a legend
+const MAIN_MAP_LEVEL_TARGET_TYPES = [TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE];
+const isMapLevelTargetType = (targetType) => MAP_LEVEL_TARGET_TYPES.includes(targetType);
 
 // Human-readable labels for target types
 export const TARGET_TYPE_LABELS = {
@@ -183,18 +192,6 @@ export const WIDGET_TARGETS_BY_TYPE = {
         {
             targetType: TARGET_TYPES.APPLY_FILTER,
             expectedDataType: DATATYPES.LAYER_FILTER,
-            constraints: {}
-        }
-    ],
-    map: [
-        {
-            targetType: TARGET_TYPES.APPLY_ZOOM_TO,
-            expectedDataType: DATATYPES.ZOOM_TRIGGER,
-            constraints: {}
-        },
-        {
-            targetType: TARGET_TYPES.APPLY_ZOOM_TO_FEATURE,
-            expectedDataType: DATATYPES.ZOOM_TRIGGER,
             constraints: {}
         }
     ]
@@ -421,42 +418,28 @@ function createMapTimeLeafNode(layer) {
 }
 
 /**
- * Creates the interaction targets metadata of a map zoom node, zoom to filtered bounds and zoom to feature
- * @returns {object[]} the zoom targets metadata
- */
-function createMapZoomToTargetsMetadata() {
-    return WIDGET_TARGETS_BY_TYPE.map.map(metadata => ({ ...metadata }));
-}
-
-/**
- * Creates the "zoom to" leaf node for a map or dashboard widget.
+ * Creates the leaf node of a map-level target type (zoom to, zoom to feature, view sync, legend)
+ * @param {string} targetType the map-level target type, also the node id
  * @param {string} [promotedTitle] label of the node when it replaces its collapsed parents
- * @returns {object} the zoom-to map leaf node
+ * @returns {object} the map-level leaf node
  */
-function createMapZoomToLeafNode(promotedTitle, extraTargets = []) {
+function createMapLevelLeafNode(targetType, promotedTitle) {
     return {
         type: 'element',
-        id: TARGET_TYPES.APPLY_ZOOM_TO,
-        title: 'Zoom to',
-        icon: 'zoom-to',
+        id: targetType,
+        title: TARGET_TYPE_LABELS[targetType],
+        icon: TARGET_TYPE_GLYPHS[targetType],
         nodePathMode: 'dot',
         ...(promotedTitle ? { promotedTitle, promotedIcon: '1-map' } : {}),
         interactionMetadata: {
-            targets: [...createMapZoomToTargetsMetadata(), ...extraTargets]
+            targets: [{
+                targetType,
+                expectedDataType: TARGET_EVENT_DATA_TYPES[targetType],
+                constraints: {}
+            }]
         }
     };
 }
-
-// only dashboard map widgets follow the view of another map or are controlled by a legend, the main map is not
-const MAP_WIDGET_ONLY_TARGETS = [{
-    targetType: TARGET_TYPES.APPLY_VIEW_SYNC,
-    expectedDataType: DATATYPES.MAP_VIEW,
-    constraints: {}
-}, {
-    targetType: TARGET_TYPES.APPLY_LEGEND,
-    expectedDataType: DATATYPES.MAP_LEGEND,
-    constraints: {}
-}];
 
 function createLayerDimensionNodes(layer) {
     const dimensionNodes = [];
@@ -584,15 +567,16 @@ export function generateMapWidgetLayersTree(maps, options = {}, widget) {
                 "layers"
             );
             // collapsed single-child collections would otherwise label the zoom node with a generic parent (e.g. Widgets)
-            const mapZoomToNode = createMapZoomToLeafNode(widget?.title && maps.length > 1
+            const promotedTitle = widget?.title && maps.length > 1
                 ? `${widget.title} / ${map.name || map.mapId}`
-                : widget?.title || map.name, MAP_WIDGET_ONLY_TARGETS.map(target => ({ ...target })));
+                : widget?.title || map.name;
+            const mapLevelNodes = MAP_LEVEL_TARGET_TYPES.map(targetType => createMapLevelLeafNode(targetType, promotedTitle));
             const baseNode = createBaseElementNode(map, '1-map');
             return {
                 ...baseNode,
                 type: "collection",
                 ...createBaseProperties(map.name || "No Title", "1-map", map.mapId),
-                children: [layersCollection, mapZoomToNode]
+                children: [layersCollection, ...mapLevelNodes]
             };
         });
 
@@ -939,12 +923,12 @@ export function generateRootTree(widgets, mapLayers, options = {}) {
         createBaseCollectionNode("Layers", createLayerNodesForLayers(mapLayers, options), "1-layer", "layers")
     ] : [];
     const mapTimeNode = createMapTimeNode(mapLayers || [], options);
-    const mapZoomToNode = mapLayers?.length > 0 ? createMapZoomToLeafNode() : null;
+    const mapLevelNodes = mapLayers?.length > 0 ? MAIN_MAP_LEVEL_TARGET_TYPES.map(targetType => createMapLevelLeafNode(targetType)) : [];
 
     const widgetsCollection = createBaseCollectionNode("Widgets", widgetNodes, "widgets", "widgets");
     const collections = [widgetsCollection];
     if (mapLayersNodes.length > 0) {
-        const mapsCollection = createBaseCollectionNode("Map", [mapTimeNode, ...mapLayersNodes, mapZoomToNode].filter(Boolean), "1-map", "map");
+        const mapsCollection = createBaseCollectionNode("Map", [mapTimeNode, ...mapLayersNodes, ...mapLevelNodes].filter(Boolean), "1-map", "map");
         collections.push(mapsCollection);
     }
 
@@ -1051,7 +1035,7 @@ const excludeTreeNode = (node, excludedNodeId) => {
 };
 
 /**
- * Promotes zoom-to to the Map node when it is the only remaining child.
+ * Promotes a map-level target (zoom to, view sync, legend) to its map node when it is the only remaining child.
  * @param {object} node the tree node to process
  * @returns {object} the tree with map zoom-to wrappers promoted
  */
@@ -1062,7 +1046,7 @@ export function promoteMapZoomToNodes(node) {
     if (node.type === 'collection'
         && Array.isArray(node.children)
         && node.children.length === 1
-        && node.children[0]?.id === TARGET_TYPES.APPLY_ZOOM_TO
+        && isMapLevelTargetType(node.children[0]?.id)
         && node.children[0]?.type === 'element') {
         const zoomChild = node.children[0];
         return { ...zoomChild, title: zoomChild.promotedTitle || node.title, icon: zoomChild.promotedIcon || node.icon };
@@ -1073,8 +1057,6 @@ export function promoteMapZoomToNodes(node) {
     return node;
 }
 
-const MAP_NODE_TARGET_TYPES = [TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, TARGET_TYPES.APPLY_VIEW_SYNC, TARGET_TYPES.APPLY_LEGEND];
-const isZoomTargetType = (targetType) => MAP_NODE_TARGET_TYPES.includes(targetType);
 
 export function getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType, excludedNodeId) {
     const filteredTree = filterTreeWithTarget(excludeTreeNode(interactionTree, excludedNodeId), target) || { children: [] };
@@ -1082,7 +1064,7 @@ export function getDisplayInteractionTargetTree(interactionTree, target, valueAt
         ? filterDimensionTreeByValueAttributeType(filteredTree, valueAttributeType)
         : filteredTree;
     const detachedTree = detachSingleChildCollections(targetTree, ['widgets', 'traces', 'map', 'layers']) || { children: [] };
-    return isZoomTargetType(target?.targetType)
+    return isMapLevelTargetType(target?.targetType)
         ? promoteMapZoomToNodes(detachedTree)
         : detachedTree;
 }
@@ -1271,24 +1253,25 @@ export function isMapZoomToTarget(nodePath) {
     return !!nodePath && MAIN_MAP_ZOOM_REGEX.test(nodePath);
 }
 
+const MAP_LEVEL_TARGET_PATH_REGEX = new RegExp(`(?:^map|\\.maps\\[[^\\]]+\\])\\.(?:${MAP_LEVEL_TARGET_TYPES.join('|')})$`);
+
 /**
- * Returns true when the interaction target points to a dashboard map widget's zoom-to field
- * (widgets[widgetId].maps[mapId].applyZoomTo).
+ * Returns true when the interaction target is a map-level target of the main map or of a map widget map
+ * (e.g. map.applyZoomTo, widgets[widgetId].maps[mapId].applyViewSync)
  * @param {string} nodePath the node path to check
  * @returns {boolean}
  */
-export function isWidgetMapZoomToTarget(nodePath) {
-    const DASHBOARD_MAP_ZOOM_REGEX = new RegExp(`\\.maps\\[[^\\]]+\\]\\.${TARGET_TYPES.APPLY_ZOOM_TO}$`);
-    return !!nodePath && DASHBOARD_MAP_ZOOM_REGEX.test(nodePath);
+export function isMapLevelTarget(nodePath) {
+    return !!nodePath && MAP_LEVEL_TARGET_PATH_REGEX.test(nodePath);
 }
 
 /**
- * Returns true when the interaction target points to a zoom-to field, either main map or dashboard map widget.
+ * Returns true when the interaction target is a map-level target of the main map (e.g. map.applyZoomToFeature)
  * @param {string} nodePath the node path to check
  * @returns {boolean}
  */
-export function isAnyZoomToTarget(nodePath) {
-    return isMapZoomToTarget(nodePath) || isWidgetMapZoomToTarget(nodePath);
+export function isMainMapLevelTarget(nodePath) {
+    return isMapLevelTarget(nodePath) && nodePath.startsWith('map.');
 }
 
 /**

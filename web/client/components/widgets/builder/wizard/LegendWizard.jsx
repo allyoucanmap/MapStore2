@@ -44,7 +44,7 @@ export default ({
     data = {},
     currentLocale,
     language,
-    updateProperty = () => {}
+    onApplyWidgetInteractions = () => {}
 } = {}) => (
     <Wizard
         step={step}
@@ -57,11 +57,12 @@ export default ({
                 <Col xs={12}>
                     <div className="legend-preview-container">
                         <LegendPreview
+                            id={data.id}
                             legendMap={legendMap}
+                            onApplyWidgetInteractions={onApplyWidgetInteractions}
                             key="widget-options"
                             currentLocale={currentLocale}
                             language={language}
-                            updateProperty={updateProperty}
                             disableVisibility
                             disableOpacitySlider
                             legendExpanded

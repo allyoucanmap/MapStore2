@@ -18,6 +18,10 @@ import {
     getTableWidgetZoomExtentLayers,
     buildMapWidgetAppliedData,
     applyViewSyncEffect,
+    applyZoomToFeatureEffect,
+    applyLegendEffect,
+    mergeLegendLayerChanges,
+    EVENT_TARGET_TYPES,
     getTargetGeometryAttribute,
     isTransientEffectSender,
     stripTransientEffects,
@@ -319,7 +323,7 @@ describe('InteractionEffectsUtils', () => {
         });
         it('sends center and zoom for view sync and moves the target map', () => {
             const center = { x: 10, y: 20, crs: 'EPSG:4326' };
-            const interaction = { ...makeSpatialInteraction('widgets[map-r].maps[r1].applyZoomTo'), targetType: TARGET_TYPES.APPLY_VIEW_SYNC };
+            const interaction = { ...makeSpatialInteraction('widgets[map-r].maps[r1].applyViewSync'), targetType: TARGET_TYPES.APPLY_VIEW_SYNC };
             const appliedData = buildMapWidgetAppliedData(makeMapWidget({ center, zoom: 5 }), 'm1', interaction, { widgets: [] });
             expect(appliedData).toEqual({ center, zoom: 5 });
             expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_VIEW_SYNC]).toBe(applyViewSyncEffect);
@@ -363,6 +367,51 @@ describe('InteractionEffectsUtils', () => {
             const widgets = [{ id: 'counter-1', interactionFilters: [persisted] }, { id: 'text-1' }];
             expect(stripTransientEffects(widgets)).toBe(widgets);
             expect(stripTransientEffects(undefined)).toBe(undefined);
+        });
+    });
+
+    describe('event effects', () => {
+        const mapWidget = { id: 'map-w', widgetType: 'map', maps: [{ mapId: 'm1', layers: [{ id: 'l1', visibility: true, title: 'L1' }, { id: 'l2' }] }] };
+        const makeEventInteraction = (targetType, nodePath, appliedData) => ({ id: 'e1', plugged: true, targetType, target: { nodePath }, appliedData });
+
+        it('registers the event effects, applied only with event data', () => {
+            expect(EVENT_TARGET_TYPES).toEqual([TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, TARGET_TYPES.APPLY_LEGEND]);
+            expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]).toBe(applyZoomToFeatureEffect);
+            expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_LEGEND]).toBe(applyLegendEffect);
+        });
+        it('zooms a map widget map to the feature with a zoom request', () => {
+            const interaction = makeEventInteraction(TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, 'widgets[map-w].maps[m1].applyZoomToFeature', { feature: { bbox: [1, 2, 3, 4] }, maxZoom: 12 });
+            expect(applyZoomToFeatureEffect(interaction, { widgets: [mapWidget] })).toEqual({
+                type: INTERACTION_UPDATES.WIDGET_PROPERTY, widgetId: 'map-w', key: 'maps', mode: 'merge',
+                value: { mapId: 'm1', zoomToRequest: { extent: [1, 2, 3, 4], crs: 'EPSG:4326', maxZoom: 12 } }
+            });
+        });
+        it('zooms the main map to the feature geometry extent, with the main map padding', () => {
+            const padding = { top: 0, right: 100, bottom: 0, left: 0 };
+            const interaction = makeEventInteraction(TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, 'map.applyZoomToFeature', { feature: { geometry: { type: 'Point', coordinates: [10, 20] } } });
+            expect(applyZoomToFeatureEffect(interaction, { widgets: [], mainMapPadding: padding })).toEqual({
+                type: INTERACTION_UPDATES.ZOOM_TO_EXTENT, extent: [10, 20, 10, 20], crs: 'EPSG:4326', padding
+            });
+        });
+        it('does not zoom without feature extent or target map', () => {
+            expect(applyZoomToFeatureEffect(makeEventInteraction(TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, 'map.applyZoomToFeature', {}), {})).toBe(null);
+            expect(applyZoomToFeatureEffect(makeEventInteraction(TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, 'widgets[other].maps[m1].applyZoomToFeature', { feature: { bbox: [1, 2, 3, 4] } }), { widgets: [mapWidget] })).toBe(null);
+        });
+        it('mergeLegendLayerChanges applies only the legend fields to the changed layers', () => {
+            const layerFilter = { filters: [] };
+            const merged = mergeLegendLayerChanges(mapWidget.maps[0].layers, [{ id: 'l1', visibility: false, opacity: 0.5, expanded: true, layerFilter, title: 'ignored' }]);
+            expect(merged[0]).toEqual({ id: 'l1', visibility: false, opacity: 0.5, expanded: true, layerFilter, title: 'L1' });
+            expect(merged[1]).toBe(mapWidget.maps[0].layers[1]);
+        });
+        it('writes the legend changes into the controlled map layers', () => {
+            const interaction = makeEventInteraction(TARGET_TYPES.APPLY_LEGEND, 'widgets[map-w].maps[m1].applyLegend', { layers: [{ id: 'l1', visibility: false }] });
+            const update = applyLegendEffect(interaction, { widgets: [mapWidget] });
+            expect(update.widgetId).toBe('map-w');
+            expect(update.mode).toBe('merge');
+            expect(update.value.mapId).toBe('m1');
+            expect(update.value.layers[0].visibility).toBe(false);
+            expect(applyLegendEffect({ ...interaction, appliedData: {} }, { widgets: [mapWidget] })).toBe(null);
+            expect(applyLegendEffect(interaction, { widgets: [] })).toBe(null);
         });
     });
 });

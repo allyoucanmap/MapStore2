@@ -18,7 +18,7 @@ import xml2js from 'xml2js';
 
 import { getFeatureLayer } from '../api/WFS';
 import { updateWidgetProperty, editWidget, INSERT, UPDATE, DELETE, UPDATE_PROPERTY, SET_LINKED_DASHBOARD_DATA } from '../actions/widgets';
-import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, ZOOM_TO_FEATURE, EDIT_MAIN_MAP_INTERACTIONS } from '../actions/interactions';
+import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, EDIT_MAIN_MAP_INTERACTIONS } from '../actions/interactions';
 import { zoomToExtent, CHANGE_MAP_VIEW } from '../actions/map';
 import { setCurrentTime } from '../actions/dimension';
 import { REMOVE_NODE, changeLayerProperties, changeLayerParams } from '../actions/layers';
@@ -31,9 +31,9 @@ import {
     extractWidgetIdFromNodePath,
     isInteractionSender,
     hasSenderOwnZoomExtent,
-    isSenderTriggerKey,
+    isSenderTriggerUpdate,
     isMapLayerPath,
-    isMapZoomToTarget,
+    isMainMapLevelTarget,
     isMainMapWidget,
     createMainMapWidget,
     MAIN_MAP_WIDGET_ID,
@@ -45,6 +45,7 @@ import {
     TARGET_EFFECTS,
     SENDER_DATA_BUILDERS,
     SENDER_ZOOM_EXTENT_LAYERS,
+    EVENT_TARGET_TYPES,
     isTransientEffectSender,
     getSenderSourceIds,
     cleanupEffectsBySenderId,
@@ -57,7 +58,7 @@ import { toOGCFilter } from '../utils/FilterUtils';
 import { getWFSLayerName, getWpsUrl } from '../utils/LayersUtils';
 import { getLayerFromId, layersSelector } from '../selectors/layers';
 import { mapSelector } from '../selectors/map';
-import { shouldSkipInteraction } from '../selectors/widgets';
+import { shouldSkipInteraction, getEditingWidget } from '../selectors/widgets';
 
 // waits for typing to settle before requesting the extent and moving the map
 const AUTO_ZOOM_DEBOUNCE = 400;
@@ -67,14 +68,16 @@ const getContainerWidgets = (state, target) => get(state, `widgets.containers[${
 const getEffectsContext = (state, target) => ({
     layers: layersSelector(state) || [],
     widgets: getContainerWidgets(state, target),
-    target
+    target,
+    mainMapPadding: getMainMapZoomToPadding(mapPaddingSelector(state))
 });
 
 const UPDATE_TO_ACTION = {
     [INTERACTION_UPDATES.LAYER_PROPERTIES]: ({ layerId, properties }) => changeLayerProperties(layerId, properties),
     [INTERACTION_UPDATES.LAYER_PARAMS]: ({ layerId, params }) => changeLayerParams(layerId, params),
     [INTERACTION_UPDATES.WIDGET_PROPERTY]: ({ widgetId, key, value, mode, target }) => updateWidgetProperty(widgetId, key, value, mode, target),
-    [INTERACTION_UPDATES.CURRENT_TIME]: ({ value }) => setCurrentTime(value)
+    [INTERACTION_UPDATES.CURRENT_TIME]: ({ value }) => setCurrentTime(value),
+    [INTERACTION_UPDATES.ZOOM_TO_EXTENT]: ({ extent, crs, maxZoom, padding }) => zoomToExtent(extent, crs, maxZoom, padding ? { padding } : undefined)
 };
 
 const toActions = (updates = []) => updates.map(update => UPDATE_TO_ACTION[update?.type]?.(update)).filter(Boolean);
@@ -139,17 +142,15 @@ function resolveZoomToLayer(applyFilterInteraction, state, targetContainer) {
  * @param {object} resolvedLayer - `{mapWidgetId, mapId}` from `resolveZoomToLayer`
  * @param {string} targetContainer - The widget container target
  * @param {object} [padding] - Optional `{top, right, bottom, left}` pixel padding for widget occlusion
- * @param {string} [crs] - extent projection, EPSG:4326 by default
- * @param {number} [maxZoom] - optional max zoom level
  * @returns {object} Action to dispatch
  */
-function buildZoomToExtentAction(extent, { mapWidgetId, mapId }, targetContainer, padding, crs = "EPSG:4326", maxZoom) {
+function buildZoomToExtentAction(extent, { mapWidgetId, mapId }, targetContainer, padding) {
     if (!mapWidgetId) {
-        return zoomToExtent(extent, crs, maxZoom, padding ? { padding } : undefined);
+        return zoomToExtent(extent, "EPSG:4326", undefined, padding ? { padding } : undefined);
     }
     return updateWidgetProperty(mapWidgetId, 'maps', {
         mapId,
-        zoomToRequest: { extent, crs, ...(maxZoom !== undefined ? { maxZoom } : {}), ...(padding ? { padding } : {}) }
+        zoomToRequest: { extent, crs: "EPSG:4326", ...(padding ? { padding } : {}) }
     }, 'merge', targetContainer);
 }
 
@@ -194,7 +195,7 @@ function fetchLayerExtent(layer) {
 
 const getMapTargetKey = ({ mapWidgetId, mapId }) => `${mapWidgetId || 'main'}-${mapId || 'main'}`;
 
-const resolveZoomToMapTarget = (nodePath) => isMapZoomToTarget(nodePath)
+const resolveZoomToMapTarget = (nodePath) => isMainMapLevelTarget(nodePath)
     ? {}
     : { mapWidgetId: extractWidgetIdFromNodePath(nodePath), mapId: extractMapIdFromNodePath(nodePath) };
 
@@ -265,14 +266,35 @@ function applyInteractionEffectForZoomTo(interaction, sender, state, targetConta
 // ============================================================================
 
 /**
- * Applies the plugged interactions of a sender source, zoom-to last and only if manual or auto zoom
+ * Applies the event data to the plugged interactions of the event target types (e.g. a table row click, a legend change)
+ * The widget being edited is the sender when it is not in the container yet (e.g. the legend preview of a new legend)
+ */
+function applyEventInteractions(state, { widgetId, target, sourceId, event }) {
+    const editingWidget = getEditingWidget(state);
+    const sender = getContainerWidgets(state, target).find(w => w.id === widgetId)
+        || (editingWidget?.id === widgetId ? editingWidget : undefined);
+    const context = getEffectsContext(state, target);
+    const updates = (sender?.interactions || [])
+        .filter(interaction => interaction.plugged === true
+            && interaction.source?.nodePath?.includes(sourceId)
+            && (event.targetTypes || []).includes(interaction.targetType))
+        .map(interaction => TARGET_EFFECTS[interaction.targetType]?.({ ...interaction, appliedData: event.data }, context))
+        .filter(update => update && !isNoOpUpdate(update, state));
+    return Rx.Observable.from(toActions(updates));
+}
+
+/**
+ * Applies the plugged interactions of a sender source, zoom-to last and only if manual or auto zoom; with an event, only its target types with its data
  */
 export const applyWidgetInteractionsEpic = (action$, store) =>
     action$
         .ofType(APPLY_WIDGET_INTERACTIONS, ZOOM_TO_FILTER_EXTENT)
-        // a newer apply cancels the pending one of the same sender source only, other senders keep their zoom
-        .groupBy(({ widgetId, target, sourceId }) => `${target}:${widgetId}:${sourceId}`)
-        .mergeMap(sourceAction$ => sourceAction$.switchMap(({ type, widgetId, target, sourceId }) => {
+        // a newer apply cancels the pending one of the same sender source only, other senders keep their zoom; events never cancel state applies
+        .groupBy(({ widgetId, target, sourceId, event }) => `${target}:${widgetId}:${sourceId}:${event ? 'event' : 'state'}`)
+        .mergeMap(sourceAction$ => sourceAction$.switchMap(({ type, widgetId, target, sourceId, event }) => {
+            if (event) {
+                return applyEventInteractions(store.getState(), { widgetId, target, sourceId, event });
+            }
             const isManualZoomTrigger = type === ZOOM_TO_FILTER_EXTENT;
             const sender = getContainerWidgets(store.getState(), target).find(w => w.id === widgetId);
             const buildAppliedData = SENDER_DATA_BUILDERS[sender?.widgetType];
@@ -283,6 +305,7 @@ export const applyWidgetInteractionsEpic = (action$, store) =>
                 (sender.interactions || []).filter(interaction => interaction.plugged === true
                     && interaction.source.nodePath.includes(sourceId)
                     && !!interaction.targetType
+                    && !EVENT_TARGET_TYPES.includes(interaction.targetType)
                     && (!isManualZoomTrigger || interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO)
                 ),
                 // zoom-to resolves the extent of the layers already filtered by the other interactions
@@ -357,45 +380,15 @@ export const cleanupAndReapplyWidgetInteractionsEpic = (action$, store) =>
         });
 
 /**
- * Reapplies the interactions of a sender when one of its trigger properties is updated
+ * Reapplies the interactions of a sender when one of its trigger updates happens (see `SENDER_TRIGGERS`)
  */
 export const applyOnSenderPropertyChangeEpic = (action$, store) =>
     action$
         .ofType(UPDATE_PROPERTY)
-        .mergeMap(({ id, key, target = 'floating' }) => {
+        .mergeMap(({ id, key, value, target = 'floating' }) => {
             const sender = getContainerWidgets(store.getState(), target).find(w => w.id === id);
-            return isSenderTriggerKey(sender, key)
+            return isSenderTriggerUpdate(sender, { key, value })
                 ? Rx.Observable.from(getSenderSourceIds(sender).map(sourceId => applyWidgetInteractions(id, target, sourceId)))
-                : Rx.Observable.empty();
-        });
-
-/**
- * Zooms the maps targeted by the plugged zoom to feature interactions of a sender source to the feature
- */
-export const zoomToFeatureEpic = (action$, store) =>
-    action$
-        .ofType(ZOOM_TO_FEATURE)
-        .switchMap(({ widgetId, target = 'floating', sourceId, feature, crs, maxZoom }) => {
-            const state = store.getState();
-            const extent = feature?.bbox || (feature?.geometry ? bbox(feature) : null);
-            const sender = getContainerWidgets(state, target).find(w => w.id === widgetId);
-            const mapTargets = uniqBy(
-                (sender?.interactions || [])
-                    .filter(interaction => interaction.plugged === true
-                        && interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO_FEATURE
-                        && interaction.source?.nodePath?.includes(sourceId))
-                    .map(interaction => resolveZoomToMapTarget(interaction.target?.nodePath)),
-                getMapTargetKey
-            );
-            return extent
-                ? Rx.Observable.from(mapTargets.map(mapTarget => buildZoomToExtentAction(
-                    extent,
-                    mapTarget,
-                    target,
-                    mapTarget.mapWidgetId ? undefined : getMainMapZoomToPadding(mapPaddingSelector(state)),
-                    crs,
-                    maxZoom
-                )))
                 : Rx.Observable.empty();
         });
 
@@ -444,6 +437,5 @@ export default {
     applyTransientEffectsOnLoadEpic,
     applyWidgetInteractionsEpic,
     cleanupAndReapplyWidgetInteractionsEpic,
-    applyOnSenderPropertyChangeEpic,
-    zoomToFeatureEpic
+    applyOnSenderPropertyChangeEpic
 };

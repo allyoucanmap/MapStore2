@@ -74,7 +74,7 @@ describe('widgets selectors', () => {
     });
     it('returns the maps controlled by the legends', () => {
         const map = { mapId: 'm1', layers: [] };
-        const legendInteraction = (id, plugged = true) => ({ id, plugged, targetType: 'applyLegend', target: { nodePath: 'widgets[map-w].maps[m1].applyZoomTo' } });
+        const legendInteraction = (id, plugged = true) => ({ id, plugged, targetType: 'applyLegend', target: { nodePath: 'widgets[map-w].maps[m1].applyLegend' } });
         const legend = { id: 'legend-1', widgetType: 'legend', interactions: [legendInteraction('i1')] };
         const state = {
             widgets: {
@@ -84,7 +84,7 @@ describe('widgets selectors', () => {
                             { id: 'map-w', widgetType: 'map', maps: [map] },
                             legend,
                             { id: 'legend-2', widgetType: 'legend', interactions: [legendInteraction('i2', false)] },
-                            { id: 'legend-3', widgetType: 'legend', interactions: [{ ...legendInteraction('i3'), target: { nodePath: 'widgets[deleted].maps[m1].applyZoomTo' } }] }
+                            { id: 'legend-3', widgetType: 'legend', interactions: [{ ...legendInteraction('i3'), target: { nodePath: 'widgets[deleted].maps[m1].applyLegend' } }] }
                         ]
                     }
                 },

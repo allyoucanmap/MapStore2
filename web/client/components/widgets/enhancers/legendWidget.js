@@ -13,6 +13,7 @@ import deleteWidget from './deleteWidget';
 import { editableWidget, defaultIcons, withHeaderTools } from './tools';
 import { getScales } from '../../../utils/MapUtils';
 import { getInactiveNode, DEFAULT_GROUP_ID } from '../../../utils/LayersUtils';
+import { TARGET_TYPES } from '../../../utils/InteractionUtils';
 
 /**
  * Returns the legend view props of the controlled map, showing the layers of the visible groups without backgrounds
@@ -40,41 +41,32 @@ export const getLegendViewProps = (map = {}) => {
 };
 
 /**
- * Returns the layers of the controlled map with the legend changes (visibility, opacity, expanded, legend filter)
- * @param {object[]} mapLayers the layers of the controlled map
- * @param {object[]} legendLayers the layers changed in the legend
- * @returns {object[]} the updated map layers
+ * Feeds the legend with the map it controls (`legendMap`: `{ widgetId, mapId, map }`) and sends the legend changes
+ * as `APPLY_LEGEND` interaction events, applied to that map by the interactions epic
  */
-export const mergeLegendLayerChanges = (mapLayers = [], legendLayers = []) => mapLayers.map(layer => {
-    const legendLayer = legendLayers.find(l => l.id === layer.id);
-    return legendLayer
-        ? { ...layer, visibility: legendLayer.visibility, opacity: legendLayer.opacity, expanded: legendLayer.expanded, layerFilter: legendLayer.layerFilter }
-        : layer;
-});
-
-/**
- * Feeds the legend with the map it controls (`legendMap`: `{ widgetId, mapId, map }`) and writes the legend changes back to that map
- */
-export const withLegendMapData = (Component) => ({ legendMap, updateProperty = () => {}, ...props }) => {
+export const withLegendMapData = (Component) => ({ legendMap, onApplyWidgetInteractions = () => {}, ...props }) => {
     if (!legendMap?.map) {
-        return <Component {...props} updateProperty={updateProperty} noMapConnected />;
+        return <Component {...props} noMapConnected />;
     }
-    const { widgetId, mapId, map } = legendMap;
-    const updateMap = (key, value) => {
+    const sendLegendChange = (key, value) => {
         if (key === 'map') {
-            updateProperty(widgetId, 'maps', { mapId, layers: mergeLegendLayerChanges(map.layers, value?.layers) }, 'merge');
+            onApplyWidgetInteractions(props.id, undefined, props.id, {
+                targetTypes: [TARGET_TYPES.APPLY_LEGEND],
+                data: { layers: value?.layers || [] }
+            });
         }
     };
-    return <Component {...props} {...getLegendViewProps(map)} updateProperty={updateMap} noMapConnected={false} />;
+    return <Component {...props} {...getLegendViewProps(legendMap.map)} updateProperty={sendLegendChange} noMapConnected={false} />;
 };
 
 /**
- * Legend widget enhancer: controlled map data, base tools and menu
+ * Legend widget enhancer: base tools and menu, controlled map data
  */
 export default compose(
-    withLegendMapData,
     deleteWidget,
     editableWidget(),
     defaultIcons(),
-    withHeaderTools()
+    withHeaderTools(),
+    // innermost: only the legend view sends the legend changes, the tools keep the widget updateProperty
+    withLegendMapData
 );

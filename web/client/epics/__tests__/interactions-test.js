@@ -10,9 +10,9 @@ import axios from '../../libs/ajax';
 import MockAdapter from 'axios-mock-adapter';
 
 import { testEpic, addTimeoutEpic, TEST_TIMEOUT } from './epicTestUtils';
-import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, zoomToFeatureEpic, applyTransientEffectsOnLoadEpic, mirrorMainMapViewEpic, editMainMapInteractionsEpic } from '../interactions';
-import { applyWidgetInteractions, zoomToFilterExtent, zoomToFeature, editMainMapInteractions, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
-import { changeMapView } from '../../actions/map';
+import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, applyTransientEffectsOnLoadEpic, mirrorMainMapViewEpic, editMainMapInteractionsEpic } from '../interactions';
+import { applyWidgetInteractions, zoomToFilterExtent, editMainMapInteractions, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
+import { changeMapView, ZOOM_TO_EXTENT } from '../../actions/map';
 import { UPDATE_PROPERTY, DELETE, EDIT, insertWidget, updateWidgetProperty } from '../../actions/widgets';
 import { dashboardLoaded } from '../../actions/dashboard';
 import { CHANGE_LAYER_PARAMS, CHANGE_LAYER_PROPERTIES, removeNode } from '../../actions/layers';
@@ -872,23 +872,22 @@ describe('interactions epics', () => {
             });
         });
 
-        describe('zoom to feature', () => {
+        describe('zoom to feature event', () => {
             const makeZoomToFeatureInteraction = (overrides = {}) => ({
                 id: 'table-zoom-feature-1',
                 plugged: true,
                 targetType: TARGET_TYPES.APPLY_ZOOM_TO_FEATURE,
                 source: { nodePath: `widgets[${TABLE_WIDGET_ID}]` },
-                target: { nodePath: `widgets[${MAP_WIDGET_ID}].maps[${MAP_ID}].applyZoomTo` },
+                target: { nodePath: `widgets[${MAP_WIDGET_ID}].maps[${MAP_ID}].applyZoomToFeature` },
                 ...overrides
             });
-            const feature = { type: 'Feature', id: 'f1', bbox: [1, 2, 3, 4], geometry: null };
-            const options = { crs: 'EPSG:4326', maxZoom: 12 };
+            const rowClick = (data) => applyWidgetInteractions(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID, { targetTypes: [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE], data });
 
-            it('zooms the plugged map widgets to the feature extent', (done) => {
+            it('zooms the plugged map widgets to the clicked feature', (done) => {
                 testEpic(
-                    zoomToFeatureEpic,
+                    applyWidgetInteractionsEpic,
                     1,
-                    [zoomToFeature(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID, feature, options)],
+                    [rowClick({ feature: { bbox: [1, 2, 3, 4] }, crs: 'EPSG:4326', maxZoom: 12 })],
                     (actions) => {
                         expect(actions[0].type).toBe(UPDATE_PROPERTY);
                         expect(actions[0].id).toBe(MAP_WIDGET_ID);
@@ -900,26 +899,26 @@ describe('interactions epics', () => {
                 );
             });
 
-            it('computes the extent from the geometry when the feature has no bbox', (done) => {
-                const pointFeature = { type: 'Feature', id: 'f2', geometry: { type: 'Point', coordinates: [10, 20] } };
+            it('zooms the main map with a zoom to extent action', (done) => {
                 testEpic(
-                    zoomToFeatureEpic,
+                    applyWidgetInteractionsEpic,
                     1,
-                    [zoomToFeature(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID, pointFeature)],
+                    [rowClick({ feature: { geometry: { type: 'Point', coordinates: [10, 20] } } })],
                     (actions) => {
-                        expect(actions[0].value.zoomToRequest.extent).toEqual([10, 20, 10, 20]);
-                        expect(actions[0].value.zoomToRequest.crs).toBe('EPSG:4326');
+                        expect(actions[0].type).toBe(ZOOM_TO_EXTENT);
+                        expect(actions[0].extent).toEqual([10, 20, 10, 20]);
+                        expect(actions[0].crs).toBe('EPSG:4326');
                     },
-                    makeState([makeTableWidget({ interactions: [makeZoomToFeatureInteraction()] }), makeMapWidget()]),
+                    makeState([makeTableWidget({ interactions: [makeZoomToFeatureInteraction({ target: { nodePath: 'map.applyZoomToFeature' } })] })]),
                     done
                 );
             });
 
-            it('ignores unplugged and other zoom interactions', (done) => {
+            it('ignores unplugged and other target types', (done) => {
                 testEpic(
-                    addTimeoutEpic(zoomToFeatureEpic, 20),
+                    addTimeoutEpic(applyWidgetInteractionsEpic, 20),
                     1,
-                    [zoomToFeature(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID, feature, options)],
+                    [rowClick({ feature: { bbox: [1, 2, 3, 4] } })],
                     (actions) => {
                         expect(actions[0].type).toBe(TEST_TIMEOUT);
                     },
@@ -930,6 +929,77 @@ describe('interactions epics', () => {
                     done
                 );
             });
+
+            it('does not apply event target types without an event', (done) => {
+                testEpic(
+                    addTimeoutEpic(applyWidgetInteractionsEpic, 20),
+                    1,
+                    [applyWidgetInteractions(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID)],
+                    (actions) => {
+                        expect(actions[0].type).toBe(TEST_TIMEOUT);
+                    },
+                    makeState([makeTableWidget({ interactions: [makeZoomToFeatureInteraction()] }), makeMapWidget()]),
+                    done
+                );
+            });
+        });
+    });
+
+    describe('legend sender', () => {
+        const LEGEND_ID = 'legend-1';
+        const legendInteraction = {
+            id: 'legend-int-1',
+            plugged: true,
+            targetType: TARGET_TYPES.APPLY_LEGEND,
+            source: { nodePath: `widgets[${LEGEND_ID}]` },
+            target: { nodePath: `widgets[${MAP_WIDGET_ID}].maps[${MAP_ID}].applyLegend` }
+        };
+        const legend = { id: LEGEND_ID, widgetType: 'legend', interactions: [legendInteraction] };
+        const legendChange = (layers) => applyWidgetInteractions(LEGEND_ID, 'floating', LEGEND_ID, { targetTypes: [TARGET_TYPES.APPLY_LEGEND], data: { layers } });
+
+        it('writes the legend changes into the controlled map layers', (done) => {
+            testEpic(
+                applyWidgetInteractionsEpic,
+                1,
+                [legendChange([{ id: MAP_LAYER_ID, visibility: false }])],
+                (actions) => {
+                    expect(actions[0].type).toBe(UPDATE_PROPERTY);
+                    expect(actions[0].id).toBe(MAP_WIDGET_ID);
+                    expect(actions[0].mode).toBe('merge');
+                    expect(actions[0].value.mapId).toBe(MAP_ID);
+                    expect(actions[0].value.layers[0].visibility).toBe(false);
+                },
+                makeState([legend, makeMapWidget()]),
+                done
+            );
+        });
+
+        it('applies the changes of the legend being edited, not yet in the container', (done) => {
+            const state = { ...makeState([makeMapWidget()]) };
+            state.widgets = { ...state.widgets, builder: { editor: legend } };
+            testEpic(
+                applyWidgetInteractionsEpic,
+                1,
+                [legendChange([{ id: MAP_LAYER_ID, visibility: false }])],
+                (actions) => {
+                    expect(actions[0].id).toBe(MAP_WIDGET_ID);
+                },
+                state,
+                done
+            );
+        });
+
+        it('does not reapply the map interactions on legend layer changes', (done) => {
+            testEpic(
+                addTimeoutEpic(applyOnSenderPropertyChangeEpic, 20),
+                1,
+                [updateWidgetProperty(MAP_WIDGET_ID, 'maps', { mapId: MAP_ID, layers: [] }, 'merge')],
+                (actions) => {
+                    expect(actions[0].type).toBe(TEST_TIMEOUT);
+                },
+                makeState([legend, makeMapWidget({ interactions: [] })]),
+                done
+            );
         });
     });
 
@@ -992,7 +1062,7 @@ describe('interactions epics', () => {
                 plugged: true,
                 targetType: TARGET_TYPES.APPLY_VIEW_SYNC,
                 source: { nodePath: `widgets[${MAP_WIDGET_ID}].maps[${MAP_ID}]` },
-                target: { nodePath: `widgets[${RECEIVER_ID}].maps[r1].applyZoomTo` }
+                target: { nodePath: `widgets[${RECEIVER_ID}].maps[r1].applyViewSync` }
             };
             const sender = makeMapWidget({ maps: [{ ...makeMapWidget().maps[0], center, zoom: 6 }], interactions: [syncInteraction] });
             const receiver = (map = {}) => ({ id: RECEIVER_ID, widgetType: 'map', maps: [{ mapId: 'r1', ...map }] });

@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { applyWidgetInteractions } from '../actions/interactions';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { withResizeDetector } from 'react-resize-detector';
@@ -115,6 +116,7 @@ const WidgetsView = compose(
         ), {
             editWidget,
             updateWidgetProperty,
+            onApplyWidgetInteractions: applyWidgetInteractions,
             exportCSV,
             deleteWidget,
             onWidgetSelected: selectWidget,

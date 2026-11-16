@@ -15,7 +15,7 @@ import deleteWidget from './deleteWidget';
 import LoadingSpinner from '../../misc/LoadingSpinner';
 import { defaultIcons, editableWidget, withHeaderTools } from './tools';
 import { zoomToExtent } from '../../../actions/map';
-import { zoomToFeature } from '../../../actions/interactions';
+import { applyWidgetInteractions } from '../../../actions/interactions';
 import { TARGET_TYPES } from '../../../utils/InteractionUtils';
 import {error} from '../../../actions/notifications';
 import { gridTools } from '../../../plugins/featuregrid/index';
@@ -40,10 +40,13 @@ export default compose(
         const hasZoomToFeatureInteractions = (ownProps?.interactions || [])
             .some(interaction => interaction?.plugged && interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO_FEATURE);
         const isMapSync = ownProps?.mapSync || mapWidgetsConnectedWithTable.length || hasZoomToFeatureInteractions;
-        // legacy connected maps read extentObj, zoom to feature interactions read the action
+        // legacy connected maps read extentObj (removed in Phase 7), zoom to feature interactions receive the clicked feature
         const zoomDashboardMaps = (feature, crs, maxZoom) => {
             ownProps?.updateProperty(ownProps.id, `dependencies.extentObj`, { extent: feature.bbox, crs, maxZoom });
-            dispatch(zoomToFeature(ownProps.id, undefined, ownProps.id, feature, { crs, maxZoom }));
+            dispatch(applyWidgetInteractions(ownProps.id, undefined, ownProps.id, {
+                targetTypes: [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE],
+                data: { feature, crs, maxZoom }
+            }));
         };
         return {
             gridTools: (isMapSync && isDashboardWidget) || (isMapViewerWidget) ? gridTools.map((t) => ({

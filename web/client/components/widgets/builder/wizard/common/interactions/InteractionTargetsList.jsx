@@ -8,7 +8,7 @@
 import React from 'react';
 import FlexBox from '../../../../../layout/FlexBox';
 import Message from '../../../../../I18N/Message';
-import { findNodeById, getItemPluggableStatus, isMapTimeTarget, isAnyZoomToTarget } from '../../../../../../utils/InteractionUtils';
+import { findNodeById, getItemPluggableStatus, isMapTimeTarget, isMapLevelTarget } from '../../../../../../utils/InteractionUtils';
 import InteractionsRow from './InteractionsRow';
 import { buildInteractionObject, findInteraction, getInteractionTargetNodeDisabled } from './interactionHelpers';
 import { DEFAULT_CONFIGURATION } from './interactionConstants';
@@ -98,7 +98,7 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
         const targetMetaData = item?.interactionMetadata?.targets?.find(t => t.targetType === target.targetType);
         const existingInteraction = findInteraction(interactions, sourceNodePath, targetNodePath, target.targetType);
         const isMapTime = isMapTimeTarget(targetNodePath);
-        const isZoomTo = isAnyZoomToTarget(targetNodePath);
+        const isMapLevel = isMapLevelTarget(targetNodePath);
         const configuration = existingInteraction?.configuration || DEFAULT_CONFIGURATION;
         const plugged = existingInteraction?.plugged || false;
         const { directlyPluggable, configuredToForcePlug } = getItemPluggableStatus(item, target, configuration);
@@ -129,7 +129,7 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
         const handleConfigurationChange = (newConfiguration) => {
             updateInteraction({
                 configuration: newConfiguration,
-                plugged: !isMapTime && !isZoomTo && !newConfiguration.forcePlug ? false : plugged
+                plugged: !isMapTime && !isMapLevel && !newConfiguration.forcePlug ? false : plugged
             });
         };
 

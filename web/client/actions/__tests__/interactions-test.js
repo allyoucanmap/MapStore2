@@ -10,10 +10,8 @@ import expect from "expect";
 import {
     APPLY_WIDGET_INTERACTIONS,
     ZOOM_TO_FILTER_EXTENT,
-    ZOOM_TO_FEATURE,
     applyWidgetInteractions,
-    zoomToFilterExtent,
-    zoomToFeature
+    zoomToFilterExtent
 } from '../interactions';
 
 describe('interactions actions', () => {
@@ -52,15 +50,12 @@ describe('interactions actions', () => {
         expect(retval.target).toBe('specificTarget');
         expect(retval.sourceId).toBe('myFilterId');
     });
-    it('zoomToFeature', () => {
-        const feature = { type: 'Feature', id: 'f1', bbox: [0, 0, 1, 1], geometry: null };
-        const retval = zoomToFeature('table-1', undefined, 'table-1', feature, { crs: 'EPSG:4326', maxZoom: 15 });
-        expect(retval.type).toBe(ZOOM_TO_FEATURE);
-        expect(retval.widgetId).toBe('table-1');
+    it('applyWidgetInteractions with event data', () => {
+        const event = { targetTypes: ['applyZoomToFeature'], data: { feature: { bbox: [0, 0, 1, 1] } } };
+        const retval = applyWidgetInteractions('table-1', undefined, 'table-1', event);
+        expect(retval.type).toBe(APPLY_WIDGET_INTERACTIONS);
         expect(retval.target).toBe('floating');
-        expect(retval.sourceId).toBe('table-1');
-        expect(retval.feature).toBe(feature);
-        expect(retval.crs).toBe('EPSG:4326');
-        expect(retval.maxZoom).toBe(15);
+        expect(retval.event).toBe(event);
+        expect(applyWidgetInteractions('table-1', undefined, 'table-1').event).toNotExist();
     });
 });

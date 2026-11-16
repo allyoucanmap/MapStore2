@@ -12,7 +12,8 @@ import { connect } from 'react-redux';
 import { compose, renameProps, withProps } from 'recompose';
 import { createSelector } from 'reselect';
 
-import { insertWidget, onEditorChange, openFilterEditor, setPage, updateWidgetProperty } from '../../actions/widgets';
+import { insertWidget, onEditorChange, openFilterEditor, setPage } from '../../actions/widgets';
+import { applyWidgetInteractions } from '../../actions/interactions';
 import Message from '../../components/I18N/Message';
 import BorderLayout from '../../components/layout/BorderLayout';
 import ToolbarComp from '../../components/widgets/builder/wizard/legend/Toolbar';
@@ -42,7 +43,7 @@ const Builder = compose(
             setPage,
             onEditorChange,
             insertWidget,
-            updateWidgetProperty
+            onApplyWidgetInteractions: applyWidgetInteractions
         },
         wizardStateToProps
     ),
@@ -51,8 +52,7 @@ const Builder = compose(
     withValidMap,
     renameProps({
         editorData: "data",
-        onEditorChange: "onChange",
-        updateWidgetProperty: "updateProperty"
+        onEditorChange: "onChange"
     })
 
 )(LegendWizard);

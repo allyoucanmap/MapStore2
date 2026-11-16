@@ -10,7 +10,7 @@ import expect from 'expect';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { getLegendViewProps, mergeLegendLayerChanges, withLegendMapData } from '../legendWidget';
+import { getLegendViewProps, withLegendMapData } from '../legendWidget';
 
 const MAP = {
     zoom: 4,
@@ -49,24 +49,17 @@ describe('legendWidget enhancer', () => {
         expect(props.currentZoomLvl).toBe(4);
         expect(props.scales.length > 0).toBe(true);
     });
-    it('mergeLegendLayerChanges applies only the legend fields to the changed layers', () => {
-        const layerFilter = { filters: [] };
-        const merged = mergeLegendLayerChanges(MAP.layers, [{ id: 'l1', visibility: false, opacity: 0.5, expanded: true, layerFilter, title: 'ignored' }]);
-        expect(merged[0]).toBe(MAP.layers[0]);
-        expect(merged[1]).toEqual({ ...MAP.layers[1], visibility: false, opacity: 0.5, expanded: true, layerFilter });
-    });
-    it('writes the legend changes to the controlled map', () => {
-        const updateProperty = expect.createSpy();
-        ReactDOM.render(<Legend legendMap={{ widgetId: 'map-w', mapId: 'm1', map: MAP }} updateProperty={updateProperty} />, document.getElementById('container'));
+    it('sends the legend changes as legend interaction events', () => {
+        const onApplyWidgetInteractions = expect.createSpy();
+        ReactDOM.render(<Legend id="legend-1" legendMap={{ widgetId: 'map-w', mapId: 'm1', map: MAP }} onApplyWidgetInteractions={onApplyWidgetInteractions} />, document.getElementById('container'));
         expect(received.noMapConnected).toBe(false);
         received.updateProperty('map', { layers: [{ id: 'l1', visibility: false }] });
-        expect(updateProperty).toHaveBeenCalled();
-        const [widgetId, key, value, mode] = updateProperty.calls[0].arguments;
-        expect([widgetId, key, mode]).toEqual(['map-w', 'maps', 'merge']);
-        expect(value.mapId).toBe('m1');
-        expect(value.layers[1].visibility).toBe(false);
+        expect(onApplyWidgetInteractions).toHaveBeenCalledWith('legend-1', undefined, 'legend-1', {
+            targetTypes: ['applyLegend'],
+            data: { layers: [{ id: 'l1', visibility: false }] }
+        });
         received.updateProperty('other', {});
-        expect(updateProperty.calls.length).toBe(1);
+        expect(onApplyWidgetInteractions.calls.length).toBe(1);
     });
     it('flags the legend without a controlled map', () => {
         ReactDOM.render(<Legend />, document.getElementById('container'));

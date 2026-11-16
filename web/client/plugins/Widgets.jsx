@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { applyWidgetInteractions } from '../actions/interactions';
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
@@ -74,6 +75,7 @@ compose(
         ), {
             editWidget,
             updateWidgetProperty,
+            onApplyWidgetInteractions: applyWidgetInteractions,
             exportCSV,
             toggleCollapse,
             toggleCollapseAll,

@@ -18,7 +18,7 @@ import {
     extractWidgetIdFromNodePath,
     isMainMapWidget
 } from './InteractionUtils';
-import { SENDER_DATA_BUILDERS, TARGET_EFFECTS, getSenderSourceIds, isTransientEffectSender, INTERACTION_UPDATES } from './InteractionEffectsUtils';
+import { SENDER_DATA_BUILDERS, TARGET_EFFECTS, EVENT_TARGET_TYPES, getSenderSourceIds, isTransientEffectSender, INTERACTION_UPDATES } from './InteractionEffectsUtils';
 
 export const MAIN_MAP_SENDER_ID = MAIN_MAP_WIDGET_ID;
 
@@ -99,7 +99,7 @@ const TABLE_LEGACY_RECEIVER_INTERACTIONS = {
             return [
                 ...(layer ? [legacyInteraction(sender, TARGET_TYPES.APPLY_FILTER, `widgets[${receiver.id}].maps[${map.mapId}].layers[${layer.id}]`, layer)] : []),
                 legacyInteraction(sender, TARGET_TYPES.APPLY_ZOOM_TO, `widgets[${receiver.id}].maps[${map.mapId}].${TARGET_TYPES.APPLY_ZOOM_TO}`),
-                legacyInteraction(sender, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, `widgets[${receiver.id}].maps[${map.mapId}].${TARGET_TYPES.APPLY_ZOOM_TO}`)
+                legacyInteraction(sender, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, `widgets[${receiver.id}].maps[${map.mapId}].${TARGET_TYPES.APPLY_ZOOM_TO_FEATURE}`)
             ];
         }),
         // widgets reading the table filter through the map become direct targets, their map connection stays legacy
@@ -143,7 +143,7 @@ const MAP_LEGACY_RECEIVER_INTERACTIONS = {
     // the old connection moved the selected map, each map of the receiver follows the sender map now
     map: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'center') || readsLegacyKey(receiver, 'zoom')
         ? (receiver.maps || []).map(map => legacyInteraction(sender, TARGET_TYPES.APPLY_VIEW_SYNC,
-            `widgets[${receiver.id}].maps[${map.mapId}].${TARGET_TYPES.APPLY_ZOOM_TO}`, null, sourceNodePath))
+            `widgets[${receiver.id}].maps[${map.mapId}].${TARGET_TYPES.APPLY_VIEW_SYNC}`, null, sourceNodePath))
         : []
 };
 
@@ -155,16 +155,11 @@ const MAP_LEGACY_RECEIVER_INTERACTIONS = {
  * @returns {object|null} `{ interactions, receiver }`, null when the connection must stay legacy
  */
 // the legend is the sender in the new model, its legacy connection to a map becomes its own interaction
-const convertLegendLegacyConnection = (legend, mapWidget, mapId) => {
-    const interaction = legacyInteraction(legend, TARGET_TYPES.APPLY_LEGEND, `widgets[${mapWidget.id}].maps[${mapId}].${TARGET_TYPES.APPLY_ZOOM_TO}`);
-    return {
-        interactions: [],
-        receiver: {
-            ...omit(legend, ['mapSync', 'dependenciesMap']),
-            interactions: mergeInteractions(legend.interactions, [{ ...interaction, id: getLegacyInteractionId(legend.id, interaction) }])
-        }
-    };
-};
+const convertLegendLegacyConnection = (legend, mapWidget, mapId) => ({
+    interactions: [],
+    receiverInteractions: [legacyInteraction(legend, TARGET_TYPES.APPLY_LEGEND, `widgets[${mapWidget.id}].maps[${mapId}].${TARGET_TYPES.APPLY_LEGEND}`)],
+    receiver: omit(legend, ['mapSync', 'dependenciesMap'])
+});
 
 export const convertMapLegacyConnection = (receiver, sender, source) => {
     const mapId = source?.mapId || sender?.selectedMapId || sender?.maps?.[0]?.mapId;
@@ -194,7 +189,8 @@ export const convertMapLegacyConnection = (receiver, sender, source) => {
 export const writeLegacyConnectionEffects = (widget, sender, interactions) => {
     const buildAppliedData = SENDER_DATA_BUILDERS[sender?.widgetType];
     const sourceIds = getSenderSourceIds(sender);
-    return interactions.reduce((updated, interaction) => {
+    // event target types (zoom to feature, legend) have no state to write on load
+    return interactions.filter(interaction => !EVENT_TARGET_TYPES.includes(interaction.targetType)).reduce((updated, interaction) => {
         const applyEffect = TARGET_EFFECTS[interaction.targetType];
         const sourceId = sourceIds.find(id => interaction.source?.nodePath?.includes(id));
         const context = { widgets: [updated] };
@@ -210,7 +206,7 @@ export const writeLegacyConnectionEffects = (widget, sender, interactions) => {
 };
 
 /**
- * Legacy connection converters by sender widget type: `(receiver, sender, source, widgets) => ({ interactions, receiver }) | null`
+ * Legacy connection converters by sender widget type: `(receiver, sender, source, widgets) => ({ interactions, receiver, receiverInteractions }) | null`
  */
 export const LEGACY_CONNECTION_CONVERTERS = {
     table: convertTableLegacyConnection,
@@ -253,8 +249,13 @@ export const migrateLegacyConnections = (config, converters = LEGACY_CONNECTION_
         if (!result) {
             return;
         }
-        const interactions = (result.interactions || []).map(interaction => ({ ...interaction, id: getLegacyInteractionId(widget.id, interaction) }));
-        addedBySender[source.senderId] = [...(addedBySender[source.senderId] || []), ...interactions];
+        const withLegacyIds = (list = []) => list.map(interaction => ({ ...interaction, id: getLegacyInteractionId(widget.id, interaction) }));
+        // interactions belong to the sender, receiverInteractions to the receiver when it is the sender in the new model (legend)
+        [[source.senderId, withLegacyIds(result.interactions)], [widget.id, withLegacyIds(result.receiverInteractions)]]
+            .filter(([, interactions]) => interactions.length)
+            .forEach(([widgetId, interactions]) => {
+                addedBySender[widgetId] = [...(addedBySender[widgetId] || []), ...interactions];
+            });
         receivers[widget.id] = result.receiver || widget;
     });
     if (isEmpty(receivers)) {

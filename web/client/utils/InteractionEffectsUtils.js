@@ -9,6 +9,7 @@
 import isEqual from 'lodash/isEqual';
 import isEmpty from 'lodash/isEmpty';
 import omit from 'lodash/omit';
+import bbox from '@turf/bbox';
 
 import {
     extractTraceFromWidgetByNodePath,
@@ -21,6 +22,7 @@ import {
     isMapTimeTarget,
     isInteractionSender,
     isMainMapWidget,
+    isMainMapLevelTarget,
     TARGET_TYPES,
     unplugOrphanZoomToInteractions,
     hasSenderOwnZoomExtent
@@ -39,7 +41,8 @@ export const INTERACTION_UPDATES = {
     LAYER_PROPERTIES: 'layerProperties',
     LAYER_PARAMS: 'layerParams',
     WIDGET_PROPERTY: 'widgetProperty',
-    CURRENT_TIME: 'currentTime'
+    CURRENT_TIME: 'currentTime',
+    ZOOM_TO_EXTENT: 'zoomToExtent'
 };
 
 const layerPropertiesUpdate = (layerId, properties) => ({ type: INTERACTION_UPDATES.LAYER_PROPERTIES, layerId, properties });
@@ -50,6 +53,11 @@ const widgetPropertyUpdate = (widgetId, key, value, mode, target) => ({
     ...(target ? { target } : {})
 });
 const currentTimeUpdate = (value) => ({ type: INTERACTION_UPDATES.CURRENT_TIME, value });
+const zoomToExtentUpdate = ({ extent, crs, maxZoom, padding }) => ({
+    type: INTERACTION_UPDATES.ZOOM_TO_EXTENT, extent, crs,
+    ...(maxZoom !== undefined ? { maxZoom } : {}),
+    ...(padding ? { padding } : {})
+});
 
 const findById = (items = [], id) => id ? items.find(item => item?.id === id) : undefined;
 const findMapById = (maps = [], mapId) => mapId ? maps.find(map => map?.mapId === mapId) : undefined;
@@ -269,10 +277,68 @@ export function applyViewSyncEffect(interaction, { widgets } = {}) {
         : null;
 }
 
+/**
+ * Target types applied only with event data (e.g. a table row click, a legend change), never from the sender state
+ */
+export const EVENT_TARGET_TYPES = [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, TARGET_TYPES.APPLY_LEGEND];
+
+/**
+ * Returns the update that zooms the target map to the feature of the event
+ * @param {object} interaction the interaction with `appliedData` `{ feature, crs, maxZoom }`
+ * @param {object} context `{ widgets, mainMapPadding }` widgets of the container and main map padding
+ */
+export function applyZoomToFeatureEffect(interaction, { widgets, mainMapPadding } = {}) {
+    const { feature, crs = 'EPSG:4326', maxZoom } = interaction?.appliedData || {};
+    const extent = feature?.bbox || (feature?.geometry ? bbox(feature) : null);
+    const nodePath = interaction?.target?.nodePath;
+    if (!extent) {
+        return null;
+    }
+    if (isMainMapLevelTarget(nodePath)) {
+        return zoomToExtentUpdate({ extent, crs, maxZoom, padding: mainMapPadding });
+    }
+    const mapWidget = findById(widgets, extractWidgetIdFromNodePath(nodePath));
+    const mapId = extractMapIdFromNodePath(nodePath);
+    return mapWidget && findMapById(mapWidget.maps, mapId)
+        ? widgetPropertyUpdate(mapWidget.id, 'maps', { mapId, zoomToRequest: { extent, crs, ...(maxZoom !== undefined ? { maxZoom } : {}) } }, 'merge')
+        : null;
+}
+
+/**
+ * Returns the layers of the controlled map with the legend changes (visibility, opacity, expanded, legend filter)
+ * @param {object[]} mapLayers the layers of the controlled map
+ * @param {object[]} legendLayers the layers changed in the legend
+ * @returns {object[]} the updated map layers
+ */
+export const mergeLegendLayerChanges = (mapLayers = [], legendLayers = []) => mapLayers.map(layer => {
+    const legendLayer = legendLayers.find(l => l.id === layer.id);
+    return legendLayer
+        ? { ...layer, visibility: legendLayer.visibility, opacity: legendLayer.opacity, expanded: legendLayer.expanded, layerFilter: legendLayer.layerFilter }
+        : layer;
+});
+
+/**
+ * Returns the update that writes the legend changes into the layers of the controlled map
+ * @param {object} interaction the interaction with `appliedData` `{ layers }`
+ * @param {object} context `{ widgets }` widgets of the container
+ */
+export function applyLegendEffect(interaction, { widgets } = {}) {
+    const nodePath = interaction?.target?.nodePath;
+    const mapWidget = findById(widgets, extractWidgetIdFromNodePath(nodePath));
+    const mapId = extractMapIdFromNodePath(nodePath);
+    const map = mapWidget && findMapById(mapWidget.maps, mapId);
+    const legendLayers = interaction?.appliedData?.layers;
+    return map && Array.isArray(legendLayers)
+        ? widgetPropertyUpdate(mapWidget.id, 'maps', { mapId, layers: mergeLegendLayerChanges(map.layers, legendLayers) }, 'merge')
+        : null;
+}
+
 export const TARGET_EFFECTS = {
     [TARGET_TYPES.APPLY_FILTER]: applyFilterEffect,
     [TARGET_TYPES.APPLY_SPATIAL_FILTER]: applyFilterEffect,
     [TARGET_TYPES.APPLY_VIEW_SYNC]: applyViewSyncEffect,
+    [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: applyZoomToFeatureEffect,
+    [TARGET_TYPES.APPLY_LEGEND]: applyLegendEffect,
     [TARGET_TYPES.APPLY_STYLE]: applyStyleEffect,
     [TARGET_TYPES.APPLY_DIMENSION]: applyDimensionEffect
 };

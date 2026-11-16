@@ -31,9 +31,11 @@ import {
     hasSenderOwnZoomExtent,
     isMainMapWidget,
     createMainMapWidget,
+    isMapLevelTarget,
+    isMainMapLevelTarget,
     getLegendMapTarget,
     keepSinglePluggedTarget,
-    isSenderTriggerKey,
+    isSenderTriggerUpdate,
     extractWidgetIdFromNodePath,
     WIDGET_EVENTS_BY_WIDGET_TYPE
 } from '../InteractionUtils';
@@ -816,11 +818,11 @@ describe('InteractionUtils', () => {
             const mapWidget = { id: 'map-w', widgetType: 'map', title: 'States Map', maps: [{ mapId: 'm1', layers: [] }] };
             const tree = generateRootTree([mapWidget], [{ id: 'layer-1', name: 'layer-1', type: 'wms', group: 'overlay' }]);
             const display = getDisplayInteractionTargetTree(tree, { targetType: TARGET_TYPES.APPLY_LEGEND });
-            expect(findNodeById(display, 'widgets[map-w].maps[m1].applyZoomTo')).toExist();
-            expect(findNodeById(display, 'map.applyZoomTo')).toBe(null);
+            expect(findNodeById(display, 'widgets[map-w].maps[m1].applyLegend')).toExist();
+            expect(findNodeById(display, 'map.applyLegend')).toBe(null);
         });
         it('reads the controlled map from the plugged interaction', () => {
-            const interaction = { id: 'l1', plugged: true, targetType: TARGET_TYPES.APPLY_LEGEND, target: { nodePath: 'widgets[map-w].maps[m1].applyZoomTo' } };
+            const interaction = { id: 'l1', plugged: true, targetType: TARGET_TYPES.APPLY_LEGEND, target: { nodePath: 'widgets[map-w].maps[m1].applyLegend' } };
             expect(getLegendMapTarget({ interactions: [interaction] })).toEqual({ widgetId: 'map-w', mapId: 'm1' });
             expect(getLegendMapTarget({ interactions: [{ ...interaction, plugged: false }] })).toBe(null);
             expect(getLegendMapTarget({})).toBe(null);
@@ -907,7 +909,7 @@ describe('InteractionUtils', () => {
                 const [zoomNode] = getDisplayInteractionTargetTree(generateRootTree([mapWidget]), { targetType }).children;
                 expect(zoomNode.title).toBe('States Map');
                 expect(zoomNode.icon).toBe('1-map');
-                expect(zoomNode.nodePath).toBe('widgets[map-w].maps[m1].applyZoomTo');
+                expect(zoomNode.nodePath).toBe(`widgets[map-w].maps[m1].${targetType}`);
             });
         });
 
@@ -923,8 +925,8 @@ describe('InteractionUtils', () => {
                 (node?.children || []).forEach(collect);
             };
             collect(display);
-            expect(paths).toInclude('widgets[map-w].maps[m1].applyZoomTo');
-            expect(paths).toExclude('map.applyZoomTo');
+            expect(paths).toInclude('widgets[map-w].maps[m1].applyViewSync');
+            expect(paths.filter(path => path.startsWith('map.'))).toEqual([]);
         });
 
         it('labels each map of a multi map widget zoom node with widget and map names', () => {
@@ -941,12 +943,21 @@ describe('InteractionUtils', () => {
             expect(titles).toEqual(['States Map / Map 1', 'States Map / Map 2']);
         });
 
-        it('exposes zoom to feature on the same map zoom node', () => {
+        it('exposes each map-level target type on its own node, named after the type', () => {
             const rootTree = generateRootTree([], mapZoomLayers);
             const display = getDisplayInteractionTargetTree(rootTree, { targetType: TARGET_TYPES.APPLY_ZOOM_TO_FEATURE });
             const mapNode = display.children[0];
-            expect(mapNode.nodePath).toBe('map.applyZoomTo');
-            expect(mapNode.interactionMetadata.targets.map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]);
+            expect(mapNode.nodePath).toBe('map.applyZoomToFeature');
+            expect(mapNode.interactionMetadata.targets.map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]);
+        });
+
+        it('isMapLevelTarget and isMainMapLevelTarget recognize map-level target paths', () => {
+            ['map.applyZoomTo', 'map.applyZoomToFeature', 'widgets[w].maps[m].applyViewSync', 'widgets[w].maps[m].applyLegend']
+                .forEach(path => expect(isMapLevelTarget(path)).toBe(true));
+            ['map.layers[l1]', 'widgets[w].maps[m].layers[l1]', 'widgets[w]', undefined]
+                .forEach(path => expect(isMapLevelTarget(path)).toBe(false));
+            expect(isMainMapLevelTarget('map.applyZoomToFeature')).toBe(true);
+            expect(isMainMapLevelTarget('widgets[w].maps[m].applyZoomToFeature')).toBe(false);
         });
 
         it('renders the zoomTo action directly on the Map node (no nested "Zoom to" child leaf)', () => {
@@ -1352,16 +1363,21 @@ describe('InteractionUtils', () => {
             expect(isInteractionSender({ widgetType: 'chart' })).toBe(false);
             expect(isInteractionSender()).toBe(false);
         });
-        it('isSenderTriggerKey', () => {
+        it('isSenderTriggerUpdate', () => {
             const table = { widgetType: 'table' };
-            expect(isSenderTriggerKey(table, 'quickFilters')).toBe(true);
-            expect(isSenderTriggerKey(table, 'quickFilters.STATE_NAME')).toBe(true);
-            expect(isSenderTriggerKey({ widgetType: 'map' }, 'maps')).toBe(true);
-            expect(isSenderTriggerKey(table, 'filter')).toBe(true);
-            expect(isSenderTriggerKey(table, 'filterFields')).toBe(false);
-            expect(isSenderTriggerKey(table, 'options.columnSettings')).toBe(false);
-            expect(isSenderTriggerKey({ widgetType: 'chart' }, 'filter')).toBe(false);
-            expect(isSenderTriggerKey(table)).toBe(false);
+            const map = { widgetType: 'map' };
+            expect(isSenderTriggerUpdate(table, { key: 'quickFilters' })).toBe(true);
+            expect(isSenderTriggerUpdate(table, { key: 'quickFilters.STATE_NAME' })).toBe(true);
+            expect(isSenderTriggerUpdate(table, { key: 'filter' })).toBe(true);
+            expect(isSenderTriggerUpdate(table, { key: 'filterFields' })).toBe(false);
+            expect(isSenderTriggerUpdate(table, { key: 'options.columnSettings' })).toBe(false);
+            expect(isSenderTriggerUpdate(map, { key: 'maps', value: { mapId: 'm1', bbox: {}, center: {}, zoom: 3 } })).toBe(true);
+            expect(isSenderTriggerUpdate(map, { key: 'maps', value: { mapId: 'm1', center: {} } })).toBe(true);
+            expect(isSenderTriggerUpdate(map, { key: 'maps', value: { mapId: 'm1', layers: [] } })).toBe(false);
+            expect(isSenderTriggerUpdate(map, { key: 'maps', value: { mapId: 'm1', zoomToRequest: {} } })).toBe(false);
+            expect(isSenderTriggerUpdate(map, { key: 'maps', value: [{ mapId: 'm1' }] })).toBe(false);
+            expect(isSenderTriggerUpdate({ widgetType: 'chart' }, { key: 'filter' })).toBe(false);
+            expect(isSenderTriggerUpdate(table)).toBe(false);
         });
         it('extractWidgetIdFromNodePath', () => {
             expect(extractWidgetIdFromNodePath('root.widgets[w-1].filters[f-1]')).toBe('w-1');
