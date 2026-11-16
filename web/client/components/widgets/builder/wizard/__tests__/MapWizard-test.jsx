@@ -42,4 +42,17 @@ describe('MapWizard component', () => {
         const el = container.querySelector('.ms-wizard');
         expect(el).toExist();
     });
+    it('MapWizard shows options and interactions tabs, options by default', () => {
+        const store = {
+            getState: () => ({ maptype: { mapType: 'sink' } }),
+            subscribe: () => {}
+        };
+        const map = { groups: [{ id: 'GGG' }], layers: [{ id: "LAYER", name: "Layer", group: "GGG", options: {} }] };
+        ReactDOM.render(<Provider store={store}><MapWizard editorData={{ map }} /></Provider>, document.getElementById("container"));
+        const container = document.getElementById('container');
+        const tabs = container.querySelectorAll('.nav-tabs li');
+        expect(tabs.length).toBe(2);
+        expect(tabs[0].className).toContain('active');
+        expect(container.querySelector('.ms-map-wizard-interactions-tab')).toBeFalsy();
+    });
 });

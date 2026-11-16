@@ -14,7 +14,8 @@ import {
     LEGACY_CONNECTION_CONVERTERS,
     LEGACY_CONNECTION_EFFECT_WRITERS,
     MAIN_MAP_SENDER_ID,
-    convertTableLegacyConnection
+    convertTableLegacyConnection,
+    convertMapLegacyConnection
 } from '../InteractionMigrationUtils';
 
 const TABLE_ID = 'table-1';
@@ -69,9 +70,9 @@ describe('InteractionMigrationUtils', () => {
     });
 
     describe('migrateLegacyConnections', () => {
-        it('registers the table converter and effect writer', () => {
-            expect(Object.keys(LEGACY_CONNECTION_CONVERTERS)).toEqual(['table']);
-            expect(Object.keys(LEGACY_CONNECTION_EFFECT_WRITERS)).toEqual(['table']);
+        it('registers the table and map converters and effect writers', () => {
+            expect(Object.keys(LEGACY_CONNECTION_CONVERTERS)).toEqual(['table', 'map']);
+            expect(Object.keys(LEGACY_CONNECTION_EFFECT_WRITERS)).toEqual(['table', 'map']);
         });
         it('returns the same configuration without converters or widgets', () => {
             const config = { widgets: [makeTable(), makeConnectedChart()] };
@@ -231,6 +232,58 @@ describe('InteractionMigrationUtils', () => {
             const migrated = migrateLegacyConnections({ widgets: [table, counter] });
             expect(migrated.widgets[1].interactionFilters).toNotExist();
             expect(migrated.widgets[0].interactions.length).toBe(1);
+        });
+    });
+
+    describe('map widget legacy connections', () => {
+        const bbox = { bounds: { minx: -10, miny: -20, maxx: 30, maxy: 40 }, crs: 'EPSG:4326' };
+        const mapWidget = { id: 'map-w', widgetType: 'map', selectedMapId: 'm1', maps: [{ mapId: 'm1', bbox, layers: [] }] };
+        const viewportDependencies = {
+            mapSync: true,
+            dependenciesMap: {
+                viewport: 'widgets[map-w].maps[m1].viewport',
+                layers: 'widgets[map-w].maps[m1].layers'
+            }
+        };
+        const source = { senderId: 'map-w', mapId: 'm1' };
+        const counter = { id: 'counter-1', widgetType: 'counter', geomProp: 'the_geom', ...viewportDependencies };
+
+        it('converts a viewport connection into a spatial filter of the map', () => {
+            const { interactions, receiver } = convertMapLegacyConnection(counter, mapWidget, source);
+            expect(interactions.length).toBe(1);
+            expect(interactions[0].targetType).toBe('applySpatialFilter');
+            expect(interactions[0].source.nodePath).toBe('widgets[map-w].maps[m1]');
+            expect(interactions[0].target.nodePath).toBe('widgets[counter-1]');
+            expect(interactions[0].target.metaData.constraints).toEqual({});
+            expect(receiver.mapSync).toNotExist();
+            expect(receiver.dependenciesMap).toNotExist();
+        });
+        it('converts only the chart traces with a geometry attribute', () => {
+            const chart = {
+                id: CHART_ID,
+                widgetType: 'chart',
+                charts: [{ chartId: 'c1', traces: [{ id: 't1', geomProp: 'the_geom' }, { id: 't2' }] }],
+                ...viewportDependencies
+            };
+            const { interactions } = convertMapLegacyConnection(chart, mapWidget, source);
+            expect(interactions.map(i => i.target.nodePath)).toEqual([`widgets[${CHART_ID}].charts[c1].traces[t1]`]);
+        });
+        it('keeps map, legend and connections without geometry or viewport legacy', () => {
+            expect(convertMapLegacyConnection({ ...counter, geomProp: undefined }, mapWidget, source)).toBe(null);
+            expect(convertMapLegacyConnection({ ...counter, widgetType: 'map' }, mapWidget, source)).toBe(null);
+            expect(convertMapLegacyConnection({ ...counter, widgetType: 'legend' }, mapWidget, source)).toBe(null);
+            expect(convertMapLegacyConnection({ ...counter, dependenciesMap: { layers: 'widgets[map-w].maps[m1].layers' } }, mapWidget, source)).toBe(null);
+        });
+        it('migrates the connection and writes the viewport filter as transient', () => {
+            const migrated = migrateLegacyConnections({ widgets: [mapWidget, counter] });
+            const [migratedMap, migratedCounter] = migrated.widgets;
+            expect(migratedMap.interactions.length).toBe(1);
+            expect(migratedCounter.mapSync).toNotExist();
+            const [filter] = migratedCounter.interactionFilters;
+            expect(filter.id).toBe(migratedMap.interactions[0].id);
+            expect(filter.transient).toBe(true);
+            expect(filter.filters[0].body).toContain('INTERSECTS("the_geom"');
+            expect(migrateLegacyConnections(migrated)).toBe(migrated);
         });
     });
 });

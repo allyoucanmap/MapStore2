@@ -10,9 +10,10 @@ import axios from '../../libs/ajax';
 import MockAdapter from 'axios-mock-adapter';
 
 import { testEpic, addTimeoutEpic, TEST_TIMEOUT } from './epicTestUtils';
-import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, zoomToFeatureEpic } from '../interactions';
+import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, zoomToFeatureEpic, applyTransientEffectsOnLoadEpic } from '../interactions';
 import { applyWidgetInteractions, zoomToFilterExtent, zoomToFeature, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
 import { UPDATE_PROPERTY, DELETE, insertWidget, updateWidgetProperty } from '../../actions/widgets';
+import { dashboardLoaded } from '../../actions/dashboard';
 import { CHANGE_LAYER_PARAMS, CHANGE_LAYER_PROPERTIES, removeNode } from '../../actions/layers';
 import { TARGET_TYPES } from '../../utils/InteractionUtils';
 
@@ -928,6 +929,88 @@ describe('interactions epics', () => {
                     done
                 );
             });
+        });
+    });
+
+    describe('map widget sender', () => {
+        const bbox = { bounds: { minx: -10, miny: -20, maxx: 30, maxy: 40 }, crs: 'EPSG:4326' };
+        const spatialInteraction = {
+            id: 'map-spatial-1',
+            plugged: true,
+            targetType: TARGET_TYPES.APPLY_SPATIAL_FILTER,
+            source: { nodePath: `widgets[${MAP_WIDGET_ID}].maps[${MAP_ID}]` },
+            target: { nodePath: `widgets[${TABLE_WIDGET_ID}]` }
+        };
+        const makeSenderMap = () => makeMapWidget({
+            maps: [{ ...makeMapWidget().maps[0], bbox }],
+            interactions: [spatialInteraction]
+        });
+        const makeReceiverTable = (overrides = {}) => makeTableWidget({ geomProp: 'the_geom', ...overrides });
+
+        it('applies the viewport spatial filter to the table as a transient effect', (done) => {
+            testEpic(
+                applyWidgetInteractionsEpic,
+                1,
+                [applyWidgetInteractions(MAP_WIDGET_ID, 'floating', MAP_ID)],
+                (actions) => {
+                    expect(actions[0].type).toBe(UPDATE_PROPERTY);
+                    expect(actions[0].id).toBe(TABLE_WIDGET_ID);
+                    expect(actions[0].key).toBe('interactionFilters');
+                    const [filter] = actions[0].value;
+                    expect(filter.id).toBe('map-spatial-1');
+                    expect(filter.appliedFromWidget).toBe(MAP_WIDGET_ID);
+                    expect(filter.transient).toBe(true);
+                    expect(filter.filters[0].body).toContain('INTERSECTS("the_geom"');
+                },
+                makeState([makeSenderMap(), makeReceiverTable()]),
+                done
+            );
+        });
+
+        it('does not dispatch when the receiver already has the same filter', (done) => {
+            // first apply computes the filter, the second one runs on a state that already has it
+            testEpic(applyWidgetInteractionsEpic, 1, [applyWidgetInteractions(MAP_WIDGET_ID, 'floating', MAP_ID)], ([first]) => {
+                testEpic(
+                    addTimeoutEpic(applyWidgetInteractionsEpic, 20),
+                    1,
+                    [applyWidgetInteractions(MAP_WIDGET_ID, 'floating', MAP_ID)],
+                    (actions) => {
+                        expect(actions[0].type).toBe(TEST_TIMEOUT);
+                    },
+                    makeState([makeSenderMap(), makeReceiverTable({ interactionFilters: first.value })]),
+                    done
+                );
+            }, makeState([makeSenderMap(), makeReceiverTable()]));
+        });
+
+        it('reapplies on map widget updates', (done) => {
+            testEpic(
+                applyOnSenderPropertyChangeEpic,
+                1,
+                [updateWidgetProperty(MAP_WIDGET_ID, 'maps', { mapId: MAP_ID, bbox }, 'merge')],
+                (actions) => {
+                    expect(actions[0].type).toBe(APPLY_WIDGET_INTERACTIONS);
+                    expect(actions[0].widgetId).toBe(MAP_WIDGET_ID);
+                    expect(actions[0].sourceId).toBe(MAP_ID);
+                },
+                makeState([makeSenderMap(), makeReceiverTable()]),
+                done
+            );
+        });
+
+        it('reapplies the transient effects on load', (done) => {
+            testEpic(
+                applyTransientEffectsOnLoadEpic,
+                1,
+                [dashboardLoaded({}, {})],
+                (actions) => {
+                    expect(actions[0].type).toBe(APPLY_WIDGET_INTERACTIONS);
+                    expect(actions[0].widgetId).toBe(MAP_WIDGET_ID);
+                    expect(actions[0].sourceId).toBe(MAP_ID);
+                },
+                makeState([makeSenderMap(), makeReceiverTable(), makeFilterWidget()]),
+                done
+            );
         });
     });
 });

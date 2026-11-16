@@ -16,6 +16,10 @@ import {
     buildFilterWidgetAppliedData,
     buildTableWidgetAppliedData,
     getTableWidgetZoomExtentLayers,
+    buildMapWidgetAppliedData,
+    getTargetGeometryAttribute,
+    isTransientEffectSender,
+    stripTransientEffects,
     SENDER_ZOOM_EXTENT_LAYERS,
     getSenderSourceIds,
     cleanupEffectsBySenderId,
@@ -62,10 +66,12 @@ describe('InteractionEffectsUtils', () => {
             expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_FILTER]).toBe(applyFilterEffect);
             expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_STYLE]).toBe(applyStyleEffect);
             expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_DIMENSION]).toBe(applyDimensionEffect);
+            expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_SPATIAL_FILTER]).toBe(applyFilterEffect);
             expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_ZOOM_TO]).toNotExist();
         });
-        it('SENDER_DATA_BUILDERS has the filter and table widgets', () => {
-            expect(Object.keys(SENDER_DATA_BUILDERS)).toEqual(['filter', 'table']);
+        it('SENDER_DATA_BUILDERS has the filter, table and map widgets', () => {
+            expect(Object.keys(SENDER_DATA_BUILDERS)).toEqual(['filter', 'table', 'map']);
+            expect(SENDER_DATA_BUILDERS.map).toBe(buildMapWidgetAppliedData);
             expect(SENDER_DATA_BUILDERS.filter).toBe(buildFilterWidgetAppliedData);
             expect(SENDER_DATA_BUILDERS.table).toBe(buildTableWidgetAppliedData);
         });
@@ -74,6 +80,7 @@ describe('InteractionEffectsUtils', () => {
             expect(getSenderSourceIds({ widgetType: 'filter' })).toEqual([]);
             expect(getSenderSourceIds({ id: TABLE_ID, widgetType: 'table' })).toEqual([TABLE_ID]);
             expect(getSenderSourceIds({ widgetType: 'table' })).toEqual([]);
+            expect(getSenderSourceIds({ id: 'm', widgetType: 'map', maps: [{ mapId: 'm1' }, { mapId: 'm2' }] })).toEqual(['m1', 'm2']);
             expect(getSenderSourceIds({ id: 'c', widgetType: 'chart' })).toEqual([]);
             expect(getSenderSourceIds()).toEqual([]);
         });
@@ -273,6 +280,68 @@ describe('InteractionEffectsUtils', () => {
             expect(actions.length).toBe(1);
             expect(actions[0].widgetId).toBe(TABLE_ID);
             expect(actions[0].value).toEqual([kept]);
+        });
+    });
+
+    describe('map widget sender', () => {
+        const MAP_WIDGET_ID = 'map-w';
+        const bbox = { bounds: { minx: '-10', miny: '-20', maxx: '30', maxy: '40' }, crs: 'EPSG:4326' };
+        const makeMapWidget = (map = {}) => ({ id: MAP_WIDGET_ID, widgetType: 'map', maps: [{ mapId: 'm1', bbox, ...map }] });
+        const makeSpatialInteraction = (targetNodePath) => ({
+            id: 'spatial-1',
+            plugged: true,
+            targetType: TARGET_TYPES.APPLY_SPATIAL_FILTER,
+            source: { nodePath: `widgets[${MAP_WIDGET_ID}].maps[m1]` },
+            target: { nodePath: targetNodePath }
+        });
+        const table = { id: TABLE_ID, widgetType: 'table', geomProp: 'the_geom' };
+        const chart = { id: 'chart-1', widgetType: 'chart', charts: [{ chartId: 'c1', traces: [{ id: 't1', geomProp: 'geom' }] }] };
+
+        it('reads the target geometry attribute from the widget or the chart trace', () => {
+            expect(getTargetGeometryAttribute(makeSpatialInteraction(`widgets[${TABLE_ID}]`), [table])).toBe('the_geom');
+            expect(getTargetGeometryAttribute(makeSpatialInteraction('widgets[chart-1].charts[c1].traces[t1]'), [chart])).toBe('geom');
+            expect(getTargetGeometryAttribute(makeSpatialInteraction('widgets[other]'), [table])).toNotExist();
+        });
+        it('builds the CQL spatial filter of the map extent on the target geometry', () => {
+            const data = buildMapWidgetAppliedData(makeMapWidget(), 'm1', makeSpatialInteraction(`widgets[${TABLE_ID}]`), { widgets: [table] });
+            expect(data.format).toBe('cql');
+            expect(data.body).toContain('INTERSECTS("the_geom",SRID=4326;');
+            expect(data.body).toContain('-10 -20');
+            expect(data.body).toContain('30 40');
+        });
+        it('returns no filter without extent or target geometry', () => {
+            const interaction = makeSpatialInteraction(`widgets[${TABLE_ID}]`);
+            expect(buildMapWidgetAppliedData(makeMapWidget({ bbox: undefined }), 'm1', interaction, { widgets: [table] })).toBe(null);
+            expect(buildMapWidgetAppliedData(makeMapWidget(), 'other-map', interaction, { widgets: [table] })).toBe(null);
+            expect(buildMapWidgetAppliedData(makeMapWidget(), 'm1', interaction, { widgets: [{ ...table, geomProp: undefined }] })).toBe(null);
+        });
+        it('writes the map effects as transient', () => {
+            expect(isTransientEffectSender(makeMapWidget())).toBe(true);
+            expect(isTransientEffectSender(table)).toBe(false);
+            const interaction = { ...makeSpatialInteraction(`widgets[${TABLE_ID}]`), appliedData: { format: 'cql', version: '1.0.0', body: 'INCLUDE' }, "transient": true };
+            const update = applyFilterEffect(interaction, { widgets: [table] });
+            expect(update.value[0].transient).toBe(true);
+            expect(update.value[0].appliedFromWidget).toBe(MAP_WIDGET_ID);
+        });
+    });
+
+    describe('stripTransientEffects', () => {
+        const persisted = { id: 'persisted', appliedFromWidget: 'table-1' };
+        const transientFilter = { id: 'viewport', appliedFromWidget: 'map-w', "transient": true };
+        it('removes transient filters from widgets and chart traces', () => {
+            const widgets = [
+                { id: 'counter-1', interactionFilters: [persisted, transientFilter] },
+                { id: 'chart-1', charts: [{ chartId: 'c1', traces: [{ id: 't1', interactionFilters: [transientFilter] }, { id: 't2', interactionFilters: [persisted] }] }] }
+            ];
+            const [counter, chart] = stripTransientEffects(widgets);
+            expect(counter.interactionFilters).toEqual([persisted]);
+            expect(chart.charts[0].traces[0].interactionFilters).toEqual([]);
+            expect(chart.charts[0].traces[1]).toBe(widgets[1].charts[0].traces[1]);
+        });
+        it('returns the same widgets when there is nothing to remove', () => {
+            const widgets = [{ id: 'counter-1', interactionFilters: [persisted] }, { id: 'text-1' }];
+            expect(stripTransientEffects(widgets)).toBe(widgets);
+            expect(stripTransientEffects(undefined)).toBe(undefined);
         });
     });
 });

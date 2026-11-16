@@ -17,6 +17,7 @@ import { cleanPaths, getWidgetsGroups, getWidgetDependency, getSelectedWidgetDat
 import { dashboardServicesSelector, isDashboardAvailable, isDashboardEditing } from './dashboard';
 import { createSelector, createStructuredSelector } from 'reselect';
 import { createShallowSelector } from '../utils/ReselectUtils';
+import { stripTransientEffects } from '../utils/InteractionEffectsUtils';
 import { getAttributesNames } from "../utils/FeatureGridUtils";
 import { getDerivedLayersVisibility } from '../utils/LayersUtils';
 import { isFeatureGridOpen } from './featuregrid';
@@ -210,16 +211,21 @@ export const availableDependenciesSelector = createSelector(
                 .concat(castArray(tableWidgets).filter(() => pathname.indexOf("viewer") === -1).map(({id}) => `widgets[${id}]`))
     })
 );
+// widgets receiving the map widget viewport through its interactions, map and legend receivers still use the legacy connection
+const MAP_WIDGET_INTERACTION_RECEIVER_TYPES = ['chart', 'table', 'counter'];
+
 /**
- * Maps the widget in edit mode can connect to with the legacy connect button, tables connect through their interactions
+ * Maps the widget in edit mode can connect to with the legacy connect button, tables and map widgets connect through their interactions
  */
 export const availableDependenciesForEditingWidgetSelector = createSelector(
     getMapWidgetsPerView,
     mapSelector,
-    (ws = [], map = {}) => {
+    getEditingWidget,
+    (ws = [], map = {}, editingWidget) => {
+        const mapWidgets = MAP_WIDGET_INTERACTION_RECEIVER_TYPES.includes(editingWidget?.widgetType) ? [] : ws;
         return {
             availableDependencies:
-                flatten(ws
+                flatten(mapWidgets
                     .map(({id, maps = []}) => maps.map(({mapId} = {})=> `widgets[${id}].maps[${mapId}].map`)))
                     .concat(castArray(map).map(() => map ? "map" : null))
                     .filter(w => w)
@@ -355,8 +361,11 @@ export const filterLinkedWidgets = createSelector(
     }
 );
 
+// transient effects (e.g. map viewport filters) are recomputed on load, so they are not saved
+const widgetsToSave = createSelector(filterLinkedWidgets, stripTransientEffects);
+
 export const widgetsConfig = createStructuredSelector({
-    widgets: filterLinkedWidgets,
+    widgets: widgetsToSave,
     layouts: getUpdatedLayout,
     catalogs: dashboardServicesSelector
 });

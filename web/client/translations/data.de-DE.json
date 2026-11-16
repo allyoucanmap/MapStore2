@@ -2428,6 +2428,7 @@
           "columnFilter": "Spaltenfilter",
           "zoomToFilteredBounds": "Auf gefilterte Ausdehnung zoomen",
           "zoomToFeatureExtent": "Auf Objektausdehnung zoomen",
+          "viewportFilter": "Kartenausschnittfilter",
           "errorChart": "Mindestens ein Diagramm ist ungültig",
           "errorFilter": "Mindestens ein Filter ist ungültig",
           "backToTableOptions": "Zurück zu den Tabellenoptionen",

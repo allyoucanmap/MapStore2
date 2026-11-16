@@ -15,6 +15,8 @@ import MapOptions from './map/MapOptions';
 import Preview from './map/PreviewMap';
 import MapSwitcher from "../wizard/map/MapSwitcher";
 import EmptyView from '../../../misc/EmptyView';
+import InteractionsTabs from './common/interactions/InteractionsTabs';
+import MapInteractionsTab from './map/MapInteractionsTab';
 import Message from "../../../I18N/Message";
 import { getDerivedLayersVisibility } from "../../../../utils/LayersUtils";
 const Wizard = wizardHandlers(WizardContainer);
@@ -60,7 +62,7 @@ export default ({
                     emptyMap={emptyMap}
                     withContainer
                 />
-                {!emptyMap && <MapOptions
+                {!emptyMap && <InteractionsTabs interactions={<MapInteractionsTab data={editorData} onEditorChange={onChange} />}><MapOptions
                     editNode={editNode}
                     setEditNode={setEditNode}
                     addonsItems={addonsItems}
@@ -79,7 +81,7 @@ export default ({
                         env={env}
                         options={{ style: { margin: 10, height: 'calc(100% - 20px)' } }} /> }
                     map={selectedMap}
-                />}
+                /></InteractionsTabs>}
             </div>
             <WidgetOptions
                 key="widget-options"

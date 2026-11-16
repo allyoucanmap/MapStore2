@@ -795,6 +795,17 @@ describe('InteractionUtils', () => {
         });
     });
 
+    describe('spatial filter targets', () => {
+        const spatialTargetsOf = node => (node.interactionMetadata?.targets || []).filter(t => t.targetType === TARGET_TYPES.APPLY_SPATIAL_FILTER);
+        it('are offered by datasets with a geometry attribute, without layer constraint', () => {
+            const layer = { name: 'topp:states' };
+            const [tableTarget] = spatialTargetsOf(generateTableWidgetTreeNode({ id: 't', layer, geomProp: 'the_geom' }));
+            expect(tableTarget.constraints).toEqual({});
+            expect(spatialTargetsOf(generateCounterWidgetTreeNode({ id: 'c', layer, geomProp: 'the_geom' })).length).toBe(1);
+            expect(spatialTargetsOf(generateTableWidgetTreeNode({ id: 't', layer })).length).toBe(0);
+        });
+    });
+
     describe('hasSenderOwnZoomExtent', () => {
         it('is true only for senders zooming to their own data', () => {
             expect(hasSenderOwnZoomExtent({ widgetType: 'table' })).toBe(true);
@@ -809,6 +820,11 @@ describe('InteractionUtils', () => {
             expect(targets.map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_FILTER, TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]);
             expect(targets[0].constraints.layer).toExist();
             expect(getPossibleTargetsEditingWidget('table')[0].constraints).toEqual({});
+        });
+        it('returns the map widget spatial filter target without layer constraint', () => {
+            const [target] = getPossibleTargetsEditingWidget('map');
+            expect(target.targetType).toBe(TARGET_TYPES.APPLY_SPATIAL_FILTER);
+            expect(target.constraints).toEqual({});
         });
         it('returns no targets for widgets that are not senders', () => {
             expect(getPossibleTargetsEditingWidget('chart')).toEqual([]);
@@ -1266,6 +1282,7 @@ describe('InteractionUtils', () => {
         it('isInteractionSender', () => {
             expect(isInteractionSender({ widgetType: 'filter' })).toBe(true);
             expect(isInteractionSender({ widgetType: 'table' })).toBe(true);
+            expect(isInteractionSender({ widgetType: 'map' })).toBe(true);
             expect(isInteractionSender({ widgetType: 'chart' })).toBe(false);
             expect(isInteractionSender()).toBe(false);
         });
@@ -1273,6 +1290,7 @@ describe('InteractionUtils', () => {
             const table = { widgetType: 'table' };
             expect(isSenderTriggerKey(table, 'quickFilters')).toBe(true);
             expect(isSenderTriggerKey(table, 'quickFilters.STATE_NAME')).toBe(true);
+            expect(isSenderTriggerKey({ widgetType: 'map' }, 'maps')).toBe(true);
             expect(isSenderTriggerKey(table, 'filter')).toBe(true);
             expect(isSenderTriggerKey(table, 'filterFields')).toBe(false);
             expect(isSenderTriggerKey(table, 'options.columnSettings')).toBe(false);

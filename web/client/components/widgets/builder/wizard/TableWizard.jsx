@@ -6,44 +6,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React, { lazy, useEffect, useState } from 'react';
-import { Nav, NavItem } from 'react-bootstrap';
+import React, { lazy, useEffect } from 'react';
 
 import { wizardHandlers } from '../../../misc/wizard/enhancers';
 import WizardContainer from '../../../misc/wizard/WizardContainer';
 import WidgetOptions from './common/WidgetOptions';
 import TableInteractionsTab from './table/TableInteractionsTab';
+import InteractionsTabs from './common/interactions/InteractionsTabs';
 import withSuspense from '../../../misc/withSuspense';
-import Message from '../../../I18N/Message';
 
 const TableOptions = withSuspense()(lazy(() => import('./table/TableOptions')));
 
 const isChartOptionsValid = (options = {}) => options.aggregateFunction && options.aggregationAttribute && options.groupByAttributes;
 
 const Wizard = wizardHandlers(WizardContainer);
-
-const TABS = [
-    { id: 'options', msgId: 'options' },
-    { id: 'interactions', msgId: 'widgets.filterWidget.interactionsTabLabel' }
-];
-
-const TableOptionsTabs = ({ data, layer, onEditorChange, children }) => {
-    const [activeTab, setActiveTab] = useState('options');
-    return (
-        <div className="ms-row-tab">
-            <Nav bsStyle="tabs" activeKey={activeTab} justified>
-                {TABS.map(tab => (
-                    <NavItem key={tab.id} eventKey={tab.id} onClick={() => setActiveTab(tab.id)}>
-                        <Message msgId={tab.msgId} />
-                    </NavItem>
-                ))}
-            </Nav>
-            {activeTab === 'interactions'
-                ? <TableInteractionsTab data={data} layer={layer} onEditorChange={onEditorChange} />
-                : children}
-        </div>
-    );
-};
 
 const TableWizard = ({ onChange = () => { }, onFinish = () => { }, setPage = () => { }, setValid = () => { }, valid, data = {}, layer = {}, step = 0, types, featureTypeProperties, dependencies }) => {
     useEffect(() => {
@@ -56,11 +32,9 @@ const TableWizard = ({ onChange = () => { }, onFinish = () => { }, setPage = () 
         setPage={setPage}
         onFinish={onFinish}
         isStepValid={n => n === 1 ? isChartOptionsValid(data.options) : true} hideButtons>
-        <TableOptionsTabs
+        <InteractionsTabs
             key="chart-options"
-            data={data}
-            layer={data.layer || layer}
-            onEditorChange={onChange}
+            interactions={<TableInteractionsTab data={data} layer={data.layer || layer} onEditorChange={onChange} />}
         >
             <TableOptions
                 dependencies={dependencies}
@@ -70,7 +44,7 @@ const TableWizard = ({ onChange = () => { }, onFinish = () => { }, setPage = () 
                 onChange={onChange}
                 layer={data.layer || layer}
             />
-        </TableOptionsTabs>
+        </InteractionsTabs>
         <WidgetOptions
             key="widget-options"
             data={data}

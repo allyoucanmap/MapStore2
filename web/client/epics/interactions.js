@@ -9,6 +9,7 @@
 import Rx from 'rxjs';
 import get from 'lodash/get';
 import sortBy from 'lodash/sortBy';
+import isEqual from 'lodash/isEqual';
 import uniqBy from 'lodash/uniqBy';
 import { getMainMapZoomToPadding } from '../utils/MapWidgetUtils';
 import { mapPaddingSelector } from '../selectors/maplayout';
@@ -16,11 +17,13 @@ import bbox from '@turf/bbox';
 import xml2js from 'xml2js';
 
 import { getFeatureLayer } from '../api/WFS';
-import { updateWidgetProperty, INSERT, UPDATE, DELETE, UPDATE_PROPERTY } from '../actions/widgets';
+import { updateWidgetProperty, INSERT, UPDATE, DELETE, UPDATE_PROPERTY, SET_LINKED_DASHBOARD_DATA } from '../actions/widgets';
 import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, ZOOM_TO_FEATURE } from '../actions/interactions';
 import { zoomToExtent } from '../actions/map';
 import { setCurrentTime } from '../actions/dimension';
 import { REMOVE_NODE, changeLayerProperties, changeLayerParams } from '../actions/layers';
+import { DASHBOARD_LOADED } from '../actions/dashboard';
+import { MAP_CONFIG_LOADED } from '../actions/config';
 import wpsBounds from '../observables/wps/bounds';
 import {
     extractLayerIdFromNodePath,
@@ -38,6 +41,7 @@ import {
     TARGET_EFFECTS,
     SENDER_DATA_BUILDERS,
     SENDER_ZOOM_EXTENT_LAYERS,
+    isTransientEffectSender,
     getSenderSourceIds,
     cleanupEffectsBySenderId,
     cleanupEffectsOfDeletedInteractions,
@@ -69,6 +73,19 @@ const UPDATE_TO_ACTION = {
 };
 
 const toActions = (updates = []) => updates.map(update => UPDATE_TO_ACTION[update?.type]?.(update)).filter(Boolean);
+
+// re-applying unchanged effects would make every receiver fetch again, e.g. on each map widget update
+const isNoOpUpdate = (update, state) => {
+    if (update?.type === INTERACTION_UPDATES.WIDGET_PROPERTY && update.mode !== 'merge') {
+        const widget = getContainerWidgets(state, update.target || 'floating').find(w => w.id === update.widgetId);
+        return !!widget && isEqual(get(widget, update.key), update.value);
+    }
+    if (update?.type === INTERACTION_UPDATES.LAYER_PROPERTIES) {
+        const layer = (layersSelector(state) || []).find(l => l.id === update.layerId);
+        return !!layer && Object.keys(update.properties || {}).every(key => isEqual(layer[key], update.properties[key]));
+    }
+    return false;
+};
 
 /**
  * Resolves the actual layer object referenced by a plugged 'applyFilter' interaction,
@@ -271,11 +288,13 @@ export const applyWidgetInteractionsEpic = (action$, store) =>
                     if (!applyEffect || shouldSkipInteraction(interaction, currentState)) {
                         return Rx.Observable.empty();
                     }
+                    const context = getEffectsContext(currentState, target);
                     const update = applyEffect({
                         ...interaction,
-                        appliedData: buildAppliedData(sender, sourceId, interaction)
-                    }, getEffectsContext(currentState, target));
-                    return Rx.Observable.from(toActions([update]));
+                        appliedData: buildAppliedData(sender, sourceId, interaction, context),
+                        "transient": isTransientEffectSender(sender)
+                    }, context);
+                    return Rx.Observable.from(toActions(isNoOpUpdate(update, currentState) ? [] : [update]));
                 });
         }));
 
@@ -364,7 +383,20 @@ export const zoomToFeatureEpic = (action$, store) =>
                 : Rx.Observable.empty();
         });
 
+/**
+ * Re-applies on load the interactions of the senders with transient effects, which are not saved
+ */
+export const applyTransientEffectsOnLoadEpic = (action$, store) =>
+    action$
+        .ofType(DASHBOARD_LOADED, MAP_CONFIG_LOADED, SET_LINKED_DASHBOARD_DATA)
+        .switchMap(() => Rx.Observable.from(
+            getContainerWidgets(store.getState(), 'floating')
+                .filter(isTransientEffectSender)
+                .flatMap(sender => getSenderSourceIds(sender).map(sourceId => applyWidgetInteractions(sender.id, 'floating', sourceId)))
+        ));
+
 export default {
+    applyTransientEffectsOnLoadEpic,
     applyWidgetInteractionsEpic,
     cleanupAndReapplyWidgetInteractionsEpic,
     applyOnSenderPropertyChangeEpic,

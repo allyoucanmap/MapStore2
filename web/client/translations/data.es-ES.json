@@ -2389,6 +2389,7 @@
           "columnFilter": "Filtro de columnas",
           "zoomToFilteredBounds": "Zoom a los límites filtrados",
           "zoomToFeatureExtent": "Zoom a la extensión del elemento",
+          "viewportFilter": "Filtro por vista del mapa",
           "errorChart": "Uno o más gráficos no son válidos",
           "errorFilter": "Uno o más filtros no son válidos",
           "backToTableOptions": "Volver a las opciones de tabla",

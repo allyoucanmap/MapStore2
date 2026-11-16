@@ -9,7 +9,7 @@
 import isEmpty from 'lodash/isEmpty';
 import omit from 'lodash/omit';
 import { TARGET_TYPES, TARGET_EVENT_DATA_TYPES, createLayerConstraint, extractWidgetIdFromNodePath } from './InteractionUtils';
-import { applyFilterEffect, buildTableWidgetAppliedData, INTERACTION_UPDATES } from './InteractionEffectsUtils';
+import { SENDER_DATA_BUILDERS, TARGET_EFFECTS, getSenderSourceIds, isTransientEffectSender, INTERACTION_UPDATES } from './InteractionEffectsUtils';
 
 export const MAIN_MAP_SENDER_ID = 'map';
 
@@ -41,10 +41,10 @@ export const getLegacyConnectionSource = (widget) => {
     return { senderId, ...(mapId ? { mapId } : {}) };
 };
 
-const legacyInteraction = (sender, targetType, nodePath, layer) => ({
+const legacyInteraction = (sender, targetType, nodePath, layer, sourceNodePath = `widgets[${sender.id}]`) => ({
     plugged: true,
     targetType,
-    source: { nodePath: `widgets[${sender.id}]` },
+    source: { nodePath: sourceNodePath },
     target: {
         nodePath,
         metaData: {
@@ -112,40 +112,76 @@ export const convertTableLegacyConnection = (receiver, sender, source, widgets) 
         : null;
 };
 
+// viewport only, center and zoom sync of map receivers is converted with APPLY_VIEW_SYNC, legends stay legacy until the legend phase
+const MAP_LEGACY_RECEIVER_INTERACTIONS = {
+    counter: (receiver, sender, sourceNodePath) => receiver.geomProp
+        ? [legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER, `widgets[${receiver.id}]`, null, sourceNodePath)]
+        : [],
+    table: (receiver, sender, sourceNodePath) => receiver.geomProp
+        ? [legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER, `widgets[${receiver.id}]`, null, sourceNodePath)]
+        : [],
+    chart: (receiver, sender, sourceNodePath) => (receiver.charts || []).flatMap(chart => (chart.traces || [])
+        .filter(trace => trace?.geomProp)
+        .map(trace => legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER,
+            `widgets[${receiver.id}].charts[${chart.chartId || chart.id}].traces[${trace.id}]`, null, sourceNodePath)))
+};
+
 /**
- * Writes the current table filter into a targeted widget, so converted resources show filtered data on load
- * @param {object} receiver the targeted widget
- * @param {object} sender the table widget
- * @param {object[]} interactions the converted interactions, with their ids
- * @returns {object} the receiver with the applied filters
+ * Converts a receiver connected to the viewport of a map widget into spatial filter interactions of the map widget
+ * @param {object} receiver the connected receiver widget
+ * @param {object} sender the map widget
+ * @param {object} source the legacy connection source, with the `mapId` of the connected map
+ * @returns {object|null} `{ interactions, receiver }`, null when the connection must stay legacy
  */
-export const writeTableLegacyConnectionEffects = (receiver, sender, interactions) => {
-    const appliedData = buildTableWidgetAppliedData(sender);
-    if (!appliedData) {
-        return receiver;
-    }
-    return interactions
-        .filter(interaction => interaction.targetType === TARGET_TYPES.APPLY_FILTER)
-        .reduce((updated, interaction) => {
-            const update = applyFilterEffect({ ...interaction, appliedData }, { widgets: [updated] });
-            return update?.type === INTERACTION_UPDATES.WIDGET_PROPERTY
-                ? { ...updated, [update.key]: update.value }
-                : updated;
-        }, receiver);
+export const convertMapLegacyConnection = (receiver, sender, source) => {
+    const mapId = source?.mapId || sender?.selectedMapId || sender?.maps?.[0]?.mapId;
+    const readsViewport = typeof receiver?.dependenciesMap?.viewport === 'string';
+    const getInteractions = mapId && readsViewport ? MAP_LEGACY_RECEIVER_INTERACTIONS[receiver.widgetType] : null;
+    const interactions = getInteractions ? getInteractions(receiver, sender, `widgets[${sender.id}].maps[${mapId}]`) : [];
+    return interactions.length
+        ? { interactions, receiver: omit(receiver, ['mapSync', 'dependenciesMap']) }
+        : null;
+};
+
+/**
+ * Writes the current effects of the converted interactions into a targeted widget, so converted resources show filtered data on load
+ * @param {object} widget the targeted widget
+ * @param {object} sender the sender widget
+ * @param {object[]} interactions the converted interactions targeting the widget, with their ids
+ * @returns {object} the widget with the applied effects
+ */
+export const writeLegacyConnectionEffects = (widget, sender, interactions) => {
+    const buildAppliedData = SENDER_DATA_BUILDERS[sender?.widgetType];
+    const sourceIds = getSenderSourceIds(sender);
+    return interactions.reduce((updated, interaction) => {
+        const applyEffect = TARGET_EFFECTS[interaction.targetType];
+        const sourceId = sourceIds.find(id => interaction.source?.nodePath?.includes(id));
+        const context = { widgets: [updated] };
+        const appliedData = applyEffect && buildAppliedData ? buildAppliedData(sender, sourceId, interaction, context) : null;
+        if (!appliedData) {
+            return updated;
+        }
+        const update = applyEffect({ ...interaction, appliedData, "transient": isTransientEffectSender(sender) }, context);
+        return update?.type === INTERACTION_UPDATES.WIDGET_PROPERTY && update.mode !== 'merge'
+            ? { ...updated, [update.key]: update.value }
+            : updated;
+    }, widget);
 };
 
 /**
  * Legacy connection converters by sender widget type: `(receiver, sender, source, widgets) => ({ interactions, receiver }) | null`
  */
 export const LEGACY_CONNECTION_CONVERTERS = {
-    table: convertTableLegacyConnection
+    table: convertTableLegacyConnection,
+    map: convertMapLegacyConnection
 };
 
 /**
  * Writers of the converted interaction effects into a targeted widget, by sender widget type: `(widget, sender, interactions) => widget`
  */
 export const LEGACY_CONNECTION_EFFECT_WRITERS = {
-    table: writeTableLegacyConnectionEffects
+    table: writeLegacyConnectionEffects,
+    map: writeLegacyConnectionEffects
 };
 
 const mergeInteractions = (existing = [], added = []) => {

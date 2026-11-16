@@ -12,6 +12,7 @@ import { mapSelector } from './map';
 import { createStructuredSelector, createSelector } from 'reselect';
 import { servicesSelector, selectedServiceSelector } from './catalog';
 import { getCollapsedState, getFloatingWidgetsLayout, getFloatingWidgets } from './widgets';
+import { stripTransientEffects } from '../utils/InteractionEffectsUtils';
 import { mapInfoConfigurationSelector } from './mapInfo';
 import { currentTimeSelector, offsetTimeSelector } from './dimension';
 import {
@@ -45,7 +46,7 @@ export const basicMapOptionsToSaveSelector = createStructuredSelector({
         selectedService: selectedServiceSelector
     }),
     widgetsConfig: createStructuredSelector({
-        widgets: getFloatingWidgets,
+        widgets: state => stripTransientEffects(getFloatingWidgets(state)),
         layouts: getFloatingWidgetsLayout,
         collapsed: getCollapsedState
     }),

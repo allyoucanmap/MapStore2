@@ -27,6 +27,7 @@ import { composeFilterObject } from '../components/widgets/enhancers/utils';
 import { processFilterToCQL, buildExcludeCQLFilter, buildDefaultCQLFilter } from './FilterEventUtils';
 import { FILTER_SELECTION_MODES } from '../components/widgets/builder/wizard/filter/FilterDataTab/constants';
 import { getChartAxisDependencyPath, getMapDependencyPath } from './WidgetsUtils';
+import { getViewportGeometry } from './CoordinatesUtils';
 
 /**
  * Types of the updates returned by the effects, converted to actions by the interactions epics
@@ -48,6 +49,7 @@ const widgetPropertyUpdate = (widgetId, key, value, mode, target) => ({
 const currentTimeUpdate = (value) => ({ type: INTERACTION_UPDATES.CURRENT_TIME, value });
 
 const findById = (items = [], id) => id ? items.find(item => item?.id === id) : undefined;
+const findMapById = (maps = [], mapId) => mapId ? maps.find(map => map?.mapId === mapId) : undefined;
 
 // mutates the given (already cloned) layer
 function ensureLayerFilterStructure(layer) {
@@ -80,7 +82,8 @@ function createUpdatedFilter(interaction, senderId) {
         "version": "1.0.0",
         "logic": "OR",
         "filters": [{ ...interaction.appliedData }],
-        "appliedFromWidget": senderId
+        "appliedFromWidget": senderId,
+        ...(interaction.transient ? { "transient": true } : {})
     };
 }
 
@@ -250,6 +253,7 @@ export function applyDimensionEffect(interaction, { widgets = [] } = {}) {
  */
 export const TARGET_EFFECTS = {
     [TARGET_TYPES.APPLY_FILTER]: applyFilterEffect,
+    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: applyFilterEffect,
     [TARGET_TYPES.APPLY_STYLE]: applyStyleEffect,
     [TARGET_TYPES.APPLY_DIMENSION]: applyDimensionEffect
 };
@@ -303,6 +307,41 @@ export function buildTableWidgetAppliedData(tableWidget) {
 }
 
 /**
+ * Returns the geometry attribute of the interaction target, from the chart trace or the widget
+ * @param {object} interaction the interaction
+ * @param {object[]} widgets widgets of the container
+ * @returns {string|undefined}
+ */
+export function getTargetGeometryAttribute(interaction, widgets = []) {
+    const nodePath = interaction?.target?.nodePath;
+    const targetWidget = findById(widgets, extractWidgetIdFromNodePath(nodePath));
+    return targetWidget?.widgetType === 'chart'
+        ? extractTraceFromWidgetByNodePath(targetWidget, nodePath)?.geomProp
+        : targetWidget?.geomProp;
+}
+
+/**
+ * Returns the CQL spatial filter of the map extent on the interaction target geometry, null without extent or geometry
+ * @param {object} mapWidget the map widget
+ * @param {string} mapId the map of the widget sending the extent
+ * @param {object} interaction the interaction
+ * @param {object} context `{ widgets }` widgets of the container, to read the target geometry attribute
+ */
+export function buildMapWidgetAppliedData(mapWidget, mapId, interaction, { widgets } = {}) {
+    const { bounds, crs } = findMapById(mapWidget?.maps, mapId)?.bbox || {};
+    const attribute = getTargetGeometryAttribute(interaction, widgets);
+    if (!bounds || !crs || !attribute) {
+        return null;
+    }
+    const numericBounds = Object.keys(bounds).reduce((acc, key) => ({ ...acc, [key]: parseFloat(bounds[key]) }), {});
+    const geometry = getViewportGeometry(numericBounds, crs);
+    const body = toCQLFilter({ spatialField: { attribute, operation: 'INTERSECTS', geometry: { ...geometry, projection: crs } } });
+    return typeof body === 'string' && body && body !== 'INCLUDE'
+        ? { format: 'cql', version: '1.0.0', body }
+        : null;
+}
+
+/**
  * Returns the table layer filtered by the table column and configured filters, empty without a filter
  * @param {object} tableWidget the table widget
  * @returns {object[]} layers to compute the zoom extent from
@@ -326,15 +365,27 @@ export const SENDER_ZOOM_EXTENT_LAYERS = {
  */
 export const SENDER_DATA_BUILDERS = {
     filter: buildFilterWidgetAppliedData,
-    table: buildTableWidgetAppliedData
+    table: buildTableWidgetAppliedData,
+    map: buildMapWidgetAppliedData
 };
+
+/**
+ * Sender types whose effects follow a frequently changing state, written as transient and not saved
+ */
+export const TRANSIENT_EFFECT_SENDER_TYPES = ['map'];
+
+/**
+ * Returns true if the effects of the sender are transient
+ */
+export const isTransientEffectSender = (widget) => TRANSIENT_EFFECT_SENDER_TYPES.includes(widget?.widgetType);
 
 /**
  * Source ids by sender widget type: the sub-elements of the sender that emit interactions
  */
 export const SENDER_SOURCE_IDS = {
     filter: (widget) => (widget.filters || []).map(f => f.id),
-    table: (widget) => widget.id ? [widget.id] : []
+    table: (widget) => widget.id ? [widget.id] : [],
+    map: (widget) => (widget.maps || []).map(map => map.mapId).filter(Boolean)
 };
 
 /**
@@ -512,4 +563,36 @@ export function cleanupInteractionsAfterWidgetDeletion(deletedWidgetId, context 
     return updateSendersInteractions(context, interactions =>
         interactions.filter(interaction => extractWidgetIdFromNodePath(interaction?.target?.nodePath) !== deletedWidgetId)
     );
+}
+
+const withoutTransient = (filters) => Array.isArray(filters) && filters.some(filter => filter?.transient)
+    ? filters.filter(filter => !filter?.transient)
+    : filters;
+
+const stripWidgetTransientEffects = (widget) => {
+    const interactionFilters = withoutTransient(widget.interactionFilters);
+    const charts = widget.charts?.map(chart => {
+        const traces = chart.traces?.map(trace => {
+            const traceFilters = withoutTransient(trace.interactionFilters);
+            return traceFilters === trace.interactionFilters ? trace : { ...trace, interactionFilters: traceFilters };
+        });
+        return traces?.some((trace, idx) => trace !== chart.traces[idx]) ? { ...chart, traces } : chart;
+    });
+    const chartsChanged = charts?.some((chart, idx) => chart !== widget.charts[idx]);
+    return interactionFilters === widget.interactionFilters && !chartsChanged
+        ? widget
+        : { ...widget, interactionFilters, ...(chartsChanged ? { charts } : {}) };
+};
+
+/**
+ * Removes the transient effects (e.g. map viewport filters) from the widgets, they are recomputed on load
+ * @param {object[]} widgets the widgets to save
+ * @returns {object[]} the widgets without transient effects, the same array when there is nothing to remove
+ */
+export function stripTransientEffects(widgets) {
+    if (!Array.isArray(widgets)) {
+        return widgets;
+    }
+    const stripped = widgets.map(stripWidgetTransientEffects);
+    return stripped.some((widget, idx) => widget !== widgets[idx]) ? stripped : widgets;
 }

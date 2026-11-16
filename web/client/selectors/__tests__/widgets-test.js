@@ -68,6 +68,19 @@ describe('widgets selectors', () => {
         expect(getDashboardWidgetsLayout(state)[0]).toExist();
         expect(getDashboardWidgetsLayout(state)[0].title).toBe("TEST");
     });
+    it('widgetsConfig does not save transient effects', () => {
+        const persisted = { id: 'table-filter', appliedFromWidget: 'table-1' };
+        const state = {
+            widgets: {
+                containers: {
+                    [DEFAULT_TARGET]: {
+                        widgets: [{ id: 'counter-1', widgetType: 'counter', interactionFilters: [persisted, { id: 'viewport', appliedFromWidget: 'map-w', "transient": true }] }]
+                    }
+                }
+            }
+        };
+        expect(widgetsConfig(state).widgets[0].interactionFilters).toEqual([persisted]);
+    });
     it('widgetsConfig uses canonical state while maximized and filters linked views', () => {
         const widget = {
             id: 'widget-1',
@@ -380,8 +393,8 @@ describe('widgets selectors', () => {
         const state = availableDependenciesForEditingWidgetSelector(stateInput);
         const availableDeps = state.availableDependencies;
         expect(availableDeps).toExist();
-        expect(availableDeps.length).toBe(1);
-        expect(availableDeps[0]).toBe('widgets[WIDGET].maps[MAPS].map');
+        // map widgets connect to charts through their interactions
+        expect(availableDeps.length).toBe(0);
     });
     it('availableDependenciesForEditingWidgetSelector for counter', () => {
         const stateInput = {
@@ -425,8 +438,16 @@ describe('widgets selectors', () => {
         const state = availableDependenciesForEditingWidgetSelector(stateInput);
         const availableDeps = state.availableDependencies;
         expect(availableDeps).toExist();
-        expect(availableDeps.length).toBe(1);
-        expect(availableDeps[0]).toBe('widgets[WIDGET].maps[MAPS].map');
+        expect(availableDeps.length).toBe(0);
+    });
+    it('availableDependenciesForEditingWidgetSelector keeps map widgets for legends', () => {
+        const stateInput = {
+            widgets: {
+                containers: { [DEFAULT_TARGET]: { widgets: [{ id: "WIDGET", maps: [{ mapId: "MAPS" }], widgetType: "map" }] } },
+                builder: { editor: { widgetType: "legend", id: "legendId" } }
+            }
+        };
+        expect(availableDependenciesForEditingWidgetSelector(stateInput).availableDependencies).toEqual(['widgets[WIDGET].maps[MAPS].map']);
     });
     it('dependenciesSelector', () => {
         const state = {

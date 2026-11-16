@@ -9,7 +9,8 @@ export const DATATYPES = {
     BBOX_COORDINATES: 'BBOX_COORDINATES',
     POINT: 'POINT',
     NUMBER: 'NUMBER',
-    FEATURE: 'FEATURE'
+    FEATURE: 'FEATURE',
+    SPATIAL_FILTER: 'SPATIAL_FILTER'
 };
 
 export const EVENTS = {
@@ -23,13 +24,14 @@ export const EVENTS = {
 /**
  * Widget types that send interactions; extended as each widget type adopts the interactions model
  */
-export const INTERACTION_SENDER_TYPES = ['filter', 'table'];
+export const INTERACTION_SENDER_TYPES = ['filter', 'table', 'map'];
 
 /**
  * Widget properties, by sender type, whose update reapplies the sender interactions
  */
 export const SENDER_TRIGGER_KEYS = {
-    table: ['quickFilters', 'filter']
+    table: ['quickFilters', 'filter'],
+    map: ['maps']
 };
 
 /**
@@ -58,7 +60,8 @@ export const TARGET_TYPES = {
     APPLY_STYLE: 'applyStyle',
     APPLY_DIMENSION: 'applyDimension',
     APPLY_ZOOM_TO: 'applyZoomTo',
-    APPLY_ZOOM_TO_FEATURE: 'applyZoomToFeature'
+    APPLY_ZOOM_TO_FEATURE: 'applyZoomToFeature',
+    APPLY_SPATIAL_FILTER: 'applySpatialFilter'
 };
 
 // Human-readable labels for target types
@@ -67,7 +70,8 @@ export const TARGET_TYPE_LABELS = {
     [TARGET_TYPES.APPLY_STYLE]: 'Apply style',
     [TARGET_TYPES.APPLY_DIMENSION]: 'Apply dimension',
     [TARGET_TYPES.APPLY_ZOOM_TO]: 'Zoom to',
-    [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: 'Zoom to feature'
+    [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: 'Zoom to feature',
+    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'Apply spatial filter'
 };
 
 // Glyph icons for target types
@@ -76,7 +80,8 @@ export const TARGET_TYPE_GLYPHS = {
     [TARGET_TYPES.APPLY_STYLE]: 'style',
     [TARGET_TYPES.APPLY_DIMENSION]: 'record',
     [TARGET_TYPES.APPLY_ZOOM_TO]: 'zoom-to',
-    [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: 'zoom-to'
+    [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: 'zoom-to',
+    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'filter'
 };
 
 /**
@@ -92,7 +97,8 @@ export const TARGET_EVENT_DATA_TYPES = {
     [TARGET_TYPES.APPLY_STYLE]: DATATYPES.LAYER_STYLE,
     [TARGET_TYPES.APPLY_DIMENSION]: DATATYPES.LAYER_DIMENSION,
     [TARGET_TYPES.APPLY_ZOOM_TO]: DATATYPES.ZOOM_TRIGGER,
-    [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: DATATYPES.ZOOM_TRIGGER
+    [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: DATATYPES.ZOOM_TRIGGER,
+    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: DATATYPES.SPATIAL_FILTER
 };
 
 // Events available by widget type
@@ -160,6 +166,15 @@ export const WIDGET_TARGETS_BY_TYPE = {
         }
     ]
 };
+
+// a spatial filter needs only the target geometry attribute, so it matches any dataset with one
+const createSpatialFilterTargets = (geometryAttribute) => geometryAttribute
+    ? [{
+        targetType: TARGET_TYPES.APPLY_SPATIAL_FILTER,
+        expectedDataType: DATATYPES.SPATIAL_FILTER,
+        constraints: {}
+    }]
+    : [];
 
 /**
  * Creates a layer constraint object with standardized name and id handling.
@@ -614,12 +629,15 @@ export function generateChartTraceElementNode(trace) {
         interactionMetadata: {
             events: [
             ],
-            targets: WIDGET_TARGETS_BY_TYPE.chartTrace.map(t => ({
-                ...t,
-                constraints: t.constraints?.layer ? t.constraints : {
-                    layer: createLayerConstraint(trace?.layer)
-                }
-            }))
+            targets: [
+                ...WIDGET_TARGETS_BY_TYPE.chartTrace.map(t => ({
+                    ...t,
+                    constraints: t.constraints?.layer ? t.constraints : {
+                        layer: createLayerConstraint(trace?.layer)
+                    }
+                })),
+                ...createSpatialFilterTargets(trace?.geomProp)
+            ]
         }
     };
 }
@@ -695,12 +713,15 @@ export function generateTableWidgetTreeNode(widget) {
         ...baseNode,
         interactionMetadata: {
             events: WIDGET_EVENTS_BY_WIDGET_TYPE.table,
-            targets: WIDGET_TARGETS_BY_TYPE.table.map(t => ({
-                ...t,
-                constraints: t.constraints?.layer ? t.constraints : {
-                    layer: createLayerConstraint(widget?.layer)
-                }
-            }))
+            targets: [
+                ...WIDGET_TARGETS_BY_TYPE.table.map(t => ({
+                    ...t,
+                    constraints: t.constraints?.layer ? t.constraints : {
+                        layer: createLayerConstraint(widget?.layer)
+                    }
+                })),
+                ...createSpatialFilterTargets(widget?.geomProp)
+            ]
         }
     };
 }
@@ -716,12 +737,15 @@ export function generateCounterWidgetTreeNode(widget) {
         ...baseNode,
         interactionMetadata: {
             events: WIDGET_EVENTS_BY_WIDGET_TYPE.counter,
-            targets: WIDGET_TARGETS_BY_TYPE.counter.map(t => ({
-                ...t,
-                constraints: t.constraints?.layer ? t.constraints : {
-                    layer: createLayerConstraint(widget?.layer)
-                }
-            }))
+            targets: [
+                ...WIDGET_TARGETS_BY_TYPE.counter.map(t => ({
+                    ...t,
+                    constraints: t.constraints?.layer ? t.constraints : {
+                        layer: createLayerConstraint(widget?.layer)
+                    }
+                })),
+                ...createSpatialFilterTargets(widget?.geomProp)
+            ]
         }
     };
 }
@@ -1012,7 +1036,7 @@ export function hasConnectableTargetNodes(interactionTree, target, valueAttribut
 
 /**
  * Gets possible targets for editing a widget of the specified widgetType.
- * @param {string} widgetType widget type, `filter` or `table`
+ * @param {string} widgetType widget type, `filter`, `table` or `map`
  * @param {object} layerInvolved optional layer object with name and id
  * @returns {array} [{ title, targetType, glyph, expectedDataType, constraint }]
  */
@@ -1074,6 +1098,15 @@ export function getPossibleTargetsEditingWidget(widgetType, layerInvolved) {
             targetType: TARGET_TYPES.APPLY_ZOOM_TO_FEATURE,
             glyph: TARGET_TYPE_GLYPHS[TARGET_TYPES.APPLY_ZOOM_TO_FEATURE],
             expectedDataType: TARGET_EVENT_DATA_TYPES[TARGET_TYPES.APPLY_ZOOM_TO_FEATURE],
+            constraints: {}
+        }];
+    }
+    if (widgetType === 'map') {
+        return [{
+            title: TARGET_TYPE_LABELS[TARGET_TYPES.APPLY_SPATIAL_FILTER],
+            targetType: TARGET_TYPES.APPLY_SPATIAL_FILTER,
+            glyph: TARGET_TYPE_GLYPHS[TARGET_TYPES.APPLY_SPATIAL_FILTER],
+            expectedDataType: TARGET_EVENT_DATA_TYPES[TARGET_TYPES.APPLY_SPATIAL_FILTER],
             constraints: {}
         }];
     }

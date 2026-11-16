@@ -2389,6 +2389,7 @@
           "columnFilter": "Column filter",
           "zoomToFilteredBounds": "Zoom to filtered bounds",
           "zoomToFeatureExtent": "Zoom to feature extent",
+          "viewportFilter": "Viewport filter",
           "errorChart": "One or more chart(s) is invalid",
           "errorFilter": "One or more filter(s) is invalid",
           "backToTableOptions": "Back to table options",
