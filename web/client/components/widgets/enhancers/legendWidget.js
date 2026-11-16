@@ -5,79 +5,74 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import {compose, withHandlers, withProps} from 'recompose';
+import React from 'react';
+import { compose } from 'recompose';
 
 import { castArray, get } from 'lodash';
 import deleteWidget from './deleteWidget';
 import { editableWidget, defaultIcons, withHeaderTools } from './tools';
 import { getScales } from '../../../utils/MapUtils';
-import { WIDGETS_MAPS_REGEX } from "../../../actions/widgets";
 import { getInactiveNode, DEFAULT_GROUP_ID } from '../../../utils/LayersUtils';
-import { updateLayerWithLegendFilters } from '../../../utils/LegendUtils';
 
 /**
- * map dependencies to layers, scales and current zoom level to show legend items for current zoom.
- * Add also base tools and menu to the widget
+ * Returns the legend view props of the controlled map, showing the layers of the visible groups without backgrounds
+ * @param {object} map the map controlled by the legend
+ * @returns {object} `{ map, scales, currentZoomLvl }`
+ */
+export const getLegendViewProps = (map = {}) => {
+    const groups = castArray(map.groups || []);
+    const layers = (map.layers || [])
+        .filter((layer = {}) => layer.group !== 'background' && !getInactiveNode(layer?.group || DEFAULT_GROUP_ID, groups))
+        // the legend images ignore the layer CQL filter, as the previous legend did
+        .map(({ group, ...layer }) => ({ ...layer, params: { ...layer.params, CQL_FILTER: undefined } }));
+    return {
+        map: {
+            layers,
+            // empty, so the default group is created and hidden in the layers tree
+            groups: [],
+            projection: map.projection,
+            bbox: map.bbox
+        },
+        // falls back to the extent projection when the map projection is missing
+        scales: getScales(map.projection || map.bbox?.crs || 'EPSG:3857', get(map, 'mapOptions.view.DPI')),
+        currentZoomLvl: map.zoom
+    };
+};
+
+/**
+ * Returns the layers of the controlled map with the legend changes (visibility, opacity, expanded, legend filter)
+ * @param {object[]} mapLayers the layers of the controlled map
+ * @param {object[]} legendLayers the layers changed in the legend
+ * @returns {object[]} the updated map layers
+ */
+export const mergeLegendLayerChanges = (mapLayers = [], legendLayers = []) => mapLayers.map(layer => {
+    const legendLayer = legendLayers.find(l => l.id === layer.id);
+    return legendLayer
+        ? { ...layer, visibility: legendLayer.visibility, opacity: legendLayer.opacity, expanded: legendLayer.expanded, layerFilter: legendLayer.layerFilter }
+        : layer;
+});
+
+/**
+ * Feeds the legend with the map it controls (`legendMap`: `{ widgetId, mapId, map }`) and writes the legend changes back to that map
+ */
+export const withLegendMapData = (Component) => ({ legendMap, updateProperty = () => {}, ...props }) => {
+    if (!legendMap?.map) {
+        return <Component {...props} updateProperty={updateProperty} noMapConnected />;
+    }
+    const { widgetId, mapId, map } = legendMap;
+    const updateMap = (key, value) => {
+        if (key === 'map') {
+            updateProperty(widgetId, 'maps', { mapId, layers: mergeLegendLayerChanges(map.layers, value?.layers) }, 'merge');
+        }
+    };
+    return <Component {...props} {...getLegendViewProps(map)} updateProperty={updateMap} noMapConnected={false} />;
+};
+
+/**
+ * Legend widget enhancer: controlled map data, base tools and menu
  */
 export default compose(
-    withProps(({ dependencies = {}, dependenciesMap = {} }) => {
-        const allLayers = dependencies[dependenciesMap.layers] || dependencies.layers || [];
-        const groups = castArray(dependencies[dependenciesMap.groups] || dependencies.groups || []);
-        let layers = allLayers
-            // filter backgrounds and inactive layer
-            // the inactive layers are the one with a not visible parent group
-            .filter((layer = {}) =>
-                layer.group !== 'background' && !getInactiveNode(layer?.group || DEFAULT_GROUP_ID, groups)
-            )
-            .map(({ group, ...layer }) => layer);
-        layers = updateLayerWithLegendFilters(layers, dependencies);
-        return {
-            allLayers,
-            map: {
-                layers,
-                // use empty so it creates the default group that will be hidden in the layers tree
-                groups: [],
-                projection: dependencies.projection,
-                bbox: dependencies.viewport
-            },
-            dependencyMapPath: dependenciesMap.layers || '',
-            scales: getScales(
-                // TODO: this is a fallback that checks the viewport if projection is not defined. We should use only projection
-                dependencies.projection || dependencies.viewport && dependencies.viewport.crs || 'EPSG:3857',
-                get( dependencies, "mapOptions.view.DPI")
-            ),
-            currentZoomLvl: dependencies.zoom
-        };
-    }),
-    withHandlers({
-        updateProperty: ({ updateProperty, dependencyMapPath, allLayers = [] }) => (key, value) => {
-            if (dependencyMapPath) {
-                const [, widgetId, mapId] = WIDGETS_MAPS_REGEX.exec(dependencyMapPath) || [];
-                if (mapId && key === 'map') {
-                    const updatedLayers = value?.layers || [];
-                    const newLayers = allLayers.map(layer => {
-                        const updateLayer = updatedLayers.find(l => l.id === layer.id);
-                        if (updateLayer) {
-                            return {
-                                ...layer,
-                                visibility: updateLayer.visibility,
-                                opacity: updateLayer.opacity,
-                                expanded: updateLayer.expanded,
-                                layerFilter: updateLayer.layerFilter
-                            };
-                        }
-                        return layer;
-                    });
-                    updateProperty(widgetId, "maps", { mapId, layers: newLayers }, 'merge');
-                    /*
-                    if (groupsConnected) {
-                        updateProperty(widgetId, "maps", { mapId, groups: value?.groups }, 'merge');
-                    }
-                    */
-                }
-            }
-        }
-    }),
+    withLegendMapData,
     deleteWidget,
     editableWidget(),
     defaultIcons(),

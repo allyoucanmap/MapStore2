@@ -25,7 +25,6 @@ const getNextTooltipId = (step, valid) => !valid
     ? undefined
     : "widgets.builder.wizard.configureWidgetOptions";
 
-const isValidStep1 = ({mapSync}) => mapSync;
 const getSaveTooltipId = (step, {id} = {}) => {
     if (id) {
         return "widgets.builder.wizard.updateWidget";
@@ -46,7 +45,7 @@ buttons={[{
 }, ...stepButtons, {
     onClick: () => setPage(Math.min(step + 1, 1)),
     visible: step === 0,
-    disabled: step === 0 && !isValidStep1(editorData) || !valid,
+    disabled: !valid,
     glyph: "arrow-right",
     tooltipId: getNextTooltipId(step, valid)
 }, {

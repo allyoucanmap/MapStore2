@@ -11,7 +11,8 @@ export const DATATYPES = {
     NUMBER: 'NUMBER',
     FEATURE: 'FEATURE',
     SPATIAL_FILTER: 'SPATIAL_FILTER',
-    MAP_VIEW: 'MAP_VIEW'
+    MAP_VIEW: 'MAP_VIEW',
+    MAP_LEGEND: 'MAP_LEGEND'
 };
 
 export const EVENTS = {
@@ -25,7 +26,7 @@ export const EVENTS = {
 /**
  * Widget types that send interactions; extended as each widget type adopts the interactions model
  */
-export const INTERACTION_SENDER_TYPES = ['filter', 'table', 'map'];
+export const INTERACTION_SENDER_TYPES = ['filter', 'table', 'map', 'legend'];
 
 /**
  * Widget properties, by sender type, whose update reapplies the sender interactions
@@ -86,7 +87,8 @@ export const TARGET_TYPES = {
     APPLY_ZOOM_TO: 'applyZoomTo',
     APPLY_ZOOM_TO_FEATURE: 'applyZoomToFeature',
     APPLY_SPATIAL_FILTER: 'applySpatialFilter',
-    APPLY_VIEW_SYNC: 'applyViewSync'
+    APPLY_VIEW_SYNC: 'applyViewSync',
+    APPLY_LEGEND: 'applyLegend'
 };
 
 // Human-readable labels for target types
@@ -97,7 +99,8 @@ export const TARGET_TYPE_LABELS = {
     [TARGET_TYPES.APPLY_ZOOM_TO]: 'Zoom to',
     [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: 'Zoom to feature',
     [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'Apply spatial filter',
-    [TARGET_TYPES.APPLY_VIEW_SYNC]: 'Sync map view'
+    [TARGET_TYPES.APPLY_VIEW_SYNC]: 'Sync map view',
+    [TARGET_TYPES.APPLY_LEGEND]: 'Control map'
 };
 
 // Glyph icons for target types
@@ -108,7 +111,8 @@ export const TARGET_TYPE_GLYPHS = {
     [TARGET_TYPES.APPLY_ZOOM_TO]: 'zoom-to',
     [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: 'zoom-to',
     [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'filter',
-    [TARGET_TYPES.APPLY_VIEW_SYNC]: '1-map'
+    [TARGET_TYPES.APPLY_VIEW_SYNC]: '1-map',
+    [TARGET_TYPES.APPLY_LEGEND]: 'list'
 };
 
 /**
@@ -126,7 +130,8 @@ export const TARGET_EVENT_DATA_TYPES = {
     [TARGET_TYPES.APPLY_ZOOM_TO]: DATATYPES.ZOOM_TRIGGER,
     [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: DATATYPES.ZOOM_TRIGGER,
     [TARGET_TYPES.APPLY_SPATIAL_FILTER]: DATATYPES.SPATIAL_FILTER,
-    [TARGET_TYPES.APPLY_VIEW_SYNC]: DATATYPES.MAP_VIEW
+    [TARGET_TYPES.APPLY_VIEW_SYNC]: DATATYPES.MAP_VIEW,
+    [TARGET_TYPES.APPLY_LEGEND]: DATATYPES.MAP_LEGEND
 };
 
 // Events available by widget type
@@ -442,12 +447,16 @@ function createMapZoomToLeafNode(promotedTitle, extraTargets = []) {
     };
 }
 
-// only dashboard map widgets follow the view of another map, the main map does not
-const MAP_WIDGET_VIEW_SYNC_TARGET = {
+// only dashboard map widgets follow the view of another map or are controlled by a legend, the main map is not
+const MAP_WIDGET_ONLY_TARGETS = [{
     targetType: TARGET_TYPES.APPLY_VIEW_SYNC,
     expectedDataType: DATATYPES.MAP_VIEW,
     constraints: {}
-};
+}, {
+    targetType: TARGET_TYPES.APPLY_LEGEND,
+    expectedDataType: DATATYPES.MAP_LEGEND,
+    constraints: {}
+}];
 
 function createLayerDimensionNodes(layer) {
     const dimensionNodes = [];
@@ -577,7 +586,7 @@ export function generateMapWidgetLayersTree(maps, options = {}, widget) {
             // collapsed single-child collections would otherwise label the zoom node with a generic parent (e.g. Widgets)
             const mapZoomToNode = createMapZoomToLeafNode(widget?.title && maps.length > 1
                 ? `${widget.title} / ${map.name || map.mapId}`
-                : widget?.title || map.name, [{ ...MAP_WIDGET_VIEW_SYNC_TARGET }]);
+                : widget?.title || map.name, MAP_WIDGET_ONLY_TARGETS.map(target => ({ ...target })));
             const baseNode = createBaseElementNode(map, '1-map');
             return {
                 ...baseNode,
@@ -1064,7 +1073,7 @@ export function promoteMapZoomToNodes(node) {
     return node;
 }
 
-const MAP_NODE_TARGET_TYPES = [TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, TARGET_TYPES.APPLY_VIEW_SYNC];
+const MAP_NODE_TARGET_TYPES = [TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, TARGET_TYPES.APPLY_VIEW_SYNC, TARGET_TYPES.APPLY_LEGEND];
 const isZoomTargetType = (targetType) => MAP_NODE_TARGET_TYPES.includes(targetType);
 
 export function getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType, excludedNodeId) {
@@ -1085,7 +1094,7 @@ export function hasConnectableTargetNodes(interactionTree, target, valueAttribut
 
 /**
  * Gets possible targets for editing a widget of the specified widgetType.
- * @param {string} widgetType widget type, `filter`, `table` or `map`
+ * @param {string} widgetType widget type, `filter`, `table`, `map` or `legend`
  * @param {object} layerInvolved optional layer object with name and id
  * @returns {array} [{ title, targetType, glyph, expectedDataType, constraint }]
  */
@@ -1147,6 +1156,15 @@ export function getPossibleTargetsEditingWidget(widgetType, layerInvolved) {
             targetType: TARGET_TYPES.APPLY_ZOOM_TO_FEATURE,
             glyph: TARGET_TYPE_GLYPHS[TARGET_TYPES.APPLY_ZOOM_TO_FEATURE],
             expectedDataType: TARGET_EVENT_DATA_TYPES[TARGET_TYPES.APPLY_ZOOM_TO_FEATURE],
+            constraints: {}
+        }];
+    }
+    if (widgetType === 'legend') {
+        return [{
+            title: TARGET_TYPE_LABELS[TARGET_TYPES.APPLY_LEGEND],
+            targetType: TARGET_TYPES.APPLY_LEGEND,
+            glyph: TARGET_TYPE_GLYPHS[TARGET_TYPES.APPLY_LEGEND],
+            expectedDataType: TARGET_EVENT_DATA_TYPES[TARGET_TYPES.APPLY_LEGEND],
             constraints: {}
         }];
     }
@@ -1467,3 +1485,33 @@ export const unplugOrphanZoomToInteractions = (interactions = []) =>
             ? { ...interaction, plugged: false }
             : interaction);
 
+/**
+ * Returns the map controlled by a legend, from its plugged legend interaction
+ * @param {object} legend the legend widget
+ * @returns {object|null} `{ widgetId, mapId }` of the controlled map widget map, null if not connected
+ */
+export const getLegendMapTarget = (legend) => {
+    const nodePath = (legend?.interactions || [])
+        .find(interaction => interaction?.plugged && interaction.targetType === TARGET_TYPES.APPLY_LEGEND)?.target?.nodePath;
+    const widgetId = extractWidgetIdFromNodePath(nodePath);
+    const mapId = extractMapIdFromNodePath(nodePath);
+    return widgetId && mapId ? { widgetId, mapId } : null;
+};
+
+/**
+ * Keeps plugged only the last plugged interaction of a target type, e.g. a legend controls one map
+ * @param {object[]} interactions the updated interactions
+ * @param {object[]} previous the interactions before the update
+ * @param {string} targetType the target type allowing a single plugged interaction
+ * @returns {object[]} the interactions, the same array when nothing changes
+ */
+export const keepSinglePluggedTarget = (interactions = [], previous = [], targetType) => {
+    const wasPlugged = (id) => previous.some(interaction => interaction?.id === id && interaction.plugged);
+    const newlyPlugged = interactions.find(interaction => interaction?.targetType === targetType && interaction.plugged && !wasPlugged(interaction.id));
+    if (!newlyPlugged) {
+        return interactions;
+    }
+    return interactions.map(interaction => interaction !== newlyPlugged && interaction?.targetType === targetType && interaction.plugged
+        ? { ...interaction, plugged: false }
+        : interaction);
+};

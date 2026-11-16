@@ -10,9 +10,6 @@ import isEmpty from "lodash/isEmpty";
 import { getExtentFromViewport } from "./CoordinatesUtils";
 import { ServerTypes } from "./LayersUtils";
 import { optionsToVendorParams } from "./VendorParamsUtils";
-import { composeFilterObject } from "../components/widgets/enhancers/utils";
-import { toCQLFilter } from "./FilterUtils";
-import { arrayUpdate } from "./ImmutableUtils";
 
 export const INTERACTIVE_LEGEND_ID = "interactiveLegend";
 export const LEGEND_FORMAT = {
@@ -79,44 +76,8 @@ export const getWMSLegendConfig = ({
     };
 };
 
-/**
- * Updates the layers with the filters from dependencies
- * to perform legend filtering in the legend widget
- */
-export const updateLayerWithLegendFilters = (layers, dependencies) => {
-    const targetLayerName = dependencies?.layer?.name;
-    const filterObj = dependencies?.filter || {};
-    const layerInCommon = layers?.find(l => l.name === targetLayerName) || {};
-    let filterObjCollection = {};
-    let layersUpdatedWithCql = [];
-
-    if (dependencies?.mapSync && !isEmpty(layerInCommon)
-        && (filterObj.featureTypeName ? filterObj.featureTypeName === targetLayerName : true)
-        && dependencies?.quickFilters) {
-        filterObjCollection = {
-            ...filterObjCollection,
-            ...composeFilterObject(filterObj, dependencies?.quickFilters, dependencies?.options)
-        };
-    }
-    const cqlFilter = toCQLFilter(filterObjCollection);
-    if (!isEmpty(filterObjCollection) && cqlFilter) {
-        layersUpdatedWithCql = arrayUpdate(false,
-            {
-                ...layerInCommon,
-                params: optionsToVendorParams({ params: {CQL_FILTER: cqlFilter}})
-            },
-            {name: targetLayerName},
-            layers
-        );
-    } else {
-        layersUpdatedWithCql = layers.map(l => ({...l, params: {...l.params, CQL_FILTER: undefined}}));
-    }
-    return layersUpdatedWithCql;
-};
-
 export default {
     getLayerFilterByLegendFormat,
-    getWMSLegendConfig,
-    updateLayerWithLegendFilters
+    getWMSLegendConfig
 };
 

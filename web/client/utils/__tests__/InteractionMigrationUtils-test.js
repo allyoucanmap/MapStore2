@@ -268,10 +268,9 @@ describe('InteractionMigrationUtils', () => {
             const { interactions } = convertMapLegacyConnection(chart, mapWidget, source);
             expect(interactions.map(i => i.target.nodePath)).toEqual([`widgets[${CHART_ID}].charts[c1].traces[t1]`]);
         });
-        it('keeps legend and connections without geometry, viewport or view legacy', () => {
+        it('keeps connections without geometry, viewport or view legacy', () => {
             expect(convertMapLegacyConnection({ ...counter, geomProp: undefined }, mapWidget, source)).toBe(null);
             expect(convertMapLegacyConnection({ ...counter, widgetType: 'map' }, mapWidget, source)).toBe(null);
-            expect(convertMapLegacyConnection({ ...counter, widgetType: 'legend' }, mapWidget, source)).toBe(null);
             expect(convertMapLegacyConnection({ ...counter, dependenciesMap: { layers: 'widgets[map-w].maps[m1].layers' } }, mapWidget, source)).toBe(null);
         });
         it('converts a map receiver following center and zoom into view sync on each of its maps', () => {
@@ -289,6 +288,19 @@ describe('InteractionMigrationUtils', () => {
             ]);
             expect(interactions[0].source.nodePath).toBe('widgets[map-w].maps[m1]');
             expect(receiver.dependenciesMap).toNotExist();
+        });
+        it('converts a legend connection into the legend own interaction controlling the map', () => {
+            const legend = { id: 'legend-1', widgetType: 'legend', mapSync: true, dependenciesMap: { layers: 'widgets[map-w].maps[m1].layers', zoom: 'widgets[map-w].maps[m1].zoom' } };
+            const migrated = migrateLegacyConnections({ widgets: [mapWidget, legend] });
+            const [migratedMap, migratedLegend] = migrated.widgets;
+            expect(migratedLegend.mapSync).toNotExist();
+            expect(migratedLegend.dependenciesMap).toNotExist();
+            expect(migratedLegend.interactions.map(i => [i.targetType, i.source.nodePath, i.target.nodePath, i.plugged])).toEqual([
+                ['applyLegend', 'widgets[legend-1]', 'widgets[map-w].maps[m1].applyZoomTo', true]
+            ]);
+            expect(migratedLegend.interactions[0].id).toBe('legacy:legend-1:applyLegend:widgets[map-w].maps[m1].applyZoomTo');
+            expect(migratedMap.interactions).toEqual([]);
+            expect(migrateLegacyConnections(migrated)).toBe(migrated);
         });
         it('migrates the connection and writes the viewport filter as transient', () => {
             const migrated = migrateLegacyConnections({ widgets: [mapWidget, counter] });

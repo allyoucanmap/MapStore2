@@ -39,6 +39,7 @@ export default pure(({
     layouts,
     maximized,
     dependencies,
+    legendMaps = {},
     compactType = null,
     compactMode,
     useDefaultWidthProvider = true,
@@ -142,6 +143,7 @@ export default pure(({
                 groups={getWidgetGroups(groups, w)}
                 showGroupColor={showGroupColor}
                 dependencies={dependencies}
+                legendMap={legendMaps[w.id]}
                 enableColumnFilters={getEnableColumnFilters(w)}
                 canEdit={canEdit}
                 updateProperty={(...args) => updateWidgetProperty(...args)}

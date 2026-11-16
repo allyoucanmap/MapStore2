@@ -117,13 +117,11 @@ export const CounterWidget = compose(
 )(BaseCounterWidget);
 
 /**
- * Legend widgets with dependencies management and all base enhancers. Adds to the base component the following props.
- * @prop {object} dependencies values for dependenciesMap.
- * @prop {object} dependenciesMap a map of dependencies that provides the needed props to the widget
+ * Legend widget showing and controlling the map of its interaction, with all base enhancers.
+ * @prop {object} legendMap `{ widgetId, mapId, map }` the controlled map
  * @prop {object} env parameter for legend localization
  */
 export const LegendWidget = compose(
-    dependenciesToWidget,
     legendWidget
 )(BaseLegendWidget);
 

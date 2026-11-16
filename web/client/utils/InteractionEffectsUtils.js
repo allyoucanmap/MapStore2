@@ -408,7 +408,8 @@ export const isTransientEffectSender = (widget) => TRANSIENT_EFFECT_SENDER_TYPES
 export const SENDER_SOURCE_IDS = {
     filter: (widget) => (widget.filters || []).map(f => f.id),
     table: (widget) => widget.id ? [widget.id] : [],
-    map: (widget) => (widget.maps || []).map(map => map.mapId).filter(Boolean)
+    map: (widget) => (widget.maps || []).map(map => map.mapId).filter(Boolean),
+    legend: (widget) => widget.id ? [widget.id] : []
 };
 
 /**

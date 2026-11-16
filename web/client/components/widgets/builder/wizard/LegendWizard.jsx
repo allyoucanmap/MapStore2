@@ -17,6 +17,8 @@ import StepHeader from '../../../misc/wizard/StepHeader';
 import WizardContainer from '../../../misc/wizard/WizardContainer';
 import emptyLegendState from '../../enhancers/emptyLegendState';
 import legendWidget from '../../enhancers/legendWidget';
+import InteractionsTabs from './common/interactions/InteractionsTabs';
+import LegendInteractionsTab from './legend/LegendInteractionsTab';
 import LegendView from '../../widget/LegendView';
 import WidgetOptions from './common/WidgetOptions';
 
@@ -25,10 +27,10 @@ const Wizard = wizardHandlers(WizardContainer);
 const enhancePreview = compose(
     legendWidget,
     emptyState(
-        ({valid}) => !valid,
+        ({noMapConnected}) => noMapConnected,
         {
-            title: <Message msgId="widgets.builder.errors.noMapAvailableForLegend" />,
-            description: <Message msgId="widgets.builder.errors.noMapAvailableForLegendDescription" />
+            title: <Message msgId="widgets.errors.noLegendMap" />,
+            description: <Message msgId="widgets.errors.noLegendMapDescription" />
         }
     ),
     emptyLegendState(false)
@@ -38,8 +40,7 @@ const LegendPreview = enhancePreview(LegendView);
 export default ({
     onChange = () => {}, onFinish = () => {}, setPage = () => {},
     step = 0,
-    dependencies,
-    valid,
+    legendMap,
     data = {},
     currentLocale,
     language,
@@ -50,25 +51,25 @@ export default ({
         setPage={setPage}
         onFinish={onFinish}
         hideButtons>
-        <Row>
-            <StepHeader title={<Message msgId={`widgets.builder.wizard.preview`} />} />
-            <Col xs={12}>
-                <div className="legend-preview-container">
-                    <LegendPreview
-                        valid={valid}
-                        dependencies={dependencies}
-                        dependenciesMap={data.dependenciesMap}
-                        key="widget-options"
-                        currentLocale={currentLocale}
-                        language={language}
-                        updateProperty={updateProperty}
-                        disableVisibility
-                        disableOpacitySlider
-                        legendExpanded
-                    />
-                </div>
-            </Col>
-        </Row>
+        <InteractionsTabs key="legend-preview" interactions={<LegendInteractionsTab data={data} onEditorChange={onChange} />}>
+            <Row>
+                <StepHeader title={<Message msgId={`widgets.builder.wizard.preview`} />} />
+                <Col xs={12}>
+                    <div className="legend-preview-container">
+                        <LegendPreview
+                            legendMap={legendMap}
+                            key="widget-options"
+                            currentLocale={currentLocale}
+                            language={language}
+                            updateProperty={updateProperty}
+                            disableVisibility
+                            disableOpacitySlider
+                            legendExpanded
+                        />
+                    </div>
+                </Col>
+            </Row>
+        </InteractionsTabs>
         <WidgetOptions key="widget-options" onChange={onChange} />
     </Wizard>
 );

@@ -23,7 +23,8 @@ import {
     getMaximizedState,
     getVisibleFloatingWidgets,
     isTrayEnabled,
-    getTblWidgetZoomLoader
+    getTblWidgetZoomLoader,
+    getLegendMapsSelector
 } from '../selectors/widgets';
 import {
     changeLayout,
@@ -57,7 +58,8 @@ compose(
             state => state.browser && state.browser.mobile,
             getRenderableFloatingWidgets,
             getTblWidgetZoomLoader,
-            (id, widgets, layouts, maximized, dependencies, mapLayout, isMobileAgent, dropdownWidgets, recordZoomLoading) => ({
+            getLegendMapsSelector,
+            (id, widgets, layouts, maximized, dependencies, mapLayout, isMobileAgent, dropdownWidgets, recordZoomLoading, legendMaps) => ({
                 id,
                 widgets,
                 layouts,
@@ -66,7 +68,8 @@ compose(
                 mapLayout,
                 isMobileAgent,
                 dropdownWidgets,
-                recordZoomLoading
+                recordZoomLoading,
+                legendMaps
             })
         ), {
             editWidget,

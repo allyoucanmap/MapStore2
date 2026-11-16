@@ -55,7 +55,7 @@ describe('LegendWidget component', () => {
         ReactTestUtils.Simulate.click(el); // <-- trigger event callback
         expect(spyonEdit).toHaveBeenCalled();
     });
-    it('LegendWidget rendering with layers', () => {
+    it('LegendWidget rendering with the layers of the controlled map', () => {
         const LAYERS = [{
             id: 'layer:00',
             name: 'layer:00',
@@ -72,45 +72,19 @@ describe('LegendWidget component', () => {
             opacity: 0.5
         }
         ];
-        ReactDOM.render(<LegendWidget dependencies={{layers: LAYERS}} />, document.getElementById("container"));
+        ReactDOM.render(<LegendWidget legendMap={{ widgetId: 'map-w', mapId: 'm1', map: { layers: LAYERS } }} />, document.getElementById("container"));
         const container = document.getElementById('container');
-        const el = container.querySelector('.ms-layers-tree');
-        expect(el).toBeTruthy();
+        expect(container.querySelector('.ms-layers-tree')).toBeTruthy();
+        expect(container.querySelector('.empty-state-container')).toBeFalsy();
     });
-    it('LegendWidget rendering with layers specified in dependenciesMap', () => {
-        const layers = [
-            {
-                type: 'wms',
-                url: 'https://gs-stable.geo-solutions.it/geoserver/wms',
-                visibility: true,
-                dimensions: [],
-                name: 'gs:us_states',
-                title: 'States of US',
-                description: '',
-                bbox: {
-                    crs: 'EPSG:4326',
-                    bounds: {
-                        minx: -124.73142200000001,
-                        miny: 24.955967,
-                        maxx: -66.969849,
-                        maxy: 49.371735
-                    }
-                },
-                links: [],
-                params: {},
-                allowedSRS: {},
-                search: {
-                    type: 'wfs',
-                    url: 'https://gs-stable.geo-solutions.it/geoserver/wfs'
-                },
-                id: 'gs:us_states__qxhbmc4jmko'
-            }
-        ];
-        ReactDOM.render(<LegendWidget
-            dependencies={{"widgets[3fe79110-ac81-11e9-9a66-39723a13a30f].maps[213].layers": layers}}
-            dependenciesMap={{layers: "widgets[3fe79110-ac81-11e9-9a66-39723a13a30f].maps[213].layers" }} />, document.getElementById("container"));
+    it('LegendWidget shows the empty state without controlled map', () => {
+        ReactDOM.render(<LegendWidget />, document.getElementById("container"));
+        expect(document.getElementById('container').querySelector('.empty-state-container')).toBeTruthy();
+    });
+    it('shows the empty state when no map is connected', () => {
+        ReactDOM.render(<LegendWidgetComp id="legend-1" noMapConnected />, document.getElementById("container"));
         const container = document.getElementById('container');
-        const el = container.querySelector('.ms-layers-tree');
-        expect(el).toBeTruthy();
+        expect(container.querySelector('.empty-state-container')).toBeTruthy();
+        expect(container.querySelector('.ms-layers-tree')).toBeFalsy();
     });
 });

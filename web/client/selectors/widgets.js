@@ -9,7 +9,7 @@
 import { find, get, castArray, flatten } from 'lodash';
 import { mapSelector } from './map';
 import { getEffectivelyVisibleLayers, getSelectedLayer, layersSelector } from './layers';
-import { generateRootTree, isMainMapWidget, TARGET_TYPES, getChartAxisFromCurrentTimeTargetPath, isAnyLayerPath, isChartAxisDateType, isChartAxisDimensionTarget, isLayerDimensionTarget, isLayerTimeDimensionTarget, isMapTimeTarget } from '../utils/InteractionUtils';
+import { generateRootTree, getLegendMapTarget, isMainMapWidget, TARGET_TYPES, getChartAxisFromCurrentTimeTargetPath, isAnyLayerPath, isChartAxisDateType, isChartAxisDimensionTarget, isLayerDimensionTarget, isLayerTimeDimensionTarget, isMapTimeTarget } from '../utils/InteractionUtils';
 import { currentTimeSelector } from './dimension';
 import { pathnameSelector } from './router';
 import { DEFAULT_TARGET, DEPENDENCY_SELECTOR_KEY, LAYERS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
@@ -165,6 +165,34 @@ export const getMaximizedState = state => get(state, `widgets.containers[${DEFAU
 export const getRenderableFloatingWidgets = createSelector(
     getFloatingWidgets,
     (widgets) => Array.isArray(widgets) && widgets.some(isMainMapWidget) ? widgets.filter(widget => !isMainMapWidget(widget)) : widgets
+);
+
+const getLegendMap = (legend, widgets = []) => {
+    const target = getLegendMapTarget(legend);
+    const map = target && widgets.find(widget => widget.id === target.widgetId)?.maps?.find(m => m.mapId === target.mapId);
+    return map ? { ...target, map } : null;
+};
+
+/**
+ * Returns the maps controlled by the legends, by legend id: `{ [legendId]: { widgetId, mapId, map } }`
+ */
+export const getLegendMapsSelector = createSelector(
+    getFloatingWidgets,
+    (widgets = []) => (widgets || [])
+        .filter(widget => widget?.widgetType === 'legend')
+        .reduce((acc, legend) => {
+            const legendMap = getLegendMap(legend, widgets);
+            return legendMap ? { ...acc, [legend.id]: legendMap } : acc;
+        }, {})
+);
+
+/**
+ * Returns the map controlled by the legend being edited: `{ widgetId, mapId, map }`, null if none
+ */
+export const getEditingLegendMapSelector = createSelector(
+    getEditingWidget,
+    getFloatingWidgets,
+    (editingWidget, widgets) => getLegendMap(editingWidget, widgets || [])
 );
 
 /**

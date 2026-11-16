@@ -49,6 +49,11 @@ export const getLegacyConnectionSource = (widget) => {
     return { senderId, ...(mapId ? { mapId } : {}) };
 };
 
+const mergeInteractions = (existing = [], added = []) => {
+    const existingIds = existing.map(interaction => interaction?.id);
+    return [...existing, ...added.filter(interaction => !existingIds.includes(interaction?.id))];
+};
+
 const legacyInteraction = (sender, targetType, nodePath, layer, sourceNodePath = `widgets[${sender.id}]`) => ({
     plugged: true,
     targetType,
@@ -122,7 +127,6 @@ export const convertTableLegacyConnection = (receiver, sender, source, widgets) 
 
 const readsLegacyKey = (receiver, key) => typeof receiver?.dependenciesMap?.[key] === 'string';
 
-// legends stay legacy until the legend phase
 const MAP_LEGACY_RECEIVER_INTERACTIONS = {
     counter: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'viewport') && receiver.geomProp
         ? [legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER, `widgets[${receiver.id}]`, null, sourceNodePath)]
@@ -144,14 +148,31 @@ const MAP_LEGACY_RECEIVER_INTERACTIONS = {
 };
 
 /**
- * Converts a receiver connected to a map widget into interactions of the map widget, spatial filter or view sync
+ * Converts a receiver connected to a map widget into interactions of the map widget (spatial filter, view sync), or of the legend controlling it
  * @param {object} receiver the connected receiver widget
  * @param {object} sender the map widget
  * @param {object} source the legacy connection source, with the `mapId` of the connected map
  * @returns {object|null} `{ interactions, receiver }`, null when the connection must stay legacy
  */
+// the legend is the sender in the new model, its legacy connection to a map becomes its own interaction
+const convertLegendLegacyConnection = (legend, mapWidget, mapId) => {
+    const interaction = legacyInteraction(legend, TARGET_TYPES.APPLY_LEGEND, `widgets[${mapWidget.id}].maps[${mapId}].${TARGET_TYPES.APPLY_ZOOM_TO}`);
+    return {
+        interactions: [],
+        receiver: {
+            ...omit(legend, ['mapSync', 'dependenciesMap']),
+            interactions: mergeInteractions(legend.interactions, [{ ...interaction, id: getLegacyInteractionId(legend.id, interaction) }])
+        }
+    };
+};
+
 export const convertMapLegacyConnection = (receiver, sender, source) => {
     const mapId = source?.mapId || sender?.selectedMapId || sender?.maps?.[0]?.mapId;
+    if (receiver?.widgetType === 'legend') {
+        return mapId && !isMainMapWidget(sender) && readsLegacyKey(receiver, 'layers')
+            ? convertLegendLegacyConnection(receiver, sender, mapId)
+            : null;
+    }
     const getInteractions = mapId ? MAP_LEGACY_RECEIVER_INTERACTIONS[receiver?.widgetType] : null;
     // older main map connections have only `mapSync`, which meant the viewport filter
     const connected = isMainMapWidget(sender) && isEmpty(receiver?.dependenciesMap)
@@ -202,11 +223,6 @@ export const LEGACY_CONNECTION_CONVERTERS = {
 export const LEGACY_CONNECTION_EFFECT_WRITERS = {
     table: writeLegacyConnectionEffects,
     map: writeLegacyConnectionEffects
-};
-
-const mergeInteractions = (existing = [], added = []) => {
-    const existingIds = existing.map(interaction => interaction?.id);
-    return [...existing, ...added.filter(interaction => !existingIds.includes(interaction?.id))];
 };
 
 /**

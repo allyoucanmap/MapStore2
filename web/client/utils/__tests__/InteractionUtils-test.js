@@ -31,6 +31,8 @@ import {
     hasSenderOwnZoomExtent,
     isMainMapWidget,
     createMainMapWidget,
+    getLegendMapTarget,
+    keepSinglePluggedTarget,
     isSenderTriggerKey,
     extractWidgetIdFromNodePath,
     WIDGET_EVENTS_BY_WIDGET_TYPE
@@ -805,6 +807,32 @@ describe('InteractionUtils', () => {
             expect(tableTarget.constraints).toEqual({});
             expect(spatialTargetsOf(generateCounterWidgetTreeNode({ id: 'c', layer, geomProp: 'the_geom' })).length).toBe(1);
             expect(spatialTargetsOf(generateTableWidgetTreeNode({ id: 't', layer })).length).toBe(0);
+        });
+    });
+
+    describe('legend', () => {
+        it('controls a map widget map, never the main map', () => {
+            expect(getPossibleTargetsEditingWidget('legend').map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_LEGEND]);
+            const mapWidget = { id: 'map-w', widgetType: 'map', title: 'States Map', maps: [{ mapId: 'm1', layers: [] }] };
+            const tree = generateRootTree([mapWidget], [{ id: 'layer-1', name: 'layer-1', type: 'wms', group: 'overlay' }]);
+            const display = getDisplayInteractionTargetTree(tree, { targetType: TARGET_TYPES.APPLY_LEGEND });
+            expect(findNodeById(display, 'widgets[map-w].maps[m1].applyZoomTo')).toExist();
+            expect(findNodeById(display, 'map.applyZoomTo')).toBe(null);
+        });
+        it('reads the controlled map from the plugged interaction', () => {
+            const interaction = { id: 'l1', plugged: true, targetType: TARGET_TYPES.APPLY_LEGEND, target: { nodePath: 'widgets[map-w].maps[m1].applyZoomTo' } };
+            expect(getLegendMapTarget({ interactions: [interaction] })).toEqual({ widgetId: 'map-w', mapId: 'm1' });
+            expect(getLegendMapTarget({ interactions: [{ ...interaction, plugged: false }] })).toBe(null);
+            expect(getLegendMapTarget({})).toBe(null);
+        });
+        it('keeps plugged only the last plugged map', () => {
+            const first = { id: 'a', plugged: true, targetType: TARGET_TYPES.APPLY_LEGEND };
+            const second = { id: 'b', plugged: false, targetType: TARGET_TYPES.APPLY_LEGEND };
+            const previous = [first, second];
+            const next = keepSinglePluggedTarget([first, { ...second, plugged: true }], previous, TARGET_TYPES.APPLY_LEGEND);
+            expect(next.map(i => [i.id, i.plugged])).toEqual([['a', false], ['b', true]]);
+            const unplugged = [{ ...first, plugged: false }, second];
+            expect(keepSinglePluggedTarget(unplugged, previous, TARGET_TYPES.APPLY_LEGEND)).toBe(unplugged);
         });
     });
 

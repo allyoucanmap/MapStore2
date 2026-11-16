@@ -48,7 +48,8 @@ import {
     getWidgetsDependenciesGroups,
     isWidgetSelectionActive,
     getMaximizedState,
-    getSelectedLayoutId
+    getSelectedLayoutId,
+    getLegendMapsSelector
 } from '../selectors/widgets';
 import dashboardReducers from '../reducers/dashboard';
 import dashboardEpics from '../epics/dashboard';
@@ -82,8 +83,9 @@ const WidgetsView = compose(
             getSelectedLayoutId,
             buttonCanEdit,
             userSelector,
+            getLegendMapsSelector,
             (resource, widgets, layouts, dependencies, selectionActive, editingWidget, groups, showGroupColor, loading, isMobile, currentLocaleLanguage, isLocalizedLayerStylesEnabled,
-                env, maximized, currentLocale, isDashboardOpened, selectedLayoutId, edit, user) => ({
+                env, maximized, currentLocale, isDashboardOpened, selectedLayoutId, edit, user, legendMaps) => ({
                 resource,
                 loading,
                 canEdit: edit,
@@ -107,7 +109,8 @@ const WidgetsView = compose(
                 currentLocale,
                 isDashboardOpened,
                 selectedLayoutId,
-                user
+                user,
+                legendMaps
             })
         ), {
             editWidget,

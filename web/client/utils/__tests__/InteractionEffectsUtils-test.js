@@ -82,6 +82,7 @@ describe('InteractionEffectsUtils', () => {
             expect(getSenderSourceIds({ id: TABLE_ID, widgetType: 'table' })).toEqual([TABLE_ID]);
             expect(getSenderSourceIds({ widgetType: 'table' })).toEqual([]);
             expect(getSenderSourceIds({ id: 'm', widgetType: 'map', maps: [{ mapId: 'm1' }, { mapId: 'm2' }] })).toEqual(['m1', 'm2']);
+            expect(getSenderSourceIds({ id: 'legend-1', widgetType: 'legend' })).toEqual(['legend-1']);
             expect(getSenderSourceIds({ id: 'c', widgetType: 'chart' })).toEqual([]);
             expect(getSenderSourceIds()).toEqual([]);
         });

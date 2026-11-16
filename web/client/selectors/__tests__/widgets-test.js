@@ -41,7 +41,9 @@ import {
     isTimelineEnabledForInteractions,
     widgetsConfig,
     getMainMapWidget,
-    getMapWidgets
+    getMapWidgets,
+    getLegendMapsSelector,
+    getEditingLegendMapSelector
 } from '../widgets';
 
 import { set } from '../../utils/ImmutableUtils';
@@ -69,6 +71,28 @@ describe('widgets selectors', () => {
         expect(getDashboardWidgetsLayout(state)).toExist();
         expect(getDashboardWidgetsLayout(state)[0]).toExist();
         expect(getDashboardWidgetsLayout(state)[0].title).toBe("TEST");
+    });
+    it('returns the maps controlled by the legends', () => {
+        const map = { mapId: 'm1', layers: [] };
+        const legendInteraction = (id, plugged = true) => ({ id, plugged, targetType: 'applyLegend', target: { nodePath: 'widgets[map-w].maps[m1].applyZoomTo' } });
+        const legend = { id: 'legend-1', widgetType: 'legend', interactions: [legendInteraction('i1')] };
+        const state = {
+            widgets: {
+                containers: {
+                    [DEFAULT_TARGET]: {
+                        widgets: [
+                            { id: 'map-w', widgetType: 'map', maps: [map] },
+                            legend,
+                            { id: 'legend-2', widgetType: 'legend', interactions: [legendInteraction('i2', false)] },
+                            { id: 'legend-3', widgetType: 'legend', interactions: [{ ...legendInteraction('i3'), target: { nodePath: 'widgets[deleted].maps[m1].applyZoomTo' } }] }
+                        ]
+                    }
+                },
+                builder: { editor: legend }
+            }
+        };
+        expect(getLegendMapsSelector(state)).toEqual({ 'legend-1': { widgetId: 'map-w', mapId: 'm1', map } });
+        expect(getEditingLegendMapSelector(state)).toEqual({ widgetId: 'map-w', mapId: 'm1', map });
     });
     it('does not render or list the main map entry', () => {
         const mainMap = { id: 'map', widgetType: 'map', mainMap: true, maps: [{ mapId: 'main' }] };

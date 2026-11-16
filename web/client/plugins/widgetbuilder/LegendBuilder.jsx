@@ -9,7 +9,7 @@
 import { get } from 'lodash';
 import React from 'react';
 import { connect } from 'react-redux';
-import { compose, mapPropsStream, renameProps, withProps } from 'recompose';
+import { compose, renameProps, withProps } from 'recompose';
 import { createSelector } from 'reselect';
 
 import { insertWidget, onEditorChange, openFilterEditor, setPage, updateWidgetProperty } from '../../actions/widgets';
@@ -19,15 +19,13 @@ import ToolbarComp from '../../components/widgets/builder/wizard/legend/Toolbar'
 import LegendWizard from '../../components/widgets/builder/wizard/LegendWizard';
 import InfoPopover from '../../components/widgets/widget/InfoPopover';
 import { currentLocaleSelector } from '../../selectors/locale';
+import { getEditingLegendMapSelector } from '../../selectors/widgets';
 import BuilderHeader from './BuilderHeader';
 import { wizardSelector, wizardStateToProps } from './commons';
-import legendBuilderConnect from './enhancers/connection/legendBuilderConnect';
-import viewportBuilderConnectMask from './enhancers/connection/viewportBuilderConnectMask';
-import withConnectButton from './enhancers/connection/withConnectButton';
-import withMapConnect from './enhancers/connection/withMapConnect';
 import withExitButton from './enhancers/withExitButton';
 
-const withValidMap = withProps(({ availableDependencies = [], editorData }) => ({ valid: availableDependencies.length > 0 && editorData.mapSync }));
+// a legend can be saved without map, it shows an empty state until a map is connected in its interactions
+const withValidMap = withProps(() => ({ valid: true }));
 
 
 const localeSelector = createSelector(
@@ -49,6 +47,7 @@ const Builder = compose(
         wizardStateToProps
     ),
     connect(localeSelector),
+    connect(createSelector(getEditingLegendMapSelector, legendMap => ({ legendMap }))),
     withValidMap,
     renameProps({
         editorData: "data",
@@ -68,7 +67,6 @@ const Toolbar = compose(
     },
     wizardStateToProps
     ),
-    legendBuilderConnect,
     withValidMap,
     // exit support
     connect(() => ({}), {
@@ -82,34 +80,17 @@ const Toolbar = compose(
             onClick: () => onResetChange('widgetType', undefined)
         }
     })),
-    withExitButton(({ step}) => step === 0),
+    withExitButton(({ step}) => step === 0)
     // end exit support
-    withConnectButton(({ step }) => step === 0)
 )(ToolbarComp);
 
 /*
  * in case you don't have a layer selected (e.g. dashboard) the table builder
  * prompts a catalog view to allow layer selection
  */
-const builderEnhancer = compose(
-    connect(wizardSelector),
-    viewportBuilderConnectMask,
-    legendBuilderConnect,
-    withMapConnect({ layers: "layers", "zoom": "zoom", "viewport": "viewport", "groups": "groups" }),
-    // auto trigger connect if not in sync
-    mapPropsStream(
-        props$ => props$.merge(
-            props$
-                .filter(({ editorData = {} }) => !editorData.mapSync)
-                .take(1)
-                .distinctUntilChanged()
-                .do(({ toggleConnection = () => { }, availableDependencies, widgets }) => toggleConnection(availableDependencies, widgets))
-                .ignoreElements()
-        )
-    )
-);
+const builderEnhancer = connect(wizardSelector);
 
-export default builderEnhancer(({ enabled, onClose = () => { }, editorData = {}, exitButton, toggleConnection, availableDependencies = [], dependencies, ...props } = {}) =>
+export default builderEnhancer(({ enabled, onClose = () => { }, editorData = {}, exitButton, ...props } = {}) =>
 
     (<BorderLayout
         header={
@@ -117,8 +98,6 @@ export default builderEnhancer(({ enabled, onClose = () => { }, editorData = {},
                 <Toolbar
                     editorData={editorData}
                     exitButton={exitButton}
-                    toggleConnection={toggleConnection}
-                    availableDependencies={availableDependencies}
                     onClose={onClose} />
                 {get(editorData, "options.propertyName.length") === 0 ? <InfoPopover
                     trigger={false}
@@ -127,5 +106,5 @@ export default builderEnhancer(({ enabled, onClose = () => { }, editorData = {},
                     text={<Message msgId="widgets.builder.errors.checkAtLeastOneAttribute" />} /> : null}
             </BuilderHeader>}
     >
-        {enabled ? <Builder availableDependencies={availableDependencies} editorData={editorData} dependencies={dependencies} {...props} /> : null}
+        {enabled ? <Builder editorData={editorData} {...props} /> : null}
     </BorderLayout>));

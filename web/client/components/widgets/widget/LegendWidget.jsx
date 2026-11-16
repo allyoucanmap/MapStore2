@@ -10,6 +10,8 @@ import React from 'react';
 import emptyLegendState from '../enhancers/emptyLegendState';
 import LegendViewComp from './LegendView';
 import WidgetContainer from './WidgetContainer';
+import EmptyView from '../../misc/EmptyView';
+import Message from '../../I18N/Message';
 
 const LegendView = emptyLegendState()(LegendViewComp);
 
@@ -30,7 +32,9 @@ export default ({
         isDraggable={dataGrid.isDraggable}
         options={props?.options}
     >
-        <LegendView {...props} />
+        {props.noMapConnected
+            ? <EmptyView glyph="list" title={<Message msgId="widgets.errors.noLegendMap" />} description={<Message msgId="widgets.errors.noLegendMapDescription" />} />
+            : <LegendView {...props} />}
     </WidgetContainer>
 
     );
