@@ -39,7 +39,9 @@ import {
     getApplyDimensionOutOfSyncForFilterWidget,
     inactiveInteractionIdsForWidgetSelector,
     isTimelineEnabledForInteractions,
-    widgetsConfig
+    widgetsConfig,
+    getMainMapWidget,
+    getMapWidgets
 } from '../widgets';
 
 import { set } from '../../utils/ImmutableUtils';
@@ -67,6 +69,14 @@ describe('widgets selectors', () => {
         expect(getDashboardWidgetsLayout(state)).toExist();
         expect(getDashboardWidgetsLayout(state)[0]).toExist();
         expect(getDashboardWidgetsLayout(state)[0].title).toBe("TEST");
+    });
+    it('does not render or list the main map entry', () => {
+        const mainMap = { id: 'map', widgetType: 'map', mainMap: true, maps: [{ mapId: 'main' }] };
+        const mapWidget = { id: 'map-w', widgetType: 'map', maps: [{ mapId: 'm1' }] };
+        const state = { widgets: { containers: { [DEFAULT_TARGET]: { widgets: [mainMap, mapWidget] } } } };
+        expect(getVisibleFloatingWidgets(state)).toEqual([mapWidget]);
+        expect(getMapWidgets(state)).toEqual([mapWidget]);
+        expect(getMainMapWidget(state)).toBe(mainMap);
     });
     it('widgetsConfig does not save transient effects', () => {
         const persisted = { id: 'table-filter', appliedFromWidget: 'table-1' };

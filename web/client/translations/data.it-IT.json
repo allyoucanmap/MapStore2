@@ -2334,7 +2334,15 @@
         "filter": {
           "title": "Selettore filtro",
           "caption": "aggiungi selettori filtro dinamici"
+        },
+        "mainMap": {
+          "title": "Interazioni della mappa",
+          "caption": "collega la mappa ai widget"
         }
+      },
+      "typeSections": {
+        "map": "Mappa",
+        "widgets": "Widget"
       },
       "selectWidgetType": "Seleziona il tipo di widget",
       "selectChartType": {

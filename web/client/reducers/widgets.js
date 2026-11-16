@@ -280,7 +280,7 @@ function widgetsReducer(state = emptyState, action) {
     case MAP_CONFIG_LOADED:
         let { widgetsConfig } = (action.config || {});
         if (!isEmpty(widgetsConfig)) {
-            widgetsConfig = cleanMaximizedState(migrateLegacyConnections(convertToCompatibleWidgets(widgetsConfig)));
+            widgetsConfig = cleanMaximizedState(migrateLegacyConnections(convertToCompatibleWidgets(widgetsConfig), undefined, undefined, { mainMap: true }));
             return set(`containers[${DEFAULT_TARGET}]`, {
                 ...widgetsConfig
             }, state);

@@ -10,9 +10,10 @@ import axios from '../../libs/ajax';
 import MockAdapter from 'axios-mock-adapter';
 
 import { testEpic, addTimeoutEpic, TEST_TIMEOUT } from './epicTestUtils';
-import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, zoomToFeatureEpic, applyTransientEffectsOnLoadEpic } from '../interactions';
-import { applyWidgetInteractions, zoomToFilterExtent, zoomToFeature, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
-import { UPDATE_PROPERTY, DELETE, insertWidget, updateWidgetProperty } from '../../actions/widgets';
+import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, zoomToFeatureEpic, applyTransientEffectsOnLoadEpic, mirrorMainMapViewEpic, editMainMapInteractionsEpic } from '../interactions';
+import { applyWidgetInteractions, zoomToFilterExtent, zoomToFeature, editMainMapInteractions, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
+import { changeMapView } from '../../actions/map';
+import { UPDATE_PROPERTY, DELETE, EDIT, insertWidget, updateWidgetProperty } from '../../actions/widgets';
 import { dashboardLoaded } from '../../actions/dashboard';
 import { CHANGE_LAYER_PARAMS, CHANGE_LAYER_PROPERTIES, removeNode } from '../../actions/layers';
 import { TARGET_TYPES } from '../../utils/InteractionUtils';
@@ -1041,6 +1042,59 @@ describe('interactions epics', () => {
                 makeState([makeSenderMap(), makeReceiverTable(), makeFilterWidget()]),
                 done
             );
+        });
+    });
+
+    describe('main map sender', () => {
+        const bbox = { bounds: { minx: -10, miny: -20, maxx: 30, maxy: 40 }, crs: 'EPSG:4326' };
+        const center = { x: 10, y: 10, crs: 'EPSG:4326' };
+        const mainMap = { id: 'map', widgetType: 'map', mainMap: true, selectedMapId: 'main', maps: [{ mapId: 'main' }], interactions: [] };
+
+        it('mirrors the main map view into the main map entry', (done) => {
+            testEpic(
+                mirrorMainMapViewEpic,
+                1,
+                [changeMapView(center, 4, bbox), changeMapView(center, 5, bbox)],
+                (actions) => {
+                    expect(actions.length).toBe(1);
+                    expect(actions[0].type).toBe(UPDATE_PROPERTY);
+                    expect(actions[0].id).toBe('map');
+                    expect(actions[0].key).toBe('maps');
+                    expect(actions[0].mode).toBe('merge');
+                    expect(actions[0].value).toEqual({ mapId: 'main', bbox, center, zoom: 5 });
+                },
+                makeState([mainMap]),
+                done
+            );
+        });
+
+        it('does not mirror without a main map entry', (done) => {
+            testEpic(
+                addTimeoutEpic(mirrorMainMapViewEpic, 400),
+                1,
+                [changeMapView(center, 4, bbox)],
+                (actions) => {
+                    expect(actions[0].type).toBe(TEST_TIMEOUT);
+                },
+                makeState([makeTableWidget()]),
+                done
+            );
+        });
+
+        it('edits the existing main map entry', (done) => {
+            testEpic(editMainMapInteractionsEpic, 1, [editMainMapInteractions()], (actions) => {
+                expect(actions[0].type).toBe(EDIT);
+                expect(actions[0].widget).toBe(mainMap);
+            }, makeState([mainMap]), done);
+        });
+
+        it('creates the main map entry from the main map view', (done) => {
+            const state = { ...makeState([makeTableWidget()]), map: { present: { bbox, center, zoom: 3 } } };
+            testEpic(editMainMapInteractionsEpic, 1, [editMainMapInteractions()], (actions) => {
+                expect(actions[0].type).toBe(EDIT);
+                expect(actions[0].widget.mainMap).toBe(true);
+                expect(actions[0].widget.maps).toEqual([{ mapId: 'main', bbox, center, zoom: 3 }]);
+            }, state, done);
         });
     });
 });

@@ -8,6 +8,7 @@
 
 import isEqual from 'lodash/isEqual';
 import isEmpty from 'lodash/isEmpty';
+import omit from 'lodash/omit';
 
 import {
     extractTraceFromWidgetByNodePath,
@@ -19,6 +20,7 @@ import {
     isMapLayerPath,
     isMapTimeTarget,
     isInteractionSender,
+    isMainMapWidget,
     TARGET_TYPES,
     unplugOrphanZoomToInteractions,
     hasSenderOwnZoomExtent
@@ -590,7 +592,13 @@ const withoutTransient = (filters) => Array.isArray(filters) && filters.some(fil
     ? filters.filter(filter => !filter?.transient)
     : filters;
 
+const MAIN_MAP_VIEW_KEYS = ['bbox', 'center', 'zoom'];
+
 const stripWidgetTransientEffects = (widget) => {
+    // the main map view is mirrored from the map state, it is restored on load
+    if (isMainMapWidget(widget) && widget.maps?.some(map => MAIN_MAP_VIEW_KEYS.some(key => key in map))) {
+        return { ...widget, maps: widget.maps.map(map => omit(map, MAIN_MAP_VIEW_KEYS)) };
+    }
     const interactionFilters = withoutTransient(widget.interactionFilters);
     const charts = widget.charts?.map(chart => {
         const traces = chart.traces?.map(trace => {
@@ -606,7 +614,7 @@ const stripWidgetTransientEffects = (widget) => {
 };
 
 /**
- * Removes the transient effects (e.g. map viewport filters) from the widgets, they are recomputed on load
+ * Removes the transient effects (e.g. map viewport filters) and the mirrored main map view from the widgets, they are recomputed on load
  * @param {object[]} widgets the widgets to save
  * @returns {object[]} the widgets without transient effects, the same array when there is nothing to remove
  */

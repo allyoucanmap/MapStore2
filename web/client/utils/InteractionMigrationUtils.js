@@ -8,10 +8,19 @@
 
 import isEmpty from 'lodash/isEmpty';
 import omit from 'lodash/omit';
-import { TARGET_TYPES, TARGET_EVENT_DATA_TYPES, createLayerConstraint, extractWidgetIdFromNodePath } from './InteractionUtils';
+import {
+    TARGET_TYPES,
+    TARGET_EVENT_DATA_TYPES,
+    MAIN_MAP_WIDGET_ID,
+    MAIN_MAP_ID,
+    createLayerConstraint,
+    createMainMapWidget,
+    extractWidgetIdFromNodePath,
+    isMainMapWidget
+} from './InteractionUtils';
 import { SENDER_DATA_BUILDERS, TARGET_EFFECTS, getSenderSourceIds, isTransientEffectSender, INTERACTION_UPDATES } from './InteractionEffectsUtils';
 
-export const MAIN_MAP_SENDER_ID = 'map';
+export const MAIN_MAP_SENDER_ID = MAIN_MAP_WIDGET_ID;
 
 const LEGACY_WIDGET_PATH_REGEX = /^widgets\["?([^"\]]*)"?\]/;
 const LEGACY_WIDGET_MAP_PATH_REGEX = /^widgets\["?([^"\]]*)"?\]\.maps\["?([^"\]]*)"?\]/;
@@ -20,8 +29,10 @@ const LEGACY_WIDGET_MAP_PATH_REGEX = /^widgets\["?([^"\]]*)"?\]\.maps\["?([^"\]]
 const getLegacyInteractionId = (receiverId, interaction) =>
     `legacy:${receiverId}:${interaction?.targetType}:${interaction?.target?.nodePath}`;
 
+const MAIN_MAP_SOURCE = { senderId: MAIN_MAP_SENDER_ID, mapId: MAIN_MAP_ID };
+
 /**
- * Returns the sender of a receiver legacy connection, the main map when `dependenciesMap` is empty
+ * Returns the sender of a receiver legacy connection, the main map when no path refers to a widget
  * @param {object} widget the receiver widget
  * @returns {object|null} `{ senderId, mapId }`, null if not connected
  */
@@ -29,13 +40,10 @@ export const getLegacyConnectionSource = (widget) => {
     if (!widget?.mapSync) {
         return null;
     }
-    if (isEmpty(widget.dependenciesMap)) {
-        return { senderId: MAIN_MAP_SENDER_ID };
-    }
-    const paths = Object.values(widget.dependenciesMap).filter(path => typeof path === 'string');
+    const paths = Object.values(widget.dependenciesMap || {}).filter(path => typeof path === 'string');
     const [, senderId] = paths.map(path => LEGACY_WIDGET_PATH_REGEX.exec(path)).find(Boolean) || [];
     if (!senderId) {
-        return null;
+        return MAIN_MAP_SOURCE;
     }
     const [, , mapId] = paths.map(path => LEGACY_WIDGET_MAP_PATH_REGEX.exec(path)).find(Boolean) || [];
     return { senderId, ...(mapId ? { mapId } : {}) };
@@ -145,7 +153,11 @@ const MAP_LEGACY_RECEIVER_INTERACTIONS = {
 export const convertMapLegacyConnection = (receiver, sender, source) => {
     const mapId = source?.mapId || sender?.selectedMapId || sender?.maps?.[0]?.mapId;
     const getInteractions = mapId ? MAP_LEGACY_RECEIVER_INTERACTIONS[receiver?.widgetType] : null;
-    const interactions = getInteractions ? getInteractions(receiver, sender, `widgets[${sender.id}].maps[${mapId}]`) : [];
+    // older main map connections have only `mapSync`, which meant the viewport filter
+    const connected = isMainMapWidget(sender) && isEmpty(receiver?.dependenciesMap)
+        ? { ...receiver, dependenciesMap: { viewport: 'viewport' } }
+        : receiver;
+    const interactions = getInteractions ? getInteractions(connected, sender, `widgets[${sender.id}].maps[${mapId}]`) : [];
     return interactions.length
         ? { interactions, receiver: omit(receiver, ['mapSync', 'dependenciesMap']) }
         : null;
@@ -202,19 +214,23 @@ const mergeInteractions = (existing = [], added = []) => {
  * @param {object} config widgets configuration with `widgets`
  * @param {object} [converters] converters by sender widget type
  * @param {object} [effectWriters] effect writers by sender widget type
+ * @param {object} [options] `{ mainMap }` true where a main map exists (map viewer), to convert its connections into the main map entry
  * @returns {object} the converted configuration, the same object when nothing is converted
  */
-export const migrateLegacyConnections = (config, converters = LEGACY_CONNECTION_CONVERTERS, effectWriters = LEGACY_CONNECTION_EFFECT_WRITERS) => {
-    const widgets = config?.widgets;
-    if (!Array.isArray(widgets) || isEmpty(converters)) {
+export const migrateLegacyConnections = (config, converters = LEGACY_CONNECTION_CONVERTERS, effectWriters = LEGACY_CONNECTION_EFFECT_WRITERS, options = {}) => {
+    const configWidgets = config?.widgets;
+    if (!Array.isArray(configWidgets) || isEmpty(converters)) {
         return config;
     }
+    // the main map entry is created only if one of its legacy connections is converted
+    const newMainMap = options.mainMap && !configWidgets.some(isMainMapWidget) ? createMainMapWidget() : null;
+    const widgets = newMainMap ? [...configWidgets, newMainMap] : configWidgets;
     const addedBySender = {};
     const receivers = {};
     widgets.forEach(widget => {
         const source = getLegacyConnectionSource(widget);
-        // the main map is not a sender yet, its connections stay legacy
-        const sender = source && source.senderId !== MAIN_MAP_SENDER_ID
+        // without a main map (dashboards) its connections stay legacy
+        const sender = source && (source.senderId !== MAIN_MAP_SENDER_ID || options.mainMap)
             ? widgets.find(w => w.id === source.senderId)
             : undefined;
         const result = sender ? converters[sender.widgetType]?.(widget, sender, source, widgets) : null;
@@ -237,11 +253,13 @@ export const migrateLegacyConnections = (config, converters = LEGACY_CONNECTION_
     }, receivers[widget.id] || widget);
     return {
         ...config,
-        widgets: widgets.map(widget => {
-            const updated = writeEffects(widget);
-            return addedBySender[widget.id]
-                ? { ...updated, interactions: mergeInteractions(updated.interactions, addedBySender[widget.id]) }
-                : updated;
-        })
+        widgets: widgets
+            .filter(widget => widget !== newMainMap || addedBySender[MAIN_MAP_SENDER_ID])
+            .map(widget => {
+                const updated = writeEffects(widget);
+                return addedBySender[widget.id]
+                    ? { ...updated, interactions: mergeInteractions(updated.interactions, addedBySender[widget.id]) }
+                    : updated;
+            })
     };
 };

@@ -54,8 +54,8 @@ describe('InteractionMigrationUtils', () => {
             expect(getLegacyConnectionSource()).toBe(null);
         });
         it('returns the main map without dependenciesMap', () => {
-            expect(getLegacyConnectionSource({ mapSync: true })).toEqual({ senderId: MAIN_MAP_SENDER_ID });
-            expect(getLegacyConnectionSource({ mapSync: true, dependenciesMap: {} })).toEqual({ senderId: MAIN_MAP_SENDER_ID });
+            expect(getLegacyConnectionSource({ mapSync: true })).toEqual({ senderId: MAIN_MAP_SENDER_ID, mapId: 'main' });
+            expect(getLegacyConnectionSource({ mapSync: true, dependenciesMap: {} })).toEqual({ senderId: MAIN_MAP_SENDER_ID, mapId: 'main' });
         });
         it('returns the sender widget', () => {
             expect(getLegacyConnectionSource(makeConnectedChart())).toEqual({ senderId: TABLE_ID });
@@ -64,8 +64,8 @@ describe('InteractionMigrationUtils', () => {
             const widget = { mapSync: true, dependenciesMap: { viewport: 'widgets["map-w"].maps["map-1"].viewport', zoom: 'widgets["map-w"].maps["map-1"].zoom' } };
             expect(getLegacyConnectionSource(widget)).toEqual({ senderId: 'map-w', mapId: 'map-1' });
         });
-        it('returns null when no path refers to a widget', () => {
-            expect(getLegacyConnectionSource({ mapSync: true, dependenciesMap: { center: 'map.center' } })).toBe(null);
+        it('returns the main map when no path refers to a widget', () => {
+            expect(getLegacyConnectionSource({ mapSync: true, dependenciesMap: { viewport: 'viewport', center: 'center' } })).toEqual({ senderId: MAIN_MAP_SENDER_ID, mapId: 'main' });
         });
     });
 
@@ -300,6 +300,34 @@ describe('InteractionMigrationUtils', () => {
             expect(filter.transient).toBe(true);
             expect(filter.filters[0].body).toContain('INTERSECTS("the_geom"');
             expect(migrateLegacyConnections(migrated)).toBe(migrated);
+        });
+    });
+
+    describe('main map legacy connections', () => {
+        const counter = { id: 'counter-1', widgetType: 'counter', geomProp: 'the_geom', mapSync: true, dependenciesMap: { viewport: 'viewport', center: 'center', zoom: 'zoom' } };
+
+        it('converts them into the main map entry, created when missing, in the map viewer', () => {
+            const migrated = migrateLegacyConnections({ widgets: [counter] }, undefined, undefined, { mainMap: true });
+            const [migratedCounter, mainMap] = migrated.widgets;
+            expect(migratedCounter.mapSync).toNotExist();
+            expect(mainMap.id).toBe(MAIN_MAP_SENDER_ID);
+            expect(mainMap.mainMap).toBe(true);
+            expect(mainMap.interactions.map(i => [i.targetType, i.source.nodePath, i.target.nodePath])).toEqual([
+                ['applySpatialFilter', 'widgets[map].maps[main]', 'widgets[counter-1]']
+            ]);
+            expect(migrateLegacyConnections(migrated, undefined, undefined, { mainMap: true })).toBe(migrated);
+        });
+        it('treats a connection with only mapSync as the viewport filter and reuses the existing main map entry', () => {
+            const existing = { id: MAIN_MAP_SENDER_ID, widgetType: 'map', mainMap: true, maps: [{ mapId: 'main' }], interactions: [] };
+            const migrated = migrateLegacyConnections({ widgets: [existing, { ...counter, dependenciesMap: undefined }] }, undefined, undefined, { mainMap: true });
+            expect(migrated.widgets.length).toBe(2);
+            expect(migrated.widgets[0].interactions.length).toBe(1);
+        });
+        it('keeps them legacy without a main map and adds no entry when nothing is converted', () => {
+            const config = { widgets: [counter] };
+            expect(migrateLegacyConnections(config)).toBe(config);
+            const noGeometry = { widgets: [{ ...counter, geomProp: undefined }] };
+            expect(migrateLegacyConnections(noGeometry, undefined, undefined, { mainMap: true })).toBe(noGeometry);
         });
     });
 });

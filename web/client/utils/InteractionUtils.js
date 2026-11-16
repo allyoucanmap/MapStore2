@@ -35,6 +35,29 @@ export const SENDER_TRIGGER_KEYS = {
     map: ['maps']
 };
 
+export const MAIN_MAP_WIDGET_ID = 'map';
+export const MAIN_MAP_ID = 'main';
+
+/**
+ * Returns true if the widget is the main map entry, the map widget that holds the main map interactions
+ */
+export const isMainMapWidget = (widget) => widget?.mainMap === true && widget?.id === MAIN_MAP_WIDGET_ID;
+
+/**
+ * Creates the main map entry, not rendered, with the main map view mirrored in its only map
+ * @param {object} [view] `{ bbox, center, zoom }` of the main map
+ * @returns {object} the main map widget
+ */
+export const createMainMapWidget = (view = {}) => ({
+    id: MAIN_MAP_WIDGET_ID,
+    widgetType: 'map',
+    mainMap: true,
+    title: 'Map',
+    selectedMapId: MAIN_MAP_ID,
+    maps: [{ mapId: MAIN_MAP_ID, ...view }],
+    interactions: []
+});
+
 /**
  * Returns true if the widget sends interactions to other widgets or layers
  */
@@ -813,6 +836,19 @@ export function generateDynamicFilterWidgetTreeNode(widget) {
  * @param {object} widget the widget object
  * @returns {object} the widget metadata tree node
  */
+// the main map is a target through the map collection, its widget entry is only the source of its interactions
+function generateMainMapSourceTreeNode(widget) {
+    const mapNodes = (widget.maps || []).map(map => ({
+        type: 'element',
+        ...createBaseProperties(widget.title, '1-map', map.mapId)
+    }));
+    return {
+        ...createBaseElementNode(widget, '1-map'),
+        type: 'collection',
+        children: [createBaseCollectionNode("Maps", mapNodes, undefined, "maps")]
+    };
+}
+
 export function generateWidgetTreeNode(widget, options = {}) {
     switch (widget?.widgetType) {
     case "chart":
@@ -822,7 +858,7 @@ export function generateWidgetTreeNode(widget, options = {}) {
     case "counter":
         return generateCounterWidgetTreeNode(widget);
     case "map":
-        return generateMapWidgetTreeNode(widget, options);
+        return isMainMapWidget(widget) ? generateMainMapSourceTreeNode(widget) : generateMapWidgetTreeNode(widget, options);
     case "filter":
         return generateDynamicFilterWidgetTreeNode(widget);
     default:

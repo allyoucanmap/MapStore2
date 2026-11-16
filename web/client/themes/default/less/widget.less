@@ -16,6 +16,9 @@
     @{prop}: (@val/(@fSize*1em));
 };
 #ms-components-theme(@theme-vars) {
+    .ms-widget-selector-map-section {
+        .border-bottom-color-var(@theme-vars[main-border-color]);
+    }
     .widget-container {
         &.selection-active {
             .background-color-var(@theme-vars[main-variant-bg]);
@@ -647,4 +650,14 @@
         font-size: 12px;
         cursor: default;
     }
+}
+
+.ms-widget-selector-map-section {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    padding-bottom: 8px;
+}
+.ms-widget-selector-section-title {
+    font-weight: bold;
+    text-transform: uppercase;
 }

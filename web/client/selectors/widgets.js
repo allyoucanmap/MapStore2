@@ -9,7 +9,7 @@
 import { find, get, castArray, flatten } from 'lodash';
 import { mapSelector } from './map';
 import { getEffectivelyVisibleLayers, getSelectedLayer, layersSelector } from './layers';
-import { generateRootTree, TARGET_TYPES, getChartAxisFromCurrentTimeTargetPath, isAnyLayerPath, isChartAxisDateType, isChartAxisDimensionTarget, isLayerDimensionTarget, isLayerTimeDimensionTarget, isMapTimeTarget } from '../utils/InteractionUtils';
+import { generateRootTree, isMainMapWidget, TARGET_TYPES, getChartAxisFromCurrentTimeTargetPath, isAnyLayerPath, isChartAxisDateType, isChartAxisDimensionTarget, isLayerDimensionTarget, isLayerTimeDimensionTarget, isMapTimeTarget } from '../utils/InteractionUtils';
 import { currentTimeSelector } from './dimension';
 import { pathnameSelector } from './router';
 import { DEFAULT_TARGET, DEPENDENCY_SELECTOR_KEY, LAYERS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
@@ -159,8 +159,21 @@ export const getWidgetInteractionTreeGenerated = createSelector(
  */
 export const getCollapsedState = state => get(state, `widgets.containers[${DEFAULT_TARGET}].collapsed`);
 export const getMaximizedState = state => get(state, `widgets.containers[${DEFAULT_TARGET}].maximized`);
-export const getVisibleFloatingWidgets = createSelector(
+/**
+ * Floating widgets that are rendered, without the main map entry that only holds the main map interactions
+ */
+export const getRenderableFloatingWidgets = createSelector(
     getFloatingWidgets,
+    (widgets) => Array.isArray(widgets) && widgets.some(isMainMapWidget) ? widgets.filter(widget => !isMainMapWidget(widget)) : widgets
+);
+
+/**
+ * Returns the main map entry of the floating widgets, if any
+ */
+export const getMainMapWidget = state => (getFloatingWidgets(state) || []).find(isMainMapWidget);
+
+export const getVisibleFloatingWidgets = createSelector(
+    getRenderableFloatingWidgets,
     getCollapsedState,
     getMaximizedState,
     (widgets, collapsed, maximized) => {
@@ -185,10 +198,10 @@ export const getCollapsedIds = createSelector(
     getCollapsedState,
     (collapsed = {}) => Object.keys(collapsed)
 );
-export const getMapWidgets = state => (getFloatingWidgets(state) || []).filter(({ widgetType } = {}) => widgetType === "map");
+export const getMapWidgets = state => (getFloatingWidgets(state) || []).filter(widget => widget?.widgetType === "map" && !isMainMapWidget(widget));
 export const getTableWidgets = state => (getFloatingWidgets(state) || []).filter(({ widgetType } = {}) => widgetType === "table");
 
-export const getMapWidgetsPerView = state => (getFloatingWidgetsPerView(state) || []).filter(({ widgetType } = {}) => widgetType === "map");
+export const getMapWidgetsPerView = state => (getFloatingWidgetsPerView(state) || []).filter(widget => widget?.widgetType === "map" && !isMainMapWidget(widget));
 export const getTableWidgetsPerView = state => (getFloatingWidgetsPerView(state) || []).filter(({ widgetType } = {}) => widgetType === "table");
 
 /**
@@ -211,21 +224,23 @@ export const availableDependenciesSelector = createSelector(
                 .concat(castArray(tableWidgets).filter(() => pathname.indexOf("viewer") === -1).map(({id}) => `widgets[${id}]`))
     })
 );
-// widgets receiving the map widget viewport or view through its interactions, legends still use the legacy connection
+// widgets receiving the main map or a map widget through their interactions, legends still use the legacy connection
 const MAP_WIDGET_INTERACTION_RECEIVER_TYPES = ['chart', 'table', 'counter', 'map'];
 
 /**
- * Maps the widget in edit mode can connect to with the legacy connect button, tables and map widgets connect through their interactions
+ * Maps the widget in edit mode can connect to with the legacy connect button, only legends still use it
  */
 export const availableDependenciesForEditingWidgetSelector = createSelector(
     getMapWidgetsPerView,
     mapSelector,
     getEditingWidget,
     (ws = [], map = {}, editingWidget) => {
-        const mapWidgets = MAP_WIDGET_INTERACTION_RECEIVER_TYPES.includes(editingWidget?.widgetType) ? [] : ws;
+        if (MAP_WIDGET_INTERACTION_RECEIVER_TYPES.includes(editingWidget?.widgetType)) {
+            return { availableDependencies: [] };
+        }
         return {
             availableDependencies:
-                flatten(mapWidgets
+                flatten(ws
                     .map(({id, maps = []}) => maps.map(({mapId} = {})=> `widgets[${id}].maps[${mapId}].map`)))
                     .concat(castArray(map).map(() => map ? "map" : null))
                     .filter(w => w)

@@ -12,12 +12,14 @@ import {createSelector} from 'reselect';
 import { compose, branch, renderComponent, withProps} from 'recompose';
 
 import {getEditingWidget} from '../../selectors/widgets';
+import { isMainMapWidget } from '../../utils/InteractionUtils';
 
 
 const mapStateToProps = createSelector(
     getEditingWidget,
     (settings) => ({
-        widgetType: settings && settings.widgetType
+        widgetType: settings && settings.widgetType,
+        mainMap: isMainMapWidget(settings)
     })
 );
 
@@ -29,6 +31,7 @@ import CounterBuilder from './CounterBuilder';
 import LegendBuilder from './LegendBuilder';
 import FilterBuilder from './FilterBuilder';
 import WidgetTypeSelector from './WidgetTypeSelector';
+import MainMapInteractionsBuilder from './MainMapInteractionsBuilder';
 const Builders = {
     chart: ChartBuilder,
     text: TextBuilder,
@@ -45,13 +48,16 @@ const Builders = {
 export default compose(
     connect(mapStateToProps),
     withProps(({ typeFilter = () => true, availableDependencies = []}) => ({
-        typeFilter: (w = {}) => typeFilter(w) && !(w.type === 'legend' && availableDependencies.length === 0)
+        // the main map interactions are available only where there is a main map (map viewer)
+        typeFilter: (w = {}) => typeFilter(w)
+            && !(w.type === 'legend' && availableDependencies.length === 0)
+            && !(w.type === 'mainMap' && !availableDependencies.includes('map'))
     })),
     branch(
         ({widgetType} = {}) => !widgetType,
         renderComponent(WidgetTypeSelector),
-        () => ({widgetType, onClose = () => {}, ...props} = {}) => {
-            const Builder = Builders[widgetType];
+        () => ({widgetType, mainMap, onClose = () => {}, ...props} = {}) => {
+            const Builder = mainMap ? MainMapInteractionsBuilder : Builders[widgetType];
             return <Builder {...props} onClose={onClose} widgetType={widgetType} />;
         }
     )

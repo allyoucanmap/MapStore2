@@ -9,6 +9,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import { onEditorChange } from '../../actions/widgets';
+import { editMainMapInteractions } from '../../actions/interactions';
 import Message from '../../components/I18N/Message';
 import BorderLayout from '../../components/layout/BorderLayout';
 import WidgetTypeSelector from '../../components/widgets/builder/WidgetTypeSelector';
@@ -17,7 +18,7 @@ import BuilderHeader from './BuilderHeader';
 const TypeSelector = connect(
     () => ({}),
     {
-        onSelect: (type) => onEditorChange("widgetType", type)
+        onSelect: (type) => type === 'mainMap' ? editMainMapInteractions() : onEditorChange("widgetType", type)
     }
 )(WidgetTypeSelector);
 

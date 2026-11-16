@@ -55,30 +55,57 @@ const DEFAULT_TYPES = [{
     glyph: "filter",
     caption: <Message msgId={'widgets.types.filter.caption'} />,
     className: "ms-widget-selector-filter"
+}, {
+    title: <Message msgId={'widgets.types.mainMap.title'} />,
+    type: "mainMap",
+    section: "map",
+    glyph: "1-map",
+    caption: <Message msgId={'widgets.types.mainMap.caption'} />,
+    className: "ms-widget-selector-main-map"
 }];
 
-const WidgetTypeSelector = ({widgetTypes = DEFAULT_TYPES, typeFilter = () => true, onSelect = () => {}}) => {
+const renderItems = (items, onSelect) => items.map((item, idx) => (
+    <FlexBox key={idx} component="li" gap="lg" classNames={['_interactive', '_padding-sm']} onClick={() => onSelect(item.type)}>
+        <Text fontSize="xl">
+            <Glyphicon glyph={item.glyph}/>
+        </Text>
+        <FlexBox.Fill flexBox column gap="sm">
+            <Text fontSize="md">
+                {item.title}
+            </Text>
+            <Text fontSize="sm" style={{ fontStyle: 'italic' }}>
+                {item.caption}
+            </Text>
+        </FlexBox.Fill>
+    </FlexBox>
+));
 
+const renderSection = (titleMsgId, items, onSelect, className) => (
+    <FlexBox column gap="sm" className={`ms-widget-selector-section ${className}`}>
+        <Text fontSize="sm" className="ms-widget-selector-section-title">
+            <Message msgId={titleMsgId} />
+        </Text>
+        <FlexBox component="ul" column gap="sm">
+            {renderItems(items, onSelect)}
+        </FlexBox>
+    </FlexBox>
+);
+
+const WidgetTypeSelector = ({widgetTypes = DEFAULT_TYPES, typeFilter = () => true, onSelect = () => {}}) => {
     const widgetMenuItems = widgetTypes ? widgetTypes.filter(typeFilter) : [];
+    const mapItems = widgetMenuItems.filter(item => item.section === 'map');
+    // the main map is not a widget type, it gets its own section where it is available
+    if (mapItems.length === 0) {
+        return (
+            <FlexBox component="ul" column gap="sm" classNames={['_padding-md']}>
+                {renderItems(widgetMenuItems, onSelect)}
+            </FlexBox>
+        );
+    }
     return (
-        <FlexBox component="ul" column gap="sm" classNames={['_padding-md']}>
-            {widgetMenuItems.map((item, idx) => {
-                return (
-                    <FlexBox key={idx} component="li" gap="lg" classNames={['_interactive', '_padding-sm']} onClick={() => onSelect(item.type)}>
-                        <Text fontSize="xl">
-                            <Glyphicon glyph={item.glyph}/>
-                        </Text>
-                        <FlexBox.Fill flexBox column gap="sm">
-                            <Text fontSize="md">
-                                {item.title}
-                            </Text>
-                            <Text fontSize="sm" style={{ fontStyle: 'italic' }}>
-                                {item.caption}
-                            </Text>
-                        </FlexBox.Fill>
-                    </FlexBox>
-                );
-            })}
+        <FlexBox column gap="md" classNames={['_padding-md']}>
+            {renderSection('widgets.typeSections.map', mapItems, onSelect, 'ms-widget-selector-map-section')}
+            {renderSection('widgets.typeSections.widgets', widgetMenuItems.filter(item => item.section !== 'map'), onSelect, 'ms-widget-selector-widgets-section')}
         </FlexBox>
     );
 };

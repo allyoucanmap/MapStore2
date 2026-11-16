@@ -2373,7 +2373,15 @@
         "filter": {
           "title": "Filterauswahl",
           "caption": "dynamische Filterauswahl hinzufügen"
+        },
+        "mainMap": {
+          "title": "Karteninteraktionen",
+          "caption": "die Karte mit den Widgets verbinden"
         }
+      },
+      "typeSections": {
+        "map": "Karte",
+        "widgets": "Widgets"
       },
       "selectWidgetType": "Wählen Sie den Widgettyp",
       "selectChartType": {

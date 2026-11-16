@@ -18,7 +18,7 @@ import usePluginItems from '../hooks/usePluginItems';
 import {mapIdSelector} from '../selectors/map';
 import {
     dependenciesSelector,
-    getFloatingWidgets,
+    getRenderableFloatingWidgets,
     getFloatingWidgetsLayout,
     getMaximizedState,
     getVisibleFloatingWidgets,
@@ -55,7 +55,7 @@ compose(
             dependenciesSelector,
             (state) => mapLayoutValuesSelector(state, { right: true}),
             state => state.browser && state.browser.mobile,
-            getFloatingWidgets,
+            getRenderableFloatingWidgets,
             getTblWidgetZoomLoader,
             (id, widgets, layouts, maximized, dependencies, mapLayout, isMobileAgent, dropdownWidgets, recordZoomLoading) => ({
                 id,

@@ -29,6 +29,8 @@ import {
     findNodeById,
     isInteractionSender,
     hasSenderOwnZoomExtent,
+    isMainMapWidget,
+    createMainMapWidget,
     isSenderTriggerKey,
     extractWidgetIdFromNodePath,
     WIDGET_EVENTS_BY_WIDGET_TYPE
@@ -803,6 +805,26 @@ describe('InteractionUtils', () => {
             expect(tableTarget.constraints).toEqual({});
             expect(spatialTargetsOf(generateCounterWidgetTreeNode({ id: 'c', layer, geomProp: 'the_geom' })).length).toBe(1);
             expect(spatialTargetsOf(generateTableWidgetTreeNode({ id: 't', layer })).length).toBe(0);
+        });
+    });
+
+    describe('main map widget', () => {
+        it('is identified by flag and reserved id', () => {
+            const mainMap = createMainMapWidget({ zoom: 3 });
+            expect(isMainMapWidget(mainMap)).toBe(true);
+            expect(mainMap.maps).toEqual([{ mapId: 'main', zoom: 3 }]);
+            expect(mainMap.selectedMapId).toBe('main');
+            expect(isMainMapWidget({ ...mainMap, mainMap: false })).toBe(false);
+            expect(isMainMapWidget({ ...mainMap, id: 'other' })).toBe(false);
+            expect(isMainMapWidget()).toBe(false);
+        });
+        it('is only a source in the tree, never a target', () => {
+            const tree = generateRootTree([createMainMapWidget(), { id: 't', widgetType: 'table', layer: { name: 'l' }, geomProp: 'the_geom' }], [{ id: 'layer-1', name: 'layer-1', type: 'wms', group: 'overlay' }]);
+            expect(findNodeById(tree, 'main').nodePath).toBe('widgets[map].maps[main]');
+            [TARGET_TYPES.APPLY_SPATIAL_FILTER, TARGET_TYPES.APPLY_VIEW_SYNC, TARGET_TYPES.APPLY_ZOOM_TO].forEach(targetType => {
+                const display = getDisplayInteractionTargetTree(tree, { targetType });
+                expect(findNodeById(display, 'main')).toBe(null);
+            });
         });
     });
 

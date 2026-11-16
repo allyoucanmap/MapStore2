@@ -17,9 +17,9 @@ import bbox from '@turf/bbox';
 import xml2js from 'xml2js';
 
 import { getFeatureLayer } from '../api/WFS';
-import { updateWidgetProperty, INSERT, UPDATE, DELETE, UPDATE_PROPERTY, SET_LINKED_DASHBOARD_DATA } from '../actions/widgets';
-import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, ZOOM_TO_FEATURE } from '../actions/interactions';
-import { zoomToExtent } from '../actions/map';
+import { updateWidgetProperty, editWidget, INSERT, UPDATE, DELETE, UPDATE_PROPERTY, SET_LINKED_DASHBOARD_DATA } from '../actions/widgets';
+import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, ZOOM_TO_FEATURE, EDIT_MAIN_MAP_INTERACTIONS } from '../actions/interactions';
+import { zoomToExtent, CHANGE_MAP_VIEW } from '../actions/map';
 import { setCurrentTime } from '../actions/dimension';
 import { REMOVE_NODE, changeLayerProperties, changeLayerParams } from '../actions/layers';
 import { DASHBOARD_LOADED } from '../actions/dashboard';
@@ -34,6 +34,10 @@ import {
     isSenderTriggerKey,
     isMapLayerPath,
     isMapZoomToTarget,
+    isMainMapWidget,
+    createMainMapWidget,
+    MAIN_MAP_WIDGET_ID,
+    MAIN_MAP_ID,
     TARGET_TYPES,
     findAllApplyFiltersForZoomTo
 } from '../utils/InteractionUtils';
@@ -52,6 +56,7 @@ import {
 import { toOGCFilter } from '../utils/FilterUtils';
 import { getWFSLayerName, getWpsUrl } from '../utils/LayersUtils';
 import { getLayerFromId, layersSelector } from '../selectors/layers';
+import { mapSelector } from '../selectors/map';
 import { shouldSkipInteraction } from '../selectors/widgets';
 
 // waits for typing to settle before requesting the extent and moving the map
@@ -406,7 +411,36 @@ export const applyTransientEffectsOnLoadEpic = (action$, store) =>
                 .flatMap(sender => getSenderSourceIds(sender).map(sourceId => applyWidgetInteractions(sender.id, 'floating', sourceId)))
         ));
 
+// the main map moves often, its view is mirrored after the movement settles
+const MAIN_MAP_VIEW_DEBOUNCE = 300;
+
+const getMainMapView = (view = {}) => ({ bbox: view.bbox, center: view.center, zoom: view.zoom });
+
+/**
+ * Mirrors the main map view into the main map entry, so the main map sends its interactions like a map widget
+ */
+export const mirrorMainMapViewEpic = (action$, store) =>
+    action$
+        .ofType(CHANGE_MAP_VIEW)
+        .debounceTime(MAIN_MAP_VIEW_DEBOUNCE)
+        .filter(() => getContainerWidgets(store.getState(), 'floating').some(isMainMapWidget))
+        .map(action => updateWidgetProperty(MAIN_MAP_WIDGET_ID, 'maps', { mapId: MAIN_MAP_ID, ...getMainMapView(action) }, 'merge', 'floating'));
+
+/**
+ * Opens the widget builder on the main map entry, created from the current main map view when missing
+ */
+export const editMainMapInteractionsEpic = (action$, store) =>
+    action$
+        .ofType(EDIT_MAIN_MAP_INTERACTIONS)
+        .map(() => {
+            const state = store.getState();
+            const mainMap = getContainerWidgets(state, 'floating').find(isMainMapWidget);
+            return editWidget(mainMap || createMainMapWidget(getMainMapView(mapSelector(state) || {})));
+        });
+
 export default {
+    mirrorMainMapViewEpic,
+    editMainMapInteractionsEpic,
     applyTransientEffectsOnLoadEpic,
     applyWidgetInteractionsEpic,
     cleanupAndReapplyWidgetInteractionsEpic,

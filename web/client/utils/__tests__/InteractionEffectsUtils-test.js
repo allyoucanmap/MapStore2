@@ -351,6 +351,13 @@ describe('InteractionEffectsUtils', () => {
             expect(chart.charts[0].traces[0].interactionFilters).toEqual([]);
             expect(chart.charts[0].traces[1]).toBe(widgets[1].charts[0].traces[1]);
         });
+        it('removes the mirrored view of the main map entry', () => {
+            const mainMap = { id: 'map', widgetType: 'map', mainMap: true, maps: [{ mapId: 'main', bbox: {}, center: {}, zoom: 3 }], interactions: [{ id: 'i' }] };
+            const [stripped] = stripTransientEffects([mainMap]);
+            expect(stripped.maps).toEqual([{ mapId: 'main' }]);
+            expect(stripped.interactions).toBe(mainMap.interactions);
+            expect(stripTransientEffects([stripped])[0]).toBe(stripped);
+        });
         it('returns the same widgets when there is nothing to remove', () => {
             const widgets = [{ id: 'counter-1', interactionFilters: [persisted] }, { id: 'text-1' }];
             expect(stripTransientEffects(widgets)).toBe(widgets);

@@ -10,6 +10,7 @@
 export const APPLY_WIDGET_INTERACTIONS = 'INTERACTIONS:APPLY_WIDGET_INTERACTIONS';
 export const ZOOM_TO_FILTER_EXTENT = 'INTERACTIONS:ZOOM_TO_FILTER_EXTENT';
 export const ZOOM_TO_FEATURE = 'INTERACTIONS:ZOOM_TO_FEATURE';
+export const EDIT_MAIN_MAP_INTERACTIONS = 'INTERACTIONS:EDIT_MAIN_MAP_INTERACTIONS';
 
 /**
  * Apply the effects of the interactions sent by a widget source (e.g. a filter of a filter widget)
@@ -53,4 +54,11 @@ export const zoomToFeature = (widgetId, target = 'floating', sourceId, feature, 
     feature,
     crs,
     maxZoom
+});
+
+/**
+ * Opens the widget builder on the main map interactions, creating the main map entry if missing
+ */
+export const editMainMapInteractions = () => ({
+    type: EDIT_MAIN_MAP_INTERACTIONS
 });
