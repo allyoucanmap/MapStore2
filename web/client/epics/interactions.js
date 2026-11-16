@@ -62,10 +62,6 @@ const UPDATE_TO_ACTION = {
 
 const toActions = (updates = []) => updates.map(update => UPDATE_TO_ACTION[update?.type]?.(update)).filter(Boolean);
 
-// ============================================================================
-// Zoom to
-// ============================================================================
-
 /**
  * Resolves the actual layer object referenced by a plugged 'applyFilter' interaction,
  * either from the main map or from a dashboard map widget.
@@ -218,8 +214,7 @@ function applyInteractionEffectForZoomTo(interaction, sender, state, targetConta
 // ============================================================================
 
 /**
- * Applies the effects of the plugged interactions of a sender source (e.g. a filter of a filter widget).
- * Zoom-to interactions are applied last, and only on manual trigger or when auto zoom is enabled.
+ * Applies the plugged interactions of a sender source, zoom-to last and only if manual or auto zoom
  */
 export const applyWidgetInteractionsEpic = (action$, store) =>
     action$
@@ -268,10 +263,7 @@ const reapplyAllSendersInteractions = (store, target) => Rx.Observable.defer(() 
 );
 
 /**
- * Keeps the applied effects aligned with widgets and layers:
- * - DELETE: removes interactions targeting the deleted widget and the effects of a deleted sender
- * - REMOVE_NODE: removes interactions targeting the deleted main map layer
- * - INSERT/UPDATE of a sender: removes its effects, then reapplies the interactions of all senders
+ * Cleans effects and interactions of deleted widgets and layers, reapplies senders on insert or update
  */
 export const cleanupAndReapplyWidgetInteractionsEpic = (action$, store) =>
     action$

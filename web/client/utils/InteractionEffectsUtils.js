@@ -26,7 +26,7 @@ import { FILTER_SELECTION_MODES } from '../components/widgets/builder/wizard/fil
 import { getChartAxisDependencyPath, getMapDependencyPath } from './WidgetsUtils';
 
 /**
- * Types of the updates returned by the interaction effects, converted to actions by the interactions epics
+ * Types of the updates returned by the effects, converted to actions by the interactions epics
  */
 export const INTERACTION_UPDATES = {
     LAYER_PROPERTIES: 'layerProperties',
@@ -45,10 +45,6 @@ const widgetPropertyUpdate = (widgetId, key, value, mode, target) => ({
 const currentTimeUpdate = (value) => ({ type: INTERACTION_UPDATES.CURRENT_TIME, value });
 
 const findById = (items = [], id) => id ? items.find(item => item?.id === id) : undefined;
-
-// ============================================================================
-// Filter helpers
-// ============================================================================
 
 // mutates the given (already cloned) layer
 function ensureLayerFilterStructure(layer) {
@@ -90,7 +86,7 @@ function mergeInteractionFilter(existingFilters = [], interaction) {
     return removeEmptyFilters(updateFiltersArray(existingFilters, updatedFilter), interaction, updatedFilter.id);
 }
 
-// returns the cloned widget with its target map layer, matching widgets[id].maps[mapId].layers[layerId]
+// matches widgets[id].maps[mapId].layers[layerId] on a cloned widget
 function findMapWidgetTargetLayer(widget, nodePath) {
     const match = nodePath?.match(/\.maps\[([^\]]+)\]\.layers\[([^\]]+)\]$/);
     if (!match) {
@@ -101,10 +97,6 @@ function findMapWidgetTargetLayer(widget, nodePath) {
     const targetLayer = Array.isArray(targetMap?.layers) ? targetMap.layers.find(layer => layer.id === match[2]) : null;
     return targetLayer ? { updatedWidget, targetLayer } : {};
 }
-
-// ============================================================================
-// Apply filter
-// ============================================================================
 
 function updateChartWidgetWithFilter(widget, interaction, traceObject) {
     const widgetCharts = JSON.parse(JSON.stringify(widget?.charts ?? []));
@@ -171,10 +163,6 @@ export function applyFilterEffect(interaction, { layers, widgets } = {}) {
     return targetWidget ? updateWidgetWithFilterByType(targetWidget, interaction) : null;
 }
 
-// ============================================================================
-// Apply style
-// ============================================================================
-
 /**
  * Returns the update that applies the interaction style to its target layer
  * @param {object} interaction the interaction with its `appliedData`
@@ -200,10 +188,6 @@ export function applyStyleEffect(interaction, { layers, widgets } = {}) {
     targetLayer.style = interaction.appliedData;
     return widgetPropertyUpdate(targetWidget.id, 'maps', updatedWidget.maps);
 }
-
-// ============================================================================
-// Apply dimension
-// ============================================================================
 
 function getMapWidgetDimensionPath(widgetId, nodePath, widgetMaps) {
     const nodePathMatch = nodePath?.match(/(?:^|\.)widgets\[[^\]]+\]\.(maps\[.*)$/);
@@ -259,18 +243,13 @@ export function applyDimensionEffect(interaction, { widgets = [] } = {}) {
 }
 
 /**
- * Effects by target type: (interaction, { layers, widgets }) => update.
- * Zoom-to is excluded because it requests the layer extent.
+ * Effects by target type, zoom-to excluded since it requests the layer extent
  */
 export const TARGET_EFFECTS = {
     [TARGET_TYPES.APPLY_FILTER]: applyFilterEffect,
     [TARGET_TYPES.APPLY_STYLE]: applyStyleEffect,
     [TARGET_TYPES.APPLY_DIMENSION]: applyDimensionEffect
 };
-
-// ============================================================================
-// Senders
-// ============================================================================
 
 function buildFilterWidgetFilterData(filterWidget, filterId) {
     const filter = findById(filterWidget.filters, filterId);
@@ -327,10 +306,6 @@ export const SENDER_SOURCE_IDS = {
  * Returns the source ids of a sender widget
  */
 export const getSenderSourceIds = (widget) => SENDER_SOURCE_IDS[widget?.widgetType]?.(widget) || [];
-
-// ============================================================================
-// Cleanup
-// ============================================================================
 
 function cleanupLayerFilter(layerFilter, senderId) {
     if (!Array.isArray(layerFilter?.filters)) {
@@ -427,7 +402,7 @@ function cleanupChartAxisDimensionsBySender(sender, widgets, targetContainer) {
 /**
  * Returns the updates that remove every effect applied by a sender widget
  * @param {string} senderId the sender widget id
- * @param {object} context `{ layers, widgets, target, sender }`, `sender` is needed when it was already removed from widgets
+ * @param {object} context `{ layers, widgets, target, sender }`, `sender` if already removed from widgets
  */
 export function cleanupEffectsBySenderId(senderId, { layers = [], widgets = [], target = 'floating', sender } = {}) {
     if (!senderId) {
@@ -447,8 +422,7 @@ export function cleanupEffectsBySenderId(senderId, { layers = [], widgets = [], 
 }
 
 /**
- * Returns the updates that reset the effects of interactions deleted while editing.
- * Filter effects are cleaned separately via appliedFromWidget, chart axis dimensions are not.
+ * Returns the updates resetting the chart axis dimensions of interactions deleted while editing
  */
 export function cleanupEffectsOfDeletedInteractions(deletedInteractions = [], { widgets = [] } = {}) {
     return deletedInteractions

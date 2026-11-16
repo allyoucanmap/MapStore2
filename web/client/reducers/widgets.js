@@ -41,6 +41,7 @@ import { DASHBOARD_LOADED, DASHBOARD_RESET } from '../actions/dashboard';
 import set from 'lodash/fp/set';
 import { get, find, omit, mapValues, castArray, isEmpty } from 'lodash';
 import { arrayUpsert, compose, arrayDelete } from '../utils/ImmutableUtils';
+import { migrateLegacyConnections } from '../utils/InteractionMigrationUtils';
 import {
     convertDependenciesMappingForCompatibility as convertToCompatibleWidgets,
     cleanMaximizedState,
@@ -211,7 +212,7 @@ function widgetsReducer(state = emptyState, action) {
     case DASHBOARD_LOADED:
         const { data } = action;
         return set(`containers[${DEFAULT_TARGET}]`, {
-            ...cleanMaximizedState(data)
+            ...cleanMaximizedState(migrateLegacyConnections(data))
         }, state);
     case REFRESH_SECURITY_LAYERS: {
         let newWidgets = state?.containers?.[DEFAULT_TARGET].widgets || [];
@@ -279,7 +280,7 @@ function widgetsReducer(state = emptyState, action) {
     case MAP_CONFIG_LOADED:
         let { widgetsConfig } = (action.config || {});
         if (!isEmpty(widgetsConfig)) {
-            widgetsConfig = cleanMaximizedState(convertToCompatibleWidgets(widgetsConfig));
+            widgetsConfig = cleanMaximizedState(migrateLegacyConnections(convertToCompatibleWidgets(widgetsConfig)));
             return set(`containers[${DEFAULT_TARGET}]`, {
                 ...widgetsConfig
             }, state);
@@ -427,7 +428,7 @@ function widgetsReducer(state = emptyState, action) {
     case SET_LINKED_DASHBOARD_DATA: {
         return set(`containers[${DEFAULT_TARGET}]`, {
             ...state?.containers?.[DEFAULT_TARGET],
-            ...action.data
+            ...migrateLegacyConnections(action.data)
         }, state);
     }
     default:
