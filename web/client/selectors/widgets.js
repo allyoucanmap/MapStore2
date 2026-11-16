@@ -211,8 +211,8 @@ export const availableDependenciesSelector = createSelector(
                 .concat(castArray(tableWidgets).filter(() => pathname.indexOf("viewer") === -1).map(({id}) => `widgets[${id}]`))
     })
 );
-// widgets receiving the map widget viewport through its interactions, map and legend receivers still use the legacy connection
-const MAP_WIDGET_INTERACTION_RECEIVER_TYPES = ['chart', 'table', 'counter'];
+// widgets receiving the map widget viewport or view through its interactions, legends still use the legacy connection
+const MAP_WIDGET_INTERACTION_RECEIVER_TYPES = ['chart', 'table', 'counter', 'map'];
 
 /**
  * Maps the widget in edit mode can connect to with the legacy connect button, tables and map widgets connect through their interactions

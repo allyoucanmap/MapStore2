@@ -11,7 +11,8 @@ import { getPossibleTargetsEditingWidget, TARGET_TYPES } from '../../../../../ut
 import InteractionEditor from '../common/interactions/InteractionsEditor';
 
 const MAP_INTERACTION_TARGET_MSG_IDS = {
-    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'widgets.builder.wizard.viewportFilter'
+    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'widgets.builder.wizard.viewportFilter',
+    [TARGET_TYPES.APPLY_VIEW_SYNC]: 'widgets.builder.wizard.syncMapView'
 };
 
 /**

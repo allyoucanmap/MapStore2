@@ -440,6 +440,15 @@ describe('widgets selectors', () => {
         expect(availableDeps).toExist();
         expect(availableDeps.length).toBe(0);
     });
+    it('availableDependenciesForEditingWidgetSelector does not list map widgets for maps', () => {
+        const stateInput = {
+            widgets: {
+                containers: { [DEFAULT_TARGET]: { widgets: [{ id: "WIDGET", maps: [{ mapId: "MAPS" }], widgetType: "map" }] } },
+                builder: { editor: { widgetType: "map", id: "otherMapId" } }
+            }
+        };
+        expect(availableDependenciesForEditingWidgetSelector(stateInput).availableDependencies).toEqual([]);
+    });
     it('availableDependenciesForEditingWidgetSelector keeps map widgets for legends', () => {
         const stateInput = {
             widgets: {

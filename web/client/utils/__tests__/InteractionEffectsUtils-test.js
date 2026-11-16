@@ -17,6 +17,7 @@ import {
     buildTableWidgetAppliedData,
     getTableWidgetZoomExtentLayers,
     buildMapWidgetAppliedData,
+    applyViewSyncEffect,
     getTargetGeometryAttribute,
     isTransientEffectSender,
     stripTransientEffects,
@@ -314,6 +315,18 @@ describe('InteractionEffectsUtils', () => {
             expect(buildMapWidgetAppliedData(makeMapWidget({ bbox: undefined }), 'm1', interaction, { widgets: [table] })).toBe(null);
             expect(buildMapWidgetAppliedData(makeMapWidget(), 'other-map', interaction, { widgets: [table] })).toBe(null);
             expect(buildMapWidgetAppliedData(makeMapWidget(), 'm1', interaction, { widgets: [{ ...table, geomProp: undefined }] })).toBe(null);
+        });
+        it('sends center and zoom for view sync and moves the target map', () => {
+            const center = { x: 10, y: 20, crs: 'EPSG:4326' };
+            const interaction = { ...makeSpatialInteraction('widgets[map-r].maps[r1].applyZoomTo'), targetType: TARGET_TYPES.APPLY_VIEW_SYNC };
+            const appliedData = buildMapWidgetAppliedData(makeMapWidget({ center, zoom: 5 }), 'm1', interaction, { widgets: [] });
+            expect(appliedData).toEqual({ center, zoom: 5 });
+            expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_VIEW_SYNC]).toBe(applyViewSyncEffect);
+            const receiver = { id: 'map-r', widgetType: 'map', maps: [{ mapId: 'r1' }] };
+            const update = applyViewSyncEffect({ ...interaction, appliedData }, { widgets: [receiver] });
+            expect(update).toEqual({ type: INTERACTION_UPDATES.WIDGET_PROPERTY, widgetId: 'map-r', key: 'maps', value: { mapId: 'r1', center, zoom: 5 }, mode: 'merge' });
+            expect(applyViewSyncEffect({ ...interaction, appliedData: null }, { widgets: [receiver] })).toBe(null);
+            expect(applyViewSyncEffect({ ...interaction, appliedData }, { widgets: [] })).toBe(null);
         });
         it('writes the map effects as transient', () => {
             expect(isTransientEffectSender(makeMapWidget())).toBe(true);

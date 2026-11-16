@@ -12,6 +12,7 @@ import isEmpty from 'lodash/isEmpty';
 import {
     extractTraceFromWidgetByNodePath,
     extractLayerIdFromNodePath,
+    extractMapIdFromNodePath,
     extractWidgetIdFromNodePath,
     isChartAxisDimensionTarget,
     isLayerDimensionTarget,
@@ -251,9 +252,25 @@ export function applyDimensionEffect(interaction, { widgets = [] } = {}) {
 /**
  * Effects by target type, zoom-to excluded since it requests the layer extent
  */
+/**
+ * Returns the update that moves the target map of a map widget to the center and zoom of the sender map
+ * @param {object} interaction the interaction with `appliedData` `{ center, zoom }`
+ * @param {object} context `{ widgets }` widgets of the container
+ */
+export function applyViewSyncEffect(interaction, { widgets } = {}) {
+    const nodePath = interaction?.target?.nodePath;
+    const targetWidget = findById(widgets, extractWidgetIdFromNodePath(nodePath));
+    const mapId = extractMapIdFromNodePath(nodePath);
+    const { center, zoom } = interaction?.appliedData || {};
+    return targetWidget && findMapById(targetWidget.maps, mapId) && center && zoom !== undefined
+        ? widgetPropertyUpdate(targetWidget.id, 'maps', { mapId, center, zoom }, 'merge')
+        : null;
+}
+
 export const TARGET_EFFECTS = {
     [TARGET_TYPES.APPLY_FILTER]: applyFilterEffect,
     [TARGET_TYPES.APPLY_SPATIAL_FILTER]: applyFilterEffect,
+    [TARGET_TYPES.APPLY_VIEW_SYNC]: applyViewSyncEffect,
     [TARGET_TYPES.APPLY_STYLE]: applyStyleEffect,
     [TARGET_TYPES.APPLY_DIMENSION]: applyDimensionEffect
 };
@@ -321,14 +338,18 @@ export function getTargetGeometryAttribute(interaction, widgets = []) {
 }
 
 /**
- * Returns the CQL spatial filter of the map extent on the interaction target geometry, null without extent or geometry
+ * Returns the data a map widget sends: center and zoom for view sync, otherwise the CQL spatial filter of the map extent on the target geometry
  * @param {object} mapWidget the map widget
  * @param {string} mapId the map of the widget sending the extent
  * @param {object} interaction the interaction
  * @param {object} context `{ widgets }` widgets of the container, to read the target geometry attribute
  */
 export function buildMapWidgetAppliedData(mapWidget, mapId, interaction, { widgets } = {}) {
-    const { bounds, crs } = findMapById(mapWidget?.maps, mapId)?.bbox || {};
+    const map = findMapById(mapWidget?.maps, mapId);
+    if (interaction?.targetType === TARGET_TYPES.APPLY_VIEW_SYNC) {
+        return map?.center && map.zoom !== undefined ? { center: map.center, zoom: map.zoom } : null;
+    }
+    const { bounds, crs } = map?.bbox || {};
     const attribute = getTargetGeometryAttribute(interaction, widgets);
     if (!bounds || !crs || !attribute) {
         return null;

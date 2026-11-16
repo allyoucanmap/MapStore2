@@ -2390,6 +2390,7 @@
           "zoomToFilteredBounds": "Zoom sui limiti filtrati",
           "zoomToFeatureExtent": "Zoom sull'estensione dell'elemento",
           "viewportFilter": "Filtro sulla vista della mappa",
+          "syncMapView": "Sincronizza la vista della mappa",
           "errorChart": "Uno o più grafici non sono validi",
           "errorFilter": "Uno o più filtri non sono validi",
           "backToTableOptions": "Torna alle opzioni della tabella",

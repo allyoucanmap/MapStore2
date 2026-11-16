@@ -2429,6 +2429,7 @@
           "zoomToFilteredBounds": "Auf gefilterte Ausdehnung zoomen",
           "zoomToFeatureExtent": "Auf Objektausdehnung zoomen",
           "viewportFilter": "Kartenausschnittfilter",
+          "syncMapView": "Kartenansicht synchronisieren",
           "errorChart": "Mindestens ein Diagramm ist ungültig",
           "errorFilter": "Mindestens ein Filter ist ungültig",
           "backToTableOptions": "Zurück zu den Tabellenoptionen",

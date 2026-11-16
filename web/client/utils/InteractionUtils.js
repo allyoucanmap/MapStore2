@@ -10,7 +10,8 @@ export const DATATYPES = {
     POINT: 'POINT',
     NUMBER: 'NUMBER',
     FEATURE: 'FEATURE',
-    SPATIAL_FILTER: 'SPATIAL_FILTER'
+    SPATIAL_FILTER: 'SPATIAL_FILTER',
+    MAP_VIEW: 'MAP_VIEW'
 };
 
 export const EVENTS = {
@@ -61,7 +62,8 @@ export const TARGET_TYPES = {
     APPLY_DIMENSION: 'applyDimension',
     APPLY_ZOOM_TO: 'applyZoomTo',
     APPLY_ZOOM_TO_FEATURE: 'applyZoomToFeature',
-    APPLY_SPATIAL_FILTER: 'applySpatialFilter'
+    APPLY_SPATIAL_FILTER: 'applySpatialFilter',
+    APPLY_VIEW_SYNC: 'applyViewSync'
 };
 
 // Human-readable labels for target types
@@ -71,7 +73,8 @@ export const TARGET_TYPE_LABELS = {
     [TARGET_TYPES.APPLY_DIMENSION]: 'Apply dimension',
     [TARGET_TYPES.APPLY_ZOOM_TO]: 'Zoom to',
     [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: 'Zoom to feature',
-    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'Apply spatial filter'
+    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'Apply spatial filter',
+    [TARGET_TYPES.APPLY_VIEW_SYNC]: 'Sync map view'
 };
 
 // Glyph icons for target types
@@ -81,7 +84,8 @@ export const TARGET_TYPE_GLYPHS = {
     [TARGET_TYPES.APPLY_DIMENSION]: 'record',
     [TARGET_TYPES.APPLY_ZOOM_TO]: 'zoom-to',
     [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: 'zoom-to',
-    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'filter'
+    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'filter',
+    [TARGET_TYPES.APPLY_VIEW_SYNC]: '1-map'
 };
 
 /**
@@ -98,7 +102,8 @@ export const TARGET_EVENT_DATA_TYPES = {
     [TARGET_TYPES.APPLY_DIMENSION]: DATATYPES.LAYER_DIMENSION,
     [TARGET_TYPES.APPLY_ZOOM_TO]: DATATYPES.ZOOM_TRIGGER,
     [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE]: DATATYPES.ZOOM_TRIGGER,
-    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: DATATYPES.SPATIAL_FILTER
+    [TARGET_TYPES.APPLY_SPATIAL_FILTER]: DATATYPES.SPATIAL_FILTER,
+    [TARGET_TYPES.APPLY_VIEW_SYNC]: DATATYPES.MAP_VIEW
 };
 
 // Events available by widget type
@@ -400,7 +405,7 @@ function createMapZoomToTargetsMetadata() {
  * @param {string} [promotedTitle] label of the node when it replaces its collapsed parents
  * @returns {object} the zoom-to map leaf node
  */
-function createMapZoomToLeafNode(promotedTitle) {
+function createMapZoomToLeafNode(promotedTitle, extraTargets = []) {
     return {
         type: 'element',
         id: TARGET_TYPES.APPLY_ZOOM_TO,
@@ -409,10 +414,17 @@ function createMapZoomToLeafNode(promotedTitle) {
         nodePathMode: 'dot',
         ...(promotedTitle ? { promotedTitle, promotedIcon: '1-map' } : {}),
         interactionMetadata: {
-            targets: createMapZoomToTargetsMetadata()
+            targets: [...createMapZoomToTargetsMetadata(), ...extraTargets]
         }
     };
 }
+
+// only dashboard map widgets follow the view of another map, the main map does not
+const MAP_WIDGET_VIEW_SYNC_TARGET = {
+    targetType: TARGET_TYPES.APPLY_VIEW_SYNC,
+    expectedDataType: DATATYPES.MAP_VIEW,
+    constraints: {}
+};
 
 function createLayerDimensionNodes(layer) {
     const dimensionNodes = [];
@@ -542,7 +554,7 @@ export function generateMapWidgetLayersTree(maps, options = {}, widget) {
             // collapsed single-child collections would otherwise label the zoom node with a generic parent (e.g. Widgets)
             const mapZoomToNode = createMapZoomToLeafNode(widget?.title && maps.length > 1
                 ? `${widget.title} / ${map.name || map.mapId}`
-                : widget?.title || map.name);
+                : widget?.title || map.name, [{ ...MAP_WIDGET_VIEW_SYNC_TARGET }]);
             const baseNode = createBaseElementNode(map, '1-map');
             return {
                 ...baseNode,
@@ -1016,7 +1028,8 @@ export function promoteMapZoomToNodes(node) {
     return node;
 }
 
-const isZoomTargetType = (targetType) => targetType === TARGET_TYPES.APPLY_ZOOM_TO || targetType === TARGET_TYPES.APPLY_ZOOM_TO_FEATURE;
+const MAP_NODE_TARGET_TYPES = [TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, TARGET_TYPES.APPLY_VIEW_SYNC];
+const isZoomTargetType = (targetType) => MAP_NODE_TARGET_TYPES.includes(targetType);
 
 export function getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType, excludedNodeId) {
     const filteredTree = filterTreeWithTarget(excludeTreeNode(interactionTree, excludedNodeId), target) || { children: [] };
@@ -1102,13 +1115,13 @@ export function getPossibleTargetsEditingWidget(widgetType, layerInvolved) {
         }];
     }
     if (widgetType === 'map') {
-        return [{
-            title: TARGET_TYPE_LABELS[TARGET_TYPES.APPLY_SPATIAL_FILTER],
-            targetType: TARGET_TYPES.APPLY_SPATIAL_FILTER,
-            glyph: TARGET_TYPE_GLYPHS[TARGET_TYPES.APPLY_SPATIAL_FILTER],
-            expectedDataType: TARGET_EVENT_DATA_TYPES[TARGET_TYPES.APPLY_SPATIAL_FILTER],
+        return [TARGET_TYPES.APPLY_SPATIAL_FILTER, TARGET_TYPES.APPLY_VIEW_SYNC].map(targetType => ({
+            title: TARGET_TYPE_LABELS[targetType],
+            targetType,
+            glyph: TARGET_TYPE_GLYPHS[targetType],
+            expectedDataType: TARGET_EVENT_DATA_TYPES[targetType],
             constraints: {}
-        }];
+        }));
     }
     return [];
 }

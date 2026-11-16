@@ -268,11 +268,27 @@ describe('InteractionMigrationUtils', () => {
             const { interactions } = convertMapLegacyConnection(chart, mapWidget, source);
             expect(interactions.map(i => i.target.nodePath)).toEqual([`widgets[${CHART_ID}].charts[c1].traces[t1]`]);
         });
-        it('keeps map, legend and connections without geometry or viewport legacy', () => {
+        it('keeps legend and connections without geometry, viewport or view legacy', () => {
             expect(convertMapLegacyConnection({ ...counter, geomProp: undefined }, mapWidget, source)).toBe(null);
             expect(convertMapLegacyConnection({ ...counter, widgetType: 'map' }, mapWidget, source)).toBe(null);
             expect(convertMapLegacyConnection({ ...counter, widgetType: 'legend' }, mapWidget, source)).toBe(null);
             expect(convertMapLegacyConnection({ ...counter, dependenciesMap: { layers: 'widgets[map-w].maps[m1].layers' } }, mapWidget, source)).toBe(null);
+        });
+        it('converts a map receiver following center and zoom into view sync on each of its maps', () => {
+            const mapReceiver = {
+                id: 'map-r',
+                widgetType: 'map',
+                maps: [{ mapId: 'r1' }, { mapId: 'r2' }],
+                mapSync: true,
+                dependenciesMap: { center: 'widgets[map-w].maps[m1].center', zoom: 'widgets[map-w].maps[m1].zoom' }
+            };
+            const { interactions, receiver } = convertMapLegacyConnection(mapReceiver, mapWidget, source);
+            expect(interactions.map(i => [i.targetType, i.target.nodePath])).toEqual([
+                ['applyViewSync', 'widgets[map-r].maps[r1].applyZoomTo'],
+                ['applyViewSync', 'widgets[map-r].maps[r2].applyZoomTo']
+            ]);
+            expect(interactions[0].source.nodePath).toBe('widgets[map-w].maps[m1]');
+            expect(receiver.dependenciesMap).toNotExist();
         });
         it('migrates the connection and writes the viewport filter as transient', () => {
             const migrated = migrateLegacyConnections({ widgets: [mapWidget, counter] });

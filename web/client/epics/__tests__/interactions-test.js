@@ -983,6 +983,36 @@ describe('interactions epics', () => {
             }, makeState([makeSenderMap(), makeReceiverTable()]));
         });
 
+        it('syncs the view of a connected map widget, skipping it when already in place', (done) => {
+            const RECEIVER_ID = 'map-widget-2';
+            const center = { x: 10, y: 20, crs: 'EPSG:4326' };
+            const syncInteraction = {
+                id: 'map-sync-1',
+                plugged: true,
+                targetType: TARGET_TYPES.APPLY_VIEW_SYNC,
+                source: { nodePath: `widgets[${MAP_WIDGET_ID}].maps[${MAP_ID}]` },
+                target: { nodePath: `widgets[${RECEIVER_ID}].maps[r1].applyZoomTo` }
+            };
+            const sender = makeMapWidget({ maps: [{ ...makeMapWidget().maps[0], center, zoom: 6 }], interactions: [syncInteraction] });
+            const receiver = (map = {}) => ({ id: RECEIVER_ID, widgetType: 'map', maps: [{ mapId: 'r1', ...map }] });
+            testEpic(applyWidgetInteractionsEpic, 1, [applyWidgetInteractions(MAP_WIDGET_ID, 'floating', MAP_ID)], (actions) => {
+                expect(actions[0].type).toBe(UPDATE_PROPERTY);
+                expect(actions[0].id).toBe(RECEIVER_ID);
+                expect(actions[0].mode).toBe('merge');
+                expect(actions[0].value).toEqual({ mapId: 'r1', center, zoom: 6 });
+                testEpic(
+                    addTimeoutEpic(applyWidgetInteractionsEpic, 20),
+                    1,
+                    [applyWidgetInteractions(MAP_WIDGET_ID, 'floating', MAP_ID)],
+                    (next) => {
+                        expect(next[0].type).toBe(TEST_TIMEOUT);
+                    },
+                    makeState([sender, receiver({ center: { x: 10 + 1e-9, y: 20, crs: 'EPSG:4326' }, zoom: 6 })]),
+                    done
+                );
+            }, makeState([sender, receiver({ center: { x: 0, y: 0, crs: 'EPSG:4326' }, zoom: 2 })]));
+        });
+
         it('reapplies on map widget updates', (done) => {
             testEpic(
                 applyOnSenderPropertyChangeEpic,

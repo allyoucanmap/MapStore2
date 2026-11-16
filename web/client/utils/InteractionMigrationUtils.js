@@ -112,22 +112,31 @@ export const convertTableLegacyConnection = (receiver, sender, source, widgets) 
         : null;
 };
 
-// viewport only, center and zoom sync of map receivers is converted with APPLY_VIEW_SYNC, legends stay legacy until the legend phase
+const readsLegacyKey = (receiver, key) => typeof receiver?.dependenciesMap?.[key] === 'string';
+
+// legends stay legacy until the legend phase
 const MAP_LEGACY_RECEIVER_INTERACTIONS = {
-    counter: (receiver, sender, sourceNodePath) => receiver.geomProp
+    counter: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'viewport') && receiver.geomProp
         ? [legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER, `widgets[${receiver.id}]`, null, sourceNodePath)]
         : [],
-    table: (receiver, sender, sourceNodePath) => receiver.geomProp
+    table: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'viewport') && receiver.geomProp
         ? [legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER, `widgets[${receiver.id}]`, null, sourceNodePath)]
         : [],
-    chart: (receiver, sender, sourceNodePath) => (receiver.charts || []).flatMap(chart => (chart.traces || [])
-        .filter(trace => trace?.geomProp)
-        .map(trace => legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER,
-            `widgets[${receiver.id}].charts[${chart.chartId || chart.id}].traces[${trace.id}]`, null, sourceNodePath)))
+    chart: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'viewport')
+        ? (receiver.charts || []).flatMap(chart => (chart.traces || [])
+            .filter(trace => trace?.geomProp)
+            .map(trace => legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER,
+                `widgets[${receiver.id}].charts[${chart.chartId || chart.id}].traces[${trace.id}]`, null, sourceNodePath)))
+        : [],
+    // the old connection moved the selected map, each map of the receiver follows the sender map now
+    map: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'center') || readsLegacyKey(receiver, 'zoom')
+        ? (receiver.maps || []).map(map => legacyInteraction(sender, TARGET_TYPES.APPLY_VIEW_SYNC,
+            `widgets[${receiver.id}].maps[${map.mapId}].${TARGET_TYPES.APPLY_ZOOM_TO}`, null, sourceNodePath))
+        : []
 };
 
 /**
- * Converts a receiver connected to the viewport of a map widget into spatial filter interactions of the map widget
+ * Converts a receiver connected to a map widget into interactions of the map widget, spatial filter or view sync
  * @param {object} receiver the connected receiver widget
  * @param {object} sender the map widget
  * @param {object} source the legacy connection source, with the `mapId` of the connected map
@@ -135,8 +144,7 @@ const MAP_LEGACY_RECEIVER_INTERACTIONS = {
  */
 export const convertMapLegacyConnection = (receiver, sender, source) => {
     const mapId = source?.mapId || sender?.selectedMapId || sender?.maps?.[0]?.mapId;
-    const readsViewport = typeof receiver?.dependenciesMap?.viewport === 'string';
-    const getInteractions = mapId && readsViewport ? MAP_LEGACY_RECEIVER_INTERACTIONS[receiver.widgetType] : null;
+    const getInteractions = mapId ? MAP_LEGACY_RECEIVER_INTERACTIONS[receiver?.widgetType] : null;
     const interactions = getInteractions ? getInteractions(receiver, sender, `widgets[${sender.id}].maps[${mapId}]`) : [];
     return interactions.length
         ? { interactions, receiver: omit(receiver, ['mapSync', 'dependenciesMap']) }

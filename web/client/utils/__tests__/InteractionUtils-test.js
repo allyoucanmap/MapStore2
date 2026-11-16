@@ -821,10 +821,10 @@ describe('InteractionUtils', () => {
             expect(targets[0].constraints.layer).toExist();
             expect(getPossibleTargetsEditingWidget('table')[0].constraints).toEqual({});
         });
-        it('returns the map widget spatial filter target without layer constraint', () => {
-            const [target] = getPossibleTargetsEditingWidget('map');
-            expect(target.targetType).toBe(TARGET_TYPES.APPLY_SPATIAL_FILTER);
-            expect(target.constraints).toEqual({});
+        it('returns the map widget spatial filter and view sync targets without layer constraint', () => {
+            const targets = getPossibleTargetsEditingWidget('map');
+            expect(targets.map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_SPATIAL_FILTER, TARGET_TYPES.APPLY_VIEW_SYNC]);
+            expect(targets.every(t => Object.keys(t.constraints).length === 0)).toBe(true);
         });
         it('returns no targets for widgets that are not senders', () => {
             expect(getPossibleTargetsEditingWidget('chart')).toEqual([]);
@@ -859,6 +859,22 @@ describe('InteractionUtils', () => {
                 expect(zoomNode.icon).toBe('1-map');
                 expect(zoomNode.nodePath).toBe('widgets[map-w].maps[m1].applyZoomTo');
             });
+        });
+
+        it('offers view sync on map widget maps only, not on the main map', () => {
+            const mapWidget = { id: 'map-w', widgetType: 'map', title: 'States Map', maps: [{ mapId: 'm1', name: 'Map 1', layers: [] }] };
+            const rootTree = generateRootTree([mapWidget], mapZoomLayers);
+            const display = getDisplayInteractionTargetTree(rootTree, { targetType: TARGET_TYPES.APPLY_VIEW_SYNC });
+            const paths = [];
+            const collect = node => {
+                if (node?.nodePath) {
+                    paths.push(node.nodePath);
+                }
+                (node?.children || []).forEach(collect);
+            };
+            collect(display);
+            expect(paths).toInclude('widgets[map-w].maps[m1].applyZoomTo');
+            expect(paths).toExclude('map.applyZoomTo');
         });
 
         it('labels each map of a multi map widget zoom node with widget and map names', () => {

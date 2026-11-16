@@ -75,7 +75,18 @@ const UPDATE_TO_ACTION = {
 const toActions = (updates = []) => updates.map(update => UPDATE_TO_ACTION[update?.type]?.(update)).filter(Boolean);
 
 // re-applying unchanged effects would make every receiver fetch again, e.g. on each map widget update
+// the receiving map emits its own view change with rounding differences, a tolerance avoids sync loops
+const VIEW_TOLERANCE = 1e-6;
+const isSameMapValue = (map = {}, value = {}) => Object.keys(value).filter(key => key !== 'mapId').every(key => key === 'center'
+    ? Math.abs((map.center?.x ?? NaN) - value.center?.x) < VIEW_TOLERANCE && Math.abs((map.center?.y ?? NaN) - value.center?.y) < VIEW_TOLERANCE
+    : isEqual(map[key], value[key]));
+
 const isNoOpUpdate = (update, state) => {
+    if (update?.type === INTERACTION_UPDATES.WIDGET_PROPERTY && update.mode === 'merge' && update.key === 'maps') {
+        const widget = getContainerWidgets(state, update.target || 'floating').find(w => w.id === update.widgetId);
+        const map = widget?.maps?.find(m => m.mapId === update.value?.mapId);
+        return !!map && isSameMapValue(map, update.value);
+    }
     if (update?.type === INTERACTION_UPDATES.WIDGET_PROPERTY && update.mode !== 'merge') {
         const widget = getContainerWidgets(state, update.target || 'floating').find(w => w.id === update.widgetId);
         return !!widget && isEqual(get(widget, update.key), update.value);
