@@ -7,6 +7,7 @@
  */
 
 import isEqual from 'lodash/isEqual';
+import isEmpty from 'lodash/isEmpty';
 
 import {
     extractTraceFromWidgetByNodePath,
@@ -20,7 +21,8 @@ import {
     TARGET_TYPES,
     unplugOrphanZoomToInteractions
 } from './InteractionUtils';
-import { defaultLayerFilter } from './FilterUtils';
+import { defaultLayerFilter, toCQLFilter } from './FilterUtils';
+import { composeFilterObject } from '../components/widgets/enhancers/utils';
 import { processFilterToCQL, buildExcludeCQLFilter, buildDefaultCQLFilter } from './FilterEventUtils';
 import { FILTER_SELECTION_MODES } from '../components/widgets/builder/wizard/filter/FilterDataTab/constants';
 import { getChartAxisDependencyPath, getMapDependencyPath } from './WidgetsUtils';
@@ -289,17 +291,30 @@ export function buildFilterWidgetAppliedData(filterWidget, filterId, interaction
 }
 
 /**
+ * Returns the CQL filter a table widget sends, composed of its configured filter and column filters
+ */
+export function buildTableWidgetAppliedData(tableWidget) {
+    const filterObj = composeFilterObject(tableWidget?.filter, tableWidget?.quickFilters, tableWidget?.options);
+    const body = isEmpty(filterObj) ? null : toCQLFilter(filterObj);
+    return typeof body === 'string' && body && body !== 'INCLUDE'
+        ? { format: 'cql', version: '1.0.0', body }
+        : null;
+}
+
+/**
  * Data builders by sender widget type: (widget, sourceId, interaction) => appliedData
  */
 export const SENDER_DATA_BUILDERS = {
-    filter: buildFilterWidgetAppliedData
+    filter: buildFilterWidgetAppliedData,
+    table: buildTableWidgetAppliedData
 };
 
 /**
  * Source ids by sender widget type: the sub-elements of the sender that emit interactions
  */
 export const SENDER_SOURCE_IDS = {
-    filter: (widget) => (widget.filters || []).map(f => f.id)
+    filter: (widget) => (widget.filters || []).map(f => f.id),
+    table: (widget) => widget.id ? [widget.id] : []
 };
 
 /**

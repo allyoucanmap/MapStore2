@@ -8,9 +8,9 @@
 import expect from 'expect';
 
 import { testEpic, addTimeoutEpic, TEST_TIMEOUT } from './epicTestUtils';
-import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic } from '../interactions';
-import { applyWidgetInteractions, zoomToFilterExtent } from '../../actions/interactions';
-import { UPDATE_PROPERTY, DELETE, insertWidget } from '../../actions/widgets';
+import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic } from '../interactions';
+import { applyWidgetInteractions, zoomToFilterExtent, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
+import { UPDATE_PROPERTY, DELETE, insertWidget, updateWidgetProperty } from '../../actions/widgets';
 import { CHANGE_LAYER_PARAMS, CHANGE_LAYER_PROPERTIES, removeNode } from '../../actions/layers';
 import { TARGET_TYPES } from '../../utils/InteractionUtils';
 
@@ -683,6 +683,72 @@ describe('interactions epics', () => {
                     expect(actions[0].value).toBe(null);
                 },
                 state,
+                done
+            );
+        });
+    });
+
+    describe('table sender', () => {
+        const tableInteraction = {
+            id: 'table-int-1',
+            plugged: true,
+            targetType: 'applyFilter',
+            source: { nodePath: `root.widgets[${TABLE_WIDGET_ID}]` },
+            target: { nodePath: `root.widgets[${CHART_WIDGET_ID}].charts[${CHART_ID}].traces[${TRACE_ID}]` }
+        };
+        const makeSenderTable = () => makeTableWidget({
+            options: { propertyName: ['STATE_NAME'] },
+            quickFilters: { STATE_NAME: { rawValue: 'Arizona', value: 'Arizona', operator: 'ilike', type: 'string', attribute: 'STATE_NAME' } },
+            interactions: [tableInteraction]
+        });
+
+        it('applies the table column filter to the target chart trace', (done) => {
+            testEpic(
+                applyWidgetInteractionsEpic,
+                1,
+                [applyWidgetInteractions(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID)],
+                (actions) => {
+                    expect(actions[0].type).toBe(UPDATE_PROPERTY);
+                    expect(actions[0].id).toBe(CHART_WIDGET_ID);
+                    expect(actions[0].key).toBe('charts');
+                    const [filter] = actions[0].value[0].traces[0].interactionFilters;
+                    expect(filter.id).toBe('table-int-1');
+                    expect(filter.appliedFromWidget).toBe(TABLE_WIDGET_ID);
+                    expect(filter.filters[0].body).toContain('STATE_NAME');
+                },
+                makeState([makeSenderTable(), makeChartWidget()]),
+                done
+            );
+        });
+
+        it('reapplies the table interactions when a column filter changes', (done) => {
+            testEpic(
+                applyOnSenderPropertyChangeEpic,
+                1,
+                [updateWidgetProperty(TABLE_WIDGET_ID, 'quickFilters.STATE_NAME', {})],
+                (actions) => {
+                    expect(actions[0].type).toBe(APPLY_WIDGET_INTERACTIONS);
+                    expect(actions[0].widgetId).toBe(TABLE_WIDGET_ID);
+                    expect(actions[0].sourceId).toBe(TABLE_WIDGET_ID);
+                },
+                makeState([makeSenderTable()]),
+                done
+            );
+        });
+
+        it('does not reapply for other properties or non sender widgets', (done) => {
+            testEpic(
+                addTimeoutEpic(applyOnSenderPropertyChangeEpic, 20),
+                1,
+                [
+                    updateWidgetProperty(TABLE_WIDGET_ID, 'options.columnSettings', {}),
+                    updateWidgetProperty(CHART_WIDGET_ID, 'filter', {})
+                ],
+                (actions) => {
+                    expect(actions.length).toBe(1);
+                    expect(actions[0].type).toBe(TEST_TIMEOUT);
+                },
+                makeState([makeSenderTable(), makeChartWidget()]),
                 done
             );
         });

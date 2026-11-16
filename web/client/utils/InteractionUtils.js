@@ -23,12 +23,25 @@ export const EVENTS = {
 /**
  * Widget types that send interactions; extended as each widget type adopts the interactions model
  */
-export const INTERACTION_SENDER_TYPES = ['filter'];
+export const INTERACTION_SENDER_TYPES = ['filter', 'table'];
+
+/**
+ * Widget properties, by sender type, whose update reapplies the sender interactions
+ */
+export const SENDER_TRIGGER_KEYS = {
+    table: ['quickFilters', 'filter']
+};
 
 /**
  * Returns true if the widget sends interactions to other widgets or layers
  */
 export const isInteractionSender = (widget) => INTERACTION_SENDER_TYPES.includes(widget?.widgetType);
+
+/**
+ * Returns true if updating the property key (e.g. `quickFilters.NAME`) reapplies the sender interactions
+ */
+export const isSenderTriggerKey = (widget, key) => typeof key === 'string'
+    && (SENDER_TRIGGER_KEYS[widget?.widgetType] || []).some(triggerKey => key === triggerKey || key.startsWith(`${triggerKey}.`));
 
 export const TARGET_TYPES = {
     APPLY_FILTER: 'applyFilter',

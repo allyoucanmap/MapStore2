@@ -27,6 +27,7 @@ import {
     findAllApplyFiltersForZoomTo,
     findNodeById,
     isInteractionSender,
+    isSenderTriggerKey,
     extractWidgetIdFromNodePath,
     WIDGET_EVENTS_BY_WIDGET_TYPE
 } from '../InteractionUtils';
@@ -1203,8 +1204,19 @@ describe('InteractionUtils', () => {
     describe('senders', () => {
         it('isInteractionSender', () => {
             expect(isInteractionSender({ widgetType: 'filter' })).toBe(true);
-            expect(isInteractionSender({ widgetType: 'table' })).toBe(false);
+            expect(isInteractionSender({ widgetType: 'table' })).toBe(true);
+            expect(isInteractionSender({ widgetType: 'chart' })).toBe(false);
             expect(isInteractionSender()).toBe(false);
+        });
+        it('isSenderTriggerKey', () => {
+            const table = { widgetType: 'table' };
+            expect(isSenderTriggerKey(table, 'quickFilters')).toBe(true);
+            expect(isSenderTriggerKey(table, 'quickFilters.STATE_NAME')).toBe(true);
+            expect(isSenderTriggerKey(table, 'filter')).toBe(true);
+            expect(isSenderTriggerKey(table, 'filterFields')).toBe(false);
+            expect(isSenderTriggerKey(table, 'options.columnSettings')).toBe(false);
+            expect(isSenderTriggerKey({ widgetType: 'chart' }, 'filter')).toBe(false);
+            expect(isSenderTriggerKey(table)).toBe(false);
         });
         it('extractWidgetIdFromNodePath', () => {
             expect(extractWidgetIdFromNodePath('root.widgets[w-1].filters[f-1]')).toBe('w-1');

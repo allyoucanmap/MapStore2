@@ -15,7 +15,7 @@ import bbox from '@turf/bbox';
 import xml2js from 'xml2js';
 
 import { getFeatureLayer } from '../api/WFS';
-import { updateWidgetProperty, INSERT, UPDATE, DELETE } from '../actions/widgets';
+import { updateWidgetProperty, INSERT, UPDATE, DELETE, UPDATE_PROPERTY } from '../actions/widgets';
 import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT } from '../actions/interactions';
 import { zoomToExtent } from '../actions/map';
 import { setCurrentTime } from '../actions/dimension';
@@ -26,6 +26,7 @@ import {
     extractMapIdFromNodePath,
     extractWidgetIdFromNodePath,
     isInteractionSender,
+    isSenderTriggerKey,
     isMapLayerPath,
     TARGET_TYPES,
     findAllApplyFiltersForZoomTo
@@ -297,7 +298,21 @@ export const cleanupAndReapplyWidgetInteractionsEpic = (action$, store) =>
             ])).concat(reapplyAllSendersInteractions(store, target));
         });
 
+/**
+ * Reapplies the interactions of a sender when one of its trigger properties is updated
+ */
+export const applyOnSenderPropertyChangeEpic = (action$, store) =>
+    action$
+        .ofType(UPDATE_PROPERTY)
+        .mergeMap(({ id, key, target = 'floating' }) => {
+            const sender = getContainerWidgets(store.getState(), target).find(w => w.id === id);
+            return isSenderTriggerKey(sender, key)
+                ? Rx.Observable.from(getSenderSourceIds(sender).map(sourceId => applyWidgetInteractions(id, target, sourceId)))
+                : Rx.Observable.empty();
+        });
+
 export default {
     applyWidgetInteractionsEpic,
-    cleanupAndReapplyWidgetInteractionsEpic
+    cleanupAndReapplyWidgetInteractionsEpic,
+    applyOnSenderPropertyChangeEpic
 };

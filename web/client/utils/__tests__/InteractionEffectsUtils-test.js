@@ -14,6 +14,7 @@ import {
     applyStyleEffect,
     applyDimensionEffect,
     buildFilterWidgetAppliedData,
+    buildTableWidgetAppliedData,
     getSenderSourceIds,
     cleanupEffectsBySenderId,
     cleanupInteractionsAfterLayerDeletion,
@@ -61,14 +62,17 @@ describe('InteractionEffectsUtils', () => {
             expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_DIMENSION]).toBe(applyDimensionEffect);
             expect(TARGET_EFFECTS[TARGET_TYPES.APPLY_ZOOM_TO]).toNotExist();
         });
-        it('SENDER_DATA_BUILDERS has only the filter widget', () => {
-            expect(Object.keys(SENDER_DATA_BUILDERS)).toEqual(['filter']);
+        it('SENDER_DATA_BUILDERS has the filter and table widgets', () => {
+            expect(Object.keys(SENDER_DATA_BUILDERS)).toEqual(['filter', 'table']);
             expect(SENDER_DATA_BUILDERS.filter).toBe(buildFilterWidgetAppliedData);
+            expect(SENDER_DATA_BUILDERS.table).toBe(buildTableWidgetAppliedData);
         });
         it('getSenderSourceIds', () => {
             expect(getSenderSourceIds(makeFilterWidget())).toEqual([FILTER_ID]);
             expect(getSenderSourceIds({ widgetType: 'filter' })).toEqual([]);
+            expect(getSenderSourceIds({ id: TABLE_ID, widgetType: 'table' })).toEqual([TABLE_ID]);
             expect(getSenderSourceIds({ widgetType: 'table' })).toEqual([]);
+            expect(getSenderSourceIds({ id: 'c', widgetType: 'chart' })).toEqual([]);
             expect(getSenderSourceIds()).toEqual([]);
         });
     });
@@ -105,6 +109,37 @@ describe('InteractionEffectsUtils', () => {
             expect(buildFilterWidgetAppliedData(makeFilterWidget({ selections: { [FILTER_ID]: [{ value: '2020-01-01' }] } }), FILTER_ID, interaction)).toBe('2020-01-01');
             expect(buildFilterWidgetAppliedData(makeFilterWidget({ selections: { [FILTER_ID]: ['2021'] } }), FILTER_ID, interaction)).toBe('2021');
             expect(buildFilterWidgetAppliedData(makeFilterWidget({ selections: {} }), FILTER_ID, interaction)).toBe(null);
+        });
+    });
+
+    describe('buildTableWidgetAppliedData', () => {
+        const options = { propertyName: ['STATE_NAME', 'PERSONS'] };
+        const quickFilters = { STATE_NAME: { rawValue: 'Arizona', value: 'Arizona', operator: 'ilike', type: 'string', attribute: 'STATE_NAME' } };
+        const filter = {
+            groupFields: [{ id: 1, logic: 'OR', index: 0 }],
+            filterFields: [{ rowId: 1, groupId: 1, attribute: 'PERSONS', operator: '>', value: 1000, type: 'number' }]
+        };
+        it('returns the CQL of the column filters', () => {
+            const data = buildTableWidgetAppliedData({ quickFilters, options });
+            expect(data.format).toBe('cql');
+            expect(data.version).toBe('1.0.0');
+            expect(data.body).toContain('STATE_NAME');
+        });
+        it('returns the CQL of the configured filter', () => {
+            const data = buildTableWidgetAppliedData({ filter, options });
+            expect(data.body).toContain('PERSONS');
+        });
+        it('combines configured filter and column filters', () => {
+            const data = buildTableWidgetAppliedData({ filter, quickFilters, options });
+            expect(data.body).toContain('PERSONS');
+            expect(data.body).toContain('STATE_NAME');
+        });
+        it('ignores column filters of hidden columns', () => {
+            expect(buildTableWidgetAppliedData({ quickFilters, options: { propertyName: ['PERSONS'] } })).toBe(null);
+        });
+        it('returns null without filters', () => {
+            expect(buildTableWidgetAppliedData({ options })).toBe(null);
+            expect(buildTableWidgetAppliedData()).toBe(null);
         });
     });
 
@@ -197,10 +232,19 @@ describe('InteractionEffectsUtils', () => {
         it('cleanupInteractionsAfterLayerDeletion removes interactions targeting the main map layer', () => {
             const kept = makeInteraction({ id: 'kept' });
             const removed = makeInteraction({ id: 'removed', target: { nodePath: `map.layers[${LAYER_ID}]` } });
-            const context = makeContext({ widgets: [makeFilterWidget({ interactions: [kept, removed] }), { id: TABLE_ID, widgetType: 'table', interactions: [removed] }] });
+            const context = makeContext({ widgets: [makeFilterWidget({ interactions: [kept, removed] }), { id: 'chart-1', widgetType: 'chart', interactions: [removed] }] });
             const actions = cleanupInteractionsAfterLayerDeletion(LAYER_ID, context);
             expect(actions.length).toBe(1);
             expect(actions[0].widgetId).toBe(SENDER_ID);
+            expect(actions[0].value).toEqual([kept]);
+        });
+        it('cleanupInteractionsAfterLayerDeletion cleans the table sender interactions', () => {
+            const kept = makeInteraction({ id: 'kept' });
+            const removed = makeInteraction({ id: 'removed', target: { nodePath: `map.layers[${LAYER_ID}]` } });
+            const context = makeContext({ widgets: [{ id: TABLE_ID, widgetType: 'table', interactions: [kept, removed] }] });
+            const actions = cleanupInteractionsAfterLayerDeletion(LAYER_ID, context);
+            expect(actions.length).toBe(1);
+            expect(actions[0].widgetId).toBe(TABLE_ID);
             expect(actions[0].value).toEqual([kept]);
         });
     });
