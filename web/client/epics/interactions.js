@@ -237,7 +237,9 @@ function applyInteractionEffectForZoomTo(interaction, sender, state, targetConta
 export const applyWidgetInteractionsEpic = (action$, store) =>
     action$
         .ofType(APPLY_WIDGET_INTERACTIONS, ZOOM_TO_FILTER_EXTENT)
-        .switchMap(({ type, widgetId, target, sourceId }) => {
+        // a newer apply cancels the pending one of the same sender source only, other senders keep their zoom
+        .groupBy(({ widgetId, target, sourceId }) => `${target}:${widgetId}:${sourceId}`)
+        .mergeMap(sourceAction$ => sourceAction$.switchMap(({ type, widgetId, target, sourceId }) => {
             const isManualZoomTrigger = type === ZOOM_TO_FILTER_EXTENT;
             const sender = getContainerWidgets(store.getState(), target).find(w => w.id === widgetId);
             const buildAppliedData = SENDER_DATA_BUILDERS[sender?.widgetType];
@@ -275,7 +277,7 @@ export const applyWidgetInteractionsEpic = (action$, store) =>
                     }, getEffectsContext(currentState, target));
                     return Rx.Observable.from(toActions([update]));
                 });
-        });
+        }));
 
 const reapplyAllSendersInteractions = (store, target) => Rx.Observable.defer(() =>
     Rx.Observable.from(getContainerWidgets(store.getState(), target).filter(isInteractionSender))

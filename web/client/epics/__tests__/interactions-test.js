@@ -833,6 +833,28 @@ describe('interactions epics', () => {
                 );
             });
 
+            it('keeps the pending zoom of a sender when another sender applies', (done) => {
+                const OTHER_TABLE_ID = 'table-widget-2';
+                const otherTable = makeZoomTable({
+                    id: OTHER_TABLE_ID,
+                    interactions: [{ ...zoomInteraction, id: 'table-zoom-2', source: { nodePath: `widgets[${OTHER_TABLE_ID}]` } }]
+                });
+                testEpic(
+                    applyWidgetInteractionsEpic,
+                    2,
+                    [
+                        applyWidgetInteractions(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID),
+                        applyWidgetInteractions(OTHER_TABLE_ID, 'floating', OTHER_TABLE_ID)
+                    ],
+                    (actions) => {
+                        expect(actions.map(action => action.key)).toEqual(['maps', 'maps']);
+                        expect(requests).toBe(2);
+                    },
+                    makeState([makeZoomTable(), otherTable, makeMapWidget()]),
+                    done
+                );
+            });
+
             it('does not zoom when the table has no filter', (done) => {
                 testEpic(
                     addTimeoutEpic(applyWidgetInteractionsEpic, 20),

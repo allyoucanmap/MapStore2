@@ -382,15 +382,17 @@ function createMapZoomToTargetsMetadata() {
 
 /**
  * Creates the "zoom to" leaf node for a map or dashboard widget.
+ * @param {string} [promotedTitle] label of the node when it replaces its collapsed parents
  * @returns {object} the zoom-to map leaf node
  */
-function createMapZoomToLeafNode() {
+function createMapZoomToLeafNode(promotedTitle) {
     return {
         type: 'element',
         id: TARGET_TYPES.APPLY_ZOOM_TO,
         title: 'Zoom to',
         icon: 'zoom-to',
         nodePathMode: 'dot',
+        ...(promotedTitle ? { promotedTitle, promotedIcon: '1-map' } : {}),
         interactionMetadata: {
             targets: createMapZoomToTargetsMetadata()
         }
@@ -508,7 +510,7 @@ export function generateLayersMetadataTree(layers) {
     return createLayerNodesForLayers(layers);
 }
 
-export function generateMapWidgetLayersTree(maps, options = {}) {
+export function generateMapWidgetLayersTree(maps, options = {}, widget) {
     if (!maps || !Array.isArray(maps)) {
         return createBaseCollectionNode("Maps", [], "1-map", "maps");
     }
@@ -522,7 +524,10 @@ export function generateMapWidgetLayersTree(maps, options = {}) {
                 "1-layer",
                 "layers"
             );
-            const mapZoomToNode = createMapZoomToLeafNode();
+            // collapsed single-child collections would otherwise label the zoom node with a generic parent (e.g. Widgets)
+            const mapZoomToNode = createMapZoomToLeafNode(widget?.title && maps.length > 1
+                ? `${widget.title} / ${map.name || map.mapId}`
+                : widget?.title || map.name);
             const baseNode = createBaseElementNode(map, '1-map');
             return {
                 ...baseNode,
@@ -727,7 +732,7 @@ export function generateCounterWidgetTreeNode(widget) {
  * @returns {object} the map widget metadata tree node
  */
 export function generateMapWidgetTreeNode(widget, options = {}) {
-    const mapsCollection = generateMapWidgetLayersTree(widget.maps, options);
+    const mapsCollection = generateMapWidgetLayersTree(widget.maps, options, widget);
     const baseNode = createBaseElementNode(widget, '1-map');
     return {
         ...baseNode,
@@ -979,7 +984,7 @@ export function promoteMapZoomToNodes(node) {
         && node.children[0]?.id === TARGET_TYPES.APPLY_ZOOM_TO
         && node.children[0]?.type === 'element') {
         const zoomChild = node.children[0];
-        return { ...zoomChild, title: node.title, icon: node.icon };
+        return { ...zoomChild, title: zoomChild.promotedTitle || node.title, icon: zoomChild.promotedIcon || node.icon };
     }
     if (Array.isArray(node.children)) {
         return { ...node, children: node.children.map(promoteMapZoomToNodes) };

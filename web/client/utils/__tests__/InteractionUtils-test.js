@@ -835,6 +835,30 @@ describe('InteractionUtils', () => {
             expect(mapCollection.children[0].id).toBe('layers');
         });
 
+        it('labels the dashboard map widget zoom node with the widget title', () => {
+            const mapWidget = { id: 'map-w', widgetType: 'map', title: 'States Map', maps: [{ mapId: 'm1', name: 'Map 1', layers: [] }] };
+            [TARGET_TYPES.APPLY_ZOOM_TO, TARGET_TYPES.APPLY_ZOOM_TO_FEATURE].forEach(targetType => {
+                const [zoomNode] = getDisplayInteractionTargetTree(generateRootTree([mapWidget]), { targetType }).children;
+                expect(zoomNode.title).toBe('States Map');
+                expect(zoomNode.icon).toBe('1-map');
+                expect(zoomNode.nodePath).toBe('widgets[map-w].maps[m1].applyZoomTo');
+            });
+        });
+
+        it('labels each map of a multi map widget zoom node with widget and map names', () => {
+            const mapWidget = { id: 'map-w', widgetType: 'map', title: 'States Map', maps: [{ mapId: 'm1', name: 'Map 1', layers: [] }, { mapId: 'm2', name: 'Map 2', layers: [] }] };
+            const display = getDisplayInteractionTargetTree(generateRootTree([mapWidget]), { targetType: TARGET_TYPES.APPLY_ZOOM_TO });
+            const titles = [];
+            const collect = node => {
+                if (node?.id === TARGET_TYPES.APPLY_ZOOM_TO) {
+                    titles.push(node.promotedTitle);
+                }
+                (node?.children || []).forEach(collect);
+            };
+            collect(display);
+            expect(titles).toEqual(['States Map / Map 1', 'States Map / Map 2']);
+        });
+
         it('exposes zoom to feature on the same map zoom node', () => {
             const rootTree = generateRootTree([], mapZoomLayers);
             const display = getDisplayInteractionTargetTree(rootTree, { targetType: TARGET_TYPES.APPLY_ZOOM_TO_FEATURE });
