@@ -5,12 +5,30 @@ export const DATATYPES = {
     LAYER_FILTER: 'LAYER_FILTER',
     LAYER_STYLE: 'LAYER_STYLE',
     LAYER_DIMENSION: 'LAYER_DIMENSION',
-    ZOOM_TRIGGER: 'ZOOM_TRIGGER'
+    ZOOM_TRIGGER: 'ZOOM_TRIGGER',
+    BBOX_COORDINATES: 'BBOX_COORDINATES',
+    POINT: 'POINT',
+    NUMBER: 'NUMBER',
+    FEATURE: 'FEATURE'
 };
 
 export const EVENTS = {
-    FILTER_CHANGE: 'filter_change'
+    FILTER_CHANGE: 'filter_change',
+    VIEWPORT_CHANGE: 'viewport_change',
+    CENTER_CHANGE: 'center_change',
+    ZOOM_CHANGE: 'zoom_change',
+    FEATURE_CLICK: 'feature_click'
 };
+
+/**
+ * Widget types that send interactions; extended as each widget type adopts the interactions model
+ */
+export const INTERACTION_SENDER_TYPES = ['filter'];
+
+/**
+ * Returns true if the widget sends interactions to other widgets or layers
+ */
+export const isInteractionSender = (widget) => INTERACTION_SENDER_TYPES.includes(widget?.widgetType);
 
 export const TARGET_TYPES = {
     APPLY_FILTER: 'applyFilter',
@@ -1031,6 +1049,14 @@ export function findNodeById(tree, nodeId) {
 export function extractLayerIdFromNodePath(nodePath) {
     if (!nodePath) return null;
     const match = nodePath.match(/\.layers\[([^\]]+)\]/);
+    return match ? match[1] : null;
+}
+
+/**
+ * Returns the id of the first widget in the node path (widgets[id]) or null
+ */
+export function extractWidgetIdFromNodePath(nodePath) {
+    const match = nodePath?.match(/(?:^|\.)widgets\[([^\]]+)\]/);
     return match ? match[1] : null;
 }
 

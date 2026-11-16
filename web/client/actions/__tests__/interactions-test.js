@@ -8,29 +8,29 @@
 
 import expect from "expect";
 import {
-    APPLY_FILTER_WIDGET_INTERACTIONS,
+    APPLY_WIDGET_INTERACTIONS,
     ZOOM_TO_FILTER_EXTENT,
-    applyFilterWidgetInteractions,
+    applyWidgetInteractions,
     zoomToFilterExtent
 } from '../interactions';
 
 describe('interactions actions', () => {
-    it('applyFilterWidgetInteractions default target', () => {
-        const retval = applyFilterWidgetInteractions('myWidgetId', undefined, 'myFilterId');
+    it('applyWidgetInteractions default target', () => {
+        const retval = applyWidgetInteractions('myWidgetId', undefined, 'myFilterId');
         expect(retval).toExist();
-        expect(retval.type).toBe(APPLY_FILTER_WIDGET_INTERACTIONS);
+        expect(retval.type).toBe(APPLY_WIDGET_INTERACTIONS);
         expect(retval.widgetId).toBe('myWidgetId');
         expect(retval.target).toBe('floating');
-        expect(retval.filterId).toBe('myFilterId');
+        expect(retval.sourceId).toBe('myFilterId');
     });
 
-    it('applyFilterWidgetInteractions with specific target', () => {
-        const retval = applyFilterWidgetInteractions('myWidgetId', 'specificTarget', 'myFilterId');
+    it('applyWidgetInteractions with specific target', () => {
+        const retval = applyWidgetInteractions('myWidgetId', 'specificTarget', 'myFilterId');
         expect(retval).toExist();
-        expect(retval.type).toBe(APPLY_FILTER_WIDGET_INTERACTIONS);
+        expect(retval.type).toBe(APPLY_WIDGET_INTERACTIONS);
         expect(retval.widgetId).toBe('myWidgetId');
         expect(retval.target).toBe('specificTarget');
-        expect(retval.filterId).toBe('myFilterId');
+        expect(retval.sourceId).toBe('myFilterId');
     });
 
     it('zoomToFilterExtent default target', () => {
@@ -39,7 +39,7 @@ describe('interactions actions', () => {
         expect(retval.type).toBe(ZOOM_TO_FILTER_EXTENT);
         expect(retval.widgetId).toBe('myWidgetId');
         expect(retval.target).toBe('floating');
-        expect(retval.filterId).toBe('myFilterId');
+        expect(retval.sourceId).toBe('myFilterId');
     });
 
     it('zoomToFilterExtent with specific target', () => {
@@ -48,6 +48,6 @@ describe('interactions actions', () => {
         expect(retval.type).toBe(ZOOM_TO_FILTER_EXTENT);
         expect(retval.widgetId).toBe('myWidgetId');
         expect(retval.target).toBe('specificTarget');
-        expect(retval.filterId).toBe('myFilterId');
+        expect(retval.sourceId).toBe('myFilterId');
     });
 });

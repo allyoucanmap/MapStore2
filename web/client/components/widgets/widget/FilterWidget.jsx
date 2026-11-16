@@ -12,7 +12,7 @@ import { createStructuredSelector } from 'reselect';
 
 import WidgetContainer from './WidgetContainer';
 import FilterView from '../../../plugins/widgetbuilder/FilterView';
-import { applyFilterWidgetInteractions, zoomToFilterExtent } from '../../../actions/interactions';
+import { applyWidgetInteractions, zoomToFilterExtent } from '../../../actions/interactions';
 import './filter-widget.less';
 import { interactionTargetVisibilitySelector, interactionTargetsFilterDisabledSelector, getApplyStyleOutOfSyncForFilterWidget, getApplyDimensionOutOfSyncForFilterWidget, inactiveInteractionIdsForWidgetSelector, getWidgetsByTarget } from '../../../selectors/widgets';
 import { currentTimeSelector, offsetEnabledSelector } from '../../../selectors/dimension';
@@ -187,6 +187,6 @@ export default connect(createStructuredSelector({
     timelineRangeEnabled: offsetEnabledSelector,
     locale: currentLocaleSelector
 }), {
-    onApplyInteractions: applyFilterWidgetInteractions,
+    onApplyInteractions: applyWidgetInteractions,
     onZoomToFilterExtent: zoomToFilterExtent
 })(FilterWidget);

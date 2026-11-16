@@ -8,8 +8,8 @@
 import expect from 'expect';
 
 import { testEpic, addTimeoutEpic, TEST_TIMEOUT } from './epicTestUtils';
-import { applyFilterWidgetInteractionsEpic, cleanupAndReapplyFilterWidgetInteractionsEpic } from '../interactions';
-import { applyFilterWidgetInteractions, zoomToFilterExtent } from '../../actions/interactions';
+import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic } from '../interactions';
+import { applyWidgetInteractions, zoomToFilterExtent } from '../../actions/interactions';
 import { UPDATE_PROPERTY, DELETE, insertWidget } from '../../actions/widgets';
 import { CHANGE_LAYER_PARAMS, CHANGE_LAYER_PROPERTIES, removeNode } from '../../actions/layers';
 import { TARGET_TYPES } from '../../utils/InteractionUtils';
@@ -106,16 +106,16 @@ const makeState = (widgets, layersState = null) => {
 };
 
 describe('interactions epics', () => {
-    describe('applyFilterWidgetInteractionsEpic', () => {
+    describe('applyWidgetInteractionsEpic', () => {
         it('dispatches updateWidgetProperty with charts and trace.interactionFilters for chart target', (done) => {
             const filterWidget = makeFilterWidget();
             const chartWidget = makeChartWidget();
             const state = makeState([filterWidget, chartWidget]);
 
             testEpic(
-                applyFilterWidgetInteractionsEpic,
+                applyWidgetInteractionsEpic,
                 1,
-                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                [applyWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
                     expect(actions.length).toBe(1);
                     expect(actions[0].type).toBe(UPDATE_PROPERTY);
@@ -152,9 +152,9 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget], layersState);
 
             testEpic(
-                applyFilterWidgetInteractionsEpic,
+                applyWidgetInteractionsEpic,
                 1,
-                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                [applyWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
                     expect(actions.length).toBe(1);
                     expect(actions[0].type).toBe(CHANGE_LAYER_PROPERTIES);
@@ -199,9 +199,9 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget, tableWidget]);
 
             testEpic(
-                addTimeoutEpic(applyFilterWidgetInteractionsEpic, 100),
+                addTimeoutEpic(applyWidgetInteractionsEpic, 100),
                 2,
-                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                [applyWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
                     const update = actions.find(a => a.type === UPDATE_PROPERTY);
                     expect(update).toBeTruthy();
@@ -229,9 +229,9 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget, tableWidget]);
 
             testEpic(
-                applyFilterWidgetInteractionsEpic,
+                applyWidgetInteractionsEpic,
                 1,
-                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                [applyWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
                     expect(actions.length).toBe(1);
                     expect(actions[0].type).toBe(UPDATE_PROPERTY);
@@ -275,9 +275,9 @@ describe('interactions epics', () => {
             };
 
             testEpic(
-                applyFilterWidgetInteractionsEpic,
+                applyWidgetInteractionsEpic,
                 1,
-                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                [applyWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
                     expect(actions.length).toBe(1);
                     expect(actions[0].type).toBe(UPDATE_PROPERTY);
@@ -310,9 +310,9 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget, mapWidget]);
 
             testEpic(
-                applyFilterWidgetInteractionsEpic,
+                applyWidgetInteractionsEpic,
                 1,
-                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                [applyWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
                     expect(actions.length).toBe(1);
                     expect(actions[0].type).toBe(UPDATE_PROPERTY);
@@ -345,9 +345,9 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget]);
 
             testEpic(
-                applyFilterWidgetInteractionsEpic,
+                applyWidgetInteractionsEpic,
                 1,
-                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                [applyWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
                     expect(actions.length).toBe(1);
                     expect(actions[0].type).toBe(CHANGE_LAYER_PARAMS);
@@ -398,9 +398,9 @@ describe('interactions epics', () => {
             };
 
             testEpic(
-                applyFilterWidgetInteractionsEpic,
+                applyWidgetInteractionsEpic,
                 1,
-                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                [applyWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
                     expect(actions.length).toBe(1);
                     expect(actions[0].type).toBe(UPDATE_PROPERTY);
@@ -437,7 +437,7 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget], layersState);
 
             testEpic(
-                addTimeoutEpic(applyFilterWidgetInteractionsEpic, 10),
+                addTimeoutEpic(applyWidgetInteractionsEpic, 10),
                 1,
                 [zoomToFilterExtent(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
@@ -474,9 +474,9 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget], layersState);
 
             testEpic(
-                applyFilterWidgetInteractionsEpic,
+                applyWidgetInteractionsEpic,
                 1,
-                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                [applyWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
                 (actions) => {
                     // Even with zoomTo placed first, applyFilter should still be executed and emit its action.
                     expect(actions.length).toBe(1);
@@ -488,7 +488,7 @@ describe('interactions epics', () => {
         });
     });
 
-    describe('cleanupAndReapplyFilterWidgetInteractionsEpic', () => {
+    describe('cleanupAndReapplyWidgetInteractionsEpic', () => {
         it('on remove map layer, removes interactions targeting deleted main map layer', (done) => {
             const deletedLayerId = 'layer-A';
             const remainingLayerId = 'layer-B';
@@ -513,7 +513,7 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget]);
 
             testEpic(
-                cleanupAndReapplyFilterWidgetInteractionsEpic,
+                cleanupAndReapplyWidgetInteractionsEpic,
                 1,
                 [removeNode(deletedLayerId, 'layers')],
                 (actions) => {
@@ -552,7 +552,7 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget, chartWidget]);
 
             testEpic(
-                cleanupAndReapplyFilterWidgetInteractionsEpic,
+                cleanupAndReapplyWidgetInteractionsEpic,
                 1,
                 [{ type: DELETE, widget: filterWidget, target: 'floating' }],
                 (actions) => {
@@ -582,7 +582,7 @@ describe('interactions epics', () => {
             const state = makeState([filterWidget, tableWidget]);
 
             testEpic(
-                cleanupAndReapplyFilterWidgetInteractionsEpic,
+                cleanupAndReapplyWidgetInteractionsEpic,
                 1,
                 [{ type: DELETE, widget: filterWidget, target: 'floating' }],
                 (actions) => {
@@ -624,7 +624,7 @@ describe('interactions epics', () => {
             const state = makeState([chartWidget]);
 
             testEpic(
-                cleanupAndReapplyFilterWidgetInteractionsEpic,
+                cleanupAndReapplyWidgetInteractionsEpic,
                 1,
                 [{ type: DELETE, widget: filterWidget, target: 'floating' }],
                 (actions) => {
@@ -672,7 +672,7 @@ describe('interactions epics', () => {
             const state = makeState([{ ...filterWidget, deletedInteractions: undefined }, chartWidget]);
 
             testEpic(
-                cleanupAndReapplyFilterWidgetInteractionsEpic,
+                cleanupAndReapplyWidgetInteractionsEpic,
                 1,
                 [insertWidget(filterWidget, 'floating')],
                 (actions) => {

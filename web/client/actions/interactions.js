@@ -7,31 +7,31 @@
  */
 
 
-export const APPLY_FILTER_WIDGET_INTERACTIONS = 'INTERACTIONS:APPLY_FILTER_WIDGET_INTERACTIONS';
+export const APPLY_WIDGET_INTERACTIONS = 'INTERACTIONS:APPLY_WIDGET_INTERACTIONS';
 export const ZOOM_TO_FILTER_EXTENT = 'INTERACTIONS:ZOOM_TO_FILTER_EXTENT';
 
 /**
- * Apply interaction effects for all filters in a filter widget
- * Useful for triggering interactions right after saving or loading a widget
- * @param {string} widgetId - The filter widget ID
- * @param {string} [target='floating'] - The target container (defaults to 'floating')
+ * Apply the effects of the interactions sent by a widget source (e.g. a filter of a filter widget)
+ * @param {string} widgetId the sender widget id
+ * @param {string} [target='floating'] the widgets container
+ * @param {string} sourceId the id of the sender sub-element that emits the interactions
  */
-export const applyFilterWidgetInteractions = (widgetId, target = 'floating', filterId) => ({
-    type: APPLY_FILTER_WIDGET_INTERACTIONS,
+export const applyWidgetInteractions = (widgetId, target = 'floating', sourceId) => ({
+    type: APPLY_WIDGET_INTERACTIONS,
     widgetId,
     target,
-    filterId
+    sourceId
 });
 
 /**
- * Manually trigger a zoom-to interaction effect for a filter widget's filter.
- * @param {string} widgetId - The filter widget ID
- * @param {string} [target='floating'] - The target container (defaults to 'floating')
- * @param {string} filterId - The filter ID whose plugged zoom-to interaction(s) should zoom
+ * Manually trigger the zoom-to interactions of a filter widget's filter
+ * @param {string} widgetId the filter widget id
+ * @param {string} [target='floating'] the widgets container
+ * @param {string} sourceId the filter id whose plugged zoom-to interactions should zoom
  */
-export const zoomToFilterExtent = (widgetId, target = 'floating', filterId) => ({
+export const zoomToFilterExtent = (widgetId, target = 'floating', sourceId) => ({
     type: ZOOM_TO_FILTER_EXTENT,
     widgetId,
     target,
-    filterId
+    sourceId
 });

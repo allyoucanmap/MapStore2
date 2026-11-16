@@ -25,7 +25,10 @@ import {
     promoteMapZoomToNodes,
     TARGET_TYPES,
     findAllApplyFiltersForZoomTo,
-    findNodeById
+    findNodeById,
+    isInteractionSender,
+    extractWidgetIdFromNodePath,
+    WIDGET_EVENTS_BY_WIDGET_TYPE
 } from '../InteractionUtils';
 
 // Shared test data for all widget tests
@@ -1194,6 +1197,26 @@ describe('InteractionUtils', () => {
                 ]
             };
             expect(findNodeById(tree, 'non-existent')).toBe(null);
+        });
+    });
+
+    describe('senders', () => {
+        it('isInteractionSender', () => {
+            expect(isInteractionSender({ widgetType: 'filter' })).toBe(true);
+            expect(isInteractionSender({ widgetType: 'table' })).toBe(false);
+            expect(isInteractionSender()).toBe(false);
+        });
+        it('extractWidgetIdFromNodePath', () => {
+            expect(extractWidgetIdFromNodePath('root.widgets[w-1].filters[f-1]')).toBe('w-1');
+            expect(extractWidgetIdFromNodePath('widgets[w-2].maps[m].layers[l]')).toBe('w-2');
+            expect(extractWidgetIdFromNodePath('map.layers[l]')).toBe(null);
+            expect(extractWidgetIdFromNodePath()).toBe(null);
+        });
+        it('every declared widget event has defined event and data types', () => {
+            Object.values(WIDGET_EVENTS_BY_WIDGET_TYPE).flat().forEach(({ eventType, dataType }) => {
+                expect(eventType).toExist();
+                expect(dataType).toExist();
+            });
         });
     });
 

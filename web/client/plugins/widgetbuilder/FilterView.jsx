@@ -12,7 +12,7 @@ import { connect } from 'react-redux';
 import moment from 'moment';
 import isNil from 'lodash/isNil';
 import { Button, Glyphicon, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { applyFilterWidgetInteractions } from '../../actions/interactions';
+import { applyWidgetInteractions } from '../../actions/interactions';
 import filterWidgetEnhancer from '../../components/widgets/enhancers/filterWidget';
 import LoadingSpinner from '../../components/misc/LoadingSpinner';
 import FilterTitle from '../../components/widgets/builder/wizard/filter/FilterTitle';
@@ -206,7 +206,7 @@ const ApplyInteractionOutOfSyncInfo = connect()(
                                     <Button
                                         bsStyle="primary"
                                         bsSize="small"
-                                        onClick={() => dispatch(applyFilterWidgetInteractions(actionParams.widgetId, actionParams.target, actionParams.filterId))}
+                                        onClick={() => dispatch(applyWidgetInteractions(actionParams.widgetId, actionParams.target, actionParams.filterId))}
                                     >
                                         <Message msgId={buttonId} />
                                     </Button>
