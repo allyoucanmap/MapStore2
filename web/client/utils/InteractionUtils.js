@@ -936,6 +936,16 @@ export function filterTreeWithTarget(tree, target) {
     return cloneWithFilteredChildren(tree);
 }
 
+// a sender must not list itself as a target
+const excludeTreeNode = (node, excludedNodeId) => {
+    if (!node || !excludedNodeId) {
+        return node;
+    }
+    return node.children
+        ? { ...node, children: node.children.filter(child => child?.id !== excludedNodeId).map(child => excludeTreeNode(child, excludedNodeId)) }
+        : node;
+};
+
 /**
  * Promotes zoom-to to the Map node when it is the only remaining child.
  * @param {object} node the tree node to process
@@ -959,8 +969,8 @@ export function promoteMapZoomToNodes(node) {
     return node;
 }
 
-export function getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType) {
-    const filteredTree = filterTreeWithTarget(interactionTree, target) || { children: [] };
+export function getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType, excludedNodeId) {
+    const filteredTree = filterTreeWithTarget(excludeTreeNode(interactionTree, excludedNodeId), target) || { children: [] };
     const targetTree = target?.targetType === TARGET_TYPES.APPLY_DIMENSION
         ? filterDimensionTreeByValueAttributeType(filteredTree, valueAttributeType)
         : filteredTree;
@@ -970,15 +980,14 @@ export function getDisplayInteractionTargetTree(interactionTree, target, valueAt
         : detachedTree;
 }
 
-export function hasConnectableTargetNodes(interactionTree, target, valueAttributeType) {
-    const displayTree = getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType);
+export function hasConnectableTargetNodes(interactionTree, target, valueAttributeType, excludedNodeId) {
+    const displayTree = getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType, excludedNodeId);
     return (displayTree?.children || []).length > 0;
 }
 
 /**
  * Gets possible targets for editing a widget of the specified widgetType.
- * Currently only supports filter widget type.
- * @param {string} widgetType widget type (currently only 'filter' is supported)
+ * @param {string} widgetType widget type, `filter` or `table`
  * @param {object} layerInvolved optional layer object with name and id
  * @returns {array} [{ title, targetType, glyph, expectedDataType, constraint }]
  */
@@ -1017,6 +1026,17 @@ export function getPossibleTargetsEditingWidget(widgetType, layerInvolved) {
             constraints: {}
         }
         ];
+    }
+    if (widgetType === 'table') {
+        return [{
+            title: TARGET_TYPE_LABELS[TARGET_TYPES.APPLY_FILTER],
+            targetType: TARGET_TYPES.APPLY_FILTER,
+            glyph: TARGET_TYPE_GLYPHS[TARGET_TYPES.APPLY_FILTER],
+            expectedDataType: TARGET_EVENT_DATA_TYPES[TARGET_TYPES.APPLY_FILTER],
+            constraints: layerInvolved ? {
+                layer: createLayerConstraint(layerInvolved)
+            } : {}
+        }];
     }
     return [];
 }

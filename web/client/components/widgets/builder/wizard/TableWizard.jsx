@@ -6,13 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React, { lazy } from 'react';
-import { compose, lifecycle } from 'recompose';
+import React, { lazy, useEffect, useState } from 'react';
+import { Nav, NavItem } from 'react-bootstrap';
 
 import { wizardHandlers } from '../../../misc/wizard/enhancers';
 import WizardContainer from '../../../misc/wizard/WizardContainer';
 import WidgetOptions from './common/WidgetOptions';
+import TableInteractionsTab from './table/TableInteractionsTab';
 import withSuspense from '../../../misc/withSuspense';
+import Message from '../../../I18N/Message';
 
 const TableOptions = withSuspense()(lazy(() => import('./table/TableOptions')));
 
@@ -20,35 +22,63 @@ const isChartOptionsValid = (options = {}) => options.aggregateFunction && optio
 
 const Wizard = wizardHandlers(WizardContainer);
 
+const TABS = [
+    { id: 'options', msgId: 'options' },
+    { id: 'interactions', msgId: 'widgets.filterWidget.interactionsTabLabel' }
+];
 
-const triggerValidationReset = compose(lifecycle({
-    UNSAFE_componentWillReceiveProps: ({ data = {}, valid, setValid = () => { } } = {}) => {
+const TableOptionsTabs = ({ data, layer, onEditorChange, children }) => {
+    const [activeTab, setActiveTab] = useState('options');
+    return (
+        <div className="ms-row-tab">
+            <Nav bsStyle="tabs" activeKey={activeTab} justified>
+                {TABS.map(tab => (
+                    <NavItem key={tab.id} eventKey={tab.id} onClick={() => setActiveTab(tab.id)}>
+                        <Message msgId={tab.msgId} />
+                    </NavItem>
+                ))}
+            </Nav>
+            {activeTab === 'interactions'
+                ? <TableInteractionsTab data={data} layer={layer} onEditorChange={onEditorChange} />
+                : children}
+        </div>
+    );
+};
+
+const TableWizard = ({ onChange = () => { }, onFinish = () => { }, setPage = () => { }, setValid = () => { }, valid, data = {}, layer = {}, step = 0, types, featureTypeProperties, dependencies }) => {
+    useEffect(() => {
         if (valid && !isChartOptionsValid(data.options)) {
             setValid(false);
         }
-    }
-})
-);
-
-export default triggerValidationReset(({ onChange = () => { }, onFinish = () => { }, setPage = () => { }, data = {}, layer = {}, step = 0, types, featureTypeProperties, dependencies }) =>
-    (<Wizard
+    }, [valid, data.options]);
+    return (<Wizard
         step={step}
         setPage={setPage}
         onFinish={onFinish}
         isStepValid={n => n === 1 ? isChartOptionsValid(data.options) : true} hideButtons>
-        <TableOptions
-            dependencies={dependencies}
+        <TableOptionsTabs
             key="chart-options"
-            featureTypeProperties={featureTypeProperties}
-            types={types}
             data={data}
-            onChange={onChange}
             layer={data.layer || layer}
-        />
+            onEditorChange={onChange}
+        >
+            <TableOptions
+                dependencies={dependencies}
+                featureTypeProperties={featureTypeProperties}
+                types={types}
+                data={data}
+                onChange={onChange}
+                layer={data.layer || layer}
+            />
+        </TableOptionsTabs>
         <WidgetOptions
             key="widget-options"
             data={data}
             onChange={onChange}
             layer={data.layer || layer}
         />
-    </Wizard>));
+    </Wizard>);
+};
+
+// memo stops recompose (mapPropsStream in TableBuilder) from calling it as a plain function, which breaks hooks
+export default React.memo(TableWizard);

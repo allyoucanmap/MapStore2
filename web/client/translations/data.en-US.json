@@ -2386,6 +2386,7 @@
           "selectAMap": "Select one or more maps",
           "configureChartOptions": "Configure chart options",
           "configureWidgetOptions": "Configure widget options",
+          "columnFilter": "Column filter",
           "errorChart": "One or more chart(s) is invalid",
           "errorFilter": "One or more filter(s) is invalid",
           "backToTableOptions": "Back to table options",

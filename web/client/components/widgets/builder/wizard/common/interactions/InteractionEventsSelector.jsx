@@ -23,8 +23,8 @@ const TButton = tooltip(Button);
 export const InteractionEventsSelector = ({target, expanded, toggleExpanded = () => {}, interactionTree, interactions, sourceWidgetId, currentSourceId, onEditorChange, alreadyExistingInteractions, valueAttributeType, sourceSelectionMode, timelineEnabled = false, targetTitleMsgIds = {}, removable = false, onRemove = () => {}}) => {
 
     const filteredInteractionTree = useMemo(() => {
-        return getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType);
-    }, [interactionTree, target, valueAttributeType]);
+        return getDisplayInteractionTargetTree(interactionTree, target, valueAttributeType, sourceWidgetId);
+    }, [interactionTree, target, valueAttributeType, sourceWidgetId]);
     const hasConnectableNodes = (filteredInteractionTree?.children || []).length > 0;
     const targetTitleMsgId = targetTitleMsgIds[target.targetType];
 

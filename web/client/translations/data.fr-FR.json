@@ -2386,6 +2386,7 @@
           "noFilterableMapLayers": "Aucune couche de la carte ne peut être filtrée. Ajoutez d'abord une couche WMS ou WFS.",
           "configureChartOptions": "Configurer les options de graphique",
           "configureWidgetOptions": "Configurer les options du widget",
+          "columnFilter": "Filtre des colonnes",
           "errorChart": "Un ou plusieurs graphiques ne sont pas valides",
           "errorFilter": "Un ou plusieurs filtres ne sont pas valides",
           "backToTableOptions": "Retour à l'option de table",

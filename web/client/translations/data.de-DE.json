@@ -2425,6 +2425,7 @@
           "noFilterableMapLayers": "In keiner Karte können Ebenen gefiltert werden. Fügen Sie zuerst ein WMS- oder WFS-Layer hinzu.",
           "configureChartOptions": "Diagrammoptionen konfigurieren",
           "configureWidgetOptions": "Widget-Optionen konfigurieren",
+          "columnFilter": "Spaltenfilter",
           "errorChart": "Mindestens ein Diagramm ist ungültig",
           "errorFilter": "Mindestens ein Filter ist ungültig",
           "backToTableOptions": "Zurück zu den Tabellenoptionen",

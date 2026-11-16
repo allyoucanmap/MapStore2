@@ -18,6 +18,7 @@ import {
     isLayerDimensionTarget,
     isLayerTimeDimensionTarget,
     getDisplayInteractionTargetTree,
+    getPossibleTargetsEditingWidget,
     hasConnectableTargetNodes,
     createLayerConstraint,
     getConnectedActiveTargets,
@@ -783,6 +784,25 @@ describe('InteractionUtils', () => {
 
             expect(hasConnectableTargetNodes(interactionTree, target, 'number')).toBe(true);
             expect(hasConnectableTargetNodes(interactionTree, target, 'string')).toBe(false);
+        });
+
+        it('should exclude the source node from the targets', () => {
+            const target = { targetType: 'applyFilter' };
+            expect(hasConnectableTargetNodes(interactionTree, target, undefined, 'chart-1')).toBe(false);
+            expect(hasConnectableTargetNodes(interactionTree, target, undefined, 'other')).toBe(true);
+            expect(interactionTree.children[0].children[0].id).toBe('chart-1');
+        });
+    });
+
+    describe('getPossibleTargetsEditingWidget', () => {
+        it('returns the table targets constrained to its layer', () => {
+            const targets = getPossibleTargetsEditingWidget('table', { id: 'layer-1', name: 'topp:states' });
+            expect(targets.map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_FILTER]);
+            expect(targets[0].constraints.layer).toExist();
+            expect(getPossibleTargetsEditingWidget('table')[0].constraints).toEqual({});
+        });
+        it('returns no targets for widgets that are not senders', () => {
+            expect(getPossibleTargetsEditingWidget('chart')).toEqual([]);
         });
     });
 

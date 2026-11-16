@@ -40,4 +40,23 @@ describe('TableWizard component', () => {
         const el = container.querySelector('.widget-options-form');
         expect(el).toBeTruthy();
     });
+    it('TableWizard shows options and interactions tabs on the first step, options by default', (done) => {
+        ReactDOM.render(<TableWizard />, document.getElementById("container"));
+        const container = document.getElementById('container');
+        waitFor(() => container.querySelector('.chart-options-form'))
+            .then(() => {
+                const tabs = container.querySelectorAll('.nav-tabs li');
+                expect(tabs.length).toBe(2);
+                expect(tabs[0].className).toContain('active');
+                expect(container.querySelector('.ms-table-wizard-interactions-tab')).toBeFalsy();
+                done();
+            })
+            .catch(done);
+    });
+    it('TableWizard widget options step has no tabs', () => {
+        ReactDOM.render(<TableWizard step={1} />, document.getElementById("container"));
+        const container = document.getElementById('container');
+        expect(container.querySelector('.widget-options-form')).toBeTruthy();
+        expect(container.querySelectorAll('.nav-tabs li').length).toBe(0);
+    });
 });

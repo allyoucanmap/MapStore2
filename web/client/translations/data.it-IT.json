@@ -2386,6 +2386,7 @@
           "noFilterableMapLayers": "Nessun livello nella mappa può essere filtrato. Aggiungi prima un livello WMS o WFS.",
           "configureChartOptions": "Configura le opzioni del grafico",
           "configureWidgetOptions": "Configura le opzioni del widget",
+          "columnFilter": "Filtro colonne",
           "errorChart": "Uno o più grafici non sono validi",
           "errorFilter": "Uno o più filtri non sono validi",
           "backToTableOptions": "Torna alle opzioni della tabella",
