@@ -21,7 +21,7 @@ import { parseResourceProperties, parseClonedResourcePayload, computeSaveResourc
 import { getResourceInfo } from '../../utils/ResourcesUtils';
 import { storySaved, geostoryLoaded, setResource as setGeoStoryResource, setCurrentStory, saveGeoStoryError } from '../../actions/geostory';
 import { dashboardSaveError, dashboardSaved, dashboardLoaded } from '../../actions/dashboard';
-import { convertDependenciesMappingForCompatibility } from '../../utils/WidgetsUtils';
+import { convertDependenciesMappingForCompatibility } from '../../utils/InteractionMigrationUtils';
 import { show } from '../../actions/notifications';
 import InputControl from '../../components/catalog/resources/InputControl';
 import ConfirmDialog from '../../components/layout/ConfirmDialog';

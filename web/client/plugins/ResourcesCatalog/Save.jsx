@@ -20,7 +20,7 @@ import { mapSaveError, mapSaved, mapInfoLoaded, configureMap } from '../../actio
 import { userSelector } from '../../selectors/security';
 import { storySaved, geostoryLoaded, setResource as setGeoStoryResource, setCurrentStory, saveGeoStoryError } from '../../actions/geostory';
 import { dashboardSaveError, dashboardSaved, dashboardLoaded } from '../../actions/dashboard';
-import { convertDependenciesMappingForCompatibility } from '../../utils/WidgetsUtils';
+import { convertDependenciesMappingForCompatibility } from '../../utils/InteractionMigrationUtils';
 import { show } from '../../actions/notifications';
 import { computeSaveResource } from '../../utils/GeostoreUtils';
 import save from './reducers/save';

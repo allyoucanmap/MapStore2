@@ -37,9 +37,8 @@ import { DASHBOARD_LOADED, DASHBOARD_RESET } from '../actions/dashboard';
 import set from 'lodash/fp/set';
 import { get, find, omit, mapValues, castArray, isEmpty } from 'lodash';
 import { arrayUpsert, compose, arrayDelete } from '../utils/ImmutableUtils';
-import { migrateLegacyConnections } from '../utils/InteractionMigrationUtils';
+import { migrateLegacyConnections, convertDependenciesMappingForCompatibility as convertToCompatibleWidgets } from '../utils/InteractionMigrationUtils';
 import {
-    convertDependenciesMappingForCompatibility as convertToCompatibleWidgets,
     cleanMaximizedState,
     editorChange,
     updateWidgetPropertyInList

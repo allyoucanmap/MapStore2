@@ -55,6 +55,10 @@ describe('Test mapsave selectors', () => {
         expect(retVal.widgetsConfig.layouts).toBe(state.widgets.containers.floating.layouts);
         expect(retVal.widgetsConfig.collapsed).toBe(state.widgets.containers.floating.collapsed);
     });
+    it('does not save the transient UI properties of the widgets', () => {
+        const tableState = { ...state, widgets: { containers: { floating: { widgets: [{ id: 'table-1', widgetType: 'table', zoomLoading: false }] } } } };
+        expect(mapOptionsToSaveSelector(tableState).widgetsConfig.widgets).toEqual([{ id: 'table-1', widgetType: 'table' }]);
+    });
     it('check timeline state is correctly selected', () => {
         const retVal = mapOptionsToSaveSelector(state);
         expect(retVal.timelineData).toExist();

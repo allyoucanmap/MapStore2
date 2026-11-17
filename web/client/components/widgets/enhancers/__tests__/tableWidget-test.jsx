@@ -11,7 +11,16 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {createSink} from 'recompose';
 
+import axios from '../../../../libs/ajax';
+import MockAdapter from 'axios-mock-adapter';
+
 import tableWidget from '../tableWidget';
+
+const FEATURE_COLLECTION = {
+    type: 'FeatureCollection',
+    features: [{ type: 'Feature', id: 'f1', geometry: { type: 'Point', coordinates: [10, 20] }, properties: {} }]
+};
+const ZOOM_LAYER = { name: 'test:layer', search: { url: '/geoserver/wfs' } };
 
 describe('widgets tableWidget enhancer', () => {
     beforeEach((done) => {
@@ -144,6 +153,66 @@ describe('widgets tableWidget enhancer', () => {
         const container = document.getElementById('container');
         expect(container).toExist();
 
+    });
+    describe('row zoom loader', () => {
+        let mockAxios;
+        beforeEach(() => {
+            mockAxios = new MockAdapter(axios);
+        });
+        afterEach(() => {
+            mockAxios.restore();
+        });
+        it('sets zoomLoading while fetching the feature geometry and clears it after the zoom', (done) => {
+            mockAxios.onGet().reply(200, FEATURE_COLLECTION);
+            const updateProperty = expect.createSpy();
+            const onZoomToExtent = expect.createSpy();
+            const Sink = tableWidget(createSink(props => {
+                props.gridTools[0].events.onClick({ id: 'f1' }, {}, "", {})
+                    .then(() => {
+                        expect(updateProperty.calls.map(c => c.arguments)).toEqual([
+                            ['123456', 'zoomLoading', true],
+                            ['123456', 'zoomLoading', false]
+                        ]);
+                        expect(onZoomToExtent).toHaveBeenCalledWith([10, 20, 10, 20], 'EPSG:4326', undefined);
+                        done();
+                    })
+                    .catch(done);
+            }));
+            ReactDOM.render(<Sink enableZoomInTblWidget id="123456" widgetType="table" layer={ZOOM_LAYER} updateProperty={updateProperty} onZoomToExtent={onZoomToExtent} />, document.getElementById("container"));
+        });
+        it('ignores the row zoom while the table is loading a previous one', (done) => {
+            const updateProperty = expect.createSpy();
+            const onZoomToExtent = expect.createSpy();
+            const Sink = tableWidget(createSink(props => {
+                props.gridTools[0].events.onClick({ bbox: [-10, 0, 0, -10] }, {}, "", {})
+                    .then(() => {
+                        expect(updateProperty).toNotHaveBeenCalled();
+                        expect(onZoomToExtent).toNotHaveBeenCalled();
+                        expect(mockAxios.history.get.length).toBe(0);
+                        done();
+                    })
+                    .catch(done);
+            }));
+            ReactDOM.render(<Sink enableZoomInTblWidget zoomLoading id="123456" widgetType="table" layer={ZOOM_LAYER} updateProperty={updateProperty} onZoomToExtent={onZoomToExtent} />, document.getElementById("container"));
+        });
+        it('clears zoomLoading and notifies when the feature request fails', (done) => {
+            mockAxios.onGet().reply(500);
+            const updateProperty = expect.createSpy();
+            const onNotifyError = expect.createSpy();
+            const Sink = tableWidget(createSink(props => {
+                props.gridTools[0].events.onClick({ id: 'f1' }, {}, "", {})
+                    .then(() => {
+                        expect(updateProperty.calls.map(c => c.arguments)).toEqual([
+                            ['123456', 'zoomLoading', true],
+                            ['123456', 'zoomLoading', false]
+                        ]);
+                        expect(onNotifyError).toHaveBeenCalled();
+                        done();
+                    })
+                    .catch(done);
+            }));
+            ReactDOM.render(<Sink enableZoomInTblWidget id="123456" widgetType="table" layer={ZOOM_LAYER} updateProperty={updateProperty} onNotifyError={onNotifyError} />, document.getElementById("container"));
+        });
     });
     it('tableWidget with gridTools including zoom icon for mapViewer [not enable zoom in config]', (done) => {
         const Sink = tableWidget(createSink( props => {

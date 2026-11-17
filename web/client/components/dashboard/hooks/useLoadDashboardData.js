@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getErrorMessageId, updateDependenciesMap } from '../../../utils/WidgetsUtils';
+import { getErrorMessageId } from '../../../utils/WidgetsUtils';
+import { updateDependenciesMap } from '../../../utils/InteractionMigrationUtils';
 import { getResource } from '../../../api/persistence';
 import { prefixWidgetInteractionIds } from '../../../utils/InteractionEffectsUtils';
 

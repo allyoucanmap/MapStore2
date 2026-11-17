@@ -16,7 +16,10 @@ import {
     MAIN_MAP_SENDER_ID,
     convertTableLegacyConnection,
     convertMapLegacyConnection,
-    buildMainMapDefaultInteractions
+    buildMainMapDefaultInteractions,
+    convertDependenciesMappingForCompatibility,
+    updateDependenciesForMultiViewCompatibility,
+    updateDependenciesMap
 } from '../InteractionMigrationUtils';
 
 const TABLE_ID = 'table-1';
@@ -47,7 +50,97 @@ const testConverters = {
     })
 };
 
+const dataWidgets = {
+    widgets: [
+        {id: 'w_1', maps: [{mapId: 'm_1', center: {x: 0, y: 0, crs: "EPSG:4326"}, mapInfoControl: true, layers: [{id: 'layer1'}], size: {width: 400, height: 400}, zoom: 3 }], widgetType: 'map', mapSync: true},
+        {id: 'w_2', dependenciesMap: {layers: "widgets[w_1].maps[m_1].layers", zoom: "widgets[w_1].maps[m_1].zoom", viewport: "widgets[w_1].maps[m_1].viewport", dependenciesMap: "widgets[w_1].dependenciesMap", mapSync: "widgets[w_1].mapSync"}, layer: false, legend: false, mapSync: true, url: false, widgetType: "legend", yAxis: true}
+    ]
+};
 describe('InteractionMigrationUtils', () => {
+    describe('legacy dashboard data', () => {
+        it('convertDependenciesMappingForCompatibility', () => {
+            const data = {widgets: [{id: 'w_1', map: {center: {x: 0, y: 0, crs: "EPSG:4326"}, mapInfoControl: true, layers: [{id: 'layer1'}], size: {width: 400, height: 400}, zoom: 3 }, widgetType: 'map', mapSync: true},
+                {id: 'w_2', dependenciesMap: {layers: "widgets[w_1].map.layers", zoom: "widgets[w_1].map.zoom", viewport: "widgets[w_1].map.viewport", dependenciesMap: "widgets[w_1].dependenciesMap", mapSync: "widgets[w_1].mapSync"}, layer: false, legend: false, mapSync: true, url: false, widgetType: "legend", yAxis: true}]};
+            const modified = convertDependenciesMappingForCompatibility(data);
+            expect(modified.widgets[0].maps).toBeTruthy();
+            [
+                modified.widgets[1].dependenciesMap.layers,
+                modified.widgets[1].dependenciesMap.viewport,
+                modified.widgets[1].dependenciesMap.zoom
+            ].forEach(match => expect(match).toContain('maps'));
+        });
+        it('convertDependenciesMappingForCompatibility when no conversion needed', () => {
+            const modified = convertDependenciesMappingForCompatibility(dataWidgets);
+            expect(modified).toEqual(dataWidgets);
+        });
+        it('convertDependenciesMappingForCompatibility for chart', () => {
+            const data = {widgets: [{id: 'w_2', widgetType: "chart", layer: {name: "Test1"}, mapSync: true, geomProp: "the_geom", yAxis: true, cartesian: false, legend: false, options: {}, autoColorOptions: {}, url: "some_url"}]};
+            const { widgets: _widgets } = convertDependenciesMappingForCompatibility(data);
+            expect(_widgets[0].id).toBe("w_2");
+            expect(_widgets[0].mapSync).toBeTruthy();
+            expect(_widgets[0].selectedChartId).toBeTruthy();
+            expect(_widgets[0].charts).toBeTruthy();
+            expect(_widgets[0].charts[0].chartId).toBe(_widgets[0].selectedChartId);
+            expect(_widgets[0].charts[0].yAxisOpts).toBeTruthy();
+            expect(_widgets[0].charts[0].cartesian).toBe(false);
+            expect(_widgets[0].charts[0].legend).toBe(false);
+            expect(_widgets[0].charts[0].name).toBe('Chart-1');
+            expect(_widgets[0].charts[0].traces.length).toBe(1);
+            expect(_widgets[0].charts[0].traces[0].layer).toBeTruthy();
+            expect(_widgets[0].charts[0].traces[0].options).toBeTruthy();
+            expect(_widgets[0].charts[0].traces[0].style).toBeTruthy();
+        });
+        describe('updateDependenciesForMultiViewCompatibility', () => {
+            it('should handle data with existing layouts array', () => {
+                const data = {
+                    layouts: [{ id: '1', name: 'Layout 1' }],
+                    widgets: [{ id: 'w1', layoutId: '1' }]
+                };
+                const result = updateDependenciesForMultiViewCompatibility(data);
+                expect(Array.isArray(result.layouts)).toBe(true);
+                expect(result.layouts[0].id).toBe('1');
+                expect(result.widgets[0].layoutId).toBe('1');
+            });
+
+            it('should wrap a single layout object into an array if not already an array', () => {
+                const data = {
+                    layouts: { md: [] },
+                    widgets: [{ id: 'w1' }]
+                };
+                const result = updateDependenciesForMultiViewCompatibility(data);
+                expect(Array.isArray(result.layouts)).toBe(true);
+                expect(result.layouts[0].name).toBe('Main view');
+                expect(result.widgets[0].layoutId).toBe(result.layouts[0].id);
+            });
+
+            it('should assign missing layoutId to widgets based on first layout', () => {
+                const data = {
+                    layouts: [{ id: 'l1', name: 'Layout 1' }],
+                    widgets: [{ id: 'w1' }, { id: 'w2', layoutId: 'l2' }]
+                };
+                const result = updateDependenciesForMultiViewCompatibility(data);
+                expect(result.widgets[0].layoutId).toBe('l1');
+                expect(result.widgets[1].layoutId).toBe('l2');
+            });
+        });
+        describe('updateDependenciesMap', () => {
+            it('should update simple widget references in strings', () => {
+                const deps = { center: 'widgets[widget1].center' };
+                const result = updateDependenciesMap(deps, 'layout1');
+                expect(result.center).toBe('widgets[layout1-widget1].center');
+            });
+
+            it('should update nested objects correctly', () => {
+                const deps = {
+                    map: {
+                        center: 'widgets[widget1].maps[map1].center'
+                    }
+                };
+                const result = updateDependenciesMap(deps, 'layout2');
+                expect(result.map.center).toBe('widgets[layout2-widget1].maps[map1].center');
+            });
+        });
+    });
     describe('getLegacyConnectionSource', () => {
         it('returns null when not connected', () => {
             expect(getLegacyConnectionSource(makeConnectedChart({ mapSync: false }))).toBe(null);

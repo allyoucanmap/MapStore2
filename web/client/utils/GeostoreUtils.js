@@ -347,7 +347,7 @@ export const compareDashboardDataChanges = (currentDashboardData, initialDashboa
             return true;
         }
 
-        const widgetDataChanged = recursiveIsChanged(omit(widget, 'dependenciesMap', 'map', 'maps'), omit(originalWidget, 'dependenciesMap', 'map', 'maps'));
+        const widgetDataChanged = recursiveIsChanged(omit(widget, 'map', 'maps'), omit(originalWidget, 'map', 'maps'));
 
         if (widgetDataChanged) {
             return true;

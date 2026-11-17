@@ -39,7 +39,7 @@ import { download, readJson } from '../utils/FileUtils';
 import { createResource, updateResource, getResource, updateResourceAttribute } from '../api/persistence';
 import { wrapStartStop } from '../observables/epics';
 import { LOCATION_CHANGE, push } from 'connected-react-router';
-import { convertDependenciesMappingForCompatibility, updateDependenciesForMultiViewCompatibility } from "../utils/WidgetsUtils";
+import { convertDependenciesMappingForCompatibility, updateDependenciesForMultiViewCompatibility } from "../utils/InteractionMigrationUtils";
 import { getSearchUrl, getWFSLayerName } from '../utils/LayersUtils';
 const getFTSelectedArgs = (state) => {
     let layer = getEditingWidgetLayer(state);

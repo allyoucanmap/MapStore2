@@ -12,7 +12,7 @@ import { getEffectivelyVisibleLayers, getSelectedLayer, layersSelector } from '.
 import { generateRootTree, getLegendMapTarget, isMainMapWidget, isMainMapSourceInteraction, TARGET_TYPES, getChartAxisFromCurrentTimeTargetPath, isAnyLayerPath, isChartAxisDateType, isChartAxisDimensionTarget, isLayerDimensionTarget, isLayerTimeDimensionTarget, isMapTimeTarget } from '../utils/InteractionUtils';
 import { currentTimeSelector } from './dimension';
 import { DEFAULT_TARGET, LAYERS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
-import { cleanPaths, getWidgetDependency, getSelectedWidgetData, extractTraceData } from '../utils/WidgetsUtils';
+import { cleanPaths, getWidgetDependency, getSelectedWidgetData, extractTraceData, omitTransientWidgetProps } from '../utils/WidgetsUtils';
 import { dashboardServicesSelector, isDashboardAvailable, isDashboardEditing } from './dashboard';
 import { createSelector, createStructuredSelector } from 'reselect';
 import { stripTransientEffects } from '../utils/InteractionEffectsUtils';
@@ -57,7 +57,6 @@ export const getSelectedLayoutId = state => {
 export const getFloatingWidgets = state => get(state, `widgets.containers[${DEFAULT_TARGET}].widgets`);
 
 export const getWidgetsByTarget = (state, target = DEFAULT_TARGET) => get(state, `widgets.containers[${target}].widgets`);
-
 
 export const getFloatingWidgetsPerView = createSelector(
     getFloatingWidgets,
@@ -334,15 +333,14 @@ export const filterLinkedWidgets = createSelector(
     }
 );
 
-// transient effects (e.g. map viewport filters) are recomputed on load, so they are not saved
-const widgetsToSave = createSelector(filterLinkedWidgets, stripTransientEffects);
+// transient effects (e.g. map viewport filters) are recomputed on load and the UI state is not saved
+const widgetsToSave = createSelector(filterLinkedWidgets, widgets => omitTransientWidgetProps(stripTransientEffects(widgets)));
 
 export const widgetsConfig = createStructuredSelector({
     widgets: widgetsToSave,
     layouts: getUpdatedLayout,
     catalogs: dashboardServicesSelector
 });
-
 
 /**
  * Get editor change key for updating filter object
@@ -383,11 +381,6 @@ export const getWidgetFilterKey = (state) => {
     const selectedTrace = extractTraceData({ selectedChartId, selectedTraceId, charts });
     // Set chart key if editor widget type is chart
     return `charts[${selectedChartId}].traces[${selectedTrace?.id}].filter`;
-};
-
-export const getTblWidgetZoomLoader = state => {
-    let tableWidgets = (getFloatingWidgets(state) || []).filter(({ widgetType } = {}) => widgetType === "table");
-    return tableWidgets?.find(t=>t.dependencies?.zoomLoader) ? true : false;
 };
 
 /**

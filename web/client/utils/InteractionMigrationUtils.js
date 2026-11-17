@@ -9,6 +9,14 @@
 import isEmpty from 'lodash/isEmpty';
 import omit from 'lodash/omit';
 import uniqBy from 'lodash/uniqBy';
+import cloneDeep from 'lodash/cloneDeep';
+import castArray from 'lodash/castArray';
+import pick from 'lodash/pick';
+import find from 'lodash/find';
+import includes from 'lodash/includes';
+import { v1 as uuidv1 } from 'uuid';
+import { WIDGETS_REGEX } from '../actions/widgets';
+import { CHART_PROPS, legacyChartToChartWithTraces } from './WidgetsUtils';
 import {
     TARGET_TYPES,
     TARGET_EVENT_DATA_TYPES,
@@ -321,3 +329,123 @@ export const migrateLegacyConnections = (config, converters = LEGACY_CONNECTION_
             })
     };
 };
+
+// Legacy dashboard data, normalized to the current format before the connections migration
+
+// the legacy connection props stay on the converted chart, the connections migration reads them
+const LEGACY_CHART_PROPS = [...CHART_PROPS, 'mapSync', 'dependenciesMap'];
+
+/**
+ * Convert the dependenciesMapping to support maplist
+ * widget for compatibility
+ * @param data {object} response from dashboard query
+ * @returns {object} data with updated map widgets
+ */
+export const convertDependenciesMappingForCompatibility = (data) => {
+    const mapDependencies = ["layers", "viewport", "zoom", "center"];
+    const _data = cloneDeep(data);
+    const widgets = _data?.widgets || [];
+    const tempWidgetMapDependency = [];
+    return {
+        ..._data,
+        widgets: widgets.map(w => {
+            let widget = {...w};
+            if (w.widgetType === 'map' && w.map) {
+                const mapId = uuidv1(); // Add mapId to existing map data
+                widget = omit({...w, selectedMapId: mapId, maps: castArray({...w.map, mapId})}, 'map');
+                tempWidgetMapDependency.push({widgetId: widget.id, mapId});
+            }
+            if (w.widgetType === 'chart' && w.layer) {
+                const chartId = uuidv1(); // Add chartId to existing chart data
+                const chartData = omit(widget, LEGACY_CHART_PROPS) || {};
+                const editorData = pick(widget, LEGACY_CHART_PROPS) || {};
+                widget = {
+                    ...editorData,
+                    selectedChartId: chartId,
+                    charts: castArray({...chartData, layer: w.layer, name: 'Chart-1', chartId })
+                };
+            }
+            if (w.widgetType === 'chart' && widget?.charts?.find(chart => !chart.traces)) {
+                widget.charts = widget.charts.map((chart) => {
+                    if (chart.traces) {
+                        return chart;
+                    }
+                    return legacyChartToChartWithTraces(chart);
+                });
+            }
+            if (!isEmpty(widget.dependenciesMap)) {
+                const widgetPath = Object.values(widget.dependenciesMap)[0];
+                const [, dependantWidgetId] = WIDGETS_REGEX.exec(widgetPath) || [];
+                const {widgetId, mapId} = find(tempWidgetMapDependency, {widgetId: dependantWidgetId}) || {};
+                if (widgetId) {
+                    return {
+                        ...widget,
+                        // Update dependenciesMap containing `map` as dependency
+                        dependenciesMap: Object.keys(widget.dependenciesMap)
+                            .filter(k => widget.dependenciesMap[k] !== undefined)
+                            .reduce((dm, k) => {
+                                if (includes(mapDependencies, k)) {
+                                    return {
+                                        ...dm,
+                                        [k]: widget.dependenciesMap[k].replace(".map.", `.maps[${mapId}].`)
+                                    };
+                                }
+                                return {...dm, [k]: widget.dependenciesMap[k]};
+                            }, {})
+                    };
+                }
+            }
+            return widget;
+        })
+    };
+};
+
+/**
+ * Convert the dependenciesMapping to support multi-view dashboard
+ * @param data {object} response from dashboard query
+ * @returns {object} data with updated map widgets and layouts for compatibility
+ */
+export const updateDependenciesForMultiViewCompatibility = (data) => {
+    const _data = cloneDeep(data);
+    const layouts = Array.isArray(data.layouts)
+        ? _data.layouts
+        : [{ ..._data.layouts, id: uuidv1(), name: 'Main view', color: null }];
+    const widgets = _data?.widgets.map(widget => widget.layoutId
+        ? widget
+        : { ...widget, layoutId: layouts?.[0]?.id }
+    );
+
+    return {
+        ..._data,
+        layouts,
+        widgets
+    };
+};
+
+/**
+ * Updates all widget reference strings inside a dependenciesMap object by prefixing
+ * the widget ID with the provided uniqueId.
+ * @param {Object} [dependenciesMap={}] - The object containing dependency references to update.
+ * @param {string} uniqueId - The layout ID used to prefix each widget ID reference.
+ * @returns {Object} A new dependenciesMap object with all widget references updated.
+ * @example
+ * Input:  widgets[widgetId].filter
+ * Output: widgets[uniqueId-widgetId].filter
+ */
+export function updateDependenciesMap(dependenciesMap = {}, uniqueId) {
+    const updated = {};
+    const pattern = /widgets\[([^\]]+)\]/g;
+
+    for (const [key, value] of Object.entries(dependenciesMap)) {
+        if (typeof value === 'string') {
+            updated[key] = value.replace(pattern, (_, widgetId) => `widgets[${uniqueId}-${widgetId}]`);
+        } else if (typeof value === 'object' && value !== null) {
+            // Handle nested objects if present
+            updated[key] = updateDependenciesMap(value, uniqueId);
+        } else {
+            updated[key] = value;
+        }
+    }
+
+    return updated;
+}

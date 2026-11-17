@@ -46,11 +46,13 @@ export default compose(
                 ...t,
                 events: {
                     onClick: async(p, opts, describe, {crs, maxZoom} = {}) => {
-                        if (ownProps?.recordZoomLoading) return;
+                        if (ownProps?.zoomLoading) {
+                            return;
+                        }
                         try {
                             // fetch feature with geometry and zoom to it if geometry not exist
                             if (!p?.bbox) {
-                                ownProps?.updateProperty(ownProps.id, `dependencies.zoomLoader`, true);     // show loader instead of zoom icon
+                                ownProps?.updateProperty(ownProps.id, 'zoomLoading', true);
                                 let { data: featureData } = await getFeature(ownProps?.layer?.search?.url, getWFSLayerName(ownProps?.layer), {
                                     outputFormat: "application/json",
                                     srsname: 'EPSG:4326',
@@ -64,7 +66,7 @@ export default compose(
                                 } else {        // in case of table widget within the map viewer zoom to the feature
                                     onZoomToExtent(p.bbox, crs || "EPSG:4326", maxZoom);
                                 }
-                                ownProps?.updateProperty(ownProps.id, `dependencies.zoomLoader`, false);        // stop zoom loader
+                                ownProps?.updateProperty(ownProps.id, 'zoomLoading', false);
                             } else {        // in case the geometry is already existing --> zoom to feature directly without fetching
                                 if (isDashboardWidget) {
                                     zoomDashboardMaps(p, crs || "EPSG:4326", maxZoom);
@@ -82,10 +84,10 @@ export default compose(
                                 autoDismiss: 3,
                                 position: "tc"
                             });
-                            ownProps?.updateProperty(ownProps.id, `dependencies.zoomLoader`, false);    // stop zoom loader
+                            ownProps?.updateProperty(ownProps.id, 'zoomLoading', false);
                         }
                     }
-                }, formatter: ownProps?.recordZoomLoading ? <React.Fragment><span><LoadingSpinner /></span></React.Fragment> : t.tableWidgetFormatter
+                }, formatter: ownProps?.zoomLoading ? <React.Fragment><span><LoadingSpinner /></span></React.Fragment> : t.tableWidgetFormatter
             })) : []
         };
     }),

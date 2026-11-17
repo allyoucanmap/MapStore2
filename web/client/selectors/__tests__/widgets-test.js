@@ -114,6 +114,18 @@ describe('widgets selectors', () => {
         };
         expect(widgetsConfig(state).widgets[0].interactionFilters).toEqual([persisted]);
     });
+    it('widgetsConfig does not save the transient UI properties', () => {
+        const state = {
+            widgets: {
+                containers: {
+                    [DEFAULT_TARGET]: {
+                        widgets: [{ id: 'table-1', widgetType: 'table', title: 'Table', zoomLoading: true }]
+                    }
+                }
+            }
+        };
+        expect(widgetsConfig(state).widgets[0]).toEqual({ id: 'table-1', widgetType: 'table', title: 'Table' });
+    });
     it('widgetsConfig uses canonical state while maximized and filters linked views', () => {
         const widget = {
             id: 'widget-1',

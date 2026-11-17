@@ -12,13 +12,11 @@ import {
     FILTER_PROPS,
     CHART_PROPS,
     isWidgetLayerSupported,
-    cleanMaximizedState, convertDependenciesMappingForCompatibility, editorChange, editorChangeProps,
+    cleanMaximizedState, editorChange, editorChangeProps,
     fitLayoutInRows,
     placeNewWidgets,
-    getConnectionList, getDependantWidget,
     getChartAxisDependencyPath, getMapDependencyPath, getTracesDependencyPath, getSelectedWidgetData, getWidgetDependency,
-    getWidgetsGroups,
-    shortenLabel, updateDependenciesMapOfMapList,
+    shortenLabel,
     defaultChartStyle,
     getAggregationAttributeDataKey,
     generateNewTrace,
@@ -28,34 +26,32 @@ import {
     parsePieNoAggregationFunctionData,
     isChartOptionsValid,
     enableBarChartStack,
-    getWidgetLayersNames,
-    isChartCompatibleWithTableWidget,
-    canTableWidgetBeDependency,
-    checkMapSyncWithWidgetOfMapType,
     addCurrentTimeShapes,
     getWidgetByDependencyPath,
     getNextAvailableName,
-    updateDependenciesForMultiViewCompatibility,
     getDefaultNullPlaceholderForDataType,
     getErrorMessageId,
-    updateDependenciesMap,
     isTableColumnFiltersEnabled,
-    updateWidgetPropertyInList
+    updateWidgetPropertyInList,
+    omitTransientWidgetProps
 } from '../WidgetsUtils';
 import * as simpleStatistics from 'simple-statistics';
 import { createClassifyGeoJSONSync } from '../../api/GeoJSONClassification';
-import SAMPLE_1 from '../../test-resources/widgets/widgets1.json';
-const widgets = SAMPLE_1.widgets;
-import SAMPLE_2 from '../../test-resources/widgets/complex_graph.json';
-const complexGraphWidgets = SAMPLE_2.widgets;
-const dataWidgets = {
-    widgets: [
-        {id: 'w_1', maps: [{mapId: 'm_1', center: {x: 0, y: 0, crs: "EPSG:4326"}, mapInfoControl: true, layers: [{id: 'layer1'}], size: {width: 400, height: 400}, zoom: 3 }], widgetType: 'map', mapSync: true},
-        {id: 'w_2', dependenciesMap: {layers: "widgets[w_1].maps[m_1].layers", zoom: "widgets[w_1].maps[m_1].zoom", viewport: "widgets[w_1].maps[m_1].viewport", dependenciesMap: "widgets[w_1].dependenciesMap", mapSync: "widgets[w_1].mapSync"}, layer: false, legend: false, mapSync: true, url: false, widgetType: "legend", yAxis: true}
-    ]
-};
 const classifyGeoJSONSync = createClassifyGeoJSONSync(simpleStatistics);
 describe('Test WidgetsUtils', () => {
+    describe('omitTransientWidgetProps', () => {
+        it('removes the transient UI properties, keeping the others', () => {
+            const widgets = [{ id: 'table-1', widgetType: 'table', zoomLoading: true, title: 'T' }, { id: 'chart-1' }];
+            const stripped = omitTransientWidgetProps(widgets);
+            expect(stripped[0]).toEqual({ id: 'table-1', widgetType: 'table', title: 'T' });
+            expect(stripped[1]).toBe(widgets[1]);
+        });
+        it('keeps the same widgets without transient properties', () => {
+            const widgets = [{ id: 'table-1', title: 'T' }];
+            expect(omitTransientWidgetProps(widgets)).toBe(widgets);
+            expect(omitTransientWidgetProps(undefined)).toBe(undefined);
+        });
+    });
     describe('updateWidgetPropertyInList', () => {
         const list = [
             { id: 'w1', title: 'W1', options: { a: 1, b: 2 } },
@@ -82,39 +78,6 @@ describe('Test WidgetsUtils', () => {
             const twice = updateWidgetPropertyInList(once, { id: 'w2', key: 'maps', value: { mapId: 'm1', zoom: 4 }, mode: 'merge' });
             expect(twice).toEqual(once);
         });
-    });
-    it('test getConnectionList', () => {
-        const pairs = getConnectionList(widgets);
-        expect(pairs).toExist();
-        expect(pairs.length).toBe(2);
-        pairs.map(p => {
-            expect(p.length).toBe(2);
-            if (p[0] === "ec974c50-37ef-11e8-a12b-f182297314df" ) {
-                expect(p[1]).toBe("e448d550-37ef-11e8-a12b-f182297314df");
-            }
-            if (p[0] === "1ac5f5e0-37f0-11e8-a12b-f182297314df") {
-                expect(p[1]).toBe("132746e0-37f0-11e8-a12b-f182297314df");
-            }
-        });
-        const complexGraphPairs = getConnectionList(complexGraphWidgets);
-        // verify that connections without mapSync=true are not taken into account
-        expect(complexGraphPairs.length).toBe(4);
-    });
-    it('test getWidgetsGroups', () => {
-        const groups = getWidgetsGroups(widgets);
-        expect(groups[0].widgets[0]).toBe("ec974c50-37ef-11e8-a12b-f182297314df");
-        expect(groups[0].widgets[1]).toBe("e448d550-37ef-11e8-a12b-f182297314df");
-        expect(groups[0].color !== groups[1].color).toBe(true);
-        expect(groups[1].widgets[0]).toBe("1ac5f5e0-37f0-11e8-a12b-f182297314df");
-        expect(groups[1].widgets[1]).toBe("132746e0-37f0-11e8-a12b-f182297314df");
-        expect(groups.length).toBe(2);
-        expect(groups[0].color !== groups[1].color).toBe(true);
-        groups.map(g => expect(g.widgets.length).toBe(2));
-        const complexChartGroups = getWidgetsGroups(complexGraphWidgets);
-        // verify that connections without mapSync=true are not taken into account
-        expect(complexChartGroups.length).toBe(2);
-        expect(complexChartGroups[0].widgets.length).toBe(3);
-        expect(complexChartGroups[1].widgets.length).toBe(2);
     });
 
     it('shortenLabel with 2500000000 and threshold=1000', () => {
@@ -412,50 +375,6 @@ describe('Test WidgetsUtils', () => {
             xxs: [{ i: 'widget-1', x: 0 }]
         });
     });
-    it('convertDependenciesMappingForCompatibility', () => {
-        const data = {widgets: [{id: 'w_1', map: {center: {x: 0, y: 0, crs: "EPSG:4326"}, mapInfoControl: true, layers: [{id: 'layer1'}], size: {width: 400, height: 400}, zoom: 3 }, widgetType: 'map', mapSync: true},
-            {id: 'w_2', dependenciesMap: {layers: "widgets[w_1].map.layers", zoom: "widgets[w_1].map.zoom", viewport: "widgets[w_1].map.viewport", dependenciesMap: "widgets[w_1].dependenciesMap", mapSync: "widgets[w_1].mapSync"}, layer: false, legend: false, mapSync: true, url: false, widgetType: "legend", yAxis: true}]};
-        const modified = convertDependenciesMappingForCompatibility(data);
-        expect(modified.widgets[0].maps).toBeTruthy();
-        [
-            modified.widgets[1].dependenciesMap.layers,
-            modified.widgets[1].dependenciesMap.viewport,
-            modified.widgets[1].dependenciesMap.zoom
-        ].forEach(match => expect(match).toContain('maps'));
-    });
-    it('convertDependenciesMappingForCompatibility when no conversion needed', () => {
-        const modified = convertDependenciesMappingForCompatibility(dataWidgets);
-        expect(modified).toEqual(dataWidgets);
-    });
-    it('convertDependenciesMappingForCompatibility for chart', () => {
-        const data = {widgets: [{id: 'w_2', widgetType: "chart", layer: {name: "Test1"}, mapSync: true, geomProp: "the_geom", yAxis: true, cartesian: false, legend: false, options: {}, autoColorOptions: {}, url: "some_url"}]};
-        const { widgets: _widgets } = convertDependenciesMappingForCompatibility(data);
-        expect(_widgets[0].id).toBe("w_2");
-        expect(_widgets[0].mapSync).toBeTruthy();
-        expect(_widgets[0].selectedChartId).toBeTruthy();
-        expect(_widgets[0].charts).toBeTruthy();
-        expect(_widgets[0].charts[0].chartId).toBe(_widgets[0].selectedChartId);
-        expect(_widgets[0].charts[0].yAxisOpts).toBeTruthy();
-        expect(_widgets[0].charts[0].cartesian).toBe(false);
-        expect(_widgets[0].charts[0].legend).toBe(false);
-        expect(_widgets[0].charts[0].name).toBe('Chart-1');
-        expect(_widgets[0].charts[0].traces.length).toBe(1);
-        expect(_widgets[0].charts[0].traces[0].layer).toBeTruthy();
-        expect(_widgets[0].charts[0].traces[0].options).toBeTruthy();
-        expect(_widgets[0].charts[0].traces[0].style).toBeTruthy();
-    });
-    it('updateDependenciesMapOfMapList', () => {
-        const modified = updateDependenciesMapOfMapList(dataWidgets.widgets, 'w_1', 'm_2');
-        [
-            modified[1].dependenciesMap.layers,
-            modified[1].dependenciesMap.zoom,
-            modified[1].dependenciesMap.viewport
-        ].forEach(match => expect(match).toContain('maps[m_2]'));
-    });
-    it('updateDependenciesMapOfMapList when no updated needed', () => {
-        const modified = updateDependenciesMapOfMapList(dataWidgets.widgets, 'w_1', 'm_1');
-        expect(modified).toEqual(dataWidgets.widgets);
-    });
     describe('Test editor change', () => {
         it('editorChangeProps', () =>{
             const props = editorChangeProps({key: 'layer', value: "test"});
@@ -666,21 +585,6 @@ describe('Test WidgetsUtils', () => {
             expect(filters[0].data.layer.name).toBe('Test1');
             expect(filters[1].data.layer.name).toBe('Test3');
         });
-    });
-    it("getDependantWidget", () => {
-        const widget = getDependantWidget({
-            widgets: [{id: "1", layer: {name: "test"}}, {id: 2, layer: {name: "test1"}}],
-            dependenciesMap: {layer: 'widgets[1].layer'}}
-        );
-        expect(widget).toBeTruthy();
-        expect(widget.layer.name).toBe("test");
-    });
-    it("getDependantWidget when not matching", () => {
-        const widget = getDependantWidget({
-            widgets: [{id: "1", layer: {name: "test"}}, {id: 2, layer: {name: "test1"}}],
-            dependenciesMap: {layer: 'widgets[3].layer'}}
-        );
-        expect(widget).toEqual({});
     });
     it("getSelectedWidgetData for charts", () => {
         const widget = getSelectedWidgetData({id: "1", selectedChartId: "1", widgetType: "chart", charts: [{chartId: "1", traces: [{ layer: "test" }]}]});
@@ -1115,92 +1019,7 @@ describe('Test WidgetsUtils', () => {
         expect(enableBarChartStack({ traces: [{ type: 'bar' }, { type: 'bar' }], xAxisOpts: [{ id: 0 }, { id: 'axis-1' }], yAxisOpts: [{ id: 0 }, { id: 'axis-1' }] })).toBe(false);
         expect(enableBarChartStack({ traces: [{ type: 'bar' }, { type: 'bar' }], xAxisOpts: [{ id: 0 }], yAxisOpts: [{ id: 0 }] })).toBe(true);
     });
-    it('getWidgetLayersNames', () => {
-        expect(getWidgetLayersNames()).toEqual([]);
-        expect(getWidgetLayersNames({})).toEqual([]);
-        expect(getWidgetLayersNames({widgetType: 'map'})).toEqual([]);
-        expect(getWidgetLayersNames({widgetType: 'map', maps: [{layers: [{name: "test"}]}]})).toEqual(["test"]);
-        expect(getWidgetLayersNames({widgetType: 'legend', layer: {name: "test"}})).toEqual(["test"]);
-        expect(getWidgetLayersNames({widgetType: 'counter', layer: {name: "test"}})).toEqual(["test"]);
-        expect(getWidgetLayersNames({widgetType: 'table', layer: {name: "test"}})).toEqual(["test"]);
-        expect(getWidgetLayersNames({widgetType: 'chart'})).toEqual([]);
-        expect(getWidgetLayersNames({widgetType: 'chart', charts: [{chartId: "1"}]})).toEqual([]);
-        expect(getWidgetLayersNames({widgetType: 'chart', charts: [{chartId: "1", traces: []}]})).toEqual([]);
-        expect(getWidgetLayersNames({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: ""}}]}]})).toEqual(["layer_1"]);
-        expect(getWidgetLayersNames({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_1"}}]}]})).toEqual(["layer_1"]);
-        expect(getWidgetLayersNames({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_1"}}]},
-            {chartId: "2", traces: [{layer: {name: "layer_1"}}]}]})).toEqual(["layer_1"]);
-        expect(getWidgetLayersNames({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_1"}}]},
-            {chartId: "2", traces: [{layer: {name: "layer_2"}}]}]})).toEqual(["layer_1", "layer_2"]);
-    });
-    it('isChartCompatibleWithTableWidget', () => {
-        expect(isChartCompatibleWithTableWidget()).toBeFalsy();
-        expect(isChartCompatibleWithTableWidget({widgetType: 'map'})).toBeFalsy();
-        expect(isChartCompatibleWithTableWidget({widgetType: 'chart', charts: [{chartId: "1"}]})).toBeFalsy();
-        expect(isChartCompatibleWithTableWidget({widgetType: 'chart', charts: [{chartId: "1", traces: []}]})).toBeFalsy();
-        expect(isChartCompatibleWithTableWidget({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}]}]}, {layer: {name: "layer_1"}})).toBeTruthy();
-        expect(isChartCompatibleWithTableWidget({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_2"}}]}]}, {layer: {name: "layer_1"}})).toBeFalsy();
-        expect(isChartCompatibleWithTableWidget({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_1"}}]},
-            {chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_1"}}]}]}, {layer: {name: "layer_1"}})).toBeTruthy();
-        expect(isChartCompatibleWithTableWidget({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_2"}}, {layer: {name: "layer_1"}}]},
-            {chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_1"}}]}]}, {layer: {name: "layer_1"}})).toBeFalsy();
-        expect(isChartCompatibleWithTableWidget({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_1"}}]},
-            {chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_2"}}]}]}, {layer: {name: "layer_1"}})).toBeFalsy();
-    });
-    it('canTableWidgetBeDependency', () => {
-        const dependencyTableWidget1 = {layer: {name: "layer_1"}};
-        const dependencyTableWidget2 = {layer: {name: "layer_2"}};
-        expect(canTableWidgetBeDependency()).toBeFalsy();
-        expect(canTableWidgetBeDependency({widgetType: 'map'})).toBeFalsy();
-        expect(canTableWidgetBeDependency({widgetType: 'map', maps: [{layers: [{name: "layer_1"}]}]}, dependencyTableWidget1)).toBeTruthy();
-        expect(canTableWidgetBeDependency({widgetType: 'counter', layer: {name: "layer_1"}}, dependencyTableWidget1)).toBeTruthy();
-        expect(canTableWidgetBeDependency({widgetType: 'counter', layer: {name: "layer_1"}}, dependencyTableWidget2)).toBeFalsy();
-        expect(canTableWidgetBeDependency({widgetType: 'table', layer: {name: "layer_1"}}, dependencyTableWidget1)).toBeTruthy();
-        expect(canTableWidgetBeDependency({widgetType: 'table', layer: {name: "layer_1"}}, dependencyTableWidget2)).toBeFalsy();
-        expect(canTableWidgetBeDependency({widgetType: 'chart', charts: [{chartId: "1"}]})).toBeFalsy();
-        expect(canTableWidgetBeDependency({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}]}]}, dependencyTableWidget1)).toBeTruthy();
-        expect(canTableWidgetBeDependency({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_1"}}]}]}, dependencyTableWidget2)).toBeFalsy();
-        expect(canTableWidgetBeDependency({widgetType: 'chart', charts: [{chartId: "1", traces: [{layer: {name: "layer_1"}}, {layer: {name: "layer_2"}}]}]}, dependencyTableWidget2)).toBeFalsy();
-    });
 
-    it("MapSync dependency to mapWidget", () => {
-        const parameters = {
-            dependenciesMap: {
-                mapSync: 'widgets[456].mapSync'
-            },
-            widgets: [
-                {
-                    id: "123",
-                    widgetType: 'table'
-                },
-                {
-                    id: "456",
-                    widgetType: 'map'
-                }
-            ]
-        };
-        const result = checkMapSyncWithWidgetOfMapType(parameters.widgets, parameters.dependenciesMap);
-        expect(result).toEqual(true);
-    });
-    it("MapSync dependency not in map widget", () => {
-        const parameters = {
-            dependenciesMap: {
-                mapSync: 'widgets[123].mapSync'
-            },
-            widgets: [
-                {
-                    id: "123",
-                    widgetType: 'table'
-                },
-                {
-                    id: "456",
-                    widgetType: 'map'
-                }
-            ]
-        };
-        const result = checkMapSyncWithWidgetOfMapType(parameters.widgets, parameters.dependenciesMap);
-        expect(result).toEqual(false);
-    });
     describe('addCurrentTimeShapes', () => {
         it('returns no shapes without applied times', () => {
             expect(addCurrentTimeShapes({ xAxisOpts: [{ type: 'date' }], yAxisOpts: [{ type: 'date' }] })).toEqual([]);
@@ -1326,40 +1145,6 @@ describe('Test WidgetsUtils', () => {
         });
     });
 
-    describe('updateDependenciesForMultiViewCompatibility', () => {
-        it('should handle data with existing layouts array', () => {
-            const data = {
-                layouts: [{ id: '1', name: 'Layout 1' }],
-                widgets: [{ id: 'w1', layoutId: '1' }]
-            };
-            const result = updateDependenciesForMultiViewCompatibility(data);
-            expect(Array.isArray(result.layouts)).toBe(true);
-            expect(result.layouts[0].id).toBe('1');
-            expect(result.widgets[0].layoutId).toBe('1');
-        });
-
-        it('should wrap a single layout object into an array if not already an array', () => {
-            const data = {
-                layouts: { md: [] },
-                widgets: [{ id: 'w1' }]
-            };
-            const result = updateDependenciesForMultiViewCompatibility(data);
-            expect(Array.isArray(result.layouts)).toBe(true);
-            expect(result.layouts[0].name).toBe('Main view');
-            expect(result.widgets[0].layoutId).toBe(result.layouts[0].id);
-        });
-
-        it('should assign missing layoutId to widgets based on first layout', () => {
-            const data = {
-                layouts: [{ id: 'l1', name: 'Layout 1' }],
-                widgets: [{ id: 'w1' }, { id: 'w2', layoutId: 'l2' }]
-            };
-            const result = updateDependenciesForMultiViewCompatibility(data);
-            expect(result.widgets[0].layoutId).toBe('l1');
-            expect(result.widgets[1].layoutId).toBe('l2');
-        });
-    });
-
     describe('getDefaultNullPlaceholderForDataType', () => {
         it('returns correct default values for numeric types', () => {
             expect(getDefaultNullPlaceholderForDataType('int')).toBe(0);
@@ -1430,23 +1215,6 @@ describe('Test WidgetsUtils', () => {
     });
 
     // Tests for updateDependenciesMap
-    describe('updateDependenciesMap', () => {
-        it('should update simple widget references in strings', () => {
-            const deps = { center: 'widgets[widget1].center' };
-            const result = updateDependenciesMap(deps, 'layout1');
-            expect(result.center).toBe('widgets[layout1-widget1].center');
-        });
-
-        it('should update nested objects correctly', () => {
-            const deps = {
-                map: {
-                    center: 'widgets[widget1].maps[map1].center'
-                }
-            };
-            const result = updateDependenciesMap(deps, 'layout2');
-            expect(result.map.center).toBe('widgets[layout2-widget1].maps[map1].center');
-        });
-    });
 
     describe('isTableColumnFiltersEnabled', () => {
         const table = { id: 'table-1', widgetType: 'table' };

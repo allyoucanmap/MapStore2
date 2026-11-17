@@ -30,11 +30,11 @@ import BaseLegendWidget from './LegendWidget';
 import BaseFilterWidget from './FilterWidget';
 
 //
-// connect widgets to dependencies, remote services and add base icons/tools
+// connect widgets to interactions, remote services and add base icons/tools
 //
 
 /**
- * Chart widget with automatic data fetch, dependency management and all base enhancers. mapSync and dependencies are mapped to the needed props. Adds to the Base component the following props.
+ * Chart widget with automatic data fetch, interaction filters and all base enhancers. Adds to the Base component the following props.
  * @prop {object[]} interactionFilters the filters applied by the interactions
  * @prop {string} geomProp the geometry, target of the spatial filter interactions
  * @prop {object} layer The layer object where to perform the requests
@@ -56,7 +56,7 @@ export const TextWidget = compose(
 )(BaseTextWidget);
 
 /**
- * Map widgets with dependencies management and all base enhancers. Adds to the base widget the following props.
+ * Map widget showing the selected map, with interaction zoom requests and all base enhancers. Adds to the base widget the following props.
  * @prop {object} map the map to display, with layers, projection, bbox, center ....
  * @prop {object} options
  */
@@ -66,7 +66,7 @@ export const MapWidget = compose(
 )(BaseMapWidget);
 
 /**
- * Table widgets with automatic data fetch, dependencies management and all base enhancers. Adds to the base component the following props.
+ * Table widgets with automatic data fetch, interaction filters and all base enhancers. Adds to the base component the following props.
  * @prop {object[]} interactionFilters the filters applied by the interactions
  * @prop {string} geomProp the geometry, target of the spatial filter interactions
  * @prop {object} layer The layer object where to perform the requests
@@ -79,7 +79,7 @@ export const TableWidget = compose(
 )(BaseTableWidget);
 
 /**
- * Counter widget with automatic data fetch, dependency management and all base enhancers. Adds to the base component the following props.
+ * Counter widget with automatic data fetch, interaction filters and all base enhancers. Adds to the base component the following props.
  * @prop {object[]} interactionFilters the filters applied by the interactions
  * @prop {string} geomProp the geometry, target of the spatial filter interactions
  * @prop {object} layer The layer object where to perform the requests

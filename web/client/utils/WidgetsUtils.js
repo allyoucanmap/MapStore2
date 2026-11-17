@@ -12,27 +12,21 @@ import {
     isNumber,
     round,
     findIndex,
-    includes,
     isEmpty,
-    cloneDeep,
     omit,
     castArray,
     pick,
     isString,
-    uniq,
-    isNil
+    uniq
 } from 'lodash';
 import set from "lodash/fp/set";
-import { CHARTS_REGEX, TRACES_REGEX, MAPS_REGEX, WIDGETS_MAPS_REGEX, WIDGETS_REGEX, LAYERS_REGEX } from '../actions/widgets';
-import { findGroups } from './GraphUtils';
-import { sameToneRangeColors } from './ColorUtils';
+import { CHARTS_REGEX, TRACES_REGEX, MAPS_REGEX, WIDGETS_REGEX, LAYERS_REGEX } from '../actions/widgets';
 import { v1 as uuidv1 } from "uuid";
 import { arrayUpsert } from "./ImmutableUtils";
 import { randomInt } from "./RandomUtils";
 import moment from 'moment';
 import { dateFormats } from './FeatureGridUtils';
 import { createNewFilter } from '../plugins/widgetbuilder/utils/filterBuilder';
-
 
 export const FONT = {
     FAMILY: "inherit",
@@ -84,6 +78,34 @@ export const getMapDependencyPath = (k, widgetId, widgetMaps) => {
 };
 
 /**
+ * Get a chart axis dependency path (resolves charts[chartId].xAxisOpts[axisId] to indices).
+ * It also supports axis paths displayed under a trace node, resolving them to the chart-level axis.
+ * @param {string} k - The dependency path
+ * @param {string} widgetId - The ID of the widget
+ * @param {object[]} widgets - The list of widgets
+ * @returns {string} The modified dependency path
+ */
+export const getChartAxisDependencyPath = (k, widgetId, widgets) => {
+    const axisPathRegex = /^charts\["?([^"\]]*)"?\]\.(?:traces\["?([^"\]]*)"?\]\.)?(xAxisOpts|yAxisOpts)\["?([^"\]]*)"?\]\.?(.*)$/;
+    const [, chartId, , axisOptsKey, axisId, rest] = axisPathRegex.exec(k) || [];
+    if (!chartId || !axisOptsKey) {
+        return k;
+    }
+    const widget = find(widgets, { id: widgetId });
+    const charts = get(widget, 'charts', []) || [];
+    const chartIndex = findIndex(charts, { chartId });
+    if (chartIndex === -1) {
+        return k;
+    }
+    const chart = charts[chartIndex] || {};
+    const axisIndex = findIndex(chart[axisOptsKey] || [], axis => String(axis?.id) === String(axisId));
+    if (axisIndex === -1) {
+        return k;
+    }
+    return `charts[${chartIndex}].${axisOptsKey}[${axisIndex}]${rest ? `.${rest}` : ''}`;
+};
+
+/**
  * Get a traces dependency path (resolves charts[chartId].traces[traceId] to indices)
  * @param {string} k - The dependency path (e.g. "charts[chartId].traces[traceId].filter")
  * @param {string} widgetId - The ID of the widget
@@ -116,34 +138,6 @@ export const getTracesDependencyPath = (k, widgetId, widgets) => {
 };
 
 /**
- * Get a chart axis dependency path (resolves charts[chartId].xAxisOpts[axisId] to indices).
- * It also supports axis paths displayed under a trace node, resolving them to the chart-level axis.
- * @param {string} k - The dependency path
- * @param {string} widgetId - The ID of the widget
- * @param {object[]} widgets - The list of widgets
- * @returns {string} The modified dependency path
- */
-export const getChartAxisDependencyPath = (k, widgetId, widgets) => {
-    const axisPathRegex = /^charts\["?([^"\]]*)"?\]\.(?:traces\["?([^"\]]*)"?\]\.)?(xAxisOpts|yAxisOpts)\["?([^"\]]*)"?\]\.?(.*)$/;
-    const [, chartId, , axisOptsKey, axisId, rest] = axisPathRegex.exec(k) || [];
-    if (!chartId || !axisOptsKey) {
-        return k;
-    }
-    const widget = find(widgets, { id: widgetId });
-    const charts = get(widget, 'charts', []) || [];
-    const chartIndex = findIndex(charts, { chartId });
-    if (chartIndex === -1) {
-        return k;
-    }
-    const chart = charts[chartIndex] || {};
-    const axisIndex = findIndex(chart[axisOptsKey] || [], axis => String(axis?.id) === String(axisId));
-    if (axisIndex === -1) {
-        return k;
-    }
-    return `charts[${chartIndex}].${axisOptsKey}[${axisIndex}]${rest ? `.${rest}` : ''}`;
-};
-
-/**
  * Get a widget dependency
  * @param {string} k - The dependency path
  * @param {object[]} widgets - The list of widgets
@@ -165,30 +159,6 @@ export const getWidgetDependency = (k, widgets, maps) => {
     return rest
         ? get(widget, rest)
         : widget;
-};
-
-/**
- * Get a connection list
- * @param {object[]} widgets - The list of widgets
- * @returns {object[]} The connection list
- */
-export const getConnectionList = (widgets = []) => {
-    return widgets.reduce(
-        (acc, curr) => {
-        // note: check mapSync because dependency map is not actually cleaned
-            const depMap = (get(curr, "mapSync") && get(curr, "dependenciesMap")) || {};
-            const dependencies = Object.keys(depMap).map(k => getWidgetByDependencyPath(depMap[k], widgets)) || [];
-            return [
-                ...acc,
-                ...(dependencies
-                    /**
-                     * This filter removes temp orphan dependencies, but can not recover connection when the value of the connected element is undefined
-                     * TODO: remove this filter and clean orphan dependencies
-                     */
-                    .filter(d => !isNil(d))
-                    .map(d => [curr.id, d.id]))
-            ];
-        }, []);
 };
 
 /**
@@ -232,16 +202,6 @@ export const shortenLabel = (label, threshold = 1000, decimals = 1) => {
     return number;
 };
 
-export const getWidgetsGroups =  (widgets = []) => {
-    const groups = findGroups(getConnectionList(widgets));
-    const colorsOpts = { base: 190, range: 340, options: { base: 10, range: 360, s: 0.67, v: 0.67 } };
-    const colors = sameToneRangeColors(colorsOpts.base, colorsOpts.range, groups.length + 1, colorsOpts.options);
-    return groups.map((members, i) => ({
-        color: colors[i],
-        widgets: members
-    }));
-};
-
 /**
  * returns default aggregation operations for
  * charts that can be used in widgtes and for
@@ -258,7 +218,7 @@ export const getDefaultAggregationOperations = () => {
     ];
 };
 
-export const CHART_PROPS = ["selectedChartId", "selectedTraceId", "id", "mapSync", "widgetType", "charts", "dependenciesMap", "dataGrid", "title", "description", "globalWidgetMode"];
+export const CHART_PROPS = ["selectedChartId", "selectedTraceId", "id", "widgetType", "charts", "dataGrid", "title", "description", "globalWidgetMode"];
 export const FILTER_PROPS = ["selectedFilterId", "id", "widgetType", "filters", "selections", "dataGrid", "title", "description", "interactions", "globalWidgetMode"];
 
 /**
@@ -591,108 +551,6 @@ export const cleanMaximizedState = (config = {}) => ({
 });
 
 /**
- * Convert the dependenciesMapping to support maplist
- * widget for compatibility
- * @param data {object} response from dashboard query
- * @returns {object} data with updated map widgets
- */
-export const convertDependenciesMappingForCompatibility = (data) => {
-    const mapDependencies = ["layers", "viewport", "zoom", "center"];
-    const _data = cloneDeep(data);
-    const widgets = _data?.widgets || [];
-    const tempWidgetMapDependency = [];
-    return {
-        ..._data,
-        widgets: widgets.map(w => {
-            let widget = {...w};
-            if (w.widgetType === 'map' && w.map) {
-                const mapId = uuidv1(); // Add mapId to existing map data
-                widget = omit({...w, selectedMapId: mapId, maps: castArray({...w.map, mapId})}, 'map');
-                tempWidgetMapDependency.push({widgetId: widget.id, mapId});
-            }
-            if (w.widgetType === 'chart' && w.layer) {
-                const chartId = uuidv1(); // Add chartId to existing chart data
-                const chartData = omit(widget, CHART_PROPS) || {};
-                const editorData = pick(widget, CHART_PROPS) || {};
-                widget = {
-                    ...editorData,
-                    selectedChartId: chartId,
-                    charts: castArray({...chartData, layer: w.layer, name: 'Chart-1', chartId })
-                };
-            }
-            if (w.widgetType === 'chart' && widget?.charts?.find(chart => !chart.traces)) {
-                widget.charts = widget.charts.map((chart) => {
-                    if (chart.traces) {
-                        return chart;
-                    }
-                    return legacyChartToChartWithTraces(chart);
-                });
-            }
-            if (!isEmpty(widget.dependenciesMap)) {
-                const widgetPath = Object.values(widget.dependenciesMap)[0];
-                const [, dependantWidgetId] = WIDGETS_REGEX.exec(widgetPath) || [];
-                const {widgetId, mapId} = find(tempWidgetMapDependency, {widgetId: dependantWidgetId}) || {};
-                if (widgetId) {
-                    return {
-                        ...widget,
-                        // Update dependenciesMap containing `map` as dependency
-                        dependenciesMap: Object.keys(widget.dependenciesMap)
-                            .filter(k => widget.dependenciesMap[k] !== undefined)
-                            .reduce((dm, k) => {
-                                if (includes(mapDependencies, k)) {
-                                    return {
-                                        ...dm,
-                                        [k]: widget.dependenciesMap[k].replace(".map.", `.maps[${mapId}].`)
-                                    };
-                                }
-                                return {...dm, [k]: widget.dependenciesMap[k]};
-                            }, {})
-                    };
-                }
-            }
-            return widget;
-        })
-    };
-};
-
-/**
- * Update the dependenciesMap of the widgets containing map as dependencies
- * when a map is changed in the widget via map switcher
- * widget for compatibility
- * @param allWidgets {object[]} response from dashboard query
- * @param widgetId {string} widget id of map list
- * @param selectedMapId {string} selected map id
- * @returns {object[]} updated widgets
- */
-export const updateDependenciesMapOfMapList = (allWidgets = [], widgetId, selectedMapId) => {
-    let widgets = [...allWidgets];
-    const widgetsWithDependenciesMaps = widgets.filter(t => t.dependenciesMap);
-    const isUpdateNeeded = widgetsWithDependenciesMaps.some(t => Object.values(t.dependenciesMap).some(td => (WIDGETS_REGEX.exec(td) || [])[1] === widgetId));
-    if (isUpdateNeeded) {
-        widgets = widgets.map(widget => {
-            const dependenciesMap = widget.dependenciesMap;
-            const modifiedWidgetId = !isEmpty(dependenciesMap) && (WIDGETS_REGEX.exec(Object.values(dependenciesMap)[0]) || [])[1];
-            return {
-                ...widget,
-                ...(!isEmpty(dependenciesMap) && modifiedWidgetId === widgetId && {
-                    dependenciesMap: Object.keys(dependenciesMap).reduce((dm, k) => {
-                        const [,, mapIdToReplace] = WIDGETS_MAPS_REGEX.exec(dependenciesMap[k]) || [];
-                        if (mapIdToReplace) {
-                            return {
-                                ...dm,
-                                [k]: dependenciesMap[k].replace(mapIdToReplace, selectedMapId) // Update map id of the dependenciesMap
-                            };
-                        }
-                        return {...dm, [k]: dependenciesMap[k]};
-
-                    }, {})})
-            };
-        });
-    }
-    return widgets;
-};
-
-/**
  * Generate widget editor props
  * @param {object} action
  * @returns {object} updated editor change props
@@ -942,9 +800,6 @@ export const editorChange = (action, state) => {
     }
     return set(path, value, state);
 };
-
-export const getDependantWidget = ({widgets = [], dependenciesMap = {}}) =>
-    widgets?.find(w => w.id === (WIDGETS_REGEX.exec(Object.values(dependenciesMap)?.[0]) || [])[1]) || {};
 
 /**
  * Get the current selected trace data
@@ -1276,116 +1131,32 @@ export const enableBarChartStack = (chart = {}) => {
 };
 
 /**
- * Get names of the layers used in the widget
- * @param {object} widget current widget object
- * @returns {string[]} array of widget's layers name
- */
-export const getWidgetLayersNames = (widget) => {
-    const type = widget?.widgetType;
-    if (!isEmpty(widget)) {
-        if (type !== 'map') {
-            if (type === 'chart') {
-                return uniq(get(widget, 'charts', [])
-                    .map(c => get(c, 'traces', []).map(t => get(t, 'layer.name', '')))
-                    .flat()
-                    .filter(n => n)
-                );
-            }
-            return castArray(get(widget, 'layer.name', []));
-        }
-        return uniq(get(widget, 'maps', [])
-            .map(m => get(m, 'layers', []).map(t => get(t, 'name', '')))
-            .flat()
-            .filter(n => n)
-        );
-    }
-    return [];
-};
-
-/**
- * Check if chart widget layers are compatible with table widget layer
- * @param {object} widget current widget object
- * @param {object} tableWidget dependant table widget object
- * @returns {boolean} flag determines if compatible
- */
-export const isChartCompatibleWithTableWidget = (widget, tableWidget) => {
-    const tableLayerName = tableWidget?.layer?.name;
-    return tableLayerName && get(widget, 'charts', [])
-        .every(({ traces = [] } = {}) => traces
-            .every(trace => get(trace, 'layer.name') === tableLayerName));
-};
-
-/**
  * Returns true if the table shows the column filters, when it sends interactions
  * @param {object} widget the widget to check
  * @returns {boolean}
  */
-export const isTableColumnFiltersEnabled = (widget) => widget?.widgetType === 'table'
-    && (widget.interactions || []).some(interaction => interaction?.plugged);
+/**
+ * Widget properties of the UI state (e.g. the table zoom loader), not saved
+ */
+export const TRANSIENT_WIDGET_PROPS = ['zoomLoading'];
 
 /**
- * Check if a table widget can be a depedency to the widget currently is edit
- * @param {object} widget current widget in edit
- * @param {object} dependencyTableWidget target widget in check for dependency compatibility
- * @returns {boolean} flag determines if compatible
+ * Removes the transient UI properties from the widgets to save
+ * @param {object[]} widgets the widgets
+ * @returns {object[]} the widgets without the transient properties
  */
-export const canTableWidgetBeDependency = (widget, dependencyTableWidget) => {
-    const isChart = widget && widget.widgetType === 'chart';
-    const isMap = widget && widget.widgetType === 'map';
-    const editingLayer = getWidgetLayersNames(widget);
-
-    if (isMap) {
-        return !isEmpty(editingLayer);
+export const omitTransientWidgetProps = (widgets) => {
+    if (!Array.isArray(widgets)) {
+        return widgets;
     }
-    const layerPresent = editingLayer.includes(get(dependencyTableWidget, 'layer.name'));
-    return isChart ? layerPresent && isChartCompatibleWithTableWidget(widget, dependencyTableWidget) : layerPresent;
+    const stripped = widgets.map(widget => TRANSIENT_WIDGET_PROPS.some(prop => prop in (widget || {}))
+        ? omit(widget, TRANSIENT_WIDGET_PROPS)
+        : widget);
+    return stripped.some((widget, idx) => widget !== widgets[idx]) ? stripped : widgets;
 };
 
-function findWidgetById(widgets, widgetId) {
-    return widgets?.find(widget => widget.id === widgetId);
-}
-
-/**
- * Checks if a widget, referenced by `mapSync` in the `dependenciesMap`, has `widgetType` set to `'map'`.
- * If the widget has a `dependenciesMap`, it will be checked recursively.
- *
- * @param {Array<Object>} widgets - List of widget objects, each containing an `id`, `widgetType`, and optionally `dependenciesMap`.
- * @param {Object} dependenciesMap - An object containing a `mapSync` reference to another widget's `mapSync` (e.g., "widgets[widgetId].mapSync").
- * @returns {boolean} - Returns boolean
- *
- * @example
- * checkMapSyncWithWidgetOfMapType(widgets, { mapSync: 'widgets[40fdb720-b228-11ef-974d-8115935269b7].mapSync' });
- */
-export function checkMapSyncWithWidgetOfMapType(widgets, dependenciesMap) {
-    const mapSyncDependencies = dependenciesMap?.mapSync;
-
-    if (!mapSyncDependencies) {
-        return false;
-    }
-    if (mapSyncDependencies.includes("map.mapSync")) {
-        return true;
-    }
-    // Extract widget ID
-    const widgetId = mapSyncDependencies.match?.(/\[([^\]]+)\]/)?.[1];
-    if (!widgetId) {
-        return false;
-    }
-    // Find the widget using the extracted widgetId
-    const widget = findWidgetById(widgets, widgetId);
-    if (!widget) {
-        return false;
-    }
-    // Check if the widget has widgetType 'map'
-    if (widget.widgetType === 'map') {
-        return true;
-    }
-    // If widget has its own dependenciesMap, recursively check that map
-    if (widget.dependenciesMap) {
-        return checkMapSyncWithWidgetOfMapType(widgets, widget.dependenciesMap);
-    }
-    // If no match found, return false
-    return false;
-}
+export const isTableColumnFiltersEnabled = (widget) => widget?.widgetType === 'table'
+    && (widget.interactions || []).some(interaction => interaction?.plugged);
 
 const createRectShape = (axisId, axisType, startTime, endTime, fill = {}) => {
     const isX = axisType === 'x';
@@ -1516,28 +1287,6 @@ export const getNextAvailableName = (data) => {
 };
 
 /**
- * Convert the dependenciesMapping to support multi-view dashboard
- * @param data {object} response from dashboard query
- * @returns {object} data with updated map widgets and layouts for compatibility
- */
-export const updateDependenciesForMultiViewCompatibility = (data) => {
-    const _data = cloneDeep(data);
-    const layouts = Array.isArray(data.layouts)
-        ? _data.layouts
-        : [{ ..._data.layouts, id: uuidv1(), name: 'Main view', color: null }];
-    const widgets = _data?.widgets.map(widget => widget.layoutId
-        ? widget
-        : { ...widget, layoutId: layouts?.[0]?.id }
-    );
-
-    return {
-        ..._data,
-        layouts,
-        widgets
-    };
-};
-
-/**
  * Returns the default placeholder for Null value based on the data type.
  * @param {string} type - The data type ('int', 'number', 'date', 'time', 'date-time', 'string', 'boolean')
  * @returns {number|string} The default placeholder value for the given type
@@ -1572,34 +1321,6 @@ export function getErrorMessageId(error) {
         return "dashboard.errors.loading.dashboardDoesNotExist";
     }
     return "dashboard.errors.loading.title";
-}
-
-/**
- * Updates all widget reference strings inside a dependenciesMap object by prefixing
- * the widget ID with the provided uniqueId.
- * @param {Object} [dependenciesMap={}] - The object containing dependency references to update.
- * @param {string} uniqueId - The layout ID used to prefix each widget ID reference.
- * @returns {Object} A new dependenciesMap object with all widget references updated.
- * @example
- * Input:  widgets[widgetId].filter
- * Output: widgets[uniqueId-widgetId].filter
- */
-export function updateDependenciesMap(dependenciesMap = {}, uniqueId) {
-    const updated = {};
-    const pattern = /widgets\[([^\]]+)\]/g;
-
-    for (const [key, value] of Object.entries(dependenciesMap)) {
-        if (typeof value === 'string') {
-            updated[key] = value.replace(pattern, (_, widgetId) => `widgets[${uniqueId}-${widgetId}]`);
-        } else if (typeof value === 'object' && value !== null) {
-            // Handle nested objects if present
-            updated[key] = updateDependenciesMap(value, uniqueId);
-        } else {
-            updated[key] = value;
-        }
-    }
-
-    return updated;
 }
 
 export const cleanPaths = p => {
