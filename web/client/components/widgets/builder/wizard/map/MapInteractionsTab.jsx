@@ -12,7 +12,8 @@ import InteractionEditor from '../common/interactions/InteractionsEditor';
 
 const MAP_INTERACTION_TARGET_MSG_IDS = {
     [TARGET_TYPES.APPLY_SPATIAL_FILTER]: 'widgets.builder.wizard.viewportFilter',
-    [TARGET_TYPES.APPLY_VIEW_SYNC]: 'widgets.builder.wizard.syncMapView'
+    [TARGET_TYPES.APPLY_VIEW_SYNC]: 'widgets.builder.wizard.syncMapView',
+    [TARGET_TYPES.APPLY_DIMENSION]: 'widgets.builder.wizard.timelineCurrentTime'
 };
 
 /**
@@ -21,7 +22,7 @@ const MAP_INTERACTION_TARGET_MSG_IDS = {
  * @prop {function} onEditorChange callback for editor changes
  */
 const MapInteractionsTab = ({ data = {}, onEditorChange = () => {} }) => {
-    const targets = useMemo(() => getPossibleTargetsEditingWidget('map'), []);
+    const targets = useMemo(() => getPossibleTargetsEditingWidget('map', undefined, { mainMap: data.mainMap }), [data.mainMap]);
     return (
         <div className="ms-map-wizard-interactions-tab">
             <InteractionEditor
@@ -31,6 +32,8 @@ const MapInteractionsTab = ({ data = {}, onEditorChange = () => {} }) => {
                 currentSourceId={data.selectedMapId}
                 onEditorChange={onEditorChange}
                 targetTitleMsgIds={MAP_INTERACTION_TARGET_MSG_IDS}
+                // the timeline time only drives time dimensions
+                valueAttributeType="date"
             />
         </div>
     );

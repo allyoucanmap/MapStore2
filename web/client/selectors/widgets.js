@@ -9,7 +9,7 @@
 import { find, get, castArray, flatten } from 'lodash';
 import { mapSelector } from './map';
 import { getEffectivelyVisibleLayers, getSelectedLayer, layersSelector } from './layers';
-import { generateRootTree, getLegendMapTarget, isMainMapWidget, TARGET_TYPES, getChartAxisFromCurrentTimeTargetPath, isAnyLayerPath, isChartAxisDateType, isChartAxisDimensionTarget, isLayerDimensionTarget, isLayerTimeDimensionTarget, isMapTimeTarget } from '../utils/InteractionUtils';
+import { generateRootTree, getLegendMapTarget, isMainMapWidget, isMainMapSourceInteraction, TARGET_TYPES, getChartAxisFromCurrentTimeTargetPath, isAnyLayerPath, isChartAxisDateType, isChartAxisDimensionTarget, isLayerDimensionTarget, isLayerTimeDimensionTarget, isMapTimeTarget } from '../utils/InteractionUtils';
 import { currentTimeSelector } from './dimension';
 import { pathnameSelector } from './router';
 import { DEFAULT_TARGET, DEPENDENCY_SELECTOR_KEY, LAYERS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
@@ -92,7 +92,8 @@ const shouldSkipInteractionForTimelineAvailability = (interaction, state) => {
     }
     const targetPath = interaction?.target?.nodePath;
     const timelineEnabled = isTimelineEnabledForInteractions(state);
-    return timelineEnabled && (
+    // the main map sends the timeline time itself, the other senders give way to the timeline
+    return timelineEnabled && !isMainMapSourceInteraction(interaction) && (
         isLayerTimeDimensionTarget(targetPath)
         || isChartAxisDimensionTarget(targetPath)
     )
@@ -108,7 +109,7 @@ const shouldSkipInteractionForChartAxisAvailability = (interaction, state) => {
         return false;
     }
     const axis = getChartAxisFromCurrentTimeTargetPath(targetPath, getFloatingWidgetsPerView(state) || []);
-    return axis?.showCurrentTime !== true || !isChartAxisDateType(axis);
+    return !axis || !isChartAxisDateType(axis);
 };
 
 export const shouldSkipInteraction = (interaction, state) => {

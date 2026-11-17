@@ -48,15 +48,18 @@ export const closeWidgetEditorOnFinish = (action$, {getState = () => {}} = {}) =
     .switchMap(() => Rx.Observable.of(setControlProperty("widgetBuilder", "enabled", false)));
 export const initEditorOnNew = (action$, {getState = () => {}} = {}) => action$.ofType(NEW)
     .filter(() => widgetBuilderAvailable(getState()))
-    .switchMap((w) => Rx.Observable.of(editNewWidget({
-        legend: false,
-        mapSync: true,
-        cartesian: true,
-        yAxis: true,
-        ...(w?.widget || {}),
-        // override action's type
-        type: undefined
-    }, {step: 0})));
+    .switchMap((w) => {
+        // `plugMainMap: false` creates a widget not connected to the main map (e.g. layer with errors), it is a builder setting
+        const { plugMainMap, ...widget } = w?.widget || {};
+        return Rx.Observable.of(editNewWidget({
+            legend: false,
+            cartesian: true,
+            yAxis: true,
+            ...widget,
+            // override action's type
+            type: undefined
+        }, { step: 0, plugMainMap: plugMainMap !== false }));
+    });
 export const initEditorOnNewChart = (action$, {getState = () => {}} = {}) => action$.ofType(NEW_CHART)
     .filter(() => widgetBuilderAvailable(getState()))
     .switchMap(() => {
@@ -66,7 +69,6 @@ export const initEditorOnNewChart = (action$, {getState = () => {}} = {}) => act
         return Rx.Observable.of(
             closeFeatureGrid(),
             editNewWidget({
-                mapSync: true,
                 selectedChartId: chartId,
                 widgetType: 'chart',
                 charts: [
@@ -82,7 +84,7 @@ export const initEditorOnNewChart = (action$, {getState = () => {}} = {}) => act
                         ]
                     }
                 ]
-            }, {step: 0}),
+            }, { step: 0, plugMainMap: true }),
             onEditorChange("returnToFeatureGrid", true)
         );
     });

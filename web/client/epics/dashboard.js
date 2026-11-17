@@ -64,7 +64,6 @@ export const initDashboardEditorOnNew = (action$, {getState = () => {}} = {}) =>
     .filter( () => isDashboardAvailable(getState()))
     .switchMap((w) => Rx.Observable.of(editNewWidget({
         legend: false,
-        mapSync: false,
         cartesian: true,
         yAxis: true,
         ...w,

@@ -17,10 +17,10 @@ import bbox from '@turf/bbox';
 import xml2js from 'xml2js';
 
 import { getFeatureLayer } from '../api/WFS';
-import { updateWidgetProperty, editWidget, INSERT, UPDATE, DELETE, UPDATE_PROPERTY, SET_LINKED_DASHBOARD_DATA } from '../actions/widgets';
+import { updateWidgetProperty, editWidget, replaceWidgets, INSERT, EDIT_NEW, UPDATE, DELETE, UPDATE_PROPERTY, SET_LINKED_DASHBOARD_DATA } from '../actions/widgets';
 import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, EDIT_MAIN_MAP_INTERACTIONS } from '../actions/interactions';
 import { zoomToExtent, CHANGE_MAP_VIEW } from '../actions/map';
-import { setCurrentTime } from '../actions/dimension';
+import { setCurrentTime, SET_CURRENT_TIME, SET_OFFSET_TIME } from '../actions/dimension';
 import { REMOVE_NODE, changeLayerProperties, changeLayerParams } from '../actions/layers';
 import { DASHBOARD_LOADED } from '../actions/dashboard';
 import { MAP_CONFIG_LOADED } from '../actions/config';
@@ -58,6 +58,10 @@ import { toOGCFilter } from '../utils/FilterUtils';
 import { getWFSLayerName, getWpsUrl } from '../utils/LayersUtils';
 import { getLayerFromId, layersSelector } from '../selectors/layers';
 import { mapSelector } from '../selectors/map';
+import { isDashboardAvailable } from '../selectors/dashboard';
+import { buildMainMapDefaultInteractions } from '../utils/InteractionMigrationUtils';
+import { v1 as uuid } from 'uuid';
+import { currentTimeSelector, offsetTimeSelector } from '../selectors/dimension';
 import { shouldSkipInteraction, getEditingWidget } from '../selectors/widgets';
 
 // waits for typing to settle before requesting the extent and moving the map
@@ -80,7 +84,10 @@ const UPDATE_TO_ACTION = {
     [INTERACTION_UPDATES.ZOOM_TO_EXTENT]: ({ extent, crs, maxZoom, padding }) => zoomToExtent(extent, crs, maxZoom, padding ? { padding } : undefined)
 };
 
-const toActions = (updates = []) => updates.map(update => UPDATE_TO_ACTION[update?.type]?.(update)).filter(Boolean);
+// an effect returns an update, a list of updates (e.g. a time range) or null
+const toUpdateList = (update) => [].concat(update || []);
+
+const toActions = (updates = []) => updates.flatMap(toUpdateList).map(update => UPDATE_TO_ACTION[update?.type]?.(update)).filter(Boolean);
 
 // re-applying unchanged effects would make every receiver fetch again, e.g. on each map widget update
 // the receiving map emits its own view change with rounding differences, a tolerance avoids sync loops
@@ -278,8 +285,8 @@ function applyEventInteractions(state, { widgetId, target, sourceId, event }) {
         .filter(interaction => interaction.plugged === true
             && interaction.source?.nodePath?.includes(sourceId)
             && (event.targetTypes || []).includes(interaction.targetType))
-        .map(interaction => TARGET_EFFECTS[interaction.targetType]?.({ ...interaction, appliedData: event.data }, context))
-        .filter(update => update && !isNoOpUpdate(update, state));
+        .flatMap(interaction => toUpdateList(TARGET_EFFECTS[interaction.targetType]?.({ ...interaction, appliedData: event.data }, context)))
+        .filter(update => !isNoOpUpdate(update, state));
     return Rx.Observable.from(toActions(updates));
 }
 
@@ -333,7 +340,7 @@ export const applyWidgetInteractionsEpic = (action$, store) =>
                         appliedData: buildAppliedData(sender, sourceId, interaction, context),
                         "transient": isTransientEffectSender(sender)
                     }, context);
-                    return Rx.Observable.from(toActions(isNoOpUpdate(update, currentState) ? [] : [update]));
+                    return Rx.Observable.from(toActions(toUpdateList(update).filter(item => !isNoOpUpdate(item, currentState))));
                 });
         }));
 
@@ -408,16 +415,26 @@ export const applyTransientEffectsOnLoadEpic = (action$, store) =>
 const MAIN_MAP_VIEW_DEBOUNCE = 300;
 
 const getMainMapView = (view = {}) => ({ bbox: view.bbox, center: view.center, zoom: view.zoom });
+const getMainMapTime = (state) => ({ currentTime: currentTimeSelector(state), offsetTime: offsetTimeSelector(state) });
+const hasMainMapEntry = (state) => getContainerWidgets(state, 'floating').some(isMainMapWidget);
+const mirrorIntoMainMap = (value) => updateWidgetProperty(MAIN_MAP_WIDGET_ID, 'maps', { mapId: MAIN_MAP_ID, ...value }, 'merge', 'floating');
 
 /**
- * Mirrors the main map view into the main map entry, so the main map sends its interactions like a map widget
+ * Mirrors the main map view and the timeline time into the main map entry, so the main map sends its interactions like a map widget
  */
 export const mirrorMainMapViewEpic = (action$, store) =>
     action$
         .ofType(CHANGE_MAP_VIEW)
         .debounceTime(MAIN_MAP_VIEW_DEBOUNCE)
-        .filter(() => getContainerWidgets(store.getState(), 'floating').some(isMainMapWidget))
-        .map(action => updateWidgetProperty(MAIN_MAP_WIDGET_ID, 'maps', { mapId: MAIN_MAP_ID, ...getMainMapView(action) }, 'merge', 'floating'));
+        .filter(() => hasMainMapEntry(store.getState()))
+        .map(action => mirrorIntoMainMap(getMainMapView(action)))
+        .merge(
+            action$
+                .ofType(SET_CURRENT_TIME, SET_OFFSET_TIME, MAP_CONFIG_LOADED)
+                .debounceTime(MAIN_MAP_VIEW_DEBOUNCE)
+                .filter(() => hasMainMapEntry(store.getState()))
+                .map(() => mirrorIntoMainMap(getMainMapTime(store.getState())))
+        );
 
 /**
  * Opens the widget builder on the main map entry, created from the current main map view when missing
@@ -428,10 +445,37 @@ export const editMainMapInteractionsEpic = (action$, store) =>
         .map(() => {
             const state = store.getState();
             const mainMap = getContainerWidgets(state, 'floating').find(isMainMapWidget);
-            return editWidget(mainMap || createMainMapWidget(getMainMapView(mapSelector(state) || {})));
+            return editWidget(mainMap || createMainMapWidget({ ...getMainMapView(mapSelector(state) || {}), ...getMainMapTime(state) }));
         });
 
+/**
+ * Plugs a new widget into the main map interactions (viewport filter, timeline time) when it is added in the map viewer,
+ * as new widgets of the map viewer always followed the main map
+ */
+export const plugNewWidgetIntoMainMapEpic = (action$, store) =>
+    action$
+        .ofType(EDIT_NEW)
+        .filter(({ settings }) => settings?.plugMainMap !== false && !!mapSelector(store.getState()) && !isDashboardAvailable(store.getState()))
+        .switchMap(({ widget: newWidget }) => action$
+            .ofType(INSERT)
+            .filter(({ id, widget }) => (id || widget?.id) === newWidget?.id)
+            .take(1)
+            .switchMap(({ widget }) => {
+                const interactions = buildMainMapDefaultInteractions(widget).map(interaction => ({ ...interaction, id: uuid() }));
+                if (interactions.length === 0) {
+                    return Rx.Observable.empty();
+                }
+                const state = store.getState();
+                const widgets = getContainerWidgets(state, 'floating');
+                const mainMap = widgets.find(isMainMapWidget);
+                const updateMainMap = mainMap
+                    ? updateWidgetProperty(MAIN_MAP_WIDGET_ID, 'interactions', [...(mainMap.interactions || []), ...interactions], 'replace', 'floating')
+                    : replaceWidgets([...widgets, { ...createMainMapWidget({ ...getMainMapView(mapSelector(state) || {}), ...getMainMapTime(state) }), interactions }], 'floating');
+                return Rx.Observable.of(updateMainMap, applyWidgetInteractions(MAIN_MAP_WIDGET_ID, 'floating', MAIN_MAP_ID));
+            }));
+
 export default {
+    plugNewWidgetIntoMainMapEpic,
     mirrorMainMapViewEpic,
     editMainMapInteractionsEpic,
     applyTransientEffectsOnLoadEpic,

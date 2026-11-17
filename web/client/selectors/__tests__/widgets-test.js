@@ -39,6 +39,7 @@ import {
     getApplyDimensionOutOfSyncForFilterWidget,
     inactiveInteractionIdsForWidgetSelector,
     isTimelineEnabledForInteractions,
+    shouldSkipInteraction,
     widgetsConfig,
     getMainMapWidget,
     getMapWidgets,
@@ -864,6 +865,24 @@ describe('widgets selectors', () => {
         const editingWidget = widgetsCollection.children.find(w => w.id === 'widget2');
         expect(editingWidget).toExist();
     });
+    it('shouldSkipInteraction lets the main map timeline time reach chart axes while the timeline is active', () => {
+        const state = {
+            widgets: {
+                containers: {
+                    [DEFAULT_TARGET]: {
+                        widgets: [{ id: 'chart-1', widgetType: 'chart', charts: [{ chartId: 'c1', xAxisOpts: [{ id: 0, type: 'date' }], traces: [{ id: 't1' }] }] }]
+                    }
+                }
+            }
+        };
+        const axisInteraction = (sourceNodePath) => ({
+            targetType: 'applyDimension',
+            source: { nodePath: sourceNodePath },
+            target: { nodePath: 'widgets[chart-1].charts[c1].traces[t1].xAxisOpts[0].appliedCurrentTime' }
+        });
+        expect(shouldSkipInteraction(axisInteraction('widgets[map].maps[main]'), state)).toBe(false);
+        expect(shouldSkipInteraction(axisInteraction('widgets[filter-1].filters[f1]'), state)).toBe(true);
+    });
     it('isTimelineEnabledForInteractions', () => {
         expect(isTimelineEnabledForInteractions({})).toBe(true);
         expect(isTimelineEnabledForInteractions({
@@ -882,7 +901,7 @@ describe('widgets selectors', () => {
         })).toBe(false);
     });
     describe('inactiveInteractionIdsForWidgetSelector', () => {
-        const getChartAxisInteractionState = ({ showCurrentTime, axisType = 'date', includeAxis = true } = {}) => ({
+        const getChartAxisInteractionState = ({ axisType = 'date', includeAxis = true } = {}) => ({
             context: {
                 currentContext: {
                     plugins: {
@@ -917,7 +936,7 @@ describe('widgets selectors', () => {
                                 chartId: 'chart-1',
                                 traces: [{ id: 'trace-1', type: 'bar' }],
                                 ...(includeAxis ? {
-                                    xAxisOpts: [{ id: 0, type: axisType, showCurrentTime }]
+                                    xAxisOpts: [{ id: 0, type: axisType }]
                                 } : {})
                             }]
                         }]
@@ -926,23 +945,16 @@ describe('widgets selectors', () => {
             }
         });
 
-        it('marks plugged chart axis time interactions inactive when show current time is disabled', () => {
+        it('does not mark plugged chart axis time interactions of date axes inactive', () => {
             expect(inactiveInteractionIdsForWidgetSelector(
-                getChartAxisInteractionState({ showCurrentTime: false }),
-                'filter-widget'
-            )).toEqual(['chart-axis-time-interaction']);
-        });
-
-        it('does not mark plugged chart axis time interactions inactive when show current time is enabled', () => {
-            expect(inactiveInteractionIdsForWidgetSelector(
-                getChartAxisInteractionState({ showCurrentTime: true }),
+                getChartAxisInteractionState(),
                 'filter-widget'
             )).toEqual([]);
         });
 
         it('marks plugged chart axis time interactions inactive when axis is not date type', () => {
             expect(inactiveInteractionIdsForWidgetSelector(
-                getChartAxisInteractionState({ showCurrentTime: true, axisType: 'linear' }),
+                getChartAxisInteractionState({ axisType: 'linear' }),
                 'filter-widget'
             )).toEqual(['chart-axis-time-interaction']);
         });

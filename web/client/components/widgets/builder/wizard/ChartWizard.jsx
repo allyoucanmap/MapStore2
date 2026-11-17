@@ -27,9 +27,7 @@ import Message from "../../../I18N/Message";
 import sampleData from '../../enhancers/sampleChartData';
 import multiProtocolChart from '../../enhancers/multiProtocolChart';
 import { chartWidgetProps } from '../../enhancers/chartWidget';
-import dependenciesToWidget from '../../enhancers/dependenciesToWidget';
-import dependenciesToFilter from '../../enhancers/dependenciesToFilter';
-import dependenciesToOptions from '../../enhancers/dependenciesToOptions';
+import interactionFiltersToFilter from '../../enhancers/interactionFiltersToFilter';
 import emptyChartState from '../../enhancers/emptyChartState';
 import errorChartState from '../../enhancers/errorChartState';
 import ChartStyleEditor from './chart/ChartStyleEditor';
@@ -37,7 +35,7 @@ import ChartTraceEditSelector from './chart/ChartTraceEditSelector';
 import TraceAxesOptions from './chart/TraceAxesOptions';
 import TraceLegendOptions from './chart/TraceLegendOptions';
 import { isChartOptionsValid } from '../../../../utils/WidgetsUtils';
-import dependenciesToShapes from '../../enhancers/dependenciesToShapes';
+import chartCurrentTimeShapes from '../../enhancers/chartCurrentTimeShapes';
 
 const loadingState = loadingEnhancer(({ loading, data }) => loading || !data, { width: 500, height: 200 });
 const hasNoAttributes = ({ featureTypeProperties = [] }) => featureTypeProperties.filter(({ type = "" } = {}) => type.indexOf("gml:") !== 0).length === 0;
@@ -48,14 +46,12 @@ const ChartNullManagementComp = wfsChartOptions(NullManagement);
 
 const enhancePreview = compose(
     chartWidgetProps,
-    dependenciesToWidget,
-    dependenciesToFilter,
-    dependenciesToOptions,
+    interactionFiltersToFilter,
     multiProtocolChart,
     loadingState,
     errorChartState,
     emptyChartState,
-    dependenciesToShapes
+    chartCurrentTimeShapes
 );
 const PreviewChart = enhancePreview(withResizeDetector(SimpleChart));
 const SampleChart = sampleData(withResizeDetector(SimpleChart));

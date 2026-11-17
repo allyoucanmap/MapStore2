@@ -21,7 +21,6 @@ const sameOptions = (o1 = {}, o2 = {}) =>
     && o1.aggregationAttribute === o2.aggregationAttribute
     && o1.viewParams === o2.viewParams;
 import { getWFSLayerName, getWpsUrl } from '../../../utils/LayersUtils';
-import { checkMapSyncWithWidgetOfMapType } from '../../../utils/WidgetsUtils';
 
 
 /**
@@ -32,15 +31,7 @@ import { checkMapSyncWithWidgetOfMapType } from '../../../utils/WidgetsUtils';
  */
 const dataStreamFactory = ($props) =>
     $props
-        .filter(({layer = {}, options, dependencies, mapSync, dependenciesMap, widgets}) => {
-            // Check if mapSync is enabled (true), dependencyMap has mapSync dependency to Map widget and dependencies.viewport is null or falsy
-            // If this condition is true, return false to filter out the event.
-            // This prevents an extra API call from being triggered when the viewport is not available.
-            if (mapSync && checkMapSyncWithWidgetOfMapType(widgets, dependenciesMap) && !dependencies?.viewport) {
-                return false;
-            }
-            return layer.name && getWpsUrl(layer) && options && options.aggregateFunction && options.aggregationAttribute;
-        })
+        .filter(({layer = {}, options}) => layer.name && getWpsUrl(layer) && options && options.aggregateFunction && options.aggregationAttribute)
         .distinctUntilChanged(
             ({layer = {}, options = {}, filter}, newProps) =>
                 (newProps.layer

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getErrorMessageId, updateDependenciesMap } from '../../../utils/WidgetsUtils';
 import { getResource } from '../../../api/persistence';
+import { prefixWidgetInteractionIds } from '../../../utils/InteractionEffectsUtils';
 
 export default function useLoadDashboardData({ props, dashboard }) {
     const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ export default function useLoadDashboardData({ props, dashboard }) {
                 const layoutData = layoutsData?.[0];
                 // Prefix widget IDs and dependencies
                 const widgetsData = res.data.widgets.map(w => ({
-                    ...w,
+                    ...prefixWidgetInteractionIds(w, selectedLayoutId),
                     id: `${selectedLayoutId}-${w.id}`,
                     layoutId: selectedLayoutId,
                     ...(w.dependenciesMap && {

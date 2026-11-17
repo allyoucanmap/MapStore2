@@ -18,6 +18,7 @@ import {
     getTableWidgetZoomExtentLayers,
     buildMapWidgetAppliedData,
     applyViewSyncEffect,
+    prefixWidgetInteractionIds,
     applyZoomToFeatureEffect,
     applyLegendEffect,
     mergeLegendLayerChanges,
@@ -412,6 +413,56 @@ describe('InteractionEffectsUtils', () => {
             expect(update.value.layers[0].visibility).toBe(false);
             expect(applyLegendEffect({ ...interaction, appliedData: {} }, { widgets: [mapWidget] })).toBe(null);
             expect(applyLegendEffect(interaction, { widgets: [] })).toBe(null);
+        });
+    });
+
+    describe('main map timeline time', () => {
+        const chart = { id: 'chart-1', widgetType: 'chart', charts: [{ chartId: 'c1', xAxisOpts: [{ id: 0, type: 'date', showCurrentTime: true }], traces: [{ id: 't1' }] }] };
+        const timeInteraction = {
+            id: 'time-1',
+            plugged: true,
+            targetType: TARGET_TYPES.APPLY_DIMENSION,
+            source: { nodePath: 'widgets[map].maps[main]' },
+            target: { nodePath: 'widgets[chart-1].charts[c1].traces[t1].xAxisOpts[0].appliedCurrentTime', metaData: { dimension: 'time' } }
+        };
+        it('sends the timeline range of the main map entry', () => {
+            const mainMap = { id: 'map', widgetType: 'map', mainMap: true, maps: [{ mapId: 'main', currentTime: '2020-01-01', offsetTime: '2020-02-01' }] };
+            expect(buildMapWidgetAppliedData(mainMap, 'main', timeInteraction, {})).toEqual({ currentTime: '2020-01-01', offsetTime: '2020-02-01' });
+            expect(buildMapWidgetAppliedData({ ...mainMap, maps: [{ mapId: 'main' }] }, 'main', timeInteraction, {})).toBe(null);
+        });
+        it('writes current and offset time on the chart axis for a range', () => {
+            const updates = applyDimensionEffect({ ...timeInteraction, appliedData: { currentTime: '2020-01-01', offsetTime: '2020-02-01' } }, { widgets: [chart] });
+            expect(updates.map(update => [update.key, update.value])).toEqual([
+                ['charts[0].xAxisOpts[0].appliedCurrentTime', '2020-01-01'],
+                ['charts[0].xAxisOpts[0].appliedOffsetTime', '2020-02-01']
+            ]);
+        });
+        it('writes a single value for the other senders', () => {
+            const update = applyDimensionEffect({ ...timeInteraction, appliedData: '2020-01-01' }, { widgets: [chart] });
+            expect([update.key, update.value]).toEqual(['charts[0].xAxisOpts[0].appliedCurrentTime', '2020-01-01']);
+        });
+    });
+
+    describe('prefixWidgetInteractionIds', () => {
+        it('prefixes the widget ids of interactions and effect senders', () => {
+            const widget = {
+                id: 'table-1',
+                interactions: [{ id: 'i1', source: { nodePath: 'widgets[table-1]' }, target: { nodePath: 'widgets[map-w].maps[m1].layers[l1]' } }],
+                interactionFilters: [{ id: 'f1', appliedFromWidget: 'filter-w' }, { id: 'own' }],
+                charts: [{ chartId: 'c1', traces: [{ id: 't1', interactionFilters: [{ id: 'f2', appliedFromWidget: 'table-2' }] }] }],
+                maps: [{ mapId: 'm1', layers: [{ id: 'l1', layerFilter: { filters: [{ id: 'f3', appliedFromWidget: 'table-1' }] } }, { id: 'l2' }] }]
+            };
+            const prefixed = prefixWidgetInteractionIds(widget, 'layout-1');
+            expect(prefixed.interactions[0].id).toBe('i1');
+            expect(prefixed.interactions[0].source.nodePath).toBe('widgets[layout-1-table-1]');
+            expect(prefixed.interactions[0].target.nodePath).toBe('widgets[layout-1-map-w].maps[m1].layers[l1]');
+            expect(prefixed.interactionFilters.map(f => f.appliedFromWidget)).toEqual(['layout-1-filter-w', undefined]);
+            expect(prefixed.charts[0].traces[0].interactionFilters[0].appliedFromWidget).toBe('layout-1-table-2');
+            expect(prefixed.maps[0].layers[0].layerFilter.filters[0].appliedFromWidget).toBe('layout-1-table-1');
+            expect(prefixed.maps[0].layers[1]).toBe(widget.maps[0].layers[1]);
+        });
+        it('leaves widgets without interactions or effects as they are', () => {
+            expect(prefixWidgetInteractionIds({ id: 'text-1', widgetType: 'text' }, 'layout-1')).toEqual({ id: 'text-1', widgetType: 'text' });
         });
     });
 });

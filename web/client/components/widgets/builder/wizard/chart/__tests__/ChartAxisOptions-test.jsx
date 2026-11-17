@@ -137,8 +137,7 @@ describe('ChartAxisOptions', () => {
             // x
             'widgets.advanced.forceTicks',
             'widgets.advanced.xAxisAngle',
-            'widgets.advanced.hideLabels',
-            'widgets.advanced.showCurrentTime'
+            'widgets.advanced.hideLabels'
         ]);
         done();
     });

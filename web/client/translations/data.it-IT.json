@@ -2402,6 +2402,7 @@
           "viewportFilter": "Filtro sulla vista della mappa",
           "syncMapView": "Sincronizza la vista della mappa",
           "controlMap": "Controlla la mappa",
+          "timelineCurrentTime": "Tempo corrente della timeline",
           "errorChart": "Uno o più grafici non sono validi",
           "errorFilter": "Uno o più filtri non sono validi",
           "backToTableOptions": "Torna alle opzioni della tabella",
@@ -2686,7 +2687,6 @@
           "log": "Logaritmo",
           "date": "Data"
         },
-        "showCurrentTime": "Mostra l'ora corrente sull'asse",
         "type": "Tipo"
       },
       "filterWidget": {
@@ -2839,8 +2839,8 @@
         "applyDimensionSelectionModeDisabledTooltip": "La selezione multipla è disabilitata perché questo filtro è collegato ad «Applica dimensione». Scollega «Applica dimensione» per usare la modalità di selezione multipla.",
         "applyDimensionMultipleSelectionDisabledTooltip": "«Applica dimensione» può essere collegato solo quando la modalità di selezione del filtro è «Singola». Imposta la modalità di selezione del layout su «Singola» per collegare questo target.",
         "layerTimeControlledByTimelineTooltip": "Il tempo del layer è controllato dalla Timeline della mappa principale. Collega invece il target Timeline.",
-        "axisCurrentTimeControlledByTimelineTooltip": "Il tempo corrente dell’asse è controllato dalla Timeline della mappa principale. Collega invece il target Timeline.",
-        "axisCurrentTimeDisabledTooltip": "Imposta il tipo di asse su Data e abilita \"Mostra ora corrente\" nelle opzioni del grafico prima di collegarlo.",
+        "axisCurrentTimeControlledByTimelineTooltip": "Il tempo corrente dell'asse è controllato dalla Timeline della mappa principale, collegalo dalle Interazioni della mappa.",
+        "axisCurrentTimeDisabledTooltip": "Imposta il tipo dell'asse su Data prima di collegarlo.",
         "timelineTargetUnavailableTooltip": "La Timeline non è disponibile in questo contesto.",
         "targetAlreadyConnectedToTimeTooltip": "La connessione alla timeline della mappa con la sincronizzazione a 2 vie abilitata può essere collegata solo da sola. Disabilita la sincronizzazione a 2 vie o scollega la connessione alla timeline della mappa per collegare altri obiettivi."
       },

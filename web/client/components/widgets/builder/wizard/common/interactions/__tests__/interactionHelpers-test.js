@@ -126,6 +126,22 @@ describe('interactionHelpers', () => {
             });
         });
 
+        it('should keep chart axis and layer time targets enabled for the main map, which sends the timeline time', () => {
+            const dateAxisItem = { ...elementItem, interactionMetadata: { targets: [{ targetType: 'applyDimension', dateType: true }] } };
+            ['widgets[chart-widget].charts[chart-1].traces[trace-1].yAxisOpts[0].appliedCurrentTime', 'widgets[map-w].maps[m1].layers[l1].params.time']
+                .forEach(targetNodePath => {
+                    const result = getInteractionTargetNodeDisabled({
+                        item: dateAxisItem,
+                        target: applyDimensionTarget,
+                        targetNodePath,
+                        sourceNodePath: 'widgets[map].maps[main]',
+                        plugged: false,
+                        timelineEnabled: true
+                    });
+                    expect(result.disabled).toBe(false);
+                });
+        });
+
         it('should disable chart axis applied current time targets when controlled by map time', () => {
             const result = getInteractionTargetNodeDisabled({
                 item: elementItem,
@@ -142,14 +158,13 @@ describe('interactionHelpers', () => {
             });
         });
 
-        it('should disable chart axis applied current time targets when axis current time is not enabled', () => {
+        it('should allow chart axis applied current time targets of date axes', () => {
             const result = getInteractionTargetNodeDisabled({
                 item: {
                     ...elementItem,
                     interactionMetadata: {
                         targets: [{
                             targetType: 'applyDimension',
-                            showCurrentTimeEnabled: false,
                             dateType: true
                         }]
                     }
@@ -161,10 +176,7 @@ describe('interactionHelpers', () => {
                 timelineEnabled: false
             });
 
-            expect(result).toEqual({
-                disabled: true,
-                reasonMsgId: 'widgets.filterWidget.axisCurrentTimeDisabledTooltip'
-            });
+            expect(result.disabled).toBe(false);
         });
 
         it('should disable chart axis applied current time targets when axis is not date type', () => {
@@ -174,7 +186,6 @@ describe('interactionHelpers', () => {
                     interactionMetadata: {
                         targets: [{
                             targetType: 'applyDimension',
-                            showCurrentTimeEnabled: true,
                             dateType: false
                         }]
                     }

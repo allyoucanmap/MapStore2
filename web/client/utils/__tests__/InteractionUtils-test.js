@@ -30,6 +30,7 @@ import {
     isInteractionSender,
     hasSenderOwnZoomExtent,
     isMainMapWidget,
+    isMainMapSourceInteraction,
     createMainMapWidget,
     isMapLevelTarget,
     isMainMapLevelTarget,
@@ -173,11 +174,9 @@ describe('InteractionUtils', () => {
             expect(xAxisCurrentTimeNode.nodePath).toBe('widgets[chart-widget-single].charts[chart-1].traces[trace-2].xAxisOpts[x-axis-1].appliedCurrentTime');
             expect(xAxisCurrentTimeNode.interactionMetadata.targets[0].targetType).toBe('applyDimension');
             expect(xAxisCurrentTimeNode.interactionMetadata.targets[0].dimension).toBe('time');
-            expect(xAxisCurrentTimeNode.interactionMetadata.targets[0].showCurrentTimeEnabled).toBe(true);
             expect(xAxisCurrentTimeNode.interactionMetadata.targets[0].dateType).toBe(true);
             expect(yAxisCollection.id).toBe('yAxisOpts[0]');
             expect(yAxisCurrentTimeNode.nodePath).toBe('widgets[chart-widget-single].charts[chart-1].traces[trace-2].yAxisOpts[0].appliedCurrentTime');
-            expect(yAxisCurrentTimeNode.interactionMetadata.targets[0].showCurrentTimeEnabled).toBe(false);
             expect(yAxisCurrentTimeNode.interactionMetadata.targets[0].dateType).toBe(true);
         });
 
@@ -878,6 +877,15 @@ describe('InteractionUtils', () => {
             expect(targets.map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_SPATIAL_FILTER, TARGET_TYPES.APPLY_VIEW_SYNC]);
             expect(targets.every(t => Object.keys(t.constraints).length === 0)).toBe(true);
         });
+        it('returns the timeline time target for the main map, not for map widgets', () => {
+            expect(getPossibleTargetsEditingWidget('map', undefined, { mainMap: true }).map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_SPATIAL_FILTER, TARGET_TYPES.APPLY_DIMENSION]);
+            expect(getPossibleTargetsEditingWidget('map').map(t => t.targetType)).toEqual([TARGET_TYPES.APPLY_SPATIAL_FILTER, TARGET_TYPES.APPLY_VIEW_SYNC]);
+        });
+        it('isMainMapSourceInteraction recognizes the interactions sent by the main map', () => {
+            expect(isMainMapSourceInteraction({ source: { nodePath: 'widgets[map].maps[main]' } })).toBe(true);
+            expect(isMainMapSourceInteraction({ source: { nodePath: 'widgets[map-w].maps[m1]' } })).toBe(false);
+            expect(isMainMapSourceInteraction({})).toBe(false);
+        });
         it('returns no targets for widgets that are not senders', () => {
             expect(getPossibleTargetsEditingWidget('chart')).toEqual([]);
         });
@@ -1373,6 +1381,7 @@ describe('InteractionUtils', () => {
             expect(isSenderTriggerUpdate(table, { key: 'options.columnSettings' })).toBe(false);
             expect(isSenderTriggerUpdate(map, { key: 'maps', value: { mapId: 'm1', bbox: {}, center: {}, zoom: 3 } })).toBe(true);
             expect(isSenderTriggerUpdate(map, { key: 'maps', value: { mapId: 'm1', center: {} } })).toBe(true);
+            expect(isSenderTriggerUpdate(map, { key: 'maps', value: { mapId: 'main', currentTime: '2020-01-01', offsetTime: undefined } })).toBe(true);
             expect(isSenderTriggerUpdate(map, { key: 'maps', value: { mapId: 'm1', layers: [] } })).toBe(false);
             expect(isSenderTriggerUpdate(map, { key: 'maps', value: { mapId: 'm1', zoomToRequest: {} } })).toBe(false);
             expect(isSenderTriggerUpdate(map, { key: 'maps', value: [{ mapId: 'm1' }] })).toBe(false);

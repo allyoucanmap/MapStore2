@@ -184,7 +184,7 @@ describe('openDashboardWidgetEditor epic', () => {
                 case EDIT_NEW:
                     expect(action.widget).toExist();
                     // verify default mapSync, legend, cartesian and yaxis
-                    expect(action.widget.mapSync).toBe(false);
+                    expect(action.widget.mapSync).toNotExist();
                     expect(action.widget.legend).toBe(false);
                     expect(action.widget.cartesian).toBe(true);
                     expect(action.widget.yAxis).toBe(true);

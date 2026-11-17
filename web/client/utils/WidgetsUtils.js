@@ -1298,19 +1298,12 @@ export const isChartCompatibleWithTableWidget = (widget, tableWidget) => {
 };
 
 /**
- * Returns true if the table shows the column filters, when it sends interactions or legacy connections read it
+ * Returns true if the table shows the column filters, when it sends interactions
  * @param {object} widget the widget to check
- * @param {object[]} widgets all the widgets of the container
  * @returns {boolean}
  */
-export const isTableColumnFiltersEnabled = (widget, widgets = []) => {
-    if (widget?.widgetType !== 'table') {
-        return false;
-    }
-    return (widget.interactions || []).some(interaction => interaction?.plugged)
-        || widgets.some(({ mapSync, dependenciesMap }) => mapSync && dependenciesMap
-            && Object.values(dependenciesMap).some(path => typeof path === 'string' && path.indexOf(widget.id) !== -1));
-};
+export const isTableColumnFiltersEnabled = (widget) => widget?.widgetType === 'table'
+    && (widget.interactions || []).some(interaction => interaction?.plugged);
 
 /**
  * Check if a table widget can be a depedency to the widget currently is edit
@@ -1426,29 +1419,19 @@ export const DEFAULT_CURRENT_TIME_SHAPE_VALUES = {
     style: DEFAULT_CURRENT_TIME_SHAPE_STYLE[2]
 };
 
-const getAxisTimes = (axis, dependencyTimes) => {
-    if (dependencyTimes.startTime || dependencyTimes.endTime) {
-        return dependencyTimes;
-    }
-    const hasAxisTime = axis.appliedCurrentTime || axis.appliedOffsetTime;
-    if (!hasAxisTime) {
-        return dependencyTimes;
-    }
-    const startTime = axis.appliedCurrentTime;
-    const endTime = axis.appliedOffsetTime;
-    return {
-        startTime,
-        endTime,
-        hasBothDates: startTime && endTime
-    };
-};
+// the current time is set on the axis by the dimension interactions (e.g. the main map timeline)
+const getAxisTimes = (axis) => ({
+    startTime: axis.appliedCurrentTime,
+    endTime: axis.appliedOffsetTime,
+    hasBothDates: axis.appliedCurrentTime && axis.appliedOffsetTime
+});
 
-const addAxisShapes = (axisOpts, axisType, times) => {
+const addAxisShapes = (axisOpts, axisType) => {
     const shapes = [];
 
     axisOpts.forEach((axis, index) => {
-        if (axis.type === 'date' && axis.showCurrentTime === true) {
-            const { startTime, endTime, hasBothDates } = getAxisTimes(axis, times);
+        if (axis.type === 'date') {
+            const { startTime, endTime, hasBothDates } = getAxisTimes(axis);
             if (!startTime && !endTime) {
                 return;
             }
@@ -1472,35 +1455,14 @@ const addAxisShapes = (axisOpts, axisType, times) => {
 };
 
 /**
- * Adds shapes representing the current time range to x or y axes of the selected chart.
- *
- * @param {Object} data - The data object containing chart information.
- * @param {Array<Object>} [data.xAxisOpts] - The options for the x-axis, which may include properties like `type`, `showCurrentTime`, etc.
- * @param {string|number} [data.yAxisOpts] - The options for the y-axis, which may include properties like `type`, `showCurrentTime`, etc.
- * @param {Object} timeRange - The time range to visualize.
- * @param {string|Date} [timeRange.start] - The start time of the range.
- * @param {string|Date} [timeRange.end] - The end time of the range.
- * @returns {Array<Object>} Array of shape objects for the current time range on both axes.
+ * Returns the shapes of the current time (line) or time range (band) of the date axes of a chart
+ * @param {object} data `{ xAxisOpts, yAxisOpts }` of the chart, with the axis `appliedCurrentTime` and `appliedOffsetTime`
+ * @returns {object[]} the shapes of both axes
  */
-export const addCurrentTimeShapes = (data, timeRange) => {
-    const xAxisOpts = data.xAxisOpts || [];
-    const yAxisOpts = data.yAxisOpts || [];
-    const hasAxisTime = [...xAxisOpts, ...yAxisOpts].some(axis => axis?.appliedCurrentTime || axis?.appliedOffsetTime);
-    if (!timeRange.start && !timeRange.end && !hasAxisTime) return [];
-
-    // Split the time range
-    const startTime = timeRange.start;
-    const endTime = timeRange.end;
-    const hasBothDates = startTime && endTime;
-
-    const times = { startTime, endTime, hasBothDates };
-
-    // Create shapes for both x and y axes
-    const xAxisShapes = addAxisShapes(xAxisOpts, 'x', times);
-    const yAxisShapes = addAxisShapes(yAxisOpts, 'y', times);
-
-    return [...xAxisShapes, ...yAxisShapes];
-};
+export const addCurrentTimeShapes = (data = {}) => [
+    ...addAxisShapes(data.xAxisOpts || [], 'x'),
+    ...addAxisShapes(data.yAxisOpts || [], 'y')
+];
 
 /**
  * Returns the next available view name in the format "View X".

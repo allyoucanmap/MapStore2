@@ -29,14 +29,15 @@ export const EVENTS = {
 export const INTERACTION_SENDER_TYPES = ['filter', 'table', 'map', 'legend'];
 
 const isKeyOrSubKey = (key, keys) => typeof key === 'string' && keys.some(triggerKey => key === triggerKey || key.startsWith(`${triggerKey}.`));
-const MAP_VIEW_KEYS = ['bbox', 'center', 'zoom'];
+// view and timeline time, the main map entry mirrors both
+const MAP_VIEW_KEYS = ['bbox', 'center', 'zoom', 'currentTime', 'offsetTime'];
 
 /**
  * Updates of a sender (`UPDATE_PROPERTY` `{ key, value }`) that reapply its interactions, by sender type
  */
 export const SENDER_TRIGGERS = {
     table: ({ key }) => isKeyOrSubKey(key, ['quickFilters', 'filter']),
-    // only view changes, not layer changes (e.g. from a legend) or zoom requests
+    // only view and time changes, not layer changes (e.g. from a legend) or zoom requests
     map: ({ key, value }) => key === 'maps' && !!value && !Array.isArray(value) && MAP_VIEW_KEYS.some(viewKey => viewKey in value)
 };
 
@@ -62,6 +63,11 @@ export const createMainMapWidget = (view = {}) => ({
     maps: [{ mapId: MAIN_MAP_ID, ...view }],
     interactions: []
 });
+
+/**
+ * Returns true if the interaction is sent by the main map entry
+ */
+export const isMainMapSourceInteraction = (interaction) => (interaction?.source?.nodePath || '').startsWith(`widgets[${MAIN_MAP_WIDGET_ID}].maps[${MAIN_MAP_ID}]`);
 
 /**
  * Returns true if the widget sends interactions to other widgets or layers
@@ -379,13 +385,12 @@ function createDimensionTargetMetadata(layer, dimension) {
     };
 }
 
-function createChartAxisDimensionTargetMetadata({ showCurrentTimeEnabled, dateType }) {
+function createChartAxisDimensionTargetMetadata({ dateType }) {
     return {
         targetType: TARGET_TYPES.APPLY_DIMENSION,
         expectedDataType: DATATYPES.LAYER_DIMENSION,
         constraints: {},
         dimension: 'time',
-        showCurrentTimeEnabled,
         dateType
     };
 }
@@ -604,7 +609,6 @@ function createChartAxisCurrentTimeNode(axis) {
         nodePathMode: 'dot',
         interactionMetadata: {
             targets: [createChartAxisDimensionTargetMetadata({
-                showCurrentTimeEnabled: axis?.showCurrentTime === true,
                 dateType: isChartAxisDateType(axis)
             })]
         }
@@ -1078,9 +1082,10 @@ export function hasConnectableTargetNodes(interactionTree, target, valueAttribut
  * Gets possible targets for editing a widget of the specified widgetType.
  * @param {string} widgetType widget type, `filter`, `table`, `map` or `legend`
  * @param {object} layerInvolved optional layer object with name and id
+ * @param {object} [options] `{ mainMap }` true for the main map entry, which has a timeline
  * @returns {array} [{ title, targetType, glyph, expectedDataType, constraint }]
  */
-export function getPossibleTargetsEditingWidget(widgetType, layerInvolved) {
+export function getPossibleTargetsEditingWidget(widgetType, layerInvolved, options = {}) {
     if (widgetType === 'filter') {
         return [{
             title: TARGET_TYPE_LABELS[TARGET_TYPES.APPLY_FILTER],
@@ -1151,7 +1156,11 @@ export function getPossibleTargetsEditingWidget(widgetType, layerInvolved) {
         }];
     }
     if (widgetType === 'map') {
-        return [TARGET_TYPES.APPLY_SPATIAL_FILTER, TARGET_TYPES.APPLY_VIEW_SYNC].map(targetType => ({
+        // only the main map has a timeline, its current time is sent to chart axes and layer time dimensions
+        const targetTypes = options.mainMap
+            ? [TARGET_TYPES.APPLY_SPATIAL_FILTER, TARGET_TYPES.APPLY_DIMENSION]
+            : [TARGET_TYPES.APPLY_SPATIAL_FILTER, TARGET_TYPES.APPLY_VIEW_SYNC];
+        return targetTypes.map(targetType => ({
             title: TARGET_TYPE_LABELS[targetType],
             targetType,
             glyph: TARGET_TYPE_GLYPHS[targetType],

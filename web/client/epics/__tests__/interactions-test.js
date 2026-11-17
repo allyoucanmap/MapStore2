@@ -10,10 +10,11 @@ import axios from '../../libs/ajax';
 import MockAdapter from 'axios-mock-adapter';
 
 import { testEpic, addTimeoutEpic, TEST_TIMEOUT } from './epicTestUtils';
-import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, applyTransientEffectsOnLoadEpic, mirrorMainMapViewEpic, editMainMapInteractionsEpic } from '../interactions';
+import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, applyTransientEffectsOnLoadEpic, mirrorMainMapViewEpic, editMainMapInteractionsEpic, plugNewWidgetIntoMainMapEpic } from '../interactions';
 import { applyWidgetInteractions, zoomToFilterExtent, editMainMapInteractions, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
 import { changeMapView, ZOOM_TO_EXTENT } from '../../actions/map';
-import { UPDATE_PROPERTY, DELETE, EDIT, insertWidget, updateWidgetProperty } from '../../actions/widgets';
+import { UPDATE_PROPERTY, DELETE, EDIT, REPLACE, insertWidget, editNewWidget, updateWidgetProperty } from '../../actions/widgets';
+import { setCurrentTime } from '../../actions/dimension';
 import { dashboardLoaded } from '../../actions/dashboard';
 import { CHANGE_LAYER_PARAMS, CHANGE_LAYER_PROPERTIES, removeNode } from '../../actions/layers';
 import { TARGET_TYPES } from '../../utils/InteractionUtils';
@@ -1165,6 +1166,89 @@ describe('interactions epics', () => {
                 expect(actions[0].widget.mainMap).toBe(true);
                 expect(actions[0].widget.maps).toEqual([{ mapId: 'main', bbox, center, zoom: 3 }]);
             }, state, done);
+        });
+    });
+
+    describe('main map defaults and timeline', () => {
+        const bbox = { bounds: { minx: -10, miny: -20, maxx: 30, maxy: 40 }, crs: 'EPSG:4326' };
+        const newTable = { id: 'table-new', widgetType: 'table', geomProp: 'the_geom', layer: { name: 'test:layer' } };
+        const mapViewerState = (widgets) => ({ ...makeState(widgets), map: { present: { bbox, center: { x: 0, y: 0 }, zoom: 3 } } });
+        const mainMap = { id: 'map', widgetType: 'map', mainMap: true, selectedMapId: 'main', maps: [{ mapId: 'main' }], interactions: [{ id: 'existing' }] };
+
+        it('creates the main map entry with the viewport filter of a new widget', (done) => {
+            testEpic(
+                plugNewWidgetIntoMainMapEpic,
+                2,
+                [editNewWidget(newTable, { step: 0, plugMainMap: true }), insertWidget(newTable, 'floating')],
+                ([replace, apply]) => {
+                    expect(replace.type).toBe(REPLACE);
+                    const entry = replace.widgets.find(w => w.id === 'map');
+                    expect(entry.mainMap).toBe(true);
+                    expect(entry.maps[0].bbox).toEqual(bbox);
+                    expect(entry.interactions.map(i => [i.targetType, i.target.nodePath])).toEqual([['applySpatialFilter', 'widgets[table-new]']]);
+                    expect(entry.interactions[0].id).toExist();
+                    expect(apply.type).toBe(APPLY_WIDGET_INTERACTIONS);
+                    expect([apply.widgetId, apply.sourceId]).toEqual(['map', 'main']);
+                },
+                mapViewerState([makeTableWidget()]),
+                done
+            );
+        });
+
+        it('adds the interactions of a new widget to the existing main map entry', (done) => {
+            testEpic(
+                plugNewWidgetIntoMainMapEpic,
+                2,
+                [editNewWidget(newTable, { step: 0, plugMainMap: true }), insertWidget(newTable, 'floating')],
+                ([update]) => {
+                    expect(update.type).toBe(UPDATE_PROPERTY);
+                    expect(update.id).toBe('map');
+                    expect(update.key).toBe('interactions');
+                    expect(update.value.map(i => i.id)[0]).toBe('existing');
+                    expect(update.value.length).toBe(2);
+                },
+                mapViewerState([mainMap]),
+                done
+            );
+        });
+
+        it('does not plug a widget created without main map interactions or outside the map viewer', (done) => {
+            testEpic(
+                addTimeoutEpic(plugNewWidgetIntoMainMapEpic, 20),
+                1,
+                [editNewWidget(newTable, { step: 0, plugMainMap: false }), insertWidget(newTable, 'floating')],
+                ([action]) => {
+                    expect(action.type).toBe(TEST_TIMEOUT);
+                    testEpic(
+                        addTimeoutEpic(plugNewWidgetIntoMainMapEpic, 20),
+                        1,
+                        [editNewWidget(newTable, { step: 0, plugMainMap: true }), insertWidget(newTable, 'floating')],
+                        ([dashboardAction]) => {
+                            expect(dashboardAction.type).toBe(TEST_TIMEOUT);
+                        },
+                        makeState([]),
+                        done
+                    );
+                },
+                mapViewerState([]),
+                () => {}
+            );
+        });
+
+        it('mirrors the timeline time into the main map entry', (done) => {
+            testEpic(
+                mirrorMainMapViewEpic,
+                1,
+                [setCurrentTime('2020-01-01T00:00:00Z')],
+                ([action]) => {
+                    expect(action.type).toBe(UPDATE_PROPERTY);
+                    expect(action.id).toBe('map');
+                    expect(action.mode).toBe('merge');
+                    expect(action.value).toEqual({ mapId: 'main', currentTime: '2020-01-01T00:00:00Z', offsetTime: '2020-02-01T00:00:00Z' });
+                },
+                { ...makeState([mainMap]), dimension: { currentTime: '2020-01-01T00:00:00Z', offsetTime: '2020-02-01T00:00:00Z' } },
+                done
+            );
         });
     });
 });

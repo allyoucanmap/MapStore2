@@ -43,4 +43,9 @@ describe('widgets emptyChartState enhancer', () => {
         ReactDOM.render(<Dummy data={[[]]}/>, document.getElementById("container"));
         expect(document.querySelector(".ms-widget-empty-message")).toExist();
     });
+    it('shows the no data in viewport message when a trace is filtered by a map viewport', () => {
+        const Dummy = emptyChartState(() => <div id="dummy"></div>);
+        ReactDOM.render(<Dummy data={[]} traces={[{ id: 't1', interactionFilters: [{ id: 'viewport', "transient": true }] }]}/>, document.getElementById("container"));
+        expect(document.querySelector(".ms-widget-empty-message").textContent).toContain('widgets.errors.nodatainviewport');
+    });
 });

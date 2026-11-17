@@ -14,9 +14,7 @@ import PropTypes from 'prop-types';
 import loadingEnhancer from '../../../misc/enhancers/loadingState';
 import {wizardHandlers} from '../../../misc/wizard/enhancers';
 import WizardContainer from '../../../misc/wizard/WizardContainer';
-import dependenciesToFilter from '../../enhancers/dependenciesToFilter';
-import dependenciesToOptions from '../../enhancers/dependenciesToOptions';
-import dependenciesToWidget from '../../enhancers/dependenciesToWidget';
+import interactionFiltersToFilter from '../../enhancers/interactionFiltersToFilter';
 import emptyChartState from '../../enhancers/emptyChartState';
 import errorChartState from '../../enhancers/errorChartState';
 import wpsCounter from '../../enhancers/wpsCounter';
@@ -51,9 +49,7 @@ const triggerSetValid = compose(
     }));
 
 const enhancePreview = compose(
-    dependenciesToWidget,
-    dependenciesToFilter,
-    dependenciesToOptions,
+    interactionFiltersToFilter,
     wpsCounter,
     triggerSetValid,
     loadingState,

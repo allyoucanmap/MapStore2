@@ -1174,72 +1174,27 @@ describe('Test WidgetsUtils', () => {
         expect(result).toEqual(false);
     });
     describe('addCurrentTimeShapes', () => {
-        it('returns empty array if no start or end in timeRange', () => {
-            const data = { xAxisOpts: [{ type: 'date', showCurrentTime: true }], yAxisOpts: [{ type: 'date', showCurrentTime: true }] };
-            const shapes = addCurrentTimeShapes(data, {});
-            expect(shapes).toEqual([]);
+        it('returns no shapes without applied times', () => {
+            expect(addCurrentTimeShapes({ xAxisOpts: [{ type: 'date' }], yAxisOpts: [{ type: 'date' }] })).toEqual([]);
+            expect(addCurrentTimeShapes()).toEqual([]);
         });
-        it('returns a line shape if only start is provided', () => {
-            const data = { xAxisOpts: [{ type: 'date', showCurrentTime: true }], yAxisOpts: [{ type: 'date', showCurrentTime: true }] };
-            const timeRange = { start: '2025-07-22' };
-            const shapes = addCurrentTimeShapes(data, timeRange);
-            expect(shapes.length).toBe(2); // one for x, one for y
-            expect(shapes[0].type).toBe('line');
-            expect(shapes[1].type).toBe('line');
-            expect(shapes[0].line.color).toBe('rgba(58, 186, 111, 0.75)');
-            expect(shapes[0].line.dash).toBe('dash');
-            expect(shapes[0].line.width).toBe(3);
-        });
-        it('returns a rect shape if both start and end are provided', () => {
-            const data = { xAxisOpts: [{ type: 'date', showCurrentTime: true }], yAxisOpts: [{ type: 'date', showCurrentTime: true }] };
-            const timeRange = { start: '2025-07-22', end: '2025-07-23' };
-            const shapes = addCurrentTimeShapes(data, timeRange);
-            expect(shapes.length).toBe(2); // one for x, one for y
-            expect(shapes[0].type).toBe('rect');
-            expect(shapes[1].type).toBe('rect');
-            expect(shapes[0].fillcolor).toBe('rgba(58, 186, 111, 0.75)');
-        });
-        it('uses custom axis shape options if provided', () => {
-            const data = {
-                xAxisOpts: [{ type: 'date', showCurrentTime: true, currentTimeShape: { color: 'red', style: 'dot', size: 5 }}],
-                yAxisOpts: [{ type: 'date', showCurrentTime: true, currentTimeShape: { color: 'blue', style: 'longdash', size: 2 }}]
-            };
-            const timeRange = { start: '2025-07-22' };
-            const shapes = addCurrentTimeShapes(data, timeRange);
-            expect(shapes.length).toBe(2);
-            expect(shapes[0].line.color).toBe('red');
-            expect(shapes[0].line.dash).toBe('dot');
-            expect(shapes[0].line.width).toBe(5);
-            expect(shapes[1].line.color).toBe('blue');
-            expect(shapes[1].line.dash).toBe('longdash');
-            expect(shapes[1].line.width).toBe(2);
-        });
-        it('uses timeline time range instead of axis appliedCurrentTime when provided', () => {
-            const data = {
-                xAxisOpts: [{ type: 'date', showCurrentTime: true, appliedCurrentTime: '2025-07-24' }],
-                yAxisOpts: [{ type: 'date', showCurrentTime: true }]
-            };
-            const shapes = addCurrentTimeShapes(data, { start: '2025-07-22' });
-            expect(shapes.length).toBe(2);
-            expect(shapes[0].x0).toBe('2025-07-22');
-            expect(shapes[1].y0).toBe('2025-07-22');
-        });
-        it('uses axis appliedCurrentTime when no timeline time range is provided', () => {
-            const data = {
-                xAxisOpts: [{ type: 'date', showCurrentTime: true, appliedCurrentTime: '2025-07-24' }],
-                yAxisOpts: [{ type: 'date', showCurrentTime: true }]
-            };
-            const shapes = addCurrentTimeShapes(data, {});
+        it('draws a line for the applied current time of a date axis', () => {
+            const shapes = addCurrentTimeShapes({ xAxisOpts: [{ type: 'date', appliedCurrentTime: '2025-07-24' }], yAxisOpts: [{ type: 'date' }] });
             expect(shapes.length).toBe(1);
+            expect(shapes[0].type).toBe('line');
             expect(shapes[0].x0).toBe('2025-07-24');
         });
-        it('does not add current time shapes for non-date axes', () => {
-            const data = {
-                xAxisOpts: [{ type: 'linear', showCurrentTime: true, appliedCurrentTime: '2025-07-24' }],
-                yAxisOpts: [{ type: 'linear', showCurrentTime: true }]
-            };
-            const shapes = addCurrentTimeShapes(data, { start: '2025-07-22' });
-            expect(shapes).toEqual([]);
+        it('draws a band for the applied time range, with the axis shape style', () => {
+            const shapes = addCurrentTimeShapes({
+                xAxisOpts: [{ type: 'date', appliedCurrentTime: '2025-07-22', appliedOffsetTime: '2025-07-24', currentTimeShape: { color: 'red' } }],
+                yAxisOpts: [{ type: 'date', appliedCurrentTime: '2025-07-23', currentTimeShape: { color: 'blue', style: 'longdash', size: 2 } }]
+            });
+            expect(shapes.map(shape => shape.type)).toEqual(['rect', 'line']);
+            expect(shapes[0].fillcolor).toBe('red');
+            expect([shapes[1].line.color, shapes[1].line.dash, shapes[1].line.width]).toEqual(['blue', 'longdash', 2]);
+        });
+        it('ignores axes that are not dates', () => {
+            expect(addCurrentTimeShapes({ xAxisOpts: [{ type: 'linear', appliedCurrentTime: '2025-07-24' }] })).toEqual([]);
         });
     });
     describe('getWidgetByDependencyPath', () => {
@@ -1471,14 +1426,9 @@ describe('Test WidgetsUtils', () => {
             expect(isTableColumnFiltersEnabled({ ...table, interactions: [{ plugged: false }, { plugged: true }] })).toBe(true);
             expect(isTableColumnFiltersEnabled({ ...table, interactions: [{ plugged: false }] })).toBe(false);
         });
-        it('is enabled when a legacy connection reads the table', () => {
-            const receiver = { id: 'chart-1', mapSync: true, dependenciesMap: { quickFilters: 'widgets[table-1].quickFilters' } };
-            expect(isTableColumnFiltersEnabled(table, [table, receiver])).toBe(true);
-            expect(isTableColumnFiltersEnabled(table, [table, { ...receiver, mapSync: false }])).toBe(false);
-        });
         it('is disabled for other widgets or without connections', () => {
             expect(isTableColumnFiltersEnabled({ id: 'c', widgetType: 'chart', interactions: [{ plugged: true }] })).toBe(false);
-            expect(isTableColumnFiltersEnabled(table, [table])).toBe(false);
+            expect(isTableColumnFiltersEnabled(table)).toBe(false);
             expect(isTableColumnFiltersEnabled()).toBe(false);
         });
     });

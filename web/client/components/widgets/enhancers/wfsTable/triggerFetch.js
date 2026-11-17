@@ -6,7 +6,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { checkMapSyncWithWidgetOfMapType } from '../../../../utils/WidgetsUtils';
 import { getSearchUrl, getWFSLayerName } from '../../../../utils/LayersUtils';
 
 require('rxjs');
@@ -25,15 +24,7 @@ const sameSortOptions = (o1 = {}, o2 = {}) =>
  * @return {Observable} Stream of props to trigger the data fetch
  */
 export default ($props) =>
-    $props.filter(({ layer = {}, mapSync, dependencies, dependenciesMap, widgets }) => {
-        // Check if mapSync is enabled (true), dependencyMap has mapSync dependency to Map widget and dependencies.viewport is null or falsy
-        // If this condition is true, return false to filter out the event.
-        // This prevents an extra API call from being triggered when the viewport is not available.
-        if (mapSync && checkMapSyncWithWidgetOfMapType(widgets, dependenciesMap) && !dependencies?.viewport) {
-            return false;
-        }
-        return getWFSLayerName(layer);
-    } )
+    $props.filter(({ layer = {} }) => getWFSLayerName(layer))
         .distinctUntilChanged(
             ({ layer = {}, options = {}, filter, sortOptions }, newProps) =>
                 (newProps.layer

@@ -160,8 +160,9 @@ describe('widgetsbuilder epic', () => {
                 switch (action.type) {
                 case EDIT_NEW:
                     expect(action.widget).toExist();
-                    // verify default mapSync
-                    expect(action.widget.mapSync).toBe(true);
+                    // new widgets are not legacy connected, the main map interactions are added when the widget is inserted
+                    expect(action.widget.mapSync).toNotExist();
+                    expect(action.settings.plugMainMap).toBe(true);
                     break;
                 default:
                     done(new Error("Action not recognized"));
@@ -176,6 +177,14 @@ describe('widgetsbuilder epic', () => {
             }
         });
     });
+    it('initEditorOnNew without main map interactions', (done) => {
+        testEpic(initEditorOnNew, 1, [createWidget({ plugMainMap: false })], ([action]) => {
+            expect(action.type).toBe(EDIT_NEW);
+            expect(action.widget.plugMainMap).toNotExist();
+            expect(action.settings.plugMainMap).toBe(false);
+            done();
+        }, { controls: { widgetBuilder: { available: true } } });
+    });
     it('initEditorOnNewChart', (done) => {
         const startActions = [createChart()];
         const NUMBER_OF_ACTIONS = 3;
@@ -185,8 +194,8 @@ describe('widgetsbuilder epic', () => {
                 switch (action.type) {
                 case EDIT_NEW:
                     expect(action.widget).toExist();
-                    // verify default mapSync
-                    expect(action.widget.mapSync).toBe(true);
+                    expect(action.widget.mapSync).toNotExist();
+                    expect(action.settings.plugMainMap).toBe(true);
                     expect(action.widget.widgetType).toBe('chart');
                     expect(action.widget.charts.length).toBe(1);
                     expect(action.widget.charts[0].chartId).toBe(action.widget.selectedChartId);

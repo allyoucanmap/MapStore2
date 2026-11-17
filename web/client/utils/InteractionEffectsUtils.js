@@ -228,6 +228,9 @@ function widgetPathUpdate(widgetId, path, value) {
     return path ? widgetPropertyUpdate(widgetId, path, value) : null;
 }
 
+// the main map sends the timeline range `{ currentTime, offsetTime }`, the other senders a single value
+const isTimeRange = (data) => !!data && typeof data === 'object' && 'currentTime' in data;
+
 /**
  * Returns the update that applies the interaction dimension value (time, elevation, chart axis current time)
  * @param {object} interaction the interaction with its `appliedData`
@@ -239,23 +242,35 @@ export function applyDimensionEffect(interaction, { widgets = [] } = {}) {
     if (!nodePath || !dimension) {
         return null;
     }
+    const appliedData = interaction.appliedData;
+    const value = isTimeRange(appliedData) ? appliedData.currentTime : appliedData;
     if (isMapTimeTarget(nodePath)) {
-        return dimension === 'time' ? currentTimeUpdate(interaction.appliedData) : null;
+        return dimension === 'time' ? currentTimeUpdate(value) : null;
     }
     const widgetId = extractWidgetIdFromNodePath(nodePath);
     if (isChartAxisDimensionTarget(nodePath)) {
-        return widgetId ? widgetPathUpdate(widgetId, getChartAxisDimensionPath(widgetId, nodePath, widgets), interaction.appliedData) : null;
+        const currentTimePath = widgetId && getChartAxisDimensionPath(widgetId, nodePath, widgets);
+        if (!currentTimePath) {
+            return null;
+        }
+        // a range also sets the axis offset time, drawn as a band instead of a line
+        return isTimeRange(appliedData)
+            ? [
+                widgetPathUpdate(widgetId, currentTimePath, appliedData.currentTime ?? null),
+                widgetPathUpdate(widgetId, currentTimePath.replace(/appliedCurrentTime$/, 'appliedOffsetTime'), appliedData.offsetTime ?? null)
+            ]
+            : widgetPathUpdate(widgetId, currentTimePath, value);
     }
     if (!isLayerDimensionTarget(nodePath)) {
         return null;
     }
     if (isMapLayerPath(nodePath)) {
         const layerId = extractLayerIdFromNodePath(nodePath);
-        return layerId ? layerParamsUpdate(layerId, { [dimension]: interaction.appliedData }) : null;
+        return layerId ? layerParamsUpdate(layerId, { [dimension]: value }) : null;
     }
     const targetWidget = findById(widgets, widgetId);
     return targetWidget?.widgetType === 'map'
-        ? widgetPathUpdate(widgetId, getMapWidgetDimensionPath(widgetId, nodePath, [targetWidget]), interaction.appliedData)
+        ? widgetPathUpdate(widgetId, getMapWidgetDimensionPath(widgetId, nodePath, [targetWidget]), value)
         : null;
 }
 
@@ -416,6 +431,10 @@ export function buildMapWidgetAppliedData(mapWidget, mapId, interaction, { widge
     const map = findMapById(mapWidget?.maps, mapId);
     if (interaction?.targetType === TARGET_TYPES.APPLY_VIEW_SYNC) {
         return map?.center && map.zoom !== undefined ? { center: map.center, zoom: map.zoom } : null;
+    }
+    if (interaction?.targetType === TARGET_TYPES.APPLY_DIMENSION) {
+        // only the main map entry mirrors the timeline time
+        return map?.currentTime ? { currentTime: map.currentTime, offsetTime: map.offsetTime } : null;
     }
     const { bounds, crs } = map?.bbox || {};
     const attribute = getTargetGeometryAttribute(interaction, widgets);
@@ -659,7 +678,7 @@ const withoutTransient = (filters) => Array.isArray(filters) && filters.some(fil
     ? filters.filter(filter => !filter?.transient)
     : filters;
 
-const MAIN_MAP_VIEW_KEYS = ['bbox', 'center', 'zoom'];
+const MAIN_MAP_VIEW_KEYS = ['bbox', 'center', 'zoom', 'currentTime', 'offsetTime'];
 
 const stripWidgetTransientEffects = (widget) => {
     // the main map view is mirrored from the map state, it is restored on load
@@ -692,3 +711,48 @@ export function stripTransientEffects(widgets) {
     const stripped = widgets.map(stripWidgetTransientEffects);
     return stripped.some((widget, idx) => widget !== widgets[idx]) ? stripped : widgets;
 }
+
+const prefixWidgetPaths = (path, prefix) => typeof path === 'string'
+    ? path.replace(/widgets\[([^\]]+)\]/g, (match, widgetId) => `widgets[${prefix}-${widgetId}]`)
+    : path;
+const prefixAppliedFromWidget = (filters, prefix) => Array.isArray(filters)
+    ? filters.map(filter => filter?.appliedFromWidget ? { ...filter, appliedFromWidget: `${prefix}-${filter.appliedFromWidget}` } : filter)
+    : filters;
+const prefixNodePath = (node, prefix) => node ? { ...node, nodePath: prefixWidgetPaths(node.nodePath, prefix) } : node;
+
+/**
+ * Prefixes the widget ids referenced by the interactions and effects of a widget, as done for the widget ids of a linked dashboard
+ * @param {object} widget the widget of the linked dashboard
+ * @param {string} prefix the prefix of the widget ids
+ * @returns {object} the widget with prefixed interaction paths and effect senders
+ */
+export function prefixWidgetInteractionIds(widget = {}, prefix) {
+    return {
+        ...widget,
+        ...(widget.interactions ? {
+            interactions: widget.interactions.map(interaction => ({
+                ...interaction,
+                source: prefixNodePath(interaction.source, prefix),
+                target: prefixNodePath(interaction.target, prefix)
+            }))
+        } : {}),
+        ...(widget.interactionFilters ? { interactionFilters: prefixAppliedFromWidget(widget.interactionFilters, prefix) } : {}),
+        ...(widget.charts ? {
+            charts: widget.charts.map(chart => ({
+                ...chart,
+                ...(chart.traces ? { traces: chart.traces.map(trace => ({ ...trace, ...(trace.interactionFilters ? { interactionFilters: prefixAppliedFromWidget(trace.interactionFilters, prefix) } : {}) })) } : {})
+            }))
+        } : {}),
+        ...(widget.maps ? {
+            maps: widget.maps.map(map => ({
+                ...map,
+                ...(map.layers ? {
+                    layers: map.layers.map(layer => layer.layerFilter?.filters
+                        ? { ...layer, layerFilter: { ...layer.layerFilter, filters: prefixAppliedFromWidget(layer.layerFilter.filters, prefix) } }
+                        : layer)
+                } : {})
+            }))
+        } : {})
+    };
+}
+

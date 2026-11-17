@@ -15,13 +15,9 @@ import wpsCounter from '../enhancers/wpsCounter';
 import wfsTable from '../enhancers/wfsTable';
 
 
-// enhancers for dependencies management
-import dependenciesToFilter from '../enhancers/dependenciesToFilter';
-import dependenciesToOptions from '../enhancers/dependenciesToOptions';
-import dependenciesToWidget from '../enhancers/dependenciesToWidget';
-import dependenciesToExtent from '../enhancers/dependenciesToExtent';
-import dependenciesToLayers from '../enhancers/dependenciesToLayers';
-import dependenciesToMapProp from '../enhancers/dependenciesToMapProp';
+// enhancers for interactions
+import interactionFiltersToFilter from '../enhancers/interactionFiltersToFilter';
+import chartCurrentTimeShapes from '../enhancers/chartCurrentTimeShapes';
 import interactionZoomToExtent from '../enhancers/interactionZoomToExtent';
 
 
@@ -32,7 +28,6 @@ import BaseTableWidget from './TableWidget';
 import BaseCounterWidget from './CounterWidget';
 import BaseLegendWidget from './LegendWidget';
 import BaseFilterWidget from './FilterWidget';
-import dependenciesToShapes from '../enhancers/dependenciesToShapes';
 
 //
 // connect widgets to dependencies, remote services and add base icons/tools
@@ -40,21 +35,17 @@ import dependenciesToShapes from '../enhancers/dependenciesToShapes';
 
 /**
  * Chart widget with automatic data fetch, dependency management and all base enhancers. mapSync and dependencies are mapped to the needed props. Adds to the Base component the following props.
- * @prop {object} dependencies values for dependenciesMap.
- * @prop {object} dependenciesMap a map of dependencies that provides the needed props to the widget
- * @prop {boolean} mapSync if true, this is in sync with a map
- * @prop {string} geomProp the geometry, required to generate spatial filter
+ * @prop {object[]} interactionFilters the filters applied by the interactions
+ * @prop {string} geomProp the geometry, target of the spatial filter interactions
  * @prop {object} layer The layer object where to perform the requests
  * @prop {object} options for the backing service. E.g. for WPS `{groupByAttributes: "STATE_NAME", aggregationAttribute: "LAND_KM", aggregateFunction: "Sum"}`
  */
 export const ChartWidget = compose(
     chartWidgetProps,
-    dependenciesToWidget,
-    dependenciesToFilter,
-    dependenciesToOptions,
+    interactionFiltersToFilter,
     multiProtocolChart,
     chartWidget,
-    dependenciesToShapes
+    chartCurrentTimeShapes
 )(BaseChartWidget);
 
 /**
@@ -66,52 +57,36 @@ export const TextWidget = compose(
 
 /**
  * Map widgets with dependencies management and all base enhancers. Adds to the base widget the following props.
- * @prop {object} dependencies values for dependenciesMap.
- * @prop {boolean} mapSync if true, this is in sync with a map
- * @prop {object} dependenciesMap a map of dependencies that provides the needed props to the widget
  * @prop {object} map the map to display, with layers, projection, bbox, center ....
  * @prop {object} options
  */
 export const MapWidget = compose(
-    dependenciesToWidget,
-    dependenciesToLayers,
-    dependenciesToMapProp('center'),
-    dependenciesToMapProp('zoom'),
-    dependenciesToExtent,
     interactionZoomToExtent,
     mapWidget
 )(BaseMapWidget);
 
 /**
  * Table widgets with automatic data fetch, dependencies management and all base enhancers. Adds to the base component the following props.
- * @prop {object} dependencies values for dependenciesMap.
- * @prop {boolean} mapSync if true, this is in sync with a map
- * @prop {object} dependenciesMap a map of dependencies that provides the needed props to the widget
- * @prop {string} geomProp the geometry, required to generate spatial filter
+ * @prop {object[]} interactionFilters the filters applied by the interactions
+ * @prop {string} geomProp the geometry, target of the spatial filter interactions
  * @prop {object} layer The layer object where to perform the requests
  * @prop {object} options {groupByAttributes: "STATE_NAME", aggregationAttribute: "LAND_KM", aggregateFunction: "Sum"}
  */
 export const TableWidget = compose(
-    dependenciesToWidget,
-    dependenciesToOptions,
-    dependenciesToFilter,
+    interactionFiltersToFilter,
     wfsTable,
     tableWidget
 )(BaseTableWidget);
 
 /**
  * Counter widget with automatic data fetch, dependency management and all base enhancers. Adds to the base component the following props.
- * @prop {object} dependencies values for dependenciesMap.
- * @prop {boolean} mapSync if true, this is in sync with a map
- * @prop {object} dependenciesMap a map of dependencies that provides the needed props to the widget
- * @prop {string} geomProp the geometry, required to generate spatial filter
+ * @prop {object[]} interactionFilters the filters applied by the interactions
+ * @prop {string} geomProp the geometry, target of the spatial filter interactions
  * @prop {object} layer The layer object where to perform the requests
  * @prop {object} options for the backing service. E.g. for WPS `{groupByAttributes: "STATE_NAME", aggregationAttribute: "LAND_KM", aggregateFunction: "Sum"}`
  */
 export const CounterWidget = compose(
-    dependenciesToWidget,
-    dependenciesToFilter,
-    dependenciesToOptions,
+    interactionFiltersToFilter,
     wpsCounter,
     counterWidget
 )(BaseCounterWidget);

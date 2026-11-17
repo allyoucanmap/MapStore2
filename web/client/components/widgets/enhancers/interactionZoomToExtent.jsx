@@ -9,9 +9,7 @@ import React, { useEffect, memo } from 'react';
 import { ZOOM_TO_EXTENT_HOOK } from '../../../utils/MapUtils';
 
 /**
- * Triggers the map's zoom when a `zoomToRequest` is received from the filter widget
- * interaction. Unlike `dependenciesToExtent`, it is driven directly by the interaction
- * system and does not require legacy map connection setup.
+ * Triggers the map zoom when a zoom-to interaction writes a `zoomToRequest` on the map (filtered bounds, feature extent)
  */
 export default (Component) => memo((props) => {
     const { id, maps = [], updateProperty = () => {}, hookRegister } = props;

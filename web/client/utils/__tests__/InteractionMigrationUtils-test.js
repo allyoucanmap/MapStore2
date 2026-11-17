@@ -15,7 +15,8 @@ import {
     LEGACY_CONNECTION_EFFECT_WRITERS,
     MAIN_MAP_SENDER_ID,
     convertTableLegacyConnection,
-    convertMapLegacyConnection
+    convertMapLegacyConnection,
+    buildMainMapDefaultInteractions
 } from '../InteractionMigrationUtils';
 
 const TABLE_ID = 'table-1';
@@ -354,6 +355,44 @@ describe('InteractionMigrationUtils', () => {
             expect(migrateLegacyConnections(config)).toBe(config);
             const noGeometry = { widgets: [{ ...counter, geomProp: undefined }] };
             expect(migrateLegacyConnections(noGeometry, undefined, undefined, { mainMap: true })).toBe(noGeometry);
+        });
+    });
+
+    describe('main map default interactions', () => {
+        const chart = {
+            id: CHART_ID,
+            widgetType: 'chart',
+            charts: [{
+                chartId: 'c1',
+                xAxisOpts: [{ id: 0, type: 'date', showCurrentTime: true }],
+                yAxisOpts: [{ id: 0 }],
+                traces: [{ id: 't1', geomProp: 'the_geom' }, { id: 't2' }, { id: 't3', type: 'pie' }]
+            }]
+        };
+        it('builds only the viewport filter for a new widget, the timeline time is connected on purpose', () => {
+            const interactions = buildMainMapDefaultInteractions(chart);
+            expect(interactions.map(i => [i.targetType, i.source.nodePath, i.target.nodePath])).toEqual([
+                ['applySpatialFilter', 'widgets[map].maps[main]', `widgets[${CHART_ID}].charts[c1].traces[t1]`]
+            ]);
+            expect(interactions.every(i => i.plugged && !i.id)).toBe(true);
+        });
+        it('builds nothing for widgets without geometry or date axes, or for maps', () => {
+            expect(buildMainMapDefaultInteractions({ id: 'counter-1', widgetType: 'counter' })).toEqual([]);
+            expect(buildMainMapDefaultInteractions({ id: 'map-w', widgetType: 'map', maps: [{ mapId: 'm1' }] })).toEqual([]);
+            expect(buildMainMapDefaultInteractions({ id: 'text-1', widgetType: 'text' })).toEqual([]);
+        });
+        it('converts the timeline time of a legacy main map connection once per date axis showing it, not of a map widget one', () => {
+            const legacyChart = { ...chart, mapSync: true, dependenciesMap: { viewport: 'viewport', 'dimension.currentTime': 'dimension.currentTime' } };
+            const migrated = migrateLegacyConnections({ widgets: [legacyChart] }, undefined, undefined, { mainMap: true });
+            const mainMap = migrated.widgets.find(w => w.id === MAIN_MAP_SENDER_ID);
+            expect(mainMap.interactions.map(i => [i.targetType, i.target.nodePath])).toEqual([
+                ['applySpatialFilter', `widgets[${CHART_ID}].charts[c1].traces[t1]`],
+                ['applyDimension', `widgets[${CHART_ID}].charts[c1].traces[t1].xAxisOpts[0].appliedCurrentTime`]
+            ]);
+            expect(mainMap.interactions[1].target.metaData.dimension).toBe('time');
+            const mapWidget = { id: 'map-w', widgetType: 'map', maps: [{ mapId: 'm1', layers: [] }] };
+            const { interactions } = convertMapLegacyConnection({ ...legacyChart, dependenciesMap: { viewport: 'widgets[map-w].maps[m1].viewport', 'dimension.currentTime': 'dimension.currentTime' } }, mapWidget, { senderId: 'map-w', mapId: 'm1' });
+            expect(interactions.map(i => i.targetType)).toEqual(['applySpatialFilter']);
         });
     });
 });

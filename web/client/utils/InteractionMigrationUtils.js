@@ -8,6 +8,7 @@
 
 import isEmpty from 'lodash/isEmpty';
 import omit from 'lodash/omit';
+import uniqBy from 'lodash/uniqBy';
 import {
     TARGET_TYPES,
     TARGET_EVENT_DATA_TYPES,
@@ -54,7 +55,7 @@ const mergeInteractions = (existing = [], added = []) => {
     return [...existing, ...added.filter(interaction => !existingIds.includes(interaction?.id))];
 };
 
-const legacyInteraction = (sender, targetType, nodePath, layer, sourceNodePath = `widgets[${sender.id}]`) => ({
+const legacyInteraction = (sender, targetType, nodePath, layer, sourceNodePath = `widgets[${sender.id}]`, metaData = {}) => ({
     plugged: true,
     targetType,
     source: { nodePath: sourceNodePath },
@@ -63,7 +64,8 @@ const legacyInteraction = (sender, targetType, nodePath, layer, sourceNodePath =
         metaData: {
             targetType,
             expectedDataType: TARGET_EVENT_DATA_TYPES[targetType],
-            constraints: layer ? { layer: createLayerConstraint(layer) } : {}
+            constraints: layer ? { layer: createLayerConstraint(layer) } : {},
+            ...metaData
         }
     },
     configuration: {
@@ -127,6 +129,23 @@ export const convertTableLegacyConnection = (receiver, sender, source, widgets) 
 
 const readsLegacyKey = (receiver, key) => typeof receiver?.dependenciesMap?.[key] === 'string';
 
+// one target per chart date axis that showed the current time (legacy `showCurrentTime` flag), as the line was drawn per axis
+const getChartCurrentTimeAxisPaths = (chartWidget) => uniqBy(
+    (chartWidget.charts || []).flatMap(chart => (chart.traces || [])
+        .filter(trace => trace?.type !== 'pie')
+        .flatMap(trace => ['x', 'y'].flatMap(axisKey => {
+            const axisId = trace?.[`${axisKey}axis`] ?? 0;
+            const chartAxisOpts = chart[`${axisKey}AxisOpts`];
+            return (Array.isArray(chartAxisOpts) ? chartAxisOpts : [chartAxisOpts || { id: 0 }])
+                .filter(axis => String(axis?.id) === String(axisId) && axis?.type === 'date' && axis?.showCurrentTime === true)
+                .map(axis => ({
+                    axisKey: `${chart.chartId || chart.id}-${axisKey}-${axis.id}`,
+                    nodePath: `widgets[${chartWidget.id}].charts[${chart.chartId || chart.id}].traces[${trace.id}].${axisKey}AxisOpts[${axis.id}].appliedCurrentTime`
+                }));
+        }))),
+    ({ axisKey }) => axisKey
+).map(({ nodePath }) => nodePath);
+
 const MAP_LEGACY_RECEIVER_INTERACTIONS = {
     counter: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'viewport') && receiver.geomProp
         ? [legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER, `widgets[${receiver.id}]`, null, sourceNodePath)]
@@ -134,17 +153,40 @@ const MAP_LEGACY_RECEIVER_INTERACTIONS = {
     table: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'viewport') && receiver.geomProp
         ? [legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER, `widgets[${receiver.id}]`, null, sourceNodePath)]
         : [],
-    chart: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'viewport')
-        ? (receiver.charts || []).flatMap(chart => (chart.traces || [])
-            .filter(trace => trace?.geomProp)
-            .map(trace => legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER,
-                `widgets[${receiver.id}].charts[${chart.chartId || chart.id}].traces[${trace.id}]`, null, sourceNodePath)))
-        : [],
+    chart: (receiver, sender, sourceNodePath) => [
+        ...(readsLegacyKey(receiver, 'viewport')
+            ? (receiver.charts || []).flatMap(chart => (chart.traces || [])
+                .filter(trace => trace?.geomProp)
+                .map(trace => legacyInteraction(sender, TARGET_TYPES.APPLY_SPATIAL_FILTER,
+                    `widgets[${receiver.id}].charts[${chart.chartId || chart.id}].traces[${trace.id}]`, null, sourceNodePath)))
+            : []),
+        // the timeline current time line, only the main map has a timeline
+        ...(isMainMapWidget(sender) && readsLegacyKey(receiver, 'dimension.currentTime')
+            ? getChartCurrentTimeAxisPaths(receiver).map(nodePath => legacyInteraction(sender, TARGET_TYPES.APPLY_DIMENSION, nodePath, null, sourceNodePath, { dimension: 'time' }))
+            : [])
+    ],
     // the old connection moved the selected map, each map of the receiver follows the sender map now
     map: (receiver, sender, sourceNodePath) => readsLegacyKey(receiver, 'center') || readsLegacyKey(receiver, 'zoom')
         ? (receiver.maps || []).map(map => legacyInteraction(sender, TARGET_TYPES.APPLY_VIEW_SYNC,
             `widgets[${receiver.id}].maps[${map.mapId}].${TARGET_TYPES.APPLY_VIEW_SYNC}`, null, sourceNodePath))
         : []
+};
+
+// legacy main map connections with only `mapSync` meant the viewport filter and the timeline time
+const LEGACY_MAIN_MAP_DEPENDENCIES = { viewport: 'viewport', 'dimension.currentTime': 'dimension.currentTime' };
+// new widgets get only the viewport filter, the timeline time is connected to the chart axes on purpose
+const NEW_WIDGET_MAIN_MAP_DEPENDENCIES = { viewport: 'viewport' };
+
+/**
+ * Returns the default interactions of the main map for a new widget: the viewport filter on its geometry
+ * @param {object} widget the chart, table or counter widget
+ * @returns {object[]} the interactions, without ids
+ */
+export const buildMainMapDefaultInteractions = (widget) => {
+    const getInteractions = MAP_LEGACY_RECEIVER_INTERACTIONS[widget?.widgetType];
+    return getInteractions && widget.widgetType !== 'map'
+        ? getInteractions({ ...widget, dependenciesMap: NEW_WIDGET_MAIN_MAP_DEPENDENCIES }, createMainMapWidget(), `widgets[${MAIN_MAP_WIDGET_ID}].maps[${MAIN_MAP_ID}]`)
+        : [];
 };
 
 /**
@@ -169,9 +211,8 @@ export const convertMapLegacyConnection = (receiver, sender, source) => {
             : null;
     }
     const getInteractions = mapId ? MAP_LEGACY_RECEIVER_INTERACTIONS[receiver?.widgetType] : null;
-    // older main map connections have only `mapSync`, which meant the viewport filter
     const connected = isMainMapWidget(sender) && isEmpty(receiver?.dependenciesMap)
-        ? { ...receiver, dependenciesMap: { viewport: 'viewport' } }
+        ? { ...receiver, dependenciesMap: LEGACY_MAIN_MAP_DEPENDENCIES }
         : receiver;
     const interactions = getInteractions ? getInteractions(connected, sender, `widgets[${sender.id}].maps[${mapId}]`) : [];
     return interactions.length

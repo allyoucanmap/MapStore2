@@ -36,20 +36,15 @@ export default compose(
         const isZoomEnabled = ownProps?.widgetType === 'table' && ownProps?.enableZoomInTblWidget;
         const isDashboardWidget = isZoomEnabled && !!ownProps?.isDashboardWidget;
         const isMapViewerWidget = isZoomEnabled && !isDashboardWidget;
-        const mapWidgetsConnectedWithTable = ownProps?.widgets?.filter(i => i.widgetType === 'map' && i?.dependenciesMap && i?.dependenciesMap?.mapSync?.includes(ownProps.id) && i.mapSync) || [];
         const hasZoomToFeatureInteractions = (ownProps?.interactions || [])
             .some(interaction => interaction?.plugged && interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO_FEATURE);
-        const isMapSync = ownProps?.mapSync || mapWidgetsConnectedWithTable.length || hasZoomToFeatureInteractions;
-        // legacy connected maps read extentObj (removed in Phase 7), zoom to feature interactions receive the clicked feature
-        const zoomDashboardMaps = (feature, crs, maxZoom) => {
-            ownProps?.updateProperty(ownProps.id, `dependencies.extentObj`, { extent: feature.bbox, crs, maxZoom });
-            dispatch(applyWidgetInteractions(ownProps.id, undefined, ownProps.id, {
-                targetTypes: [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE],
-                data: { feature, crs, maxZoom }
-            }));
-        };
+        // the zoom to feature interactions receive the clicked feature
+        const zoomDashboardMaps = (feature, crs, maxZoom) => dispatch(applyWidgetInteractions(ownProps.id, undefined, ownProps.id, {
+            targetTypes: [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE],
+            data: { feature, crs, maxZoom }
+        }));
         return {
-            gridTools: (isMapSync && isDashboardWidget) || (isMapViewerWidget) ? gridTools.map((t) => ({
+            gridTools: (hasZoomToFeatureInteractions && isDashboardWidget) || (isMapViewerWidget) ? gridTools.map((t) => ({
                 ...t,
                 events: {
                     onClick: async(p, opts, describe, {crs, maxZoom} = {}) => {

@@ -332,15 +332,8 @@ function AxisOptions({
                     <Message msgId="widgets.advanced.hideLabels" />
                 </Checkbox>
             </FormGroup>
-            {options.type === 'date' && <FormGroup className="form-group-flex">
-                <Checkbox
-                    checked={options?.showCurrentTime ?? false}
-                    onChange={(event) => { handleChange('showCurrentTime', event?.target?.checked); }}
-                >
-                    <Message msgId="widgets.advanced.showCurrentTime" />
-                </Checkbox>
-            </FormGroup>}
-            {options.type === 'date' && options.showCurrentTime && (
+            {/* the current time is shown when a dimension interaction (e.g. the main map timeline) is connected to the axis */}
+            {options.type === 'date' && (
                 <ShapeStyle
                     color={options?.currentTimeShape?.color}
                     size={options?.currentTimeShape?.size}

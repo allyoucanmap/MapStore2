@@ -71,7 +71,7 @@ export default pure(({
         xxs: maximizedIds.map(i => ({ i, x: 0, y: 0, w: 1, h: 1 }))
     };
     const effectiveLayouts = isMaximized ? maximizedLayouts : layouts;
-    const getEnableColumnFilters = w => isTableColumnFiltersEnabled(w, widgets);
+    const getEnableColumnFilters = w => isTableColumnFiltersEnabled(w);
 
     return (<GridComponent
         key={id || "widgets-view"}

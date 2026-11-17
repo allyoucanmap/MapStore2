@@ -13,7 +13,8 @@ import {
     isLayerTimeDimensionTarget,
     isMapTimeTarget,
     findAllApplyFiltersForZoomTo,
-    TARGET_TYPES
+    TARGET_TYPES,
+    isMainMapSourceInteraction
 } from '../../../../../../utils/InteractionUtils';
 
 const DEFAULT_NODE_DISABLED = {
@@ -167,7 +168,9 @@ export const getInteractionTargetNodeDisabled = ({
     }
 
     if (target.targetType === TARGET_TYPES.APPLY_DIMENSION) {
-        const chartAxisCurrentTimeDisabledByTimeline = timelineEnabled && isChartAxisDimensionTarget(targetNodePath);
+        // the main map sends the timeline time itself, the other senders give way to the timeline
+        const timelineControlsTime = timelineEnabled && !isMainMapSourceInteraction({ source: { nodePath: sourceNodePath } });
+        const chartAxisCurrentTimeDisabledByTimeline = timelineControlsTime && isChartAxisDimensionTarget(targetNodePath);
 
         if (chartAxisCurrentTimeDisabledByTimeline) {
             return {
@@ -180,17 +183,16 @@ export const getInteractionTargetNodeDisabled = ({
         const chartAxisDimensionTargetMetadata = item?.interactionMetadata?.targets
             ?.find(t => t?.targetType === TARGET_TYPES.APPLY_DIMENSION)
             || {};
-        const chartAxisCurrentTimeEnabled = chartAxisDimensionTargetMetadata?.showCurrentTimeEnabled === true;
         const chartAxisDateType = chartAxisDimensionTargetMetadata?.dateType === true;
 
-        if (chartAxisCurrentTimeTarget && (!chartAxisCurrentTimeEnabled || !chartAxisDateType)) {
+        if (chartAxisCurrentTimeTarget && !chartAxisDateType) {
             return {
                 disabled: true,
                 reasonMsgId: 'widgets.filterWidget.axisCurrentTimeDisabledTooltip'
             };
         }
 
-        const layerTimeDisabledByTimeline = timelineEnabled && isLayerTimeDimensionTarget(targetNodePath);
+        const layerTimeDisabledByTimeline = timelineControlsTime && isLayerTimeDimensionTarget(targetNodePath);
 
         if (layerTimeDisabledByTimeline) {
             return {

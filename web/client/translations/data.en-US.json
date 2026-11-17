@@ -2402,6 +2402,7 @@
           "viewportFilter": "Viewport filter",
           "syncMapView": "Sync map view",
           "controlMap": "Control map",
+          "timelineCurrentTime": "Timeline current time",
           "errorChart": "One or more chart(s) is invalid",
           "errorFilter": "One or more filter(s) is invalid",
           "backToTableOptions": "Back to table options",
@@ -2686,7 +2687,6 @@
           "log": "Log",
           "date": "Date"
         },
-        "showCurrentTime": "Highlight selected time",
         "type": "Type"
       },
       "tray": {
@@ -2854,8 +2854,8 @@
         "applyDimensionSelectionModeDisabledTooltip": "Multiple selection is disabled because this filter is connected to Apply Dimension. Disconnect Apply Dimension to use Multiple selection mode.",
         "applyDimensionMultipleSelectionDisabledTooltip": "Apply Dimension can only be connected when the filter selection mode is Single. Switch the layout selection mode to Single to connect this target.",
         "layerTimeControlledByTimelineTooltip": "Layer time is controlled by the main map Timeline. Connect to the Timeline target instead.",
-        "axisCurrentTimeControlledByTimelineTooltip": "Axis current time is controlled by the main map Timeline. Connect to the Timeline target instead.",
-        "axisCurrentTimeDisabledTooltip": "Set the axis type to Date and enable \"Show current time\" in chart options before connecting it.",
+        "axisCurrentTimeControlledByTimelineTooltip": "Axis current time is controlled by the main map Timeline, connect it from Map interactions.",
+        "axisCurrentTimeDisabledTooltip": "Set the axis type to Date before connecting it.",
         "timelineTargetUnavailableTooltip": "Timeline is not available in this context.",
         "targetAlreadyConnectedToTimeTooltip": "Map timeline connection with 2 way synchronization enabled can only be connected alone. Disable 2 way synchronization or disconnect Map timeline connection to connect other targets."
       }
