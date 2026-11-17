@@ -12,6 +12,7 @@ import {
     INSERT,
     EDIT,
     UPDATE_PROPERTY,
+    UPDATE_PROPERTIES,
     UPDATE_LAYER,
     DELETE,
     EDITOR_CHANGE,
@@ -40,7 +41,8 @@ import { migrateLegacyConnections } from '../utils/InteractionMigrationUtils';
 import {
     convertDependenciesMappingForCompatibility as convertToCompatibleWidgets,
     cleanMaximizedState,
-    editorChange
+    editorChange,
+    updateWidgetPropertyInList
 } from "../utils/WidgetsUtils";
 
 const emptyState = {
@@ -131,20 +133,13 @@ function widgetsReducer(state = emptyState, action) {
         }
         return state;
     case UPDATE_PROPERTY:
-        // if "merge" update map by merging a partial map object coming from
-        // onMapViewChanges handler for MapWidget
-        // if "replace" update the widget setting the value to the existing object
-        const oldWidget = find(get(state, `containers[${action.target}].widgets`), {
-            id: action.id
-        });
-        let uValue = action.value;
-        if (action.mode === "merge") {
-            uValue = action.key === "maps"
-                ? oldWidget?.maps?.map(m => m.mapId === action.value?.mapId ? {...m, ...action?.value} : m)
-                : Object.assign({}, oldWidget[action.key], action.value);
-        }
-        return arrayUpsert(`containers[${action.target}].widgets`,
-            set(action.key, uValue, oldWidget), { id: action.id },
+        return set(`containers[${action.target}].widgets`,
+            updateWidgetPropertyInList(get(state, `containers[${action.target}].widgets`), action),
+            state
+        );
+    case UPDATE_PROPERTIES:
+        return set(`containers[${action.target}].widgets`,
+            (action.updates || []).reduce(updateWidgetPropertyInList, get(state, `containers[${action.target}].widgets`)),
             state
         );
     case UPDATE_LAYER: {

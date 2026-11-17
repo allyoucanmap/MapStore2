@@ -22,6 +22,7 @@ import {
     applyZoomToFeatureEffect,
     applyLegendEffect,
     mergeLegendLayerChanges,
+    getLegendLayerChanges,
     EVENT_TARGET_TYPES,
     getTargetGeometryAttribute,
     isTransientEffectSender,
@@ -413,6 +414,27 @@ describe('InteractionEffectsUtils', () => {
             expect(update.value.layers[0].visibility).toBe(false);
             expect(applyLegendEffect({ ...interaction, appliedData: {} }, { widgets: [mapWidget] })).toBe(null);
             expect(applyLegendEffect(interaction, { widgets: [] })).toBe(null);
+        });
+        it('mergeLegendLayerChanges writes only the received legend fields', () => {
+            const merged = mergeLegendLayerChanges(mapWidget.maps[0].layers, [{ id: 'l1', visibility: false }]);
+            expect(merged[0]).toEqual({ id: 'l1', visibility: false, title: 'L1' });
+            expect('opacity' in merged[0]).toBe(false);
+            expect(mergeLegendLayerChanges(mapWidget.maps[0].layers, [{ id: 'l1' }])[0]).toBe(mapWidget.maps[0].layers[0]);
+        });
+        it('getLegendLayerChanges returns only the changed legend fields of the changed layers', () => {
+            const layerFilter = { filters: [] };
+            const mapLayers = [{ id: 'l1', visibility: true, opacity: 1, layerFilter }, { id: 'l2', visibility: true }];
+            expect(getLegendLayerChanges(mapLayers, [
+                { id: 'l1', visibility: false, opacity: 1, layerFilter: { filters: [] }, legendEmpty: true, title: 'ignored' },
+                { id: 'l2', visibility: true },
+                { id: 'missing', visibility: false }
+            ])).toEqual([{ id: 'l1', visibility: false }]);
+            expect(getLegendLayerChanges(mapLayers, [{ id: 'l1', visibility: true, legendEmpty: true }])).toEqual([]);
+            expect(getLegendLayerChanges(mapLayers)).toEqual([]);
+        });
+        it('does not write the legend when nothing changes in the controlled map', () => {
+            const interaction = makeEventInteraction(TARGET_TYPES.APPLY_LEGEND, 'widgets[map-w].maps[m1].applyLegend', { layers: [{ id: 'l1', visibility: true }] });
+            expect(applyLegendEffect(interaction, { widgets: [mapWidget] })).toBe(null);
         });
     });
 

@@ -39,7 +39,8 @@ import {
     getDefaultNullPlaceholderForDataType,
     getErrorMessageId,
     updateDependenciesMap,
-    isTableColumnFiltersEnabled
+    isTableColumnFiltersEnabled,
+    updateWidgetPropertyInList
 } from '../WidgetsUtils';
 import * as simpleStatistics from 'simple-statistics';
 import { createClassifyGeoJSONSync } from '../../api/GeoJSONClassification';
@@ -55,6 +56,33 @@ const dataWidgets = {
 };
 const classifyGeoJSONSync = createClassifyGeoJSONSync(simpleStatistics);
 describe('Test WidgetsUtils', () => {
+    describe('updateWidgetPropertyInList', () => {
+        const list = [
+            { id: 'w1', title: 'W1', options: { a: 1, b: 2 } },
+            { id: 'w2', maps: [{ mapId: 'm1', zoom: 3, layers: [{ id: 'l1' }] }, { mapId: 'm2', zoom: 5 }] }
+        ];
+        it('replaces the property of the widget', () => {
+            const updated = updateWidgetPropertyInList(list, { id: 'w1', key: 'options.a', value: 5 });
+            expect(updated[0]).toEqual({ id: 'w1', title: 'W1', options: { a: 5, b: 2 } });
+            expect(updated[1]).toBe(list[1]);
+            expect(list[0].options.a).toBe(1);
+        });
+        it('merges the object value, keeping the other properties', () => {
+            const updated = updateWidgetPropertyInList(list, { id: 'w1', key: 'options', value: { b: 3 }, mode: 'merge' });
+            expect(updated[0].options).toEqual({ a: 1, b: 3 });
+            expect(updated[0].title).toBe('W1');
+        });
+        it('merges the map with the same mapId only', () => {
+            const updated = updateWidgetPropertyInList(list, { id: 'w2', key: 'maps', value: { mapId: 'm1', zoom: 4 }, mode: 'merge' });
+            expect(updated[1].maps[0]).toEqual({ mapId: 'm1', zoom: 4, layers: [{ id: 'l1' }] });
+            expect(updated[1].maps[1]).toBe(list[1].maps[1]);
+        });
+        it('gives the same widgets when the value is already applied', () => {
+            const once = updateWidgetPropertyInList(list, { id: 'w2', key: 'maps', value: { mapId: 'm1', zoom: 4 }, mode: 'merge' });
+            const twice = updateWidgetPropertyInList(once, { id: 'w2', key: 'maps', value: { mapId: 'm1', zoom: 4 }, mode: 'merge' });
+            expect(twice).toEqual(once);
+        });
+    });
     it('test getConnectionList', () => {
         const pairs = getConnectionList(widgets);
         expect(pairs).toExist();

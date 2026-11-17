@@ -13,6 +13,7 @@ import {
     insertWidget,
     updateWidgetLayer,
     updateWidgetProperty,
+    updateWidgetProperties,
     deleteWidget,
     init,
     changeLayout,
@@ -474,6 +475,34 @@ describe('Test the widgets reducer', () => {
         expect(widget.map.zoom).toBe(4);
         expect(widget.map.layers.length).toBe(1);
         expect(widget.map.layers[0].params.CQL_FILTER).toBe("some cql");
+    });
+    it('widgets updateWidgetProperties applies all the updates in order', () => {
+        const state = {
+            containers: {
+                floating: {
+                    widgets: [
+                        { id: 'chart', charts: [{ chartId: 'c1' }], title: 'Chart' },
+                        { id: 'map', maps: [{ mapId: 'm1', zoom: 3, layers: [{ id: 'l1' }] }, { mapId: 'm2', zoom: 5 }] }
+                    ]
+                }
+            }
+        };
+        const newState = widgets(state, updateWidgetProperties([
+            { id: 'chart', key: 'interactionFilters', value: [{ id: 'f1' }] },
+            { id: 'chart', key: 'interactionFilters', value: [{ id: 'f2' }] },
+            { id: 'map', key: 'maps', value: { mapId: 'm1', zoom: 4 }, mode: 'merge' }
+        ]));
+        const [chart, map] = newState.containers.floating.widgets;
+        expect(chart.interactionFilters).toEqual([{ id: 'f2' }]);
+        expect(chart.title).toBe('Chart');
+        expect(chart.charts).toBe(state.containers.floating.widgets[0].charts);
+        expect(map.maps[0]).toEqual({ mapId: 'm1', zoom: 4, layers: [{ id: 'l1' }] });
+        expect(map.maps[1]).toBe(state.containers.floating.widgets[1].maps[1]);
+    });
+    it('widgets updateWidgetProperties without updates keeps the widgets', () => {
+        const state = { containers: { floating: { widgets: [{ id: 'chart', title: 'Chart' }] } } };
+        const newState = widgets(state, updateWidgetProperties([]));
+        expect(newState.containers.floating.widgets).toEqual(state.containers.floating.widgets);
     });
     it('widgets toggleMaximize changes only transient maximized state', () => {
         const {initialState} = require('../../test-resources/widgets/layout-state-collapse.js');

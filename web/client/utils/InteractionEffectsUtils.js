@@ -320,6 +320,11 @@ export function applyZoomToFeatureEffect(interaction, { widgets, mainMapPadding 
 }
 
 /**
+ * Layer fields the legend controls on its map
+ */
+export const LEGEND_LAYER_FIELDS = ['visibility', 'opacity', 'expanded', 'layerFilter'];
+
+/**
  * Returns the layers of the controlled map with the legend changes (visibility, opacity, expanded, legend filter)
  * @param {object[]} mapLayers the layers of the controlled map
  * @param {object[]} legendLayers the layers changed in the legend
@@ -327,10 +332,29 @@ export function applyZoomToFeatureEffect(interaction, { widgets, mainMapPadding 
  */
 export const mergeLegendLayerChanges = (mapLayers = [], legendLayers = []) => mapLayers.map(layer => {
     const legendLayer = legendLayers.find(l => l.id === layer.id);
-    return legendLayer
-        ? { ...layer, visibility: legendLayer.visibility, opacity: legendLayer.opacity, expanded: legendLayer.expanded, layerFilter: legendLayer.layerFilter }
+    const changes = legendLayer ? LEGEND_LAYER_FIELDS.filter(field => field in legendLayer) : [];
+    return changes.length > 0
+        ? changes.reduce((updated, field) => ({ ...updated, [field]: legendLayer[field] }), layer)
         : layer;
 });
+
+/**
+ * Returns the legend layers with only the legend fields that differ from the map layers, the unchanged layers are left out
+ * @param {object[]} mapLayers the layers of the controlled map
+ * @param {object[]} legendLayers the layers of the legend
+ * @returns {object[]} `[{ id, ...changedFields }]`
+ */
+export const getLegendLayerChanges = (mapLayers = [], legendLayers = []) => legendLayers
+    .map(legendLayer => {
+        const layer = mapLayers.find(l => l.id === legendLayer.id);
+        const changed = layer
+            ? LEGEND_LAYER_FIELDS.filter(field => field in legendLayer && !isEqual(layer[field], legendLayer[field]))
+            : [];
+        return changed.length > 0
+            ? changed.reduce((change, field) => ({ ...change, [field]: legendLayer[field] }), { id: legendLayer.id })
+            : null;
+    })
+    .filter(Boolean);
 
 /**
  * Returns the update that writes the legend changes into the layers of the controlled map
@@ -343,9 +367,10 @@ export function applyLegendEffect(interaction, { widgets } = {}) {
     const mapId = extractMapIdFromNodePath(nodePath);
     const map = mapWidget && findMapById(mapWidget.maps, mapId);
     const legendLayers = interaction?.appliedData?.layers;
-    return map && Array.isArray(legendLayers)
-        ? widgetPropertyUpdate(mapWidget.id, 'maps', { mapId, layers: mergeLegendLayerChanges(map.layers, legendLayers) }, 'merge')
-        : null;
+    if (!map || !Array.isArray(legendLayers) || getLegendLayerChanges(map.layers, legendLayers).length === 0) {
+        return null;
+    }
+    return widgetPropertyUpdate(mapWidget.id, 'maps', { mapId, layers: mergeLegendLayerChanges(map.layers, legendLayers) }, 'merge');
 }
 
 export const TARGET_EFFECTS = {

@@ -14,6 +14,7 @@ import { editableWidget, defaultIcons, withHeaderTools } from './tools';
 import { getScales } from '../../../utils/MapUtils';
 import { getInactiveNode, DEFAULT_GROUP_ID } from '../../../utils/LayersUtils';
 import { TARGET_TYPES } from '../../../utils/InteractionUtils';
+import { getLegendLayerChanges } from '../../../utils/InteractionEffectsUtils';
 
 /**
  * Returns the legend view props of the controlled map, showing the layers of the visible groups without backgrounds
@@ -48,11 +49,13 @@ export const withLegendMapData = (Component) => ({ legendMap, onApplyWidgetInter
     if (!legendMap?.map) {
         return <Component {...props} noMapConnected />;
     }
+    // the legend also reports its own state (e.g. empty legend images), only the changes of the map layers are sent
     const sendLegendChange = (key, value) => {
-        if (key === 'map') {
+        const layers = key === 'map' ? getLegendLayerChanges(legendMap.map.layers, value?.layers) : [];
+        if (layers.length > 0) {
             onApplyWidgetInteractions(props.id, undefined, props.id, {
                 targetTypes: [TARGET_TYPES.APPLY_LEGEND],
-                data: { layers: value?.layers || [] }
+                data: { layers }
             });
         }
     };

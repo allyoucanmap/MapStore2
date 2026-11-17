@@ -16,6 +16,7 @@ export const EDITOR_SETTING_CHANGE = "WIDGETS:EDITOR_SETTING_CHANGE";
 export const INIT = "WIDGETS:INIT";
 export const UPDATE = "WIDGETS:UPDATE";
 export const UPDATE_PROPERTY = "WIDGETS:UPDATE_PROPERTY";
+export const UPDATE_PROPERTIES = "WIDGETS:UPDATE_PROPERTIES";
 export const UPDATE_LAYER = "WIDGETS:UPDATE_LAYER";
 export const CHANGE_LAYOUT = "WIDGETS:CHANGE_LAYOUT";
 export const DELETE = "WIDGETS:DELETE";
@@ -133,6 +134,17 @@ export const updateWidgetProperty = (id, key, value, mode = "replace", target = 
     key,
     value,
     mode
+});
+/**
+ * Updates several widget properties at once, applied in order with a single state change
+ * @param {object[]} updates `[{ id, key, value, mode }]`, as `updateWidgetProperty`
+ * @param {string} [target] the widgets container
+ * @return {object} action with type `WIDGETS:UPDATE_PROPERTIES`
+ */
+export const updateWidgetProperties = (updates = [], target = DEFAULT_TARGET) => ({
+    type: UPDATE_PROPERTIES,
+    updates,
+    target
 });
 /**
  * Update a layer property of all widgets with that layer

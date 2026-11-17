@@ -13,7 +13,7 @@ import { testEpic, addTimeoutEpic, TEST_TIMEOUT } from './epicTestUtils';
 import { applyWidgetInteractionsEpic, cleanupAndReapplyWidgetInteractionsEpic, applyOnSenderPropertyChangeEpic, applyTransientEffectsOnLoadEpic, mirrorMainMapViewEpic, editMainMapInteractionsEpic, plugNewWidgetIntoMainMapEpic } from '../interactions';
 import { applyWidgetInteractions, zoomToFilterExtent, editMainMapInteractions, APPLY_WIDGET_INTERACTIONS } from '../../actions/interactions';
 import { changeMapView, ZOOM_TO_EXTENT } from '../../actions/map';
-import { UPDATE_PROPERTY, DELETE, EDIT, REPLACE, insertWidget, editNewWidget, updateWidgetProperty } from '../../actions/widgets';
+import { UPDATE_PROPERTY, UPDATE_PROPERTIES, DELETE, EDIT, REPLACE, insertWidget, editNewWidget, updateWidgetProperty, updateWidgetProperties } from '../../actions/widgets';
 import { setCurrentTime } from '../../actions/dimension';
 import { dashboardLoaded } from '../../actions/dashboard';
 import { CHANGE_LAYER_PARAMS, CHANGE_LAYER_PROPERTIES, removeNode } from '../../actions/layers';
@@ -737,6 +737,63 @@ describe('interactions epics', () => {
                     expect(actions[0].sourceId).toBe(TABLE_WIDGET_ID);
                 },
                 makeState([makeSenderTable()]),
+                done
+            );
+        });
+
+        it('applies the effects of all the interactions with a single update, each effect sees the previous ones', (done) => {
+            const SECOND_TRACE_ID = 'trace-2';
+            const chart = makeChartWidget({
+                charts: [{
+                    chartId: CHART_ID,
+                    traces: [
+                        { id: TRACE_ID, type: 'pie', layer: { name: 'test:layer', id: 'layer-1' } },
+                        { id: SECOND_TRACE_ID, type: 'pie', layer: { name: 'test:layer', id: 'layer-1' } }
+                    ]
+                }]
+            });
+            const table = makeSenderTable();
+            const sender = {
+                ...table,
+                interactions: [
+                    tableInteraction,
+                    { ...tableInteraction, id: 'table-int-2', target: { nodePath: `root.widgets[${CHART_WIDGET_ID}].charts[${CHART_ID}].traces[${SECOND_TRACE_ID}]` } }
+                ]
+            };
+            testEpic(
+                applyWidgetInteractionsEpic,
+                1,
+                [applyWidgetInteractions(TABLE_WIDGET_ID, 'floating', TABLE_WIDGET_ID)],
+                (actions) => {
+                    expect(actions.length).toBe(1);
+                    expect(actions[0].type).toBe(UPDATE_PROPERTIES);
+                    expect(actions[0].target).toBe('floating');
+                    const lastChartsUpdate = actions[0].updates.filter(u => u.id === CHART_WIDGET_ID && u.key === 'charts').pop();
+                    const [firstTrace, secondTrace] = lastChartsUpdate.value[0].traces;
+                    expect(firstTrace.interactionFilters[0].id).toBe('table-int-1');
+                    expect(secondTrace.interactionFilters[0].id).toBe('table-int-2');
+                },
+                makeState([sender, chart]),
+                done
+            );
+        });
+
+        it('reapplies the table interactions once when a batch changes its column filters', (done) => {
+            testEpic(
+                addTimeoutEpic(applyOnSenderPropertyChangeEpic, 20),
+                2,
+                [updateWidgetProperties([
+                    { id: TABLE_WIDGET_ID, key: 'quickFilters.STATE_NAME', value: {} },
+                    { id: TABLE_WIDGET_ID, key: 'quickFilters.STATE_FIPS', value: {} },
+                    { id: CHART_WIDGET_ID, key: 'filter', value: {} }
+                ])],
+                (actions) => {
+                    expect(actions.length).toBe(2);
+                    expect(actions[0].type).toBe(APPLY_WIDGET_INTERACTIONS);
+                    expect(actions[0].widgetId).toBe(TABLE_WIDGET_ID);
+                    expect(actions[1].type).toBe(TEST_TIMEOUT);
+                },
+                makeState([makeSenderTable(), makeChartWidget()]),
                 done
             );
         });

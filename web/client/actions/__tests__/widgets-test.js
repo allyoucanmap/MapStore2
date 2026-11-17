@@ -33,6 +33,8 @@ import {
     insertWidget,
     updateWidget,
     updateWidgetProperty,
+    updateWidgetProperties,
+    UPDATE_PROPERTIES,
     updateWidgetLayer,
     deleteWidget,
     changeLayout,
@@ -139,6 +141,14 @@ describe('Test correctness of the widgets actions', () => {
         expect(retval.value).toBe("value");
         expect(retval.mode).toBe("replace");
         expect(retval.target).toBe(DEFAULT_TARGET);
+    });
+    it('updateWidgetProperties', () => {
+        const updates = [{ id: "a", key: "k1", value: 1 }, { id: "b", key: "k2", value: { x: 1 }, mode: "merge" }];
+        const retval = updateWidgetProperties(updates);
+        expect(retval.type).toBe(UPDATE_PROPERTIES);
+        expect(retval.updates).toBe(updates);
+        expect(retval.target).toBe(DEFAULT_TARGET);
+        expect(updateWidgetProperties(updates, "other").target).toBe("other");
     });
     it('updateWidgetLayer', () => {
         const layer = {id: "1", name: "layer1"};

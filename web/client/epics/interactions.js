@@ -8,7 +8,8 @@
 
 import Rx from 'rxjs';
 import get from 'lodash/get';
-import sortBy from 'lodash/sortBy';
+import set from 'lodash/fp/set';
+import groupBy from 'lodash/groupBy';
 import isEqual from 'lodash/isEqual';
 import uniqBy from 'lodash/uniqBy';
 import { getMainMapZoomToPadding } from '../utils/MapWidgetUtils';
@@ -17,7 +18,8 @@ import bbox from '@turf/bbox';
 import xml2js from 'xml2js';
 
 import { getFeatureLayer } from '../api/WFS';
-import { updateWidgetProperty, editWidget, replaceWidgets, INSERT, EDIT_NEW, UPDATE, DELETE, UPDATE_PROPERTY, SET_LINKED_DASHBOARD_DATA } from '../actions/widgets';
+import { updateWidgetProperty, updateWidgetProperties, editWidget, replaceWidgets, INSERT, EDIT_NEW, UPDATE, DELETE, UPDATE_PROPERTY, UPDATE_PROPERTIES, SET_LINKED_DASHBOARD_DATA, DEFAULT_TARGET } from '../actions/widgets';
+import { updateWidgetPropertyInList } from '../utils/WidgetsUtils';
 import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, EDIT_MAIN_MAP_INTERACTIONS } from '../actions/interactions';
 import { zoomToExtent, CHANGE_MAP_VIEW } from '../actions/map';
 import { setCurrentTime, SET_CURRENT_TIME, SET_OFFSET_TIME } from '../actions/dimension';
@@ -87,7 +89,42 @@ const UPDATE_TO_ACTION = {
 // an effect returns an update, a list of updates (e.g. a time range) or null
 const toUpdateList = (update) => [].concat(update || []);
 
-const toActions = (updates = []) => updates.flatMap(toUpdateList).map(update => UPDATE_TO_ACTION[update?.type]?.(update)).filter(Boolean);
+const isWidgetPropertyUpdate = (update) => update?.type === INTERACTION_UPDATES.WIDGET_PROPERTY;
+
+// the widget updates of a container are dispatched together, so the dashboard changes once
+const toWidgetPropertiesAction = (widgetUpdates, target) => widgetUpdates.length === 1
+    ? UPDATE_TO_ACTION[INTERACTION_UPDATES.WIDGET_PROPERTY](widgetUpdates[0])
+    : updateWidgetProperties(widgetUpdates.map(({ widgetId, key, value, mode }) => ({ id: widgetId, key, value, mode })), target);
+
+const toActions = (updates = []) => {
+    const updateList = updates.flatMap(toUpdateList);
+    const widgetUpdatesByTarget = groupBy(updateList.filter(isWidgetPropertyUpdate), update => update.target || DEFAULT_TARGET);
+    return [
+        ...updateList.filter(update => !isWidgetPropertyUpdate(update)).map(update => UPDATE_TO_ACTION[update?.type]?.(update)),
+        ...Object.keys(widgetUpdatesByTarget).map(target => toWidgetPropertiesAction(widgetUpdatesByTarget[target], target))
+    ].filter(Boolean);
+};
+
+// keeps a local state in line with the updates not dispatched yet
+const applyUpdateToState = (state, update) => {
+    if (isWidgetPropertyUpdate(update)) {
+        const path = `widgets.containers[${update.target || DEFAULT_TARGET}].widgets`;
+        const { widgetId: id, key, value, mode } = update;
+        return set(path, updateWidgetPropertyInList(get(state, path), { id, key, value, mode }), state);
+    }
+    if (update?.type === INTERACTION_UPDATES.LAYER_PROPERTIES || update?.type === INTERACTION_UPDATES.LAYER_PARAMS) {
+        const layers = layersSelector(state).map(layer => {
+            if (layer.id !== update.layerId) {
+                return layer;
+            }
+            return update.type === INTERACTION_UPDATES.LAYER_PARAMS
+                ? { ...layer, params: { ...layer.params, ...update.params } }
+                : { ...layer, ...update.properties };
+        });
+        return set(Array.isArray(state.layers) ? 'layers' : 'layers.flat', layers, state);
+    }
+    return state;
+};
 
 // re-applying unchanged effects would make every receiver fetch again, e.g. on each map widget update
 // the receiving map emits its own view change with rounding differences, a tolerance avoids sync loops
@@ -308,40 +345,43 @@ export const applyWidgetInteractionsEpic = (action$, store) =>
             if (!buildAppliedData) {
                 return Rx.Observable.empty();
             }
-            const pluggedInteractions = sortBy(
-                (sender.interactions || []).filter(interaction => interaction.plugged === true
-                    && interaction.source.nodePath.includes(sourceId)
-                    && !!interaction.targetType
-                    && !EVENT_TARGET_TYPES.includes(interaction.targetType)
-                    && (!isManualZoomTrigger || interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO)
-                ),
-                // zoom-to resolves the extent of the layers already filtered by the other interactions
-                interaction => interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO ? 1 : 0
+            const pluggedInteractions = (sender.interactions || []).filter(interaction => interaction.plugged === true
+                && interaction.source.nodePath.includes(sourceId)
+                && !!interaction.targetType
+                && !EVENT_TARGET_TYPES.includes(interaction.targetType)
+                && (!isManualZoomTrigger || interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO)
             );
-            return Rx.Observable.from(pluggedInteractions)
-                .concatMap(interaction => {
-                    const currentState = store.getState();
-                    if (interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO) {
-                        if (isManualZoomTrigger) {
-                            return applyInteractionEffectForZoomTo(interaction, sender, currentState, target);
-                        }
-                        // a newer apply cancels the pending zoom through switchMap
-                        return interaction?.configuration?.autoZoom === true || hasSenderOwnZoomExtent(sender)
-                            ? Rx.Observable.timer(AUTO_ZOOM_DEBOUNCE).switchMap(() => applyInteractionEffectForZoomTo(interaction, sender, store.getState(), target))
-                            : Rx.Observable.empty();
-                    }
+            const effectInteractions = pluggedInteractions.filter(interaction => interaction.targetType !== TARGET_TYPES.APPLY_ZOOM_TO);
+            const zoomToInteractions = pluggedInteractions.filter(interaction => interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO);
+            // each effect sees the updates of the previous ones, all are dispatched together with a single state change
+            const applyEffects$ = Rx.Observable.defer(() => {
+                const { updates } = effectInteractions.reduce(({ state, updates: previousUpdates }, interaction) => {
                     const applyEffect = TARGET_EFFECTS[interaction.targetType];
-                    if (!applyEffect || shouldSkipInteraction(interaction, currentState)) {
-                        return Rx.Observable.empty();
+                    if (!applyEffect || shouldSkipInteraction(interaction, state)) {
+                        return { state, updates: previousUpdates };
                     }
-                    const context = getEffectsContext(currentState, target);
-                    const update = applyEffect({
+                    const context = getEffectsContext(state, target);
+                    const effectUpdates = toUpdateList(applyEffect({
                         ...interaction,
                         appliedData: buildAppliedData(sender, sourceId, interaction, context),
                         "transient": isTransientEffectSender(sender)
-                    }, context);
-                    return Rx.Observable.from(toActions(toUpdateList(update).filter(item => !isNoOpUpdate(item, currentState))));
+                    }, context)).filter(item => !isNoOpUpdate(item, state));
+                    return { state: effectUpdates.reduce(applyUpdateToState, state), updates: [...previousUpdates, ...effectUpdates] };
+                }, { state: store.getState(), updates: [] });
+                return Rx.Observable.from(toActions(updates));
+            });
+            // zoom-to resolves the extent of the layers already filtered by the other interactions
+            const applyZoomTo$ = Rx.Observable.from(zoomToInteractions)
+                .concatMap(interaction => {
+                    if (isManualZoomTrigger) {
+                        return applyInteractionEffectForZoomTo(interaction, sender, store.getState(), target);
+                    }
+                    // a newer apply cancels the pending zoom through switchMap
+                    return interaction?.configuration?.autoZoom === true || hasSenderOwnZoomExtent(sender)
+                        ? Rx.Observable.timer(AUTO_ZOOM_DEBOUNCE).switchMap(() => applyInteractionEffectForZoomTo(interaction, sender, store.getState(), target))
+                        : Rx.Observable.empty();
                 });
+            return applyEffects$.concat(applyZoomTo$);
         }));
 
 const reapplyAllSendersInteractions = (store, target) => Rx.Observable.defer(() =>
@@ -391,12 +431,19 @@ export const cleanupAndReapplyWidgetInteractionsEpic = (action$, store) =>
  */
 export const applyOnSenderPropertyChangeEpic = (action$, store) =>
     action$
-        .ofType(UPDATE_PROPERTY)
-        .mergeMap(({ id, key, value, target = 'floating' }) => {
-            const sender = getContainerWidgets(store.getState(), target).find(w => w.id === id);
-            return isSenderTriggerUpdate(sender, { key, value })
-                ? Rx.Observable.from(getSenderSourceIds(sender).map(sourceId => applyWidgetInteractions(id, target, sourceId)))
-                : Rx.Observable.empty();
+        .ofType(UPDATE_PROPERTY, UPDATE_PROPERTIES)
+        .mergeMap((action) => {
+            const target = action.target || DEFAULT_TARGET;
+            const widgets = getContainerWidgets(store.getState(), target);
+            const changes = action.type === UPDATE_PROPERTIES ? action.updates || [] : [action];
+            const senders = uniqBy(
+                changes
+                    .map(({ id, key, value }) => ({ sender: widgets.find(w => w.id === id), key, value }))
+                    .filter(({ sender, key, value }) => isSenderTriggerUpdate(sender, { key, value }))
+                    .map(({ sender }) => sender),
+                'id'
+            );
+            return Rx.Observable.from(senders.flatMap(sender => getSenderSourceIds(sender).map(sourceId => applyWidgetInteractions(sender.id, target, sourceId))));
         });
 
 /**

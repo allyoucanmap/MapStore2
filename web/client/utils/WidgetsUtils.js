@@ -964,6 +964,24 @@ export const extractTraceData = ({ selectedChartId, selectedTraceId, charts } = 
  * @param {object} widget editing widget
  * @returns {object} selected widget data
  */
+/**
+ * Updates a widget property in a widgets list. In `merge` mode, `maps` merges the map with the same `mapId`
+ * and the other keys merge the object value
+ * @param {object[]} widgets the widgets list
+ * @param {object} update `{ id, key, value, mode }`
+ * @returns {object[]} the updated widgets list
+ */
+export const updateWidgetPropertyInList = (widgets = [], { id, key, value, mode } = {}) => {
+    const oldWidget = find(widgets, { id });
+    let updatedValue = value;
+    if (mode === "merge") {
+        updatedValue = key === "maps"
+            ? oldWidget?.maps?.map(m => m.mapId === value?.mapId ? { ...m, ...value } : m)
+            : Object.assign({}, oldWidget?.[key], value);
+    }
+    return arrayUpsert(null, set(key, updatedValue, oldWidget), { id }, widgets);
+};
+
 export const getSelectedWidgetData = (widget = {}) => {
     if (widget.widgetType === 'chart' || widget.charts) {
         const widgetData = extractTraceData(widget);

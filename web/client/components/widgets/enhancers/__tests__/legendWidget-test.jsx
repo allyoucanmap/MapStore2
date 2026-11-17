@@ -61,6 +61,17 @@ describe('legendWidget enhancer', () => {
         received.updateProperty('other', {});
         expect(onApplyWidgetInteractions.calls.length).toBe(1);
     });
+    it('does not send the legend own state changes', () => {
+        const onApplyWidgetInteractions = expect.createSpy();
+        ReactDOM.render(<Legend id="legend-1" legendMap={{ widgetId: 'map-w', mapId: 'm1', map: MAP }} onApplyWidgetInteractions={onApplyWidgetInteractions} />, document.getElementById('container'));
+        received.updateProperty('map', { layers: [{ id: 'l1', visibility: true, legendEmpty: true, params: { CQL_FILTER: undefined } }] });
+        expect(onApplyWidgetInteractions).toNotHaveBeenCalled();
+        received.updateProperty('map', { layers: [{ id: 'l1', visibility: true, opacity: 0.5, legendEmpty: true }] });
+        expect(onApplyWidgetInteractions).toHaveBeenCalledWith('legend-1', undefined, 'legend-1', {
+            targetTypes: ['applyLegend'],
+            data: { layers: [{ id: 'l1', opacity: 0.5 }] }
+        });
+    });
     it('flags the legend without a controlled map', () => {
         ReactDOM.render(<Legend />, document.getElementById('container'));
         expect(received.noMapConnected).toBe(true);
