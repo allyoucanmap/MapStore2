@@ -169,9 +169,11 @@ describe('MapOptions component', () => {
 
         const widgets = [{
             widgetType: 'legend',
-            dependenciesMap: {
-                layers: 'widgets[test-widget].maps'
-            }
+            interactions: [{
+                plugged: true,
+                targetType: 'applyLegend',
+                target: { nodePath: 'widgets[test-widget].maps[test-map].applyLegend' }
+            }]
         }];
 
         ReactDOM.render(<MapOptions

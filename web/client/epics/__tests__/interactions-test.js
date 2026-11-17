@@ -782,7 +782,7 @@ describe('interactions epics', () => {
                 mockAxios = new MockAdapter(axios);
                 mockAxios.onPost().reply(() => {
                     requests++;
-                    return [200, BOUNDS];
+                    return [200, BOUNDS, { 'content-type': 'application/xml' }];
                 });
             });
             afterEach(() => {
@@ -1164,7 +1164,7 @@ describe('interactions epics', () => {
             testEpic(editMainMapInteractionsEpic, 1, [editMainMapInteractions()], (actions) => {
                 expect(actions[0].type).toBe(EDIT);
                 expect(actions[0].widget.mainMap).toBe(true);
-                expect(actions[0].widget.maps).toEqual([{ mapId: 'main', bbox, center, zoom: 3 }]);
+                expect(actions[0].widget.maps).toEqual([{ mapId: 'main', bbox, center, zoom: 3, currentTime: undefined, offsetTime: undefined }]);
             }, state, done);
         });
     });

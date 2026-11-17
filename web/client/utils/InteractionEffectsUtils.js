@@ -304,7 +304,7 @@ export const EVENT_TARGET_TYPES = [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE, TARGET_TY
  */
 export function applyZoomToFeatureEffect(interaction, { widgets, mainMapPadding } = {}) {
     const { feature, crs = 'EPSG:4326', maxZoom } = interaction?.appliedData || {};
-    const extent = feature?.bbox || (feature?.geometry ? bbox(feature) : null);
+    const extent = feature?.bbox || (feature?.geometry ? bbox(feature.geometry) : null);
     const nodePath = interaction?.target?.nodePath;
     if (!extent) {
         return null;

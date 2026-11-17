@@ -618,7 +618,7 @@ describe('widgets selectors', () => {
         expect(widgetsCollection.children.length).toBe(2);
         const mapCollection = result.children.find(c => c.id === "map");
         expect(mapCollection).toExist();
-        expect(mapCollection.children.length).toBe(2);
+        expect(mapCollection.children.map(c => c.id)).toEqual(['layers', 'applyZoomTo', 'applyZoomToFeature']);
     });
     it('getWidgetInteractionTreeGenerated with filter widget as editing widget', () => {
         const state = set(`widgets.builder.editor`, {

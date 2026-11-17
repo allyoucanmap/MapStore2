@@ -240,7 +240,8 @@ describe('InteractionMigrationUtils', () => {
             expect(migratedMap.maps[0].layers[0].layerFilter.filters.length).toBe(1);
             expect(migratedChart.dependenciesMap).toBe(chainedChart.dependenciesMap);
             expect(migratedChart.charts[0].traces[0].interactionFilters[0].id).toBe(chartInteraction.id);
-            expect(migratedLegend).toBe(legend);
+            expect(migratedLegend.interactions.map(i => [i.targetType, i.target.nodePath])).toEqual([['applyLegend', 'widgets[map-w].maps[m1].applyLegend']]);
+            expect(migratedLegend.dependenciesMap).toNotExist();
             expect(migrateLegacyConnections(migrated)).toBe(migrated);
         });
         it('writes no filter when the table has none', () => {

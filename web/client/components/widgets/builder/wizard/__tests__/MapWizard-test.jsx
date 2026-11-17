@@ -50,7 +50,7 @@ describe('MapWizard component', () => {
         const map = { groups: [{ id: 'GGG' }], layers: [{ id: "LAYER", name: "Layer", group: "GGG", options: {} }] };
         ReactDOM.render(<Provider store={store}><MapWizard editorData={{ map }} /></Provider>, document.getElementById("container"));
         const container = document.getElementById('container');
-        const tabs = container.querySelectorAll('.nav-tabs li');
+        const tabs = container.querySelector('.ms-row-tab > .nav-tabs').children;
         expect(tabs.length).toBe(2);
         expect(tabs[0].className).toContain('active');
         expect(container.querySelector('.ms-map-wizard-interactions-tab')).toBeFalsy();

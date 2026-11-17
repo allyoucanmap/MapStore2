@@ -32,6 +32,7 @@ describe('interactionZoomToExtent enhancer', () => {
         let updateCalled = false;
 
         const hookRegister = {
+            id: 'widget-1',
             getHook: (hookName) => {
                 if (hookName === ZOOM_TO_EXTENT_HOOK) {
                     return (extent, options) => {

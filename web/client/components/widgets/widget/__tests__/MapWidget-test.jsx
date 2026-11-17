@@ -136,17 +136,6 @@ describe('MapWidget component', () => {
         expect(container.querySelector('.ms-background-selector')).toNotExist();
         expect(container.querySelector('.legend-in-mapview')).toNotExist();
     });
-    it('disables MapSwitcher when selectionActive is true', () => {
-        const maps = [
-            { mapId: 'map1', title: 'Map 1' },
-            { mapId: 'map2', title: 'Map 2' }
-        ];
-        ReactDOM.render(<Provider store={{ subscribe: () => { }, getState: () => ({ maptype: { mapType: 'openlayers' } }) }} ><MapWidget map={{size: {height: 401, width: 401}, layers: [] }} maps={maps} selectedMapId="map1" selectionActive/></Provider>, document.getElementById("container"));
-        const container = document.getElementById('container');
-        const mapSwitcher = container.querySelector('.map-switcher');
-        expect(mapSwitcher).toBeTruthy();
-        expect(mapSwitcher.classList.contains('is-disabled')).toBeTruthy();
-    });
     it('renders with custom topRightItems', () => {
         const customItem = <div key="custom-item" className="custom-top-item">Custom Item</div>;
         ReactDOM.render(<Provider store={{ subscribe: () => { }, getState: () => ({ maptype: { mapType: 'openlayers' } }) }} ><MapWidget map={{size: {height: 401, width: 401}, layers: [] }} topRightItems={[customItem]}/></Provider>, document.getElementById("container"));

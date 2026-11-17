@@ -46,11 +46,11 @@ describe('TableInteractionsTab component', () => {
         document.body.innerHTML = '';
         setTimeout(done);
     });
-    it('renders the column filter section with the other widgets as targets', () => {
+    it('renders the column filter, zoom to filtered bounds and zoom to feature sections with the other widgets as targets', () => {
         renderTab();
         const container = document.getElementById('container');
         expect(container.querySelector('.ms-table-wizard-interactions-tab')).toBeTruthy();
-        expect(container.querySelectorAll('.ms-interactions-container').length).toBe(1);
+        expect(container.querySelectorAll('.ms-interactions-container').length).toBe(3);
         expect(container.textContent).toContain('Land Counter');
     });
     it('does not list the table itself as a target', () => {

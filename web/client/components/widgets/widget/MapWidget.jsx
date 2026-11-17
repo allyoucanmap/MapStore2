@@ -7,8 +7,8 @@
  */
 
 import { omit, isEqual } from 'lodash';
-import React from 'react';
-import { compose, withHandlers, withProps } from 'recompose';
+import React, { memo, useCallback, useMemo } from 'react';
+import { withHandlers } from 'recompose';
 
 import BorderLayout from '../../layout/BorderLayout';
 import LoadingSpinner from '../../misc/LoadingSpinner';
@@ -194,15 +194,19 @@ const MapWidgetComponent = ({
     </WidgetContainer>);
 };
 
-const MapWidget = compose(
-    withProps(({ selectedMapId }) => ({ selectedMapId })),
-    withHandlers({
-        onUpdateMapProperty: ({updateProperty = () => {}, id, selectedMapId}) => (value) => {
-            // Include mapId in the value so the reducer knows which map to update
-            const valueWithMapId = selectedMapId ? { ...value, mapId: selectedMapId } : value;
-            updateProperty(id, "maps", valueWithMapId, "merge");
-        }
-    })
-)(MapWidgetComponent);
+/**
+ * Map widget rendering the selected map of `maps`
+ */
+// memo keeps it a mounted component under the recompose enhancers, which call plain functions directly
+const MapWidget = memo((props) => {
+    const { maps, selectedMapId, map, updateProperty = () => {}, id } = props;
+    const selectedMap = useMemo(() => maps?.find(m => m.mapId === selectedMapId) || map || {}, [maps, selectedMapId, map]);
+    const onUpdateMapProperty = useCallback((value) => {
+        // the mapId tells the reducer which map to update
+        const valueWithMapId = selectedMapId ? { ...value, mapId: selectedMapId } : value;
+        updateProperty(id, "maps", valueWithMapId, "merge");
+    }, [updateProperty, id, selectedMapId]);
+    return <MapWidgetComponent {...props} map={selectedMap} onUpdateMapProperty={onUpdateMapProperty} />;
+});
 
 export default MapWidget;

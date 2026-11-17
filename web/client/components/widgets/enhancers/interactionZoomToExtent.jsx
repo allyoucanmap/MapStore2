@@ -5,14 +5,16 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import React, { useEffect, memo } from 'react';
-import { ZOOM_TO_EXTENT_HOOK } from '../../../utils/MapUtils';
+import React, { useEffect, useMemo, memo } from 'react';
+import { createRegisterHooks, ZOOM_TO_EXTENT_HOOK } from '../../../utils/MapUtils';
 
 /**
  * Triggers the map zoom when a zoom-to interaction writes a `zoomToRequest` on the map (filtered bounds, feature extent)
+ * Provides the `hookRegister` of the widget map, where the map registers its zoom hook
  */
 export default (Component) => memo((props) => {
-    const { id, maps = [], updateProperty = () => {}, hookRegister } = props;
+    const { id, maps = [], updateProperty = () => {} } = props;
+    const hookRegister = useMemo(() => props.hookRegister?.id === id ? props.hookRegister : createRegisterHooks(id), [id, props.hookRegister]);
     const targetMap = maps.find(m => m?.zoomToRequest);
     const mapId = targetMap?.mapId;
     const zoomToRequest = targetMap?.zoomToRequest;
@@ -29,5 +31,5 @@ export default (Component) => memo((props) => {
         updateProperty(id, 'maps', { mapId, zoomToRequest: undefined }, 'merge');
     }, [zoomToRequest]);
 
-    return <Component {...props} />;
+    return <Component {...props} hookRegister={hookRegister} />;
 });

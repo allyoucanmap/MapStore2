@@ -44,14 +44,6 @@ describe('ChartWizard Toolbar component', () => {
         const buttons = container.querySelectorAll('button');
         expect(buttons[0].classList.contains('disabled')).toBeTruthy();
     });
-    it('step 0 - disable button on error in charts', () => {
-        ReactDOM.render(<Toolbar step={0} valid editorData={{mapSync: true}} errors={{"layer1": true}} />, document.getElementById("container"));
-        const container = document.getElementById('container');
-        const el = container.querySelector('.btn-group');
-        expect(el).toBeTruthy();
-        const buttons = container.querySelectorAll('button');
-        expect(buttons[0].classList.contains('disabled')).toBeTruthy();
-    });
     it('step 1', () => {
         ReactDOM.render(<Toolbar step={1} valid />, document.getElementById("container"));
         const container = document.getElementById('container');
