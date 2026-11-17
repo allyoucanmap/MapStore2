@@ -109,7 +109,6 @@ const MapWidgetComponent = ({
     onDelete = () => {},
     headerStyle,
     env,
-    selectionActive,
     currentZoomLvl,
     scales,
     language,
@@ -128,7 +127,6 @@ const MapWidgetComponent = ({
                 maps={maps}
                 onChange={(...args) => updateProperty(id, ...args)}
                 value={selectedMapId}
-                disabled={selectionActive}
             />,
             ...topRightItems]
         }

@@ -1648,7 +1648,6 @@
       "wrongBboxParamTitle": "Paramètre de rectangle englobant invalide",
       "wrongBboxParamMessage": "Les paramètres du rectangle englobant doivent être en EPSG:4326 et écrit de cette façon : bbox=minx,miny,maxx,maxy",
       "showSectionId": "Inclure la position de défilement",
-      "showConnections": "Afficher les connexions",
       "heading": "Angle de cap",
       "roll": "Angle de roulis",
       "pitch": "Angle d'inclinaison",
@@ -2425,12 +2424,6 @@
           "preview": "Aperçu",
           "addLayer": "Ajouter une couche à la carte",
           "useTheSelectedLayer": "Utiliser la couche sélectionnée",
-          "connectToAMap": "Se connecter à un autre widget",
-          "connectToTheMap": "Connectez-vous à la carte",
-          "connectToTheTable": "Connect to the table",
-          "selectMapToConnect": "Sélectionnez le widget pour vous connecter",
-          "clearConnection": "Effacer la connexion",
-          "disableConnectToMap": "Opération indisponible",
           "classAttributes": {
             "classColor": "Couleur de la Classe",
             "classLabel": "Étiquette de la Classe",
@@ -2879,9 +2872,7 @@
       },
       "editor": {
         "save": "Sauvegarder le tableau de bord",
-        "addACardToTheDashboard": "Ajouter un widget au tableau de bord",
-        "showConnections": "Afficher les connexions",
-        "hideConnections": "Masquer les connexions"
+        "addACardToTheDashboard": "Ajouter un widget au tableau de bord"
       },
       "emptyTitle": "Le tableau de bord est vide",
       "delete": "Supprimer le tableau",

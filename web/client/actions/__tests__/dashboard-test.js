@@ -12,8 +12,6 @@ import {
     SET_EDITING,
     setEditorAvailable,
     SET_EDITOR_AVAILABLE,
-    triggerShowConnections,
-    SHOW_CONNECTIONS,
     triggerSave,
     TRIGGER_SAVE_MODAL,
     saveDashboard,
@@ -48,17 +46,6 @@ describe('Test correctness of the dashboard actions', () => {
         const retval = setEditorAvailable();
         expect(retval).toExist();
         expect(retval.type).toBe(SET_EDITOR_AVAILABLE);
-    });
-    it('triggerShowConnections', () => {
-        const retval = triggerShowConnections(true);
-        expect(retval).toExist();
-        expect(retval.type).toBe(SHOW_CONNECTIONS);
-        expect(retval.show).toBe(true);
-    });
-    it('triggerShowConnections', () => {
-        const retval = triggerShowConnections();
-        expect(retval).toExist();
-        expect(retval.type).toBe(SHOW_CONNECTIONS);
     });
     it('triggerSave', () => {
         const retval = triggerSave();

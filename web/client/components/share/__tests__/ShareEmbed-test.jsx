@@ -65,42 +65,16 @@ describe("The ShareEmbed component", () => {
         let checkboxes = inputs.filter(i => i.type === "checkbox");
         expect(checkboxes.length).toBe(0);
     });
-    it('should add connection param', () => {
-        const host = "http://localhost:8081/dashboard-embedded.html";
-        const hashPart = "#/1";
-        const expectedParam = "?connections=true";
-        const iFrameStr = "<iframe allowFullScreen style=\"border: none;\" height=\"500\" width=\"600\" src=\"" + host + expectedParam + hashPart + "\"></iframe>";
-        const cmpSharePanel = ReactDOM.render(
-            <ShareEmbed
-                shareUrl={ host + hashPart }
-                showConnectionsParamToggle
-            />, document.getElementById("container"));
-        const inputs = ReactTestUtils.scryRenderedDOMComponentsWithTag(cmpSharePanel, "input");
-        const checkboxes = inputs.filter(i => i.type === "checkbox");
-        expect(checkboxes[1].checked).toBe(false);
-        ReactTestUtils.Simulate.change(checkboxes[1]);
-        const codeEmbed = ReactDOM.findDOMNode(ReactTestUtils.scryRenderedDOMComponentsWithTag(cmpSharePanel, "code")[0]);
-        expect(checkboxes[1].checked).toBe(true);
-        expect(codeEmbed).toBeTruthy();
-        expect(codeEmbed.innerText).toEqual(iFrameStr);
-    });
-
     it('should load height and width from props if sizeOptions is available', () => {
         const host = "http://localhost:8081/dashboard-embedded.html";
         const hashPart = "#/1";
-        const expectedParam = "?connections=true";
-        const iFrameStr = "<iframe allowFullScreen style=\"border: none;\" height=\"700\" width=\"400\" src=\"" + host + expectedParam + hashPart + "\"></iframe>";
+        const iFrameStr = "<iframe allowFullScreen style=\"border: none;\" height=\"700\" width=\"400\" src=\"" + host + hashPart + "\"></iframe>";
         const cmpSharePanel = ReactDOM.render(
             <ShareEmbed
                 sizeOptions = {{Small: { width: 400, height: 700}}}
                 shareUrl={ host + hashPart }
-                showConnectionsParamToggle
             />, document.getElementById("container"));
         const codeEmbed = ReactDOM.findDOMNode(ReactTestUtils.scryRenderedDOMComponentsWithTag(cmpSharePanel, "code")[0]);
-        const inputs = ReactTestUtils.scryRenderedDOMComponentsWithTag(cmpSharePanel, "input");
-        const checkboxes = inputs.filter(i => i.type === "checkbox");
-        expect(checkboxes[1].checked).toBe(false);
-        ReactTestUtils.Simulate.change(checkboxes[1]);
         expect(codeEmbed.innerText).toEqual(iFrameStr);
     });
 
@@ -113,7 +87,6 @@ describe("The ShareEmbed component", () => {
             <ShareEmbed
                 sizeOptions = {{Small: { width: 400, height: 700}}}
                 shareUrl={ host + hashPart }
-                showConnectionsParamToggle
             />, document.getElementById("container"));
         const codeEmbed = ReactDOM.findDOMNode(ReactTestUtils.scryRenderedDOMComponentsWithTag(cmpSharePanel, "code")[0]);
         expect(codeEmbed.innerText.includes("allowFullScreen")).toBe(true);
@@ -128,7 +101,6 @@ describe("The ShareEmbed component", () => {
             <ShareEmbed
                 sizeOptions = {{Small: { width: 400, height: 700}}}
                 shareUrl={ host + hashPart }
-                showConnectionsParamToggle
                 allowFullScreen={false}
             />, document.getElementById("container"));
         const codeEmbed = ReactDOM.findDOMNode(ReactTestUtils.scryRenderedDOMComponentsWithTag(cmpSharePanel, "code")[0]);

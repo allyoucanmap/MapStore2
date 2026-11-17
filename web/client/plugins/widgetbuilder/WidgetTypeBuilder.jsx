@@ -47,11 +47,11 @@ const Builders = {
  */
 export default compose(
     connect(mapStateToProps),
-    withProps(({ typeFilter = () => true, availableDependencies = []}) => ({
+    withProps(({ typeFilter = () => true, hasMapWidgets, mainMapAvailable }) => ({
         // the main map interactions are available only where there is a main map (map viewer)
         typeFilter: (w = {}) => typeFilter(w)
-            && !(w.type === 'legend' && availableDependencies.length === 0)
-            && !(w.type === 'mainMap' && !availableDependencies.includes('map'))
+            && !(w.type === 'legend' && !hasMapWidgets)
+            && !(w.type === 'mainMap' && !mainMapAvailable)
     })),
     branch(
         ({widgetType} = {}) => !widgetType,

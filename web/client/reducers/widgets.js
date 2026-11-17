@@ -20,17 +20,12 @@ import {
     CHANGE_LAYOUT,
     CLEAR_WIDGETS,
     DEFAULT_TARGET,
-    ADD_DEPENDENCY,
-    REMOVE_DEPENDENCY,
-    LOAD_DEPENDENCIES,
-    RESET_DEPENDENCIES,
     TOGGLE_COLLAPSE,
     TOGGLE_MAXIMIZE,
     TOGGLE_COLLAPSE_ALL,
     TOGGLE_TRAY,
     toggleCollapse,
     REPLACE,
-    WIDGETS_REGEX,
     REPLACE_LAYOUT_VIEW,
     SET_SELECTED_LAYOUT_VIEW_ID,
     SET_LINKED_DASHBOARD_DATA
@@ -49,11 +44,6 @@ import {
 } from "../utils/WidgetsUtils";
 
 const emptyState = {
-    dependencies: {
-        viewport: "map.bbox",
-        center: "map.center",
-        zoom: "map.zoom"
-    },
     containers: {
         floating: {
             widgets: []
@@ -193,21 +183,9 @@ function widgetsReducer(state = emptyState, action) {
                 ? { widget: Array.isArray(maximized.widget) ? remainingMaximized : remainingMaximized[0] }
                 : {}, state)
             : state;
-        const updatedState = arrayDelete(path, {
+        return arrayDelete(path, {
             id: action.widget.id
         }, restoredState);
-        const allWidgets = get(updatedState, path, []);
-        return set(path, allWidgets.map(m => {
-            if (m.dependenciesMap) {
-                const [, dependentWidgetId] = WIDGETS_REGEX.exec((Object.values(m.dependenciesMap) || [])[0]) || [];
-                if (dependentWidgetId) {
-                    if (action.widget.id === dependentWidgetId) {
-                        return {...omit(m, "dependenciesMap"), mapSync: false};
-                    }
-                }
-            }
-            return m;
-        }), updatedState);
     }
     case DASHBOARD_LOADED:
         const { data } = action;
@@ -293,19 +271,6 @@ function widgetsReducer(state = emptyState, action) {
     case DASHBOARD_RESET: {
         return set(`containers[${DEFAULT_TARGET}]`, emptyState.containers[DEFAULT_TARGET], state);
     }
-    case ADD_DEPENDENCY: {
-        const {key, value} = action;
-        return set(`dependencies[${key}]`, value, state);
-    }
-    case REMOVE_DEPENDENCY: {
-        const {key} = action;
-        return set(`dependencies[${key}]`, null, state);
-    }
-    case LOAD_DEPENDENCIES:
-        const {dependencies} = action;
-        return set(`dependencies`, dependencies, state);
-    case RESET_DEPENDENCIES:
-        return set('dependencies', emptyState.dependencies, state);
     case TOGGLE_COLLAPSE: {
         /*
              * Collapse functionality has been implemented keeping the widget unchanged, adding it's layout is added to a map of collapsed objects.

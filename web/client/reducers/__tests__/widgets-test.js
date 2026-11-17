@@ -17,10 +17,6 @@ import {
     init,
     changeLayout,
     clearWidgets,
-    addDependency,
-    removeDependency,
-    resetDependencies,
-    loadDependencies,
     toggleCollapse,
     toggleCollapseAll,
     toggleTray,
@@ -41,10 +37,7 @@ describe('Test the widgets reducer', () => {
     it('initial state', () => {
         const state = widgets(undefined, {type: "START"});
         expect(state.containers).toExist();
-        expect(state.dependencies.key).toBeFalsy();
-        expect(state.dependencies.viewport).toBe("map.bbox");
-        expect(state.dependencies.center).toBe("map.center");
-        expect(state.dependencies.zoom).toBe("map.zoom");
+        expect(state.dependencies).toNotExist();
     });
     it('editNewWidget', () => {
         const state = widgets(undefined, editNewWidget({a: "A"}, {step: 0}));
@@ -252,58 +245,6 @@ describe('Test the widgets reducer', () => {
         expect(floating.layout).toBe(initialState.containers[DEFAULT_TARGET].layout);
         expect(floating.layouts).toBe(initialState.containers[DEFAULT_TARGET].layouts);
     });
-    it('deleteWidget remove dependenciesMap', () => {
-        const state = {
-            containers: {
-                [DEFAULT_TARGET]: {
-                    widgets: [{
-                        id: "1",
-                        maps: [{mapId: 1, layers: [1, 2]}]
-                    }, {
-                        id: "2",
-                        mapSync: true,
-                        dependenciesMap: {
-                            layers: "widgets[1].maps[1].layers"
-                        }
-                    }]
-                }
-            }
-        };
-        const newState = widgets(state, deleteWidget({id: "1"}));
-        const uWidgets = newState.containers[DEFAULT_TARGET].widgets;
-        expect(uWidgets.length).toBe(1);
-        expect(uWidgets[0].mapSync).toBeFalsy();
-        expect(uWidgets[0].dependenciesMap).toBeFalsy();
-        expect(uWidgets[0].id).toBe("2");
-    });
-    it('test deleteWidget if the some other widgets [not deleted] has dependenciesMap = {}', () => {
-        const state = {
-            containers: {
-                [DEFAULT_TARGET]: {
-                    widgets: [{
-                        id: "1",
-                        maps: [{mapId: 1, layers: [1, 2]}]
-                    }, {
-                        id: "2",
-                        mapSync: true,
-                        dependenciesMap: {
-                            layers: "widgets[1].maps[1].layers"
-                        }
-                    }, {
-                        id: "3",
-                        mapSync: true,
-                        dependenciesMap: {}
-                    }]
-                }
-            }
-        };
-        const newState = widgets(state, deleteWidget({id: "1"}));
-        const uWidgets = newState.containers[DEFAULT_TARGET].widgets;
-        expect(uWidgets.length).toBe(2);
-        expect(uWidgets[0].mapSync).toBeFalsy();
-        expect(uWidgets[0].dependenciesMap).toBeFalsy();
-        expect(uWidgets[0].id).toBe("2");
-    });
     it('init', () => {
         const defaults = {initialSize: {
             w: 4,
@@ -395,33 +336,6 @@ describe('Test the widgets reducer', () => {
         };
         const newState = widgets(state, clearWidgets());
         expect(newState.containers[DEFAULT_TARGET].widgets.length).toBe(0);
-    });
-    it('widgets addDependency', () => {
-        const action = addDependency("key", "value");
-        const state = widgets({ dependencies: {} }, action);
-        expect(state).toExist();
-        expect(state.dependencies.key).toBe("value");
-    });
-    it('widgets removeDependency', () => {
-        const action = removeDependency("key");
-        const state = widgets({dependencies: {key: "value"}}, action);
-        expect(state).toExist();
-        expect(state.dependencies.key).toBeFalsy();
-    });
-    it('widgets loadDependencies', () => {
-        const action = loadDependencies({key: "value"});
-        const state = widgets( undefined, action);
-        expect(state).toExist();
-        expect(state.dependencies.key).toBe("value");
-    });
-    it('widgets resetDependencies', () => {
-        const action = resetDependencies();
-        const state = widgets( {dependencies: {key: "value"}}, action);
-        expect(state).toExist();
-        expect(state.dependencies.key).toBeFalsy();
-        expect(state.dependencies.viewport).toBe("map.bbox");
-        expect(state.dependencies.center).toBe("map.center");
-        expect(state.dependencies.zoom).toBe("map.zoom");
     });
     it('widgets dashboardLoaded', () => {
         const widgetsData = { widgets: [{}] };

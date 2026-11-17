@@ -44,7 +44,6 @@ const ChartWidget = ({
     toggleTableView = () => {},
     toggleDeleteConfirm = () => {},
     updateProperty = () => { },
-    selectionActive,
     ...props}) => {
     const containerId = `widget-chart-${id}`;
     const width = document.getElementById(containerId)?.clientWidth;
@@ -65,7 +64,6 @@ const ChartWidget = ({
                 charts={charts}
                 onChange={(...args) => updateProperty(id, ...args)}
                 value={selectedChartId}
-                disabled={selectionActive}
                 width={width}
             />,
             ...(topRightItems ? topRightItems : [])

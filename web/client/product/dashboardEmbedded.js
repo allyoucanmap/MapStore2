@@ -7,16 +7,12 @@
 */
 
 import { loadVersion } from '../actions/version';
-import { triggerShowConnections } from '../actions/dashboard';
 import appConfigDashboardEmbedded from './appConfigDashboardEmbedded';
 import pluginsDashboardEmbedded from './pluginsDashboardEmbedded';
 import main from './main';
-import url from 'url';
 import { checkForMissingPlugins } from '../utils/DebugUtils';
 
 checkForMissingPlugins(pluginsDashboardEmbedded.plugins);
-
-const { query } = url.parse(window.location.href, true);
 
 main(
     appConfigDashboardEmbedded,
@@ -24,8 +20,7 @@ main(
     (cfg) => ({
         ...cfg,
         initialActions: [
-            loadVersion,
-            triggerShowConnections.bind(null, !!query.connections)
+            loadVersion
         ]
     })
 );

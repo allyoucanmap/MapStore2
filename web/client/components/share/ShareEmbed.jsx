@@ -26,7 +26,6 @@ class ShareEmbed extends React.Component {
     static propTypes = {
         shareUrl: PropTypes.string,
         showTOCToggle: PropTypes.bool,
-        showConnectionsParamToggle: PropTypes.bool,
         sizeOptions: PropTypes.object,
         selectedOption: PropTypes.string,
         allowFullScreen: PropTypes.bool
@@ -41,7 +40,6 @@ class ShareEmbed extends React.Component {
     state = {
         copied: false,
         forceDrawer: false,
-        connections: false,
         sizeOptions: {
             Small: { width: 600, height: 500 },
             Medium: { width: 800, height: 600},
@@ -64,14 +62,6 @@ class ShareEmbed extends React.Component {
                 onChange={() => this.setState({forceDrawer: !this.state.forceDrawer})}
             >
                 <Message msgId="share.forceDrawer"/>
-            </Checkbox>}
-            {this.props.showConnectionsParamToggle && <Checkbox
-                checked={this.state.connections}
-                onChange={() => this.setState({
-                    connections: !this.state.connections
-                })}
-            >
-                <Message msgId="share.showConnections"/>
             </Checkbox>}
         </>);
     };
@@ -135,9 +125,6 @@ class ShareEmbed extends React.Component {
         const parsed = url.parse(this.props.shareUrl, true);
         if (this.state.forceDrawer) {
             parsed.query.forceDrawer = true;
-        }
-        if (this.state.connections) {
-            parsed.query.connections = true;
         }
         return url.format(parsed);
 

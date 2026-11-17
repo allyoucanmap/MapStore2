@@ -9,15 +9,14 @@
 import { isNil } from 'lodash';
 import { createSelector } from 'reselect';
 
-import { showConnectionsSelector, isDashboardEditing } from '../../selectors/dashboard';
+import { isDashboardEditing } from '../../selectors/dashboard';
 import { currentLocaleLanguageSelector, currentLocaleSelector } from '../../selectors/locale';
 import {
     isLocalizedLayerStylesEnabledDashboardsSelector,
     localizedLayerStylesEnvSelector
 } from '../../selectors/localizedLayerStyles';
 import {
-    availableDependenciesForEditingWidgetSelector,
-    dependenciesSelector,
+    widgetTypesAvailabilitySelector,
     getEditingWidget,
     getEditorSettings,
     getFloatingWidgets,
@@ -57,14 +56,10 @@ export const wizardSelector = createSelector(
 );
 export const dashboardSelector = createSelector(
     getEditingWidget,
-    showConnectionsSelector,
-    dependenciesSelector,
-    availableDependenciesForEditingWidgetSelector,
-    ({ layer }, showConnections, dependencies, dependencyConnectProps) => ({
+    widgetTypesAvailabilitySelector,
+    ({ layer } = {}, widgetTypesAvailability) => ({
         layer,
-        showConnections,
-        dependencies,
-        ...dependencyConnectProps
+        ...widgetTypesAvailability
     }));
 
 export const dashboardsLocalizedSelector = createSelector(
@@ -80,7 +75,6 @@ export const dashboardsLocalizedSelector = createSelector(
 
 export default {
     getWidgetLayer,
-    availableDependenciesForEditingWidgetSelector,
     dashboardSelector,
     dashboardsLocalizedSelector,
     wizardStateToProps,

@@ -61,7 +61,6 @@ const Wizard = wizardHandlers(WizardContainer);
 const renderPreview = ({
     data = {},
     trace,
-    dependencies = {},
     setValid = () => { },
     hasAggregateProcess,
     setErrors = () => {},
@@ -72,7 +71,6 @@ const renderPreview = ({
     return valid
         ? (<PreviewChart
             {...data}
-            dependencies={dependencies}
             widgets={widgets}
             key="preview-chart"
             isAnimationActive={false}
@@ -110,7 +108,6 @@ const ChartWizard = ({
     step = 0,
     types,
     featureTypeProperties,
-    dependencies,
     hasAggregateProcess,
     widgets = [],
     openFilterEditor,
@@ -171,7 +168,6 @@ const ChartWizard = ({
                         data,
                         trace: selectedTrace,
                         valid: traces.some((t) => isChartOptionsValid(t?.options, { hasAggregateProcess })),
-                        dependencies,
                         setValid,
                         hasAggregateProcess,
                         setErrors,
@@ -189,7 +185,6 @@ const ChartWizard = ({
                 <StepHeader step={step} />
                 {!noAttributes && <ChartOptionsComp
                     hasAggregateProcess={hasAggregateProcess}
-                    dependencies={dependencies}
                     key="chart-options"
                     featureTypeProperties={featureTypeProperties}
                     types={types}

@@ -70,7 +70,6 @@ const Preview = enhancePreview(Counter);
 const CounterPreview = ({
     data = {},
     layer,
-    dependencies = {},
     valid,
     setValid = () => {},
     hasAggregateProcess
@@ -85,8 +84,6 @@ const CounterPreview = ({
             hasAggregateProcess={hasAggregateProcess}
             {...sampleProps}
             valid={valid}
-            dependenciesMap={data.dependenciesMap}
-            dependencies={dependencies}
             setValid={setValid}
             type={data.type}
             counterOpts={data.counterOpts}
@@ -96,7 +93,6 @@ const CounterPreview = ({
             layer={data.layer || layer}
             filter={data.filter}
             geomProp={data.geomProp}
-            mapSync={data.mapSync}
             options={data.options} />;
 
 const enhanceWizard = compose(lifecycle({
@@ -107,7 +103,7 @@ const enhanceWizard = compose(lifecycle({
     }
 })
 );
-export default enhanceWizard(({ onChange = () => { }, onFinish = () => { }, setPage = () => { }, setValid = () => { }, valid, formOptions, data = {}, layer = {}, step = 0, types, featureTypeProperties, dependencies, hasAggregateProcess }) =>
+export default enhanceWizard(({ onChange = () => { }, onFinish = () => { }, setPage = () => { }, setValid = () => { }, valid, formOptions, data = {}, layer = {}, step = 0, types, featureTypeProperties, hasAggregateProcess }) =>
     (<Wizard
         step={step}
         setPage={setPage}
@@ -115,7 +111,6 @@ export default enhanceWizard(({ onChange = () => { }, onFinish = () => { }, setP
         isStepValid={n => n === 1 ? isCounterOptionsValid(data.options, { hasAggregateProcess }) : true} hideButtons>
         <CounterOptions
             hasAggregateProcess={hasAggregateProcess}
-            dependencies={dependencies}
             key="chart-options"
             formOptions={formOptions}
             featureTypeProperties={featureTypeProperties}
@@ -128,7 +123,6 @@ export default enhanceWizard(({ onChange = () => { }, onFinish = () => { }, setP
                 data={data}
                 valid={valid}
                 layer={data.layer || layer}
-                dependencies={dependencies}
                 setValid={v => setValid(v && isCounterOptionsValid(data.options, { hasAggregateProcess }))} />}
         />
         <WidgetOptions
@@ -141,14 +135,12 @@ export default enhanceWizard(({ onChange = () => { }, onFinish = () => { }, setP
                 data={data}
                 valid={valid}
                 layer={data.layer || layer}
-                dependencies={dependencies}
                 setValid={v => setValid(v && isCounterOptionsValid(data.options, { hasAggregateProcess }))} />}
         />
     </Wizard>));
 
 CounterPreview.propTypes = {
     data: PropTypes.object,
-    dependencies: PropTypes.object,
     hasAggregateProcess: PropTypes.bool,
     layer: PropTypes.object,
     setValid: PropTypes.func,

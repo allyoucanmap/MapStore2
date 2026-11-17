@@ -17,11 +17,9 @@ export default ({
     layer,
     types,
     featureTypeProperties,
-    dependencies,
     editorData = {}}
 ) =>
     (<ChartWizard
-        dependencies={dependencies}
         valid={valid}
         types={types}
         featureTypeProperties={featureTypeProperties}

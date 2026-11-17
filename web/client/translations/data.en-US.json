@@ -1648,7 +1648,6 @@
       "wrongBboxParamMessage": "Bounding box params must be in EPSG:4326 and wrote as bbox=minx,miny,maxx,maxy",
       "showHomeButton": "Link to MapStore home",
       "showSectionId": "Include scroll position",
-      "showConnections": "Show connections",
       "heading": "Heading",
       "roll": "Roll",
       "pitch": "Pitch",
@@ -2425,12 +2424,6 @@
           "preview": "Preview",
           "addLayer": "Add a layer to the map",
           "useTheSelectedLayer": "Use the selected layer",
-          "connectToAMap": "Connect to another widget",
-          "connectToTheMap": "Connect to the map",
-          "connectToTheTable": "Connect to the table",
-          "selectMapToConnect": "Select the widget to connect",
-          "clearConnection": "Clear connection",
-          "disableConnectToMap": "Operation unavailable",
           "classAttributes": {
             "classColor": "Class Color",
             "classLabel": "Class Label",
@@ -2887,9 +2880,7 @@
       },
       "editor": {
         "save": "Save the dashboard",
-        "addACardToTheDashboard": "Add a widget to the dashboard",
-        "showConnections": "Show connections",
-        "hideConnections": "HideConnections"
+        "addACardToTheDashboard": "Add a widget to the dashboard"
       },
       "emptyTitle": "The dashboard is empty",
       "delete": "Delete dashboard",

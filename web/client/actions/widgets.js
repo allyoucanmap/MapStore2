@@ -21,18 +21,11 @@ export const CHANGE_LAYOUT = "WIDGETS:CHANGE_LAYOUT";
 export const DELETE = "WIDGETS:DELETE";
 export const REPLACE = "WIDGETS:REPLACE";
 export const CLEAR_WIDGETS = "WIDGETS:CLEAR_WIDGETS";
-export const ADD_DEPENDENCY = "WIDGETS:ADD_DEPENDENCY";
-export const REMOVE_DEPENDENCY = "WIDGETS:REMOVE_DEPENDENCY";
-export const LOAD_DEPENDENCIES = "WIDGETS:LOAD_DEPENDENCIES";
-export const RESET_DEPENDENCIES = "WIDGETS:RESET_DEPENDENCIES";
-export const TOGGLE_CONNECTION = "WIDGETS:TOGGLE_CONNECTION";
 
 export const OPEN_FILTER_EDITOR = "WIDGETS:OPEN_FILTER_EDITOR";
 export const EXPORT_CSV = "WIDGETS:EXPORT_CSV";
-export const WIDGET_SELECTED = "WIDGETS:WIDGET_SELECTED";
 export const NEW_CHART = "WIDGETS:NEW_CHART";
 export const DEFAULT_TARGET = "floating";
-export const DEPENDENCY_SELECTOR_KEY = "dependencySelector";
 export const WIDGETS_REGEX = /^widgets\["?([^"\]]*)"?\]\.?(.*)$/;
 export const LAYERS_REGEX = /^layers\["?([^"\]]*)"?\]\.?(.*)$/;
 export const MAPS_REGEX = /^maps\["?([^"\]]*)"?\]\.?(.*)$/;
@@ -238,39 +231,6 @@ export const changeEditorSetting = (key, value) => ({
     value
 });
 
-export const addDependency = (key, value) => ({
-    type: ADD_DEPENDENCY,
-    key,
-    value
-});
-
-export const removeDependency = (key) => ({
-    type: REMOVE_DEPENDENCY,
-    key
-});
-
-export const resetDependencies = () => ({
-    type: RESET_DEPENDENCIES
-});
-export const loadDependencies = (dependencies) => ({
-    type: LOAD_DEPENDENCIES,
-    dependencies
-});
-
-/**
- * Action triggered to start the connection flow. Typically starts the connection flow
- * @param {array} availableDependencies Array of available dependency keys
- * @param {object} the map of available dependencies where to choose.
- * @param {object} options a map of connections to apply when the dependencies has been resolved. E.g. mappings for dependenciesMap
- * @param {string} target target of the connection. If not present we assume is the current editing widget (not yet supported)
- */
-export const toggleConnection = (active, availableDependencies, options, target) => ({
-    type: TOGGLE_CONNECTION,
-    active,
-    availableDependencies,
-    options,
-    target
-});
 /**
  * Change the page setting of the editor
  * @param  {number} step the page number
@@ -288,35 +248,10 @@ export const exportCSV = ({data = [], title = "export"}) => ({
     title
 });
 
-export const selectWidget = (widget, opts) => ({
-    type: WIDGET_SELECTED,
-    widget,
-    opts
-});
 /**
  * Triggers the filter editor opening
  */
 export const openFilterEditor = () => ({type: OPEN_FILTER_EDITOR});
-/**
- * Changes the setup of the dependency selector, that allow to select a dependent widget
- * @param {object} setup the initial setup of the dependency selector
- */
-export const setupDependencySelector = (setup) => changeEditorSetting(`${DEPENDENCY_SELECTOR_KEY}`, setup);
-/**
- * Sets a value in the configuration of the dependency selector
- * @param {string} key the configuration of the dependency selector to change
- * @param {any} value the value to assign to the key
- */
-export const changeDependencySelector = (key, value) => changeEditorSetting(`${DEPENDENCY_SELECTOR_KEY}[${key}]`, value);
-/**
- * Activate/deactivate the dependency selector with an initial setup
- * @param {boolean} active active flag of the dependency selector
- * @param {object} settings initial setup
- */
-export const toggleDependencySelector = (active, settings) => setupDependencySelector({
-    active,
-    ...settings
-});
 /**
  * Collapse/Expand the widget
  * @param {object} widget the widget to collapse

@@ -20,10 +20,7 @@ import { insertWidget, onEditorChange, setPage, openFilterEditor, changeEditorSe
 
 import builderConfiguration from '../../components/widgets/enhancers/builderConfiguration';
 import tableLayerSelector from './enhancers/tableLayerSelector';
-import viewportBuilderConnect from './enhancers/connection/viewportBuilderConnect';
-import viewportBuilderConnectMask from './enhancers/connection/viewportBuilderConnectMask';
 import withExitButton from './enhancers/withExitButton';
-import withConnectButton from './enhancers/connection/withConnectButton';
 import { wizardStateToProps, wizardSelector} from './commons';
 import TableWizard from '../../components/widgets/builder/wizard/TableWizard';
 import BaseToolbar from '../../components/widgets/builder/wizard/table/Toolbar';
@@ -70,9 +67,7 @@ const Toolbar = compose(
     },
     wizardStateToProps
     ),
-    viewportBuilderConnect,
-    withExitButton(),
-    withConnectButton(({ step }) => step === 0)
+    withExitButton()
 )(BaseToolbar);
 
 // Map-layers picker (current map layers only)
@@ -87,7 +82,6 @@ const TableMapLayerSelector = compose(
  */
 const chooseLayerEnhancer = compose(
     connect(wizardSelector),
-    viewportBuilderConnectMask,
     catalogEditorEnhancer,
     branch(
         ({ layer, editorData } = {}) => !layer && editorData?.globalWidgetMode === true,
@@ -99,7 +93,7 @@ const chooseLayerEnhancer = compose(
     )
 );
 
-export default chooseLayerEnhancer(({ enabled, onClose = () => { }, editorData = {}, exitButton, toggleConnection, availableDependencies = [], dependencies, ...props } = {}) =>
+export default chooseLayerEnhancer(({ enabled, onClose = () => { }, editorData = {}, exitButton, ...props } = {}) =>
 
     (<BorderLayout
         header={
@@ -107,9 +101,6 @@ export default chooseLayerEnhancer(({ enabled, onClose = () => { }, editorData =
                 <Toolbar
                     editorData={editorData}
                     exitButton={exitButton}
-                    toggleConnection={toggleConnection}
-                    availableDependencies={availableDependencies}
-                    widgets={props.widgets}
                     onClose={onClose} />
                 {get(editorData, "options.propertyName.length") === 0 ? <InfoPopover
                     trigger={false}
@@ -118,5 +109,5 @@ export default chooseLayerEnhancer(({ enabled, onClose = () => { }, editorData =
                     text={<Message msgId="widgets.builder.errors.checkAtLeastOneAttribute" />} /> : null}
             </BuilderHeader>}
     >
-        {enabled ? <Builder editorData={editorData} dependencies={dependencies} {...props} /> : null}
+        {enabled ? <Builder editorData={editorData} {...props} /> : null}
     </BorderLayout>));

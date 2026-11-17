@@ -1648,7 +1648,6 @@
       "rollToolTip": "Min: 0° y Max: 360°",
       "pitchToolTip": "Min: -90° y Max: 90°",
       "showSectionId": "Incluir posición de desplazamiento",
-      "showConnections": "Mostrar conexiones",
       "heading": "Ángulo de rumbo",
       "roll": "Ángulo de inclinación",
       "pitch": "Ángulo de paso",
@@ -2425,12 +2424,6 @@
           "preview": "Vista previa",
           "addLayer": "Agregar una capa al mapa",
           "useTheSelectedLayer": "Usar la capa seleccionada",
-          "connectToAMap": "Conectarse a otro widget",
-          "connectToTheMap": "Conectar al mapa",
-          "connectToTheTable": "Conectar a la tabla",
-          "selectMapToConnect": "Seleccione el widget para conectarse",
-          "clearConnection": "Borrar conexión",
-          "disableConnectToMap": "Operación no disponible",
           "classAttributes": {
             "classColor": "Color de la Clase",
             "classLabel": "Etiqueta de la Clase",
@@ -2875,9 +2868,7 @@
       },
       "editor": {
         "save": "Guardar el panel de control",
-        "addACardToTheDashboard": "Agregar un widget al panel de control",
-        "showConnections": "Mostrar conexiones",
-        "hideConnections": "Ocultar conexiones"
+        "addACardToTheDashboard": "Agregar un widget al panel de control"
       },
       "emptyTitle": "El panel de control está vacío",
       "delete": "Eliminar panel de control",

@@ -11,7 +11,6 @@ import { compose, defaultProps, pure, withProps, withStateHandlers, withHandlers
 import Message from '../I18N/Message';
 import { widthProvider } from '../layout/enhancers/gridLayout';
 import emptyState from '../misc/enhancers/emptyState';
-import withSelection from '../widgets/view/enhancers/withSelection';
 import WidgetViewWrapper from './WidgetViewWrapper';
 import { v1 as uuidv1 } from 'uuid';
 
@@ -85,9 +84,6 @@ export default compose(
             };
         }
     ),
-    defaultProps({
-        isWidgetSelectable: () => true
-    }),
     // Intercept onLayoutChange to inspect and modify data
     withHandlers({
         onLayoutChange: props => (layout, allLayouts) => {
@@ -117,6 +113,5 @@ export default compose(
 
             return { layout, allLayouts: updatedLayouts };
         }
-    }),
-    withSelection
+    })
 )(WidgetViewWrapper);

@@ -22,10 +22,7 @@ import {
     getEditorSettings,
     getWidgetLayer,
     getWidgetAttributeFilter,
-    dependenciesSelector,
     createPathSelector,
-    availableDependenciesSelector,
-    availableDependenciesForEditingWidgetSelector,
     returnToFeatureGridSelector,
     isTrayEnabled,
     getVisibleFloatingWidgets,
@@ -44,7 +41,8 @@ import {
     getMainMapWidget,
     getMapWidgets,
     getLegendMapsSelector,
-    getEditingLegendMapSelector
+    getEditingLegendMapSelector,
+    widgetTypesAvailabilitySelector
 } from '../widgets';
 
 import { set } from '../../utils/ImmutableUtils';
@@ -277,27 +275,17 @@ describe('widgets selectors', () => {
             );
         expect(chartWidgetLayer.length).toBe(2);
     });
-    it('availableDependenciesSelector', () => {
-        const state = {
-            widgets: {
-                containers: {
-                    [DEFAULT_TARGET]: {
-                        widgets: [{
-                            id: "WIDGET",
-                            maps: [{mapId: "MAPS"}],
-                            widgetType: "map"
-                        }, {
-
-                        }, {
-                            widgetType: "table"
-                        }]
-                    }
-                }
-            }
-        };
-        expect(availableDependenciesSelector(state)).toExist();
-        expect(availableDependenciesSelector(state).availableDependencies[0]).toBe('widgets[WIDGET].maps[MAPS].map');
-        expect(availableDependenciesSelector(state).availableDependencies[1]).toBe('map');
+    it('widgetTypesAvailabilitySelector', () => {
+        const mapWidget = { id: 'map-w', widgetType: 'map', maps: [{ mapId: 'm1' }] };
+        const mainMapEntry = { id: 'map', widgetType: 'map', mainMap: true, maps: [{ mapId: 'main' }] };
+        expect(widgetTypesAvailabilitySelector({
+            map: { present: { center: {} } },
+            widgets: { containers: { [DEFAULT_TARGET]: { widgets: [mainMapEntry] } } }
+        })).toEqual({ hasMapWidgets: false, mainMapAvailable: true });
+        expect(widgetTypesAvailabilitySelector({
+            dashboard: { editor: { available: true } },
+            widgets: { containers: { [DEFAULT_TARGET]: { widgets: [mapWidget] } } }
+        })).toEqual({ hasMapWidgets: true, mainMapAvailable: false });
     });
     it('createDependenciesSelector', () => {
         const LAYER_1 = {
@@ -344,213 +332,6 @@ describe('widgets selectors', () => {
             expect(createPathSelector(path)(state)).toEqual(expected);
         });
 
-    });
-    it('availableDependenciesForEditingWidgetSelector for map', () => {
-        const stateInput = {
-            widgets: {
-                containers: {
-                    [DEFAULT_TARGET]: {
-                        widgets: [{
-                            widgetType: "table",
-                            id: "tableId",
-                            layer: {
-                                name: "layername"
-                            }
-                        }, {
-                            widgetType: "table",
-                            id: "otherTableId",
-                            layer: {
-                                name: "layername"
-                            }
-                        }]
-                    }
-                },
-                builder: {
-                    editor: {
-                        maps: [{
-                            layers: [{
-                                name: "layername"
-                            }]
-                        }],
-                        widgetType: "map",
-                        id: "mapId"
-                    }
-                }
-            }
-        };
-        const state = availableDependenciesForEditingWidgetSelector(stateInput);
-        const availableDeps = state.availableDependencies;
-        expect(availableDeps).toExist();
-        // tables connect through their interactions, not the legacy connect button
-        expect(availableDeps.length).toBe(0);
-    });
-    it('availableDependenciesForEditingWidgetSelector for chart', () => {
-        const stateInput = {
-            widgets: {
-                containers: {
-                    [DEFAULT_TARGET]: {
-                        widgets: [{
-                            widgetType: "table",
-                            id: "tableId",
-                            layer: {
-                                name: "layername"
-                            }
-                        }, {
-                            widgetType: "table",
-                            id: "otherTableId",
-                            layer: {
-                                name: "layername"
-                            }
-                        },
-                        {
-                            id: "WIDGET",
-                            maps: [{mapId: "MAPS"}],
-                            widgetType: "map"
-                        }]
-                    }
-                },
-                builder: {
-                    editor: {
-                        charts: [
-                            {
-                                chartId: "1",
-                                traces: [{
-                                    layer: { name: "layername" }
-                                }]
-                            }
-                        ],
-                        widgetType: "chart",
-                        id: "chartId"
-                    }
-                }
-            }
-        };
-        const state = availableDependenciesForEditingWidgetSelector(stateInput);
-        const availableDeps = state.availableDependencies;
-        expect(availableDeps).toExist();
-        // map widgets connect to charts through their interactions
-        expect(availableDeps.length).toBe(0);
-    });
-    it('availableDependenciesForEditingWidgetSelector for counter', () => {
-        const stateInput = {
-            widgets: {
-                containers: {
-                    [DEFAULT_TARGET]: {
-                        widgets: [{
-                            widgetType: "table",
-                            id: "tableIdDifferent",
-                            layer: {
-                                name: "layernameDifferent"
-                            }
-                        }, {
-                            widgetType: "table",
-                            id: "tableId",
-                            layer: {
-                                name: "layername"
-                            }
-                        },
-                        {
-                            widgetType: "map",
-                            id: "WIDGET",
-                            maps: [{mapId: "MAPS"}],
-                            layer: {
-                                name: "layername"
-                            }
-                        }]
-                    }
-                },
-                builder: {
-                    editor: {
-                        layer: {
-                            name: "layername"
-                        },
-                        widgetType: "counter",
-                        id: "counterId"
-                    }
-                }
-            }
-        };
-        const state = availableDependenciesForEditingWidgetSelector(stateInput);
-        const availableDeps = state.availableDependencies;
-        expect(availableDeps).toExist();
-        expect(availableDeps.length).toBe(0);
-    });
-    it('availableDependenciesForEditingWidgetSelector does not list map widgets for maps', () => {
-        const stateInput = {
-            widgets: {
-                containers: { [DEFAULT_TARGET]: { widgets: [{ id: "WIDGET", maps: [{ mapId: "MAPS" }], widgetType: "map" }] } },
-                builder: { editor: { widgetType: "map", id: "otherMapId" } }
-            }
-        };
-        expect(availableDependenciesForEditingWidgetSelector(stateInput).availableDependencies).toEqual([]);
-    });
-    it('availableDependenciesForEditingWidgetSelector keeps map widgets for legends', () => {
-        const stateInput = {
-            widgets: {
-                containers: { [DEFAULT_TARGET]: { widgets: [{ id: "WIDGET", maps: [{ mapId: "MAPS" }], widgetType: "map" }] } },
-                builder: { editor: { widgetType: "legend", id: "legendId" } }
-            }
-        };
-        expect(availableDependenciesForEditingWidgetSelector(stateInput).availableDependencies).toEqual(['widgets[WIDGET].maps[MAPS].map']);
-    });
-    it('dependenciesSelector', () => {
-        const state = {
-            widgets: {
-                containers: {
-                    [DEFAULT_TARGET]: {
-                        widgets: [{
-                            id: "WIDGET_ID",
-                            widgetType: "map",
-                            maps: [{
-                                mapId: "MAP_ID",
-                                center: {
-                                    x: -4.866943359375001,
-                                    y: 43.96119063892024,
-                                    crs: 'EPSG:4326'
-                                },
-                                bbox: {
-                                    bounds: {
-                                        minx: -1346514.6902716649,
-                                        miny: 5126784.36114334,
-                                        maxx: 262943.37730100635,
-                                        maxy: 5792092.255337515
-                                    }
-                                }
-                            }]
-                        }]
-                    }
-                },
-                dependencies: {
-                    a: "mydep.a",
-                    b: "mydep.b",
-                    // special map path
-                    c: "map.abc",
-                    // special widgets path
-                    d: "widgets[\"WIDGET_ID\"].maps[\"MAP_ID\"].center",
-                    e: "widgets[WIDGET_ID].maps[MAP_ID].center",
-                    f: "widgets[NO_ID].map.center",
-                    g: "widgets.otherStateSlice"
-                },
-                otherStateSlice: "otherStateValue"
-            },
-            mydep: {
-                a: "A",
-                b: "B"
-            },
-            map: {
-                present: {
-                    abc: "ABC"
-                }
-            }
-        };
-        const dependencies = dependenciesSelector(state);
-        expect(dependencies.a).toBe("A");
-        expect(dependencies.b).toBe("B");
-        expect(dependencies.c).toBe("ABC");
-        expect(dependencies.d).toBe(state.widgets.containers[DEFAULT_TARGET].widgets[0].maps[0].center);
-        expect(dependencies.e).toBe(state.widgets.containers[DEFAULT_TARGET].widgets[0].maps[0].center);
-        expect(dependencies.f).toBeFalsy();
-        expect(dependencies.g).toBe(state.widgets.otherStateSlice);
     });
     it('isTrayEnabled', () => {
         expect(isTrayEnabled({

@@ -1648,7 +1648,6 @@
       "rollToolTip": "Min: 0° e Max: 360°",
       "pitchToolTip": "Min: -90° e Max: 90°",
       "showSectionId": "Includi posizione di scorrimento",
-      "showConnections": "Mostra connessioni",
       "heading": "Angolo di rotta",
       "roll": "Angolo di rollio",
       "pitch": "Angolo di inclinazione",
@@ -2425,12 +2424,6 @@
           "preview": "Anteprima",
           "addLayer": "Aggiungi un livello alla mappa",
           "useTheSelectedLayer": "Usa il livello selezionato",
-          "connectToAMap": "Connetti ad un altro widget",
-          "connectToTheMap": "Collegati alla mappa",
-          "connectToTheTable": "Connetti alla tabella",
-          "selectMapToConnect": "Seleziona il widget da connettere",
-          "clearConnection": "Disconnetti",
-          "disableConnectToMap": "Operazione non disponibile",
           "classAttributes": {
             "classColor": "Colore della Classe",
             "classLabel": "Etichetta della Classe",
@@ -2879,9 +2872,7 @@
       },
       "editor": {
         "save": "Salva la dashboard",
-        "addACardToTheDashboard": "Aggiungi un widget alla dashboard",
-        "showConnections": "Mostra connessioni",
-        "hideConnections": "Nascondi connessioni"
+        "addACardToTheDashboard": "Aggiungi un widget alla dashboard"
       },
       "emptyTitle": "La dashboard è vuota",
       "delete": "Cancellare la dashboard",

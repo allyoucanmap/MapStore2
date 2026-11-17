@@ -22,7 +22,6 @@ import Catalog from '../../../../../plugins/widgetbuilder/Catalog';
 import { selectedCatalogSelector, servicesSelector as catalogServicesSelector, selectedServiceSelector as catalogSelectedServiceSelector } from '../../../../../selectors/catalog';
 import chartLayerSelector from '../../../../../plugins/widgetbuilder/enhancers/chartLayerSelector';
 import { catalogEditorEnhancer } from '../../../../../plugins/widgetbuilder/enhancers/catalogEditorEnhancer';
-import viewportBuilderConnectMask from '../../../../../plugins/widgetbuilder/enhancers/connection/viewportBuilderConnectMask';
 
 const Button = tooltip(ButtonRB);
 
@@ -183,9 +182,7 @@ const FilterLayerSelector = connect(
 
 export default chartLayerSelector(
     catalogEditorEnhancer(
-        viewportBuilderConnectMask(
-            withServiceDefaults(FilterLayerSelector)
-        )
+        withServiceDefaults(FilterLayerSelector)
     )
 );
 

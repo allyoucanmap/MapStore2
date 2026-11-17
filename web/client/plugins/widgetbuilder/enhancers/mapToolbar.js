@@ -14,15 +14,8 @@ import handleNodeEditing from './handleNodeEditing';
 import handleRemoveLayer from './handleMapRemoveLayer';
 import handleMapZoomLayer from './handleMapZoomLayer';
 import { wizardSelector, wizardStateToProps } from '../commons';
-import mapBuilderConnect from './connection/mapBuilderConnect';
-import withConnectButton from './connection/withConnectButton';
 import withExitButton from './withExitButton';
-import { EMPTY_MAP } from "../../../utils/MapUtils";
 
-const showCondition = ({step, editorData}) => {
-    const containsEmptyMap = editorData?.maps?.some(map => map.name === EMPTY_MAP);
-    return step === 0 && !containsEmptyMap;
-};
 export default compose(
     connect(wizardSelector, {
         setPage,
@@ -65,9 +58,7 @@ export default compose(
             }]
         }))
     ),
-    mapBuilderConnect,
     withExitButton(undefined, {
         tooltipId: "widgets.builder.wizard.backToMapSelection"
-    }),
-    withConnectButton(showCondition)
+    })
 );

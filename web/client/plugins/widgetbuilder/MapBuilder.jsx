@@ -19,7 +19,6 @@ import ToolbarComp from '../../components/widgets/builder/wizard/map/Toolbar';
 import MapWizardComp from '../../components/widgets/builder/wizard/MapWizard';
 import BuilderHeader from './BuilderHeader';
 import { wizardSelector, wizardStateToProps } from './commons';
-import mapBuilderConnectMask from './enhancers/connection/mapBuilderConnectMask';
 import handleNodeEditing from './enhancers/handleNodeEditing';
 import layerSelector from './enhancers/layerSelector';
 import manageLayers from './enhancers/manageLayers';
@@ -145,7 +144,6 @@ const mapBuilder = compose(
     withProps(({ editorData = {}}) => ({
         map: find(editorData?.maps, ({mapId} = {}) => mapId === editorData.selectedMapId) || {}
     })),
-    mapBuilderConnectMask,
     handleNodeSelection,
     handleNodeEditing
 );
@@ -157,7 +155,7 @@ export default mapBuilder(({
     editorData = {},
     addonsItems = [],
     editNode, setEditNode, closeNodeEditor, isLocalizedLayerStylesEnabled, env, selectedGroups = [], exitButton, selectedLayers = [], selectedNodes, onNodeSelect = () => {},
-    availableDependencies = [], toggleConnection = () => {}, ...props
+    ...props
 } = {}) =>
     (<BorderLayout
         className = "map-selector"
@@ -165,8 +163,6 @@ export default mapBuilder(({
             <Toolbar
                 exitButton={exitButton}
                 editorData={editorData}
-                availableDependencies={availableDependencies}
-                toggleConnection={toggleConnection}
                 selectedNodes={selectedNodes}
                 selectedLayers={selectedLayers}
                 selectedGroups={selectedGroups}

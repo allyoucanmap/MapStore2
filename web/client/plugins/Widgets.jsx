@@ -20,7 +20,6 @@ import usePluginItems from '../hooks/usePluginItems';
 
 import {mapIdSelector} from '../selectors/map';
 import {
-    dependenciesSelector,
     getRenderableFloatingWidgets,
     getFloatingWidgetsLayout,
     getMaximizedState,
@@ -56,18 +55,16 @@ compose(
             getVisibleFloatingWidgets,
             getFloatingWidgetsLayout,
             getMaximizedState,
-            dependenciesSelector,
             (state) => mapLayoutValuesSelector(state, { right: true}),
             state => state.browser && state.browser.mobile,
             getRenderableFloatingWidgets,
             getTblWidgetZoomLoader,
             getLegendMapsSelector,
-            (id, widgets, layouts, maximized, dependencies, mapLayout, isMobileAgent, dropdownWidgets, recordZoomLoading, legendMaps) => ({
+            (id, widgets, layouts, maximized, mapLayout, isMobileAgent, dropdownWidgets, recordZoomLoading, legendMaps) => ({
                 id,
                 widgets,
                 layouts,
                 maximized,
-                dependencies,
                 mapLayout,
                 isMobileAgent,
                 dropdownWidgets,

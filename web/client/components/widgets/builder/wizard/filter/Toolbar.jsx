@@ -35,10 +35,9 @@ const getSaveTooltipId = (step, {id} = {}) => {
 
 export default ({
     step = 0, editorData = {}, valid, setPage = () => {}, onFinish = () => {},
-    stepButtons = [],
-    errors
+    stepButtons = []
 } = {}) => {
-    const disable = !valid || (editorData?.mapSync && Object.values(errors || {}).some(error => error));
+    const disable = !valid;
     return (
         <Toolbar btnDefaultProps={{
             bsStyle: "primary",

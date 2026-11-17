@@ -10,7 +10,6 @@ import expect from 'expect';
 import {
     setEditorAvailable,
     setEditing,
-    triggerShowConnections,
     triggerSave,
     triggerSaveAs,
     dashboardLoaded,
@@ -45,10 +44,6 @@ describe('Test the dashboard reducer', () => {
         expect(dashboard({ editing: true }, insertWidget({})).editing).toBeFalsy();
         expect(dashboard({ editing: true }, updateWidget({})).editing).toBeFalsy();
         expect(dashboard({ editing: true }, deleteWidget({})).editing).toBeFalsy();
-    });
-    it('triggerShowConnections', () => {
-        const state = dashboard({}, triggerShowConnections(true));
-        expect(state.showConnections).toBe(true);
     });
     it('dashboard triggerSave', () => {
         const action = triggerSave(true);

@@ -24,7 +24,6 @@ const getWidgetOpts = (w) => w?.widgetOpts?.[w.widgetType];
  */
 const DefaultWidget = ({
     items,
-    dependencies,
     customWidgets = [],
     toggleCollapse = () => {},
     exportCSV = () => {},
@@ -62,7 +61,6 @@ const DefaultWidget = ({
                 {...getWidgetOpts(w)}
                 toggleCollapse={toggleCollapse}
                 exportCSV={exportCSV}
-                dependencies={dependencies}
                 onDelete={onDelete}
                 onEdit={onEdit}
                 items={items}
@@ -74,7 +72,6 @@ const DefaultWidget = ({
                 {...w}
                 {...getWidgetOpts(w)}
                 toggleCollapse={toggleCollapse}
-                dependencies={dependencies}
                 onDelete={onDelete}
                 onEdit={onEdit}
             />
@@ -85,7 +82,6 @@ const DefaultWidget = ({
                 {...w}
                 {...getWidgetOpts(w)}
                 toggleCollapse={toggleCollapse}
-                dependencies={dependencies}
                 onDelete={onDelete}
                 onEdit={onEdit}
                 items={items}
@@ -97,7 +93,6 @@ const DefaultWidget = ({
                 {...w}
                 {...getWidgetOpts(w)}
                 toggleCollapse={toggleCollapse}
-                dependencies={dependencies}
                 onDelete={onDelete}
                 onEdit={onEdit}
             />
@@ -109,7 +104,6 @@ const DefaultWidget = ({
                 {...getWidgetOpts(w)}
                 interactions={w.interactions}
                 toggleCollapse={toggleCollapse}
-                dependencies={dependencies}
                 onDelete={onDelete}
                 onEdit={onEdit}
             />
@@ -121,7 +115,6 @@ const DefaultWidget = ({
                 {...getWidgetOpts(w)}
                 toggleCollapse={toggleCollapse}
                 exportCSV={exportCSV}
-                dependencies={dependencies}
                 onDelete={onDelete}
                 onEdit={onEdit}
             />

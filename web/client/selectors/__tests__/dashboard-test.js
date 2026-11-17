@@ -11,7 +11,6 @@ import {
     getDashboardId,
     isDashboardAvailable,
     isDashboardEditing,
-    showConnectionsSelector,
     isShowSaveOpen,
     isShowSaveAsOpen,
     dashboardResource,
@@ -39,13 +38,6 @@ describe('dashboard selectors', () => {
     it('test isDashboardEditing selector', () => {
         const state = { dashboard: { editing: true } };
         expect(isDashboardEditing(state)).toBe(true);
-    });
-    it('test showConnectionsSelector', () => {
-        expect(showConnectionsSelector({
-            dashboard: {
-                showConnections: true
-            }
-        })).toBe(true);
     });
     it('isShowOpen', () => {
         expect(isShowSaveOpen({

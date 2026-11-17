@@ -15,10 +15,8 @@ const ResponsiveReactGridLayout =
         ({ useDefaultWidthProvider = true }) => useDefaultWidthProvider,
         widthProvider
     )(Responsive);
-import withGroupColor from '../enhancers/withGroupColor';
 import { fitLayoutInRows, placeNewWidgets, isTableColumnFiltersEnabled } from '../../../utils/WidgetsUtils';
-const DefaultWidget = withGroupColor(require('../widget/DefaultWidget').default);
-const getWidgetGroups = (groups = [], w) => groups.filter(g => find(g.widgets, id => id === w.id));
+const DefaultWidget = require('../widget/DefaultWidget').default;
 // the header is the drag handle, so the controls it contains must not start a drag
 const DRAG_CANCEL = 'button, a, input, select, textarea, [role="button"], .dropdown, .Select';
 import 'react-grid-layout/css/styles.css';
@@ -38,7 +36,6 @@ export default pure(({
     widgets = [],
     layouts,
     maximized,
-    dependencies,
     legendMaps = {},
     compactType = null,
     compactMode,
@@ -47,8 +44,6 @@ export default pure(({
     draggableCancel = DRAG_CANCEL,
     measureBeforeMount,
     width,
-    showGroupColor,
-    groups = [],
     canEdit = true,
     getWidgetClass = () => { },
     onWidgetClick = () => { },
@@ -140,9 +135,6 @@ export default pure(({
                 widgetOpts={widgetOpts}
                 quickFilters={getEnableColumnFilters(w) ? w.quickFilters : undefined}
                 toolsOptions={toolsOptions}
-                groups={getWidgetGroups(groups, w)}
-                showGroupColor={showGroupColor}
-                dependencies={dependencies}
                 legendMap={legendMaps[w.id]}
                 enableColumnFilters={getEnableColumnFilters(w)}
                 canEdit={canEdit}

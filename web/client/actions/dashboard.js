@@ -7,7 +7,6 @@
 */
 export const SET_EDITOR_AVAILABLE = "DASHBOARD:SET_AVAILABLE";
 export const SET_EDITING = "DASHBOARD:SET_EDITING";
-export const SHOW_CONNECTIONS = "DASHBOARD:SHOW_CONNECTIONS";
 export const TRIGGER_SAVE_MODAL = "DASHBOARD:TRIGGER_SAVE_MODAL";
 export const TRIGGER_SAVE_AS_MODAL = "DASHBOARD:TRIGGER_SAVE_AS_MODAL";
 
@@ -33,7 +32,6 @@ export const INIT_PLUGIN = "DASHBOARD:INIT_PLUGIN";
 export const setEditing = (editing) => ({type: SET_EDITING, editing });
 
 export const setEditorAvailable = available => ({type: SET_EDITOR_AVAILABLE, available});
-export const triggerShowConnections = show => ({ type: SHOW_CONNECTIONS, show});
 export const triggerSave = show => ({ type: TRIGGER_SAVE_MODAL, show});
 export const triggerSaveAs = show => ({ type: TRIGGER_SAVE_AS_MODAL, show});
 export const saveDashboard = resource => ({ type: SAVE_DASHBOARD, resource});

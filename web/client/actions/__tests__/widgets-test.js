@@ -23,7 +23,6 @@ import {
     DEFAULT_TARGET,
     OPEN_FILTER_EDITOR,
     EXPORT_CSV,
-    DEPENDENCY_SELECTOR_KEY,
     TOGGLE_TRAY,
     TOGGLE_MAXIMIZE,
     NEW_CHART,
@@ -42,8 +41,6 @@ import {
     onEditorChange,
     changeEditorSetting,
     setPage,
-    setupDependencySelector,
-    toggleDependencySelector,
     toggleTray,
     toggleMaximize,
     replaceWidgets,
@@ -210,23 +207,6 @@ describe('Test correctness of the widgets actions', () => {
         expect(retval.type).toBe(EDITOR_SETTING_CHANGE);
         expect(retval.key).toBe("step");
         expect(retval.value).toBe(1);
-    });
-    it('setupDependencySelector', () => {
-        const value = { active: true, setup: "setup" };
-        const retval = setupDependencySelector(value);
-        expect(retval).toExist();
-        expect(retval.type).toBe(EDITOR_SETTING_CHANGE);
-        expect(retval.key).toBe(`${DEPENDENCY_SELECTOR_KEY}`);
-        expect(retval.value).toBe(value);
-    });
-    it('toggleDependencySelector', () => {
-        const value = { setup: "setup" };
-        const retval = toggleDependencySelector(true, value);
-        expect(retval).toExist();
-        expect(retval.type).toBe(EDITOR_SETTING_CHANGE);
-        expect(retval.key).toBe(`${DEPENDENCY_SELECTOR_KEY}`);
-        expect(retval.value.setup).toBe("setup");
-        expect(retval.value.active).toBe(true);
     });
     it('createChart', () => {
         const retval = createChart(true);

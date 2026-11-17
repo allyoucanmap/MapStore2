@@ -23,7 +23,6 @@ import {
 } from '../../actions/widgets';
 import filterLayerSelector from './enhancers/filterLayerSelector';
 import mapLayerSelector from './enhancers/mapLayerSelector';
-import viewportBuilderConnectMask from './enhancers/connection/viewportBuilderConnectMask';
 import { catalogEditorEnhancer } from './enhancers/catalogEditorEnhancer';
 import { wizardSelector, wizardStateToProps } from './commons';
 
@@ -67,7 +66,6 @@ const chooseLayerEnhancer = compose(
     withState('showLayers', "toggleLayerSelector", false),
     withState('errors', 'setErrors', {}),
     connect(wizardSelector, null, wizardStateToProps),
-    viewportBuilderConnectMask,
     catalogEditorEnhancer,
     branch(
         ({showLayers, editorData, dashBoardEditing} = {}) =>

@@ -21,7 +21,7 @@ const isChartOptionsValid = (options = {}) => options.aggregateFunction && optio
 
 const Wizard = wizardHandlers(WizardContainer);
 
-const TableWizard = ({ onChange = () => { }, onFinish = () => { }, setPage = () => { }, setValid = () => { }, valid, data = {}, layer = {}, step = 0, types, featureTypeProperties, dependencies }) => {
+const TableWizard = ({ onChange = () => { }, onFinish = () => { }, setPage = () => { }, setValid = () => { }, valid, data = {}, layer = {}, step = 0, types, featureTypeProperties }) => {
     useEffect(() => {
         if (valid && !isChartOptionsValid(data.options)) {
             setValid(false);
@@ -37,7 +37,6 @@ const TableWizard = ({ onChange = () => { }, onFinish = () => { }, setPage = () 
             interactions={<TableInteractionsTab data={data} layer={data.layer || layer} onEditorChange={onChange} />}
         >
             <TableOptions
-                dependencies={dependencies}
                 featureTypeProperties={featureTypeProperties}
                 types={types}
                 data={data}

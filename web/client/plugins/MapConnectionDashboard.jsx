@@ -6,74 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
-
-import PropTypes from 'prop-types';
-import { createSelector } from 'reselect';
-import { connect } from 'react-redux';
-import ToolbarButton from '../components/misc/toolbar/ToolbarButton';
-import { buttonCanEdit, showConnectionsSelector } from '../selectors/dashboard';
-import { canEditLayoutView, dashboardHasWidgets, getWidgetsDependenciesGroups } from '../selectors/widgets';
-import { triggerShowConnections } from '../actions/dashboard';
 import { createPlugin } from '../utils/PluginsUtils';
 
-class MapConnectionDashboard extends React.Component {
-    static propTypes = {
-        showConnections: PropTypes.bool,
-        canEdit: PropTypes.bool,
-        hasWidgets: PropTypes.bool,
-        hasConnections: PropTypes.bool,
-        onShowConnections: PropTypes.func,
-        disabled: PropTypes.bool
-    }
-
-    static defaultProps = {
-        onShowConnections: () => {}
-    }
-
-    render() {
-        const { showConnections, canEdit, hasConnections, hasWidgets, onShowConnections, disabled } = this.props;
-        if (!(!!hasWidgets && !!hasConnections || !canEdit)) return false;
-        return  (<ToolbarButton
-            glyph={showConnections ? 'bulb-on' : 'bulb-off'}
-            tooltipId={showConnections ? 'dashboard.editor.hideConnections' : 'dashboard.editor.showConnections'}
-            bsStyle={showConnections ? 'success' : 'tray'}
-            onClick={()=>onShowConnections(!showConnections)}
-            tooltipPosition={'left'}
-            id={'ms-map-connection-card-dashboard'}
-            btnDefaultProps={{ tooltipPosition: 'bottom', className: 'square-button', bsStyle: 'primary' }}
-            disabled={disabled} />);
-    }
-}
-
-const ConnectedMapAddWidget = connect(
-    createSelector(
-        showConnectionsSelector,
-        dashboardHasWidgets,
-        buttonCanEdit,
-        getWidgetsDependenciesGroups,
-        canEditLayoutView,
-        (showConnections, hasWidgets, edit, groups = [], canEditView) => ({
-            showConnections,
-            hasConnections: groups.length > 0,
-            hasWidgets,
-            canEdit: edit,
-            disabled: !canEditView
-        })
-    ),
-    {
-        onShowConnections: triggerShowConnections
-    }
-)(MapConnectionDashboard);
-
+/**
+ * Deprecated: the dashboard connections are the widget interactions, configured from the sender widgets.
+ * Kept without UI so the existing configurations including it still load.
+ * @memberof plugins
+ * @deprecated
+ * @name MapConnectionDashboard
+ * @class
+ */
 export default createPlugin('MapConnectionDashboard', {
-    component: () => null,
-    containers: {
-        SidebarMenu: {
-            name: "MapConnectionDashboard",
-            tool: ConnectedMapAddWidget,
-            position: 3,
-            priority: 0
-        }
-    }
+    component: () => null
 });

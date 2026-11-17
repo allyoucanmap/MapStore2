@@ -25,6 +25,7 @@ import tooltip from '../../../../misc/enhancers/tooltip';
 import nodeEditor from './enhancers/nodeEditor';
 import NodeEditorComp from './NodeEditor';
 import TOCComp from './TOC';
+import { getLegendMapTarget } from '../../../../../utils/InteractionUtils';
 
 const NavItem = tooltip(BSNavItem);
 
@@ -50,10 +51,9 @@ const EditorTitle = compose(
 const MapViewOptions = ({ map, onChange = () => {}, widgets = [], widgetId }) => {
     const mapPath = `maps[${map.mapId}]`;
 
-    // Check if there's a legend widget that depends on this map widget (any map within it)
+    // a legend widget controls a map of this map widget
     const hasLegendWidget = useMemo(() => widgets.some(widget =>
-        widget.widgetType === 'legend' &&
-        widget.dependenciesMap?.layers?.startsWith(`widgets[${widgetId}].maps`)
+        widget.widgetType === 'legend' && getLegendMapTarget(widget)?.widgetId === widgetId
     ), [widgets, widgetId]);
 
     const handleShowLegendChange = (checked) => {

@@ -17,11 +17,8 @@ import { insertWidget, onEditorChange, setPage, openFilterEditor, changeEditorSe
 
 import builderConfiguration from '../../components/widgets/enhancers/builderConfiguration';
 import counterLayerSelector from './enhancers/counterLayerSelector';
-import viewportBuilderConnect from './enhancers/connection/viewportBuilderConnect';
-import viewportBuilderConnectMask from './enhancers/connection/viewportBuilderConnectMask';
 
 import withExitButton from './enhancers/withExitButton';
-import withConnectButton from './enhancers/connection/withConnectButton';
 import CounterWizard from '../../components/widgets/builder/wizard/CounterWizard';
 import BuilderHeader from './BuilderHeader';
 import BaseToolbar from '../../components/widgets/builder/wizard/counter/Toolbar';
@@ -61,9 +58,7 @@ const Toolbar = compose(
         },
         wizardStateToProps
     ),
-    viewportBuilderConnect,
-    withExitButton(),
-    withConnectButton(({ step }) => step === 0)
+    withExitButton()
 )(BaseToolbar);
 
 // Map-layers picker (current map layers only)
@@ -78,7 +73,6 @@ const CounterMapLayerSelector = compose(
  */
 const chooseLayerEnhancer = compose(
     connect(wizardSelector),
-    viewportBuilderConnectMask,
     catalogEditorEnhancer,
     branch(
         ({ layer, editorData } = {}) => !layer && editorData?.globalWidgetMode === true,
@@ -90,15 +84,12 @@ const chooseLayerEnhancer = compose(
     )
 );
 
-export default chooseLayerEnhancer(({ enabled, onClose = () => { }, exitButton, editorData, toggleConnection, availableDependencies = [], dependencies, ...props } = {}) =>
+export default chooseLayerEnhancer(({ enabled, onClose = () => { }, exitButton, editorData, ...props } = {}) =>
 
     (<BorderLayout
         header={<BuilderHeader onClose={onClose}><Toolbar
             exitButton={exitButton}
             editorData={editorData}
-            toggleConnection={toggleConnection}
-            availableDependencies={availableDependencies}
-            widgets={props.widgets}
             onClose={onClose} /></BuilderHeader>}
     >
         {enabled ? <Builder formOptions={{
@@ -108,5 +99,5 @@ export default chooseLayerEnhancer(({ enabled, onClose = () => { }, exitButton, 
             showGroupBy: false,
             showLegend: false,
             advancedOptions: true
-        }} dependencies={dependencies} {...props} /> : null}
+        }} {...props} /> : null}
     </BorderLayout>));

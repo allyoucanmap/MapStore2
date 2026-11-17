@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { withProps, compose } from 'recompose';
+import { compose } from 'recompose';
 import { createSelector } from 'reselect';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -15,9 +15,7 @@ import { createPlugin } from '../utils/PluginsUtils';
 import { isDashboardEditing, isDashboardLoading, canEditServiceSelector } from '../selectors/dashboard';
 import { dashboardSelector, dashboardsLocalizedSelector } from './widgetbuilder/commons';
 
-import { toggleConnection } from '../actions/widgets';
-
-import { initPlugin, setEditing, setEditorAvailable, triggerShowConnections } from '../actions/dashboard';
+import { initPlugin, setEditing, setEditorAvailable } from '../actions/dashboard';
 
 import withDashboardExitButton from './widgetbuilder/enhancers/withDashboardExitButton';
 import WidgetTypeBuilder from './widgetbuilder/WidgetTypeBuilder';
@@ -27,11 +25,8 @@ import usePluginItems from '../hooks/usePluginItems';
 
 const Builder =
     compose(
-        connect(dashboardSelector, { toggleConnection, triggerShowConnections }),
+        connect(dashboardSelector),
         connect(dashboardsLocalizedSelector),
-        withProps(({ availableDependencies = [] }) => ({
-            availableDependencies: availableDependencies.filter(d => d !== "map")
-        })),
         withDashboardExitButton
     )(WidgetTypeBuilder);
 

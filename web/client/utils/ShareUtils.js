@@ -19,7 +19,6 @@ export const DASHBOARD_DEFAULT_SHARE_OPTIONS = {
     shareUrlReplaceString: "$1dashboard-embedded.html#/$2",
     embedOptions: {
         showTOCToggle: false,
-        showConnectionsParamToggle: true,
         allowFullScreen: false
     }
 };

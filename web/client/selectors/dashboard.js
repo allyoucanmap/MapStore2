@@ -15,7 +15,6 @@ export const isDashboardAvailable = state => state && state.dashboard && state.d
 export const isShowSaveOpen = state => state && state.dashboard && state.dashboard.showSaveModal;
 export const isShowSaveAsOpen = state => state && state.dashboard && state.dashboard.showSaveAsModal;
 export const isDashboardEditing = state => state && state.dashboard && state.dashboard.editing;
-export const showConnectionsSelector = state => state && state.dashboard && state.dashboard.showConnections;
 export const dashboardResource = state => state && state.dashboard && state.dashboard.resource;
 export const isDashboardLoading = state => state && state.dashboard && state.dashboard.loading;
 export const getDashboardSaveErrors = state => state && state.dashboard && state.dashboard.saveErrors;

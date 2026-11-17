@@ -13,10 +13,9 @@ import withBackButton from './withBackButton';
 import { toLayer, addSearchObservable } from './layerSelector';
 import canGenerateCharts from '../../../observables/widgets/canGenerateCharts';
 
-import { castArray, isEmpty, isUndefined, get } from "lodash";
+import { castArray, isEmpty, isUndefined } from "lodash";
 
 import { onEditorChange } from '../../../actions/widgets';
-import { getDependantWidget } from "../../../utils/WidgetsUtils";
 
 const layerSelectorConnect = connect(() => ({}), {
     onLayerChoice: (...args) => onEditorChange(...args),
@@ -76,26 +75,9 @@ const chartLayerSelector = compose(
     setDisplayName('ChartLayerSelector'),
     layerSelectorConnect,
     defaultProps({
-        layerValidationStream: (stream$, props) => stream$.switchMap(layers =>
+        layerValidationStream: (stream$) => stream$.switchMap(layers =>
             Rx.Observable.forkJoin(layers.map(layer=> canGenerateCharts(layer)))
-                .switchMap((resp) => {
-                    let $observable = Rx.Observable.of(layers);
-                    const dependantWidget = getDependantWidget({widgets: props?.widgets, dependenciesMap: get(props, 'editorData.dependenciesMap', {})});
-                    if (resp.length && dependantWidget.widgetType === 'table') {
-                        // Compare the dependant widget attributes with the selected layer(s)
-                        // when the dependant widget is a table
-                        const layersAttributes = resp.map(res => get(res[0], 'data.featureTypes[0].properties')?.map(p => p.name));
-                        const dependantAttributes = get(dependantWidget, 'options.propertyName', []);
-                        if (dependantAttributes.length && layersAttributes?.length ) {
-                            const isDependantAttributesMatching =
-                                layersAttributes.every(lAttrib => dependantAttributes.every(depAttrib => lAttrib.includes(depAttrib)));
-                            $observable = isDependantAttributesMatching
-                                ? $observable
-                                : Rx.Observable.throw(new Error('attributesNotMatchingDescription'));
-                        }
-                    }
-                    return $observable;
-                })
+                .map(() => layers)
         )
     }),
     withBackButton,

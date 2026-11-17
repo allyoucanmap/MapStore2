@@ -10,7 +10,6 @@
 import {
     SET_EDITING,
     SET_EDITOR_AVAILABLE,
-    SHOW_CONNECTIONS,
     TRIGGER_SAVE_MODAL,
     TRIGGER_SAVE_AS_MODAL,
     DASHBOARD_LOADING,
@@ -36,7 +35,6 @@ import {
 } from '../actions/security';
 
 function dashboard(state = {
-    showConnections: true,
     services: null,
     saveServiceLoading: false
 }, action) {
@@ -54,8 +52,6 @@ function dashboard(state = {
     case INSERT:
     case DELETE:
         return set("editing", action.editing, state);
-    case SHOW_CONNECTIONS:
-        return set("showConnections", action.show, state);
     case TRIGGER_SAVE_MODAL:
         return set("showSaveModal", action.show, set('saveErrors', undefined, state));
     case TRIGGER_SAVE_AS_MODAL:

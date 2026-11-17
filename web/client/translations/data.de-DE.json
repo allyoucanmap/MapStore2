@@ -1687,7 +1687,6 @@
       "rollToolTip": "Min: 0° und Max: 360°",
       "pitchToolTip": "Min: -90° und Max: 90°",
       "showSectionId": "Bildlaufposition einschließen",
-      "showConnections": "Verbindungen anzeigen",
       "heading": "Kurswinkel",
       "roll": "Rollwinkel",
       "pitch": "Steigungswinkel",
@@ -2464,12 +2463,6 @@
           "preview": "Vorschau",
           "addLayer": "Fügt der Karte eine Ebene hinzu",
           "useTheSelectedLayer": "Verwende die ausgewählte Ebene",
-          "connectToAMap": "Stellen Sie eine Verbindung zu einem anderen Widget her",
-          "connectToTheMap": "Verbinden Sie sich mit der Karte",
-          "connectToTheTable": "Verbinden Sie sich mit der Tabelle",
-          "selectMapToConnect": "Wählen Sie das zu verbindende Widget aus",
-          "clearConnection": "Verbindung löschen",
-          "disableConnectToMap": "Vorgang nicht verfügbar",
           "classAttributes": {
             "classColor": "Klasse Farbe",
             "classLabel": "Klassenbezeichnung",
@@ -2918,9 +2911,7 @@
       },
       "editor": {
         "save": "Speichern Sie das Dashboard",
-        "addACardToTheDashboard": "Ein Widget zum Dashboard hinzufügen",
-        "showConnections": "Verbindungen anzeigen",
-        "hideConnections": "Verbindungen ausblenden"
+        "addACardToTheDashboard": "Ein Widget zum Dashboard hinzufügen"
       },
       "emptyTitle": "Das Dashboard ist leer",
       "delete": "Dashboard löschen",

@@ -6,17 +6,15 @@
  * LICENSE file in the root directory of this source tree.
 */
 
-import { find, get, castArray, flatten } from 'lodash';
+import { find, get } from 'lodash';
 import { mapSelector } from './map';
 import { getEffectivelyVisibleLayers, getSelectedLayer, layersSelector } from './layers';
 import { generateRootTree, getLegendMapTarget, isMainMapWidget, isMainMapSourceInteraction, TARGET_TYPES, getChartAxisFromCurrentTimeTargetPath, isAnyLayerPath, isChartAxisDateType, isChartAxisDimensionTarget, isLayerDimensionTarget, isLayerTimeDimensionTarget, isMapTimeTarget } from '../utils/InteractionUtils';
 import { currentTimeSelector } from './dimension';
-import { pathnameSelector } from './router';
-import { DEFAULT_TARGET, DEPENDENCY_SELECTOR_KEY, LAYERS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
-import { cleanPaths, getWidgetsGroups, getWidgetDependency, getSelectedWidgetData, extractTraceData } from '../utils/WidgetsUtils';
+import { DEFAULT_TARGET, LAYERS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
+import { cleanPaths, getWidgetDependency, getSelectedWidgetData, extractTraceData } from '../utils/WidgetsUtils';
 import { dashboardServicesSelector, isDashboardAvailable, isDashboardEditing } from './dashboard';
 import { createSelector, createStructuredSelector } from 'reselect';
-import { createShallowSelector } from '../utils/ReselectUtils';
 import { stripTransientEffects } from '../utils/InteractionEffectsUtils';
 import { getAttributesNames } from "../utils/FeatureGridUtils";
 import { getDerivedLayersVisibility } from '../utils/LayersUtils';
@@ -24,8 +22,6 @@ import { isFeatureGridOpen } from './featuregrid';
 import { isPluginInContext } from './context';
 
 export const getEditorSettings = state => get(state, "widgets.builder.settings");
-export const getDependenciesMap = s => get(s, "widgets.dependencies") || {};
-export const getDependenciesKeys = s => Object.keys(getDependenciesMap(s)).map(k => getDependenciesMap(s)[k]);
 export const getEditingWidget = state => get(state, "widgets.builder.editor");
 export const getWidgetInteractionTree = state => get(state, 'widgets.widgetInteractionTree');
 export const getSelectedChartId = state => get(getEditingWidget(state), 'selectedChartId');
@@ -230,67 +226,19 @@ export const getCollapsedIds = createSelector(
 export const getMapWidgets = state => (getFloatingWidgets(state) || []).filter(widget => widget?.widgetType === "map" && !isMainMapWidget(widget));
 export const getTableWidgets = state => (getFloatingWidgets(state) || []).filter(({ widgetType } = {}) => widgetType === "table");
 
-export const getMapWidgetsPerView = state => (getFloatingWidgetsPerView(state) || []).filter(widget => widget?.widgetType === "map" && !isMainMapWidget(widget));
-export const getTableWidgetsPerView = state => (getFloatingWidgetsPerView(state) || []).filter(({ widgetType } = {}) => widgetType === "table");
-
 /**
- * Find in the state the available dependencies to connect
- *
- * Note: table widgets are excluded from selection when viewer is present,
- * because there were conflict between map and other widgets
- * (the map contains other widgets)
+ * Returns what the widget builder can offer: legends need a map widget, the main map interactions need a main map (map viewer)
  */
-export const availableDependenciesSelector = createSelector(
+export const widgetTypesAvailabilitySelector = createSelector(
     getMapWidgets,
-    getTableWidgets,
     mapSelector,
-    pathnameSelector,
-    (ws = [], tableWidgets = [], map = [], pathname) => ({
-        availableDependencies:
-            flatten(ws
-                .map(({id, maps = []}) => maps.map(({mapId} = {})=> `widgets[${id}].maps[${mapId}].map`)))
-                .concat(castArray(map).map(() => "map"))
-                .concat(castArray(tableWidgets).filter(() => pathname.indexOf("viewer") === -1).map(({id}) => `widgets[${id}]`))
+    isDashboardAvailable,
+    (mapWidgets = [], map, dashboardAvailable) => ({
+        hasMapWidgets: mapWidgets.length > 0,
+        mainMapAvailable: !!map && !dashboardAvailable
     })
 );
-// widgets receiving the main map or a map widget through their interactions, legends still use the legacy connection
-const MAP_WIDGET_INTERACTION_RECEIVER_TYPES = ['chart', 'table', 'counter', 'map'];
 
-/**
- * Maps the widget in edit mode can connect to with the legacy connect button, only legends still use it
- */
-export const availableDependenciesForEditingWidgetSelector = createSelector(
-    getMapWidgetsPerView,
-    mapSelector,
-    getEditingWidget,
-    (ws = [], map = {}, editingWidget) => {
-        if (MAP_WIDGET_INTERACTION_RECEIVER_TYPES.includes(editingWidget?.widgetType)) {
-            return { availableDependencies: [] };
-        }
-        return {
-            availableDependencies:
-                flatten(ws
-                    .map(({id, maps = []}) => maps.map(({mapId} = {})=> `widgets[${id}].maps[${mapId}].map`)))
-                    .concat(castArray(map).map(() => map ? "map" : null))
-                    .filter(w => w)
-        };
-    }
-);
-/**
- * returns if the dependency selector state
- * @param {object} state the state
- */
-export const getDependencySelectorConfig = state => get(getEditorSettings(state), `${DEPENDENCY_SELECTOR_KEY}`);
-/**
- * Determines if the dependencySelector is active
- * @param {object} state the state
- */
-export const isWidgetSelectionActive = state => get(getDependencySelectorConfig(state), 'active');
-
-export const getWidgetsDependenciesGroups = createSelector(
-    getFloatingWidgets,
-    widgets => getWidgetsGroups(widgets)
-);
 export const getFloatingWidgetsLayout = state => get(state, `widgets.containers[${DEFAULT_TARGET}].layouts`);
 export const getFloatingWidgetsCurrentLayout = state => get(state, `widgets.containers[${DEFAULT_TARGET}].layout`);
 
@@ -329,7 +277,6 @@ export const getEditingWidgetFilter = state => {
     const selectedWidget = getSelectedWidgetData(editingWidget);
     return get(selectedWidget, "filter");
 };
-export const dashBoardDependenciesSelector = () => ({}); // TODO dashboard dependencies
 /**
  * The selector creator for creating path-based selectors for interactions / dependencies
  * In general it can resolve paths for:
@@ -358,24 +305,6 @@ export const createPathSelector = (path) => createSelector(
                 : resolvedPath;
     }
 );
-/**
- * transforms dependencies in the form `{ k1: "path1", k1, "path2" }` into
- * a map like `{k1: v1, k2: v2}` where `v1 = get("path1", state)`.
- * Dependencies paths map comes from getDependenciesMap.
- * map.... is a special path that brings to the map of mapstore.
- */
-export const dependenciesSelector = createShallowSelector(
-    getDependenciesMap,
-    getDependenciesKeys,
-    // produces the array of values of the keys in getDependenciesKeys
-    state => getDependenciesKeys(state).map(k => createPathSelector(k)(state)),
-    // iterate the dependencies keys to set the dependencies values in a map
-    (map, keys, values) => keys.reduce((acc, k, i) => ({
-        ...acc,
-        [Object.keys(map)[i]]: values[i]
-    }), {})
-);
-
 export const getUpdatedLayout = createSelector(
     getFloatingWidgetsLayout,
     (layouts) => {
