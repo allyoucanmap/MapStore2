@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { zoomToExtent } from '../actions/map';
+import { error } from '../actions/notifications';
 import { applyWidgetInteractions } from '../actions/interactions';
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
@@ -76,6 +78,8 @@ compose(
             editWidget,
             updateWidgetProperty,
             onApplyWidgetInteractions: applyWidgetInteractions,
+            onZoomToExtent: zoomToExtent,
+            onNotifyError: error,
             exportCSV,
             toggleCollapse,
             toggleCollapseAll,

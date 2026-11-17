@@ -7,17 +7,13 @@
  */
 import React from 'react';
 import { get } from 'lodash';
-import {connect} from 'react-redux';
-import { compose, withPropsOnChange } from 'recompose';
+import { compose, withProps, withPropsOnChange } from 'recompose';
 import debounce from 'lodash/debounce';
 import bbox from '@turf/bbox';
 import deleteWidget from './deleteWidget';
 import LoadingSpinner from '../../misc/LoadingSpinner';
 import { defaultIcons, editableWidget, withHeaderTools } from './tools';
-import { zoomToExtent } from '../../../actions/map';
-import { applyWidgetInteractions } from '../../../actions/interactions';
 import { TARGET_TYPES } from '../../../utils/InteractionUtils';
-import {error} from '../../../actions/notifications';
 import { gridTools } from '../../../plugins/featuregrid/index';
 import { getFeature } from '../../../api/WFS';
 import { getWFSLayerName } from '../../../utils/LayersUtils';
@@ -30,19 +26,21 @@ const withSorting = () => withPropsOnChange(["gridEvents"], ({ gridEvents = {}, 
 /**
  * enhancer that updates widget column size on resize. and add base icons and menus
  * Moreover enhances it to allow delete.
+ * The row zoom uses the actions passed by the container: `onApplyWidgetInteractions`, `onZoomToExtent`, `onNotifyError`
 */
 export default compose(
-    compose(connect(null, (dispatch, ownProps) => {
+    withProps((ownProps) => {
+        const { onApplyWidgetInteractions = () => {}, onZoomToExtent = () => {}, onNotifyError = () => {} } = ownProps;
         const isZoomEnabled = ownProps?.widgetType === 'table' && ownProps?.enableZoomInTblWidget;
         const isDashboardWidget = isZoomEnabled && !!ownProps?.isDashboardWidget;
         const isMapViewerWidget = isZoomEnabled && !isDashboardWidget;
         const hasZoomToFeatureInteractions = (ownProps?.interactions || [])
             .some(interaction => interaction?.plugged && interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO_FEATURE);
         // the zoom to feature interactions receive the clicked feature
-        const zoomDashboardMaps = (feature, crs, maxZoom) => dispatch(applyWidgetInteractions(ownProps.id, undefined, ownProps.id, {
+        const zoomDashboardMaps = (feature, crs, maxZoom) => onApplyWidgetInteractions(ownProps.id, undefined, ownProps.id, {
             targetTypes: [TARGET_TYPES.APPLY_ZOOM_TO_FEATURE],
             data: { feature, crs, maxZoom }
-        }));
+        });
         return {
             gridTools: (hasZoomToFeatureInteractions && isDashboardWidget) || (isMapViewerWidget) ? gridTools.map((t) => ({
                 ...t,
@@ -64,18 +62,18 @@ export default compose(
                                 if (isDashboardWidget) {       // in case of table widget in dashboard view zoom the connected maps
                                     zoomDashboardMaps(p, crs || "EPSG:4326", maxZoom);
                                 } else {        // in case of table widget within the map viewer zoom to the feature
-                                    dispatch(zoomToExtent(p.bbox, crs || "EPSG:4326", maxZoom));
+                                    onZoomToExtent(p.bbox, crs || "EPSG:4326", maxZoom);
                                 }
                                 ownProps?.updateProperty(ownProps.id, `dependencies.zoomLoader`, false);        // stop zoom loader
                             } else {        // in case the geometry is already existing --> zoom to feature directly without fetching
                                 if (isDashboardWidget) {
                                     zoomDashboardMaps(p, crs || "EPSG:4326", maxZoom);
                                 } else {
-                                    dispatch(zoomToExtent(p.bbox, crs || "EPSG:4326", maxZoom));
+                                    onZoomToExtent(p.bbox, crs || "EPSG:4326", maxZoom);
                                 }
                             }
                         } catch (err) {
-                            dispatch(error({
+                            onNotifyError({
                                 title: "notification.warning",
                                 message: "notification.errorLoadingGF",
                                 action: {
@@ -83,14 +81,14 @@ export default compose(
                                 },
                                 autoDismiss: 3,
                                 position: "tc"
-                            }));
+                            });
                             ownProps?.updateProperty(ownProps.id, `dependencies.zoomLoader`, false);    // stop zoom loader
                         }
                     }
                 }, formatter: ownProps?.recordZoomLoading ? <React.Fragment><span><LoadingSpinner /></span></React.Fragment> : t.tableWidgetFormatter
             })) : []
         };
-    })),
+    }),
     withPropsOnChange(["gridEvents"], ({ gridEvents = {}, updateProperty = () => {}, id } = {}) => {
         const _debounceOnAddFilter = debounce((...args) => updateProperty(...args), 500);
         return {

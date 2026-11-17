@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { zoomToExtent } from '../actions/map';
+import { error } from '../actions/notifications';
 import { applyWidgetInteractions } from '../actions/interactions';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -117,6 +119,8 @@ const WidgetsView = compose(
             editWidget,
             updateWidgetProperty,
             onApplyWidgetInteractions: applyWidgetInteractions,
+            onZoomToExtent: zoomToExtent,
+            onNotifyError: error,
             exportCSV,
             deleteWidget,
             onWidgetSelected: selectWidget,
