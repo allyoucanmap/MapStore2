@@ -1136,9 +1136,20 @@ export const enableBarChartStack = (chart = {}) => {
  * @returns {boolean}
  */
 /**
- * Widget properties of the UI state (e.g. the table zoom loader), not saved
+ * Widget properties of the UI state (e.g. the table and map zoom loaders), not saved
  */
 export const TRANSIENT_WIDGET_PROPS = ['zoomLoading'];
+
+/**
+ * Map widget map properties of the UI state (e.g. a pending zoom request), not saved
+ */
+export const TRANSIENT_WIDGET_MAP_PROPS = ['zoomToRequest'];
+
+const hasAnyProp = (object, props) => props.some(prop => prop in (object || {}));
+
+const omitTransientMapProps = (widget) => (widget?.maps || []).some(map => hasAnyProp(map, TRANSIENT_WIDGET_MAP_PROPS))
+    ? { ...widget, maps: widget.maps.map(map => hasAnyProp(map, TRANSIENT_WIDGET_MAP_PROPS) ? omit(map, TRANSIENT_WIDGET_MAP_PROPS) : map) }
+    : widget;
 
 /**
  * Removes the transient UI properties from the widgets to save
@@ -1149,9 +1160,9 @@ export const omitTransientWidgetProps = (widgets) => {
     if (!Array.isArray(widgets)) {
         return widgets;
     }
-    const stripped = widgets.map(widget => TRANSIENT_WIDGET_PROPS.some(prop => prop in (widget || {}))
-        ? omit(widget, TRANSIENT_WIDGET_PROPS)
-        : widget);
+    const stripped = widgets
+        .map(widget => hasAnyProp(widget, TRANSIENT_WIDGET_PROPS) ? omit(widget, TRANSIENT_WIDGET_PROPS) : widget)
+        .map(omitTransientMapProps);
     return stripped.some((widget, idx) => widget !== widgets[idx]) ? stripped : widgets;
 };
 

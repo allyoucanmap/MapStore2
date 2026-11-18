@@ -15,6 +15,13 @@ import { ZOOM_TO_EXTENT_HOOK } from '../../../../utils/MapUtils';
 const MockComponent = () => <div id="mock-component" />;
 const EnhancedComponent = interactionZoomToExtent(MockComponent);
 
+let registeredHookRegister;
+// registers the zoom hook on demand, as the map does when it is mounted
+const RegisteringComponent = interactionZoomToExtent(({ hookRegister }) => {
+    registeredHookRegister = hookRegister;
+    return <div />;
+});
+
 describe('interactionZoomToExtent enhancer', () => {
     beforeEach((done) => {
         document.body.innerHTML = '<div id="container"></div>';
@@ -112,5 +119,39 @@ describe('interactionZoomToExtent enhancer', () => {
 
         expect(hookCalled).toBe(false);
         expect(updateCalled).toBe(false);
+    });
+    it('keeps the zoom request until the map registers its zoom hook', () => {
+        const container = document.getElementById('container');
+        const updateProperty = expect.createSpy();
+        const hook = expect.createSpy();
+        const maps = [{ mapId: 'map-1', zoomToRequest: { extent: [1, 2, 3, 4], crs: 'EPSG:4326' } }];
+        act(() => {
+            ReactDOM.render(<RegisteringComponent id="widget-1" maps={maps} selectedMapId="map-1" updateProperty={updateProperty} />, container);
+        });
+        expect(updateProperty).toNotHaveBeenCalled();
+        act(() => {
+            registeredHookRegister.registerHook(ZOOM_TO_EXTENT_HOOK, hook);
+        });
+        expect(hook).toHaveBeenCalled();
+        expect(hook.calls[0].arguments[0]).toEqual([1, 2, 3, 4]);
+        expect(updateProperty).toHaveBeenCalledWith('widget-1', 'maps', { mapId: 'map-1', zoomToRequest: undefined }, 'merge');
+    });
+
+    it('zooms only to the request of the displayed map', () => {
+        const container = document.getElementById('container');
+        const updateProperty = expect.createSpy();
+        const hook = expect.createSpy();
+        const hookRegister = { id: 'widget-1', getHook: () => hook, registerHook: () => {} };
+        const maps = [{ mapId: 'map-1' }, { mapId: 'map-2', zoomToRequest: { extent: [1, 2, 3, 4], crs: 'EPSG:4326' } }];
+        act(() => {
+            ReactDOM.render(<EnhancedComponent id="widget-1" maps={maps} selectedMapId="map-1" hookRegister={hookRegister} updateProperty={updateProperty} />, container);
+        });
+        expect(hook).toNotHaveBeenCalled();
+        expect(updateProperty).toNotHaveBeenCalled();
+        act(() => {
+            ReactDOM.render(<EnhancedComponent id="widget-1" maps={maps} selectedMapId="map-2" hookRegister={hookRegister} updateProperty={updateProperty} />, container);
+        });
+        expect(hook).toHaveBeenCalled();
+        expect(updateProperty).toHaveBeenCalledWith('widget-1', 'maps', { mapId: 'map-2', zoomToRequest: undefined }, 'merge');
     });
 });

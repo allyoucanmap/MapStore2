@@ -108,6 +108,12 @@ describe('MapWidget component', () => {
         expect(container.querySelector('.widget-footer')).toBeTruthy();
         expect(container.querySelector('.mapstore-inline-loader')).toBeTruthy();
     });
+    it('renders loading spinner while a zoom-to interaction requests the extent', () => {
+        ReactDOM.render(<Provider store={{ subscribe: () => { }, getState: () => ({ maptype: { mapType: 'openlayers' } }) }} ><MapWidget map={{size: {height: 401, width: 401}, layers: [] }} zoomLoading/></Provider>, document.getElementById("container"));
+        const container = document.getElementById('container');
+        expect(container.querySelector('.widget-footer')).toBeTruthy();
+        expect(container.querySelector('.mapstore-inline-loader')).toBeTruthy();
+    });
     it('does not render loading spinner when loading is false', () => {
         ReactDOM.render(<Provider store={{ subscribe: () => { }, getState: () => ({ maptype: { mapType: 'openlayers' } }) }} ><MapWidget map={{size: {height: 401, width: 401}, layers: [] }} loading={false}/></Provider>, document.getElementById("container"));
         const container = document.getElementById('container');

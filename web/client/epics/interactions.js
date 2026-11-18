@@ -12,6 +12,7 @@ import set from 'lodash/fp/set';
 import groupBy from 'lodash/groupBy';
 import isEqual from 'lodash/isEqual';
 import uniqBy from 'lodash/uniqBy';
+import uniq from 'lodash/uniq';
 import { getMainMapZoomToPadding } from '../utils/MapWidgetUtils';
 import { mapPaddingSelector } from '../selectors/maplayout';
 import bbox from '@turf/bbox';
@@ -20,7 +21,7 @@ import xml2js from 'xml2js';
 import { getFeatureLayer } from '../api/WFS';
 import { updateWidgetProperty, updateWidgetProperties, editWidget, replaceWidgets, INSERT, EDIT_NEW, UPDATE, DELETE, UPDATE_PROPERTY, UPDATE_PROPERTIES, SET_LINKED_DASHBOARD_DATA, DEFAULT_TARGET } from '../actions/widgets';
 import { updateWidgetPropertyInList } from '../utils/WidgetsUtils';
-import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, EDIT_MAIN_MAP_INTERACTIONS } from '../actions/interactions';
+import { APPLY_WIDGET_INTERACTIONS, applyWidgetInteractions, ZOOM_TO_FILTER_EXTENT, zoomToFilterExtent, EDIT_MAIN_MAP_INTERACTIONS } from '../actions/interactions';
 import { zoomToExtent, CHANGE_MAP_VIEW } from '../actions/map';
 import { setCurrentTime, SET_CURRENT_TIME, SET_OFFSET_TIME } from '../actions/dimension';
 import { REMOVE_NODE, changeLayerProperties, changeLayerParams } from '../actions/layers';
@@ -200,9 +201,9 @@ function buildZoomToExtentAction(extent, { mapWidgetId, mapId }, targetContainer
 
 /**
  * Fetches a layer's filtered extent using WPS as the primary method,
- * falling back to WFS
+ * falling back to WFS only when the WPS request fails
  * @param {object} layer - The layer object with layerFilter and url
- * @returns {Observable<number[]>} Observable of extent array
+ * @returns {Observable<number[]|null>} Observable of extent array, null when no feature matches the filter
  */
 function fetchLayerExtent(layer) {
     const wfsFallback = () => Rx.Observable.fromPromise(getFeatureLayer(layer)).map(response => bbox(response.data));
@@ -229,11 +230,9 @@ function fetchLayerExtent(layer) {
                 ne = json['ows:UpperCorner'].split(' ');
             });
             const extent = [parseFloat(sw[0]), parseFloat(sw[1]), parseFloat(ne[0]), parseFloat(ne[1])];
-            // WPS returns [0, 0, -1, -1] for empty results
-            if (extent[0] === 0 && extent[1] === 0 && extent[2] === -1 && extent[3] === -1) {
-                throw new Error('No features found matching the filter');
-            }
-            return extent;
+            // WPS returns [0, 0, -1, -1] when no feature matches, there is nothing to zoom to
+            const isEmptyResult = extent[0] === 0 && extent[1] === 0 && extent[2] === -1 && extent[3] === -1;
+            return isEmptyResult ? null : extent;
         }).catch(() => wfsFallback());
 }
 
@@ -265,22 +264,37 @@ function resolveZoomToSources(interaction, sender, state, targetContainer) {
     };
 }
 
+// the loader of the map widgets waiting for a zoom-to extent
+const setMapWidgetsZoomLoading = (mapWidgetIds, loading, targetContainer) => mapWidgetIds.length > 0
+    ? [updateWidgetProperties(mapWidgetIds.map(id => ({ id, key: 'zoomLoading', value: loading })), targetContainer)]
+    : [];
+
 /**
  * Resolves and combines the filtered extents of the zoom-to sources and zooms the target maps
  * @param {object} interaction the plugged zoom-to interaction
  * @param {object} sender the sender widget owning the interaction
  * @param {object} state redux state
  * @param {string} targetContainer the widget container target
- * @returns {Observable} zoom actions
+ * @param {object} zoomLoading `{ mapWidgetIds }` the map widgets showing the loader for the sender source
+ * @returns {Observable} zoom actions, with the loader of the target map widgets while the extent is requested
  */
-function applyInteractionEffectForZoomTo(interaction, sender, state, targetContainer = 'floating') {
+function applyInteractionEffectForZoomTo(interaction, sender, state, targetContainer = 'floating', zoomLoading = { mapWidgetIds: [] }) {
     const { layers, mapTargets } = resolveZoomToSources(interaction, sender, state, targetContainer);
     if (layers.length === 0 || mapTargets.length === 0) {
         return Rx.Observable.empty();
     }
+    const mapWidgetIds = uniq(mapTargets.map(target => target.mapWidgetId).filter(Boolean));
+    const loadingOn$ = Rx.Observable.defer(() => {
+        zoomLoading.mapWidgetIds = uniq([...zoomLoading.mapWidgetIds, ...mapWidgetIds]);
+        return Rx.Observable.from(setMapWidgetsZoomLoading(mapWidgetIds, true, targetContainer));
+    });
+    const loadingOff$ = Rx.Observable.defer(() => {
+        zoomLoading.mapWidgetIds = zoomLoading.mapWidgetIds.filter(id => !mapWidgetIds.includes(id));
+        return Rx.Observable.from(setMapWidgetsZoomLoading(mapWidgetIds, false, targetContainer));
+    });
 
     // Fetch extents for all layers concurrently
-    return Rx.Observable.forkJoin(
+    const zoom$ = Rx.Observable.forkJoin(
         layers.map(layer => fetchLayerExtent(layer).catch(() => Rx.Observable.of(null)))
     )
         .switchMap(extents => {
@@ -304,7 +318,9 @@ function applyInteractionEffectForZoomTo(interaction, sender, state, targetConta
             return Rx.Observable.from(actions);
         })
         .catch(() => Rx.Observable.empty());
+    return loadingOn$.concat(zoom$, loadingOff$);
 }
+
 // ============================================================================
 // Epics
 // ============================================================================
@@ -335,54 +351,63 @@ export const applyWidgetInteractionsEpic = (action$, store) =>
         .ofType(APPLY_WIDGET_INTERACTIONS, ZOOM_TO_FILTER_EXTENT)
         // a newer apply cancels the pending one of the same sender source only, other senders keep their zoom; events never cancel state applies
         .groupBy(({ widgetId, target, sourceId, event }) => `${target}:${widgetId}:${sourceId}:${event ? 'event' : 'state'}`)
-        .mergeMap(sourceAction$ => sourceAction$.switchMap(({ type, widgetId, target, sourceId, event }) => {
-            if (event) {
-                return applyEventInteractions(store.getState(), { widgetId, target, sourceId, event });
-            }
-            const isManualZoomTrigger = type === ZOOM_TO_FILTER_EXTENT;
-            const sender = getContainerWidgets(store.getState(), target).find(w => w.id === widgetId);
-            const buildAppliedData = SENDER_DATA_BUILDERS[sender?.widgetType];
-            if (!buildAppliedData) {
-                return Rx.Observable.empty();
-            }
-            const pluggedInteractions = (sender.interactions || []).filter(interaction => interaction.plugged === true
+        .mergeMap(sourceAction$ => {
+            // the map widgets loading a zoom-to extent of this sender source, cleared when a newer apply cancels the request
+            const zoomLoading = { mapWidgetIds: [] };
+            return sourceAction$.switchMap(({ type, widgetId, target, sourceId, event }) => {
+                if (event) {
+                    return applyEventInteractions(store.getState(), { widgetId, target, sourceId, event });
+                }
+                const clearCancelledZoomLoading$ = Rx.Observable.defer(() => {
+                    const mapWidgetIds = zoomLoading.mapWidgetIds;
+                    zoomLoading.mapWidgetIds = [];
+                    return Rx.Observable.from(setMapWidgetsZoomLoading(mapWidgetIds, false, target));
+                });
+                const isManualZoomTrigger = type === ZOOM_TO_FILTER_EXTENT;
+                const sender = getContainerWidgets(store.getState(), target).find(w => w.id === widgetId);
+                const buildAppliedData = SENDER_DATA_BUILDERS[sender?.widgetType];
+                if (!buildAppliedData) {
+                    return clearCancelledZoomLoading$;
+                }
+                const pluggedInteractions = (sender.interactions || []).filter(interaction => interaction.plugged === true
                 && interaction.source.nodePath.includes(sourceId)
                 && !!interaction.targetType
                 && !EVENT_TARGET_TYPES.includes(interaction.targetType)
                 && (!isManualZoomTrigger || interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO)
-            );
-            const effectInteractions = pluggedInteractions.filter(interaction => interaction.targetType !== TARGET_TYPES.APPLY_ZOOM_TO);
-            const zoomToInteractions = pluggedInteractions.filter(interaction => interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO);
-            // each effect sees the updates of the previous ones, all are dispatched together with a single state change
-            const applyEffects$ = Rx.Observable.defer(() => {
-                const { updates } = effectInteractions.reduce(({ state, updates: previousUpdates }, interaction) => {
-                    const applyEffect = TARGET_EFFECTS[interaction.targetType];
-                    if (!applyEffect || shouldSkipInteraction(interaction, state)) {
-                        return { state, updates: previousUpdates };
-                    }
-                    const context = getEffectsContext(state, target);
-                    const effectUpdates = toUpdateList(applyEffect({
-                        ...interaction,
-                        appliedData: buildAppliedData(sender, sourceId, interaction, context),
-                        "transient": isTransientEffectSender(sender)
-                    }, context)).filter(item => !isNoOpUpdate(item, state));
-                    return { state: effectUpdates.reduce(applyUpdateToState, state), updates: [...previousUpdates, ...effectUpdates] };
-                }, { state: store.getState(), updates: [] });
-                return Rx.Observable.from(toActions(updates));
-            });
-            // zoom-to resolves the extent of the layers already filtered by the other interactions
-            const applyZoomTo$ = Rx.Observable.from(zoomToInteractions)
-                .concatMap(interaction => {
-                    if (isManualZoomTrigger) {
-                        return applyInteractionEffectForZoomTo(interaction, sender, store.getState(), target);
-                    }
-                    // a newer apply cancels the pending zoom through switchMap
-                    return interaction?.configuration?.autoZoom === true || hasSenderOwnZoomExtent(sender)
-                        ? Rx.Observable.timer(AUTO_ZOOM_DEBOUNCE).switchMap(() => applyInteractionEffectForZoomTo(interaction, sender, store.getState(), target))
-                        : Rx.Observable.empty();
+                );
+                const effectInteractions = pluggedInteractions.filter(interaction => interaction.targetType !== TARGET_TYPES.APPLY_ZOOM_TO);
+                const zoomToInteractions = pluggedInteractions.filter(interaction => interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO);
+                // each effect sees the updates of the previous ones, all are dispatched together with a single state change
+                const applyEffects$ = Rx.Observable.defer(() => {
+                    const { updates } = effectInteractions.reduce(({ state, updates: previousUpdates }, interaction) => {
+                        const applyEffect = TARGET_EFFECTS[interaction.targetType];
+                        if (!applyEffect || shouldSkipInteraction(interaction, state)) {
+                            return { state, updates: previousUpdates };
+                        }
+                        const context = getEffectsContext(state, target);
+                        const effectUpdates = toUpdateList(applyEffect({
+                            ...interaction,
+                            appliedData: buildAppliedData(sender, sourceId, interaction, context),
+                            "transient": isTransientEffectSender(sender)
+                        }, context)).filter(item => !isNoOpUpdate(item, state));
+                        return { state: effectUpdates.reduce(applyUpdateToState, state), updates: [...previousUpdates, ...effectUpdates] };
+                    }, { state: store.getState(), updates: [] });
+                    return Rx.Observable.from(toActions(updates));
                 });
-            return applyEffects$.concat(applyZoomTo$);
-        }));
+                // zoom-to resolves the extent of the layers already filtered by the other interactions
+                const applyZoomTo$ = Rx.Observable.from(zoomToInteractions)
+                    .concatMap(interaction => {
+                        if (isManualZoomTrigger) {
+                            return applyInteractionEffectForZoomTo(interaction, sender, store.getState(), target, zoomLoading);
+                        }
+                        // a newer apply cancels the pending zoom through switchMap
+                        return interaction?.configuration?.autoZoom === true || hasSenderOwnZoomExtent(sender)
+                            ? Rx.Observable.timer(AUTO_ZOOM_DEBOUNCE).switchMap(() => applyInteractionEffectForZoomTo(interaction, sender, store.getState(), target, zoomLoading))
+                            : Rx.Observable.empty();
+                    });
+                return clearCancelledZoomLoading$.concat(applyEffects$, applyZoomTo$);
+            });
+        });
 
 const reapplyAllSendersInteractions = (store, target) => Rx.Observable.defer(() =>
     Rx.Observable.from(getContainerWidgets(store.getState(), target).filter(isInteractionSender))
@@ -458,6 +483,21 @@ export const applyTransientEffectsOnLoadEpic = (action$, store) =>
                 .flatMap(sender => getSenderSourceIds(sender).map(sourceId => applyWidgetInteractions(sender.id, 'floating', sourceId)))
         ));
 
+const hasPluggedZoomTo = (sender) => (sender?.interactions || [])
+    .some(interaction => interaction?.plugged && interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO);
+
+/**
+ * Zooms on dashboard load the maps of the senders that zoom to their own filtered data (e.g. a table with column filters)
+ */
+export const zoomToFilteredSendersOnLoadEpic = (action$, store) =>
+    action$
+        .ofType(DASHBOARD_LOADED, SET_LINKED_DASHBOARD_DATA)
+        .switchMap(() => Rx.Observable.from(
+            getContainerWidgets(store.getState(), DEFAULT_TARGET)
+                .filter(sender => hasSenderOwnZoomExtent(sender) && hasPluggedZoomTo(sender))
+                .flatMap(sender => getSenderSourceIds(sender).map(sourceId => zoomToFilterExtent(sender.id, DEFAULT_TARGET, sourceId)))
+        ));
+
 // the main map moves often, its view is mirrored after the movement settles
 const MAIN_MAP_VIEW_DEBOUNCE = 300;
 
@@ -526,6 +566,7 @@ export default {
     mirrorMainMapViewEpic,
     editMainMapInteractionsEpic,
     applyTransientEffectsOnLoadEpic,
+    zoomToFilteredSendersOnLoadEpic,
     applyWidgetInteractionsEpic,
     cleanupAndReapplyWidgetInteractionsEpic,
     applyOnSenderPropertyChangeEpic

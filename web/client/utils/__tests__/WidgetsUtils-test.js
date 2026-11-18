@@ -46,6 +46,13 @@ describe('Test WidgetsUtils', () => {
             expect(stripped[0]).toEqual({ id: 'table-1', widgetType: 'table', title: 'T' });
             expect(stripped[1]).toBe(widgets[1]);
         });
+        it('removes the pending zoom requests of the maps, keeping the other maps', () => {
+            const otherMap = { mapId: 'm2', zoom: 3 };
+            const widgets = [{ id: 'map-1', maps: [{ mapId: 'm1', zoom: 4, zoomToRequest: { extent: [1, 2, 3, 4] } }, otherMap] }];
+            const [stripped] = omitTransientWidgetProps(widgets);
+            expect(stripped.maps[0]).toEqual({ mapId: 'm1', zoom: 4 });
+            expect(stripped.maps[1]).toBe(otherMap);
+        });
         it('keeps the same widgets without transient properties', () => {
             const widgets = [{ id: 'table-1', title: 'T' }];
             expect(omitTransientWidgetProps(widgets)).toBe(widgets);

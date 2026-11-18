@@ -206,7 +206,8 @@ const MapWidget = memo((props) => {
         const valueWithMapId = selectedMapId ? { ...value, mapId: selectedMapId } : value;
         updateProperty(id, "maps", valueWithMapId, "merge");
     }, [updateProperty, id, selectedMapId]);
-    return <MapWidgetComponent {...props} map={selectedMap} onUpdateMapProperty={onUpdateMapProperty} />;
+    // zoomLoading: a zoom-to interaction is requesting the extent to zoom to
+    return <MapWidgetComponent {...props} loading={props.loading || props.zoomLoading} map={selectedMap} onUpdateMapProperty={onUpdateMapProperty} />;
 });
 
 export default MapWidget;
